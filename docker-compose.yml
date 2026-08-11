@@ -1,0 +1,82 @@
+networks:
+  sandhovius-net:
+    driver: bridge
+    name: sandhovius-net
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  ha_config:
+  z2m_data:
+
+services:
+  # ==========================================
+  # 1. Mosquitto MQTT Broker (Centrale berichtenbus)
+  # ==========================================
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: sandhovius-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"   # Standaard MQTT poort
+      - "9001:9001"   # MQTT over WebSockets
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - sandhovius-net
+
+  # ==========================================
+  # 2. Home Assistant Core (Smart Home Engine)
+  # ==========================================
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: sandhovius-homeassistant
+    restart: unless-stopped
+    ports:
+      - "8123:8123"   # Home Assistant Web Dashboard
+    environment:
+      - TZ=Europe/Amsterdam
+    volumes:
+      - ha_config:/config
+    networks:
+      - sandhovius-net
+
+  # ==========================================
+  # 3. Zigbee2MQTT (Zigbee naar MQTT vertaler)
+  # ==========================================
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: sandhovius-zigbee2mqtt
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # Zigbee2MQTT Dashboard
+    environment:
+      - TZ=Europe/Amsterdam
+    volumes:
+      - z2m_data:/app/data
+    depends_on:
+      - mosquitto
+    networks:
+      - sandhovius-net
+
+  # ==========================================
+  # 4. Sandhovius Go Local Agent (Eigen backend)
+  # ==========================================
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: sandhovius-agent
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - HA_URL=ws://homeassistant:8123/api/websocket
+      - HA_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIxMTA3OThjNGVkMjY0MTk1ODBlODVlMWU2NDJlOWNlYSIsImlhdCI6MTc4NjMwMzY4OSwiZXhwIjoyMTAxNjYzNjg5fQ.QzL4eEjFI90LQmsNPw8YB-UpdoLGx6hDUGRT8OxsDeU
+    depends_on:
+      - mosquitto
+      - homeassistant
+    networks:
+      - sandhovius-net
