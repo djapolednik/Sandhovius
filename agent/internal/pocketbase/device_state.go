@@ -20,6 +20,9 @@ type deviceStateListResponse struct {
 // the cloud copy small (just "what is the current state right now") — full
 // history stays local, not here.
 func (c *Client) UpsertDeviceState(deviceID string, state map[string]any) error {
+	c.upsertMu.Lock()
+	defer c.upsertMu.Unlock()
+
 	existing, err := c.findDeviceStateByDevice(deviceID)
 	if err != nil {
 		return fmt.Errorf("pocketbase: upsert device_state for %s: %w", deviceID, err)

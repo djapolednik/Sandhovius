@@ -21,6 +21,13 @@ type Client struct {
 	token    string
 	email    string
 	password string
+
+	// upsertMu serializes UpsertDeviceState calls. Without it, two
+	// concurrent upserts for a device with no existing row yet could both
+	// see "not found" and both create a row — a classic check-then-act
+	// race. The agent is the only writer to device_state, so a single
+	// process-wide lock fully closes that race.
+	upsertMu sync.Mutex
 }
 
 func NewClient(baseURL string) *Client {

@@ -53,7 +53,33 @@ func (a *Agent) Start() error {
 }
 
 func (a *Agent) handleMQTTMessage(topic string, payload []byte) {
-	log.Printf("[APP] MQTT Event op [%s]: %s\n", topic, string(payload))
+	event, ok := mqtt.ParseZigbeeEvent(topic, payload)
+	if !ok {
+		return // geen device-state (bv. zigbee2mqtt/bridge/state, of een sandhovius/* bericht)
+	}
+	a.forwardZigbeeEvent(event)
+}
+
+// forwardZigbeeEvent vertaalt een Zigbee2MQTT state-update naar een
+// PocketBase device_state upsert. Zelfde patroon als forwardHAEvent:
+// onbekende friendly_names worden gelogd en overgeslagen.
+func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
+	deviceID, found, err := a.devices.lookup(event.FriendlyName)
+	if err != nil {
+		log.Printf("[APP] Device-lookup mislukt voor %s: %v\n", event.FriendlyName, err)
+		return
+	}
+	if !found {
+		log.Printf("[APP] Onbekend device, genegeerd: %s\n", event.FriendlyName)
+		return
+	}
+
+	if err := a.pbClient.UpsertDeviceState(deviceID, event.State); err != nil {
+		log.Printf("[APP] PocketBase update mislukt voor %s: %v\n", event.FriendlyName, err)
+		return
+	}
+
+	log.Printf("[APP] PocketBase bijgewerkt (zigbee): %s -> %v\n", event.FriendlyName, event.State)
 }
 
 func (a *Agent) listenToHAEvents() {
