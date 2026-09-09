@@ -104,5 +104,6 @@ services:
       - "8090:8090"
     volumes:
       - pocketbase_data:/pb_data
+      - ./backend/pb_migrations:/pb_migrations
     networks:
       - sandhovius-net

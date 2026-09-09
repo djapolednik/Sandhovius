@@ -64,6 +64,10 @@ Elke service met blijvende state heeft een eigen named volume (`mosquitto_data`,
 
 ## 3. PocketBase: schema en rechten
 
+### Schema als code: `backend/pb_migrations/`
+
+Het schema hierbeneden werd oorspronkelijk live opgebouwd via de Admin-API — nergens in bestandsvorm vastgelegd. PocketBase bleek automigraties al standaard aan te hebben staan, maar schreef die naar een map in de container die niet aan een volume gekoppeld was: bij elke `docker compose up` die de PocketBase-container herschiep, ging die geschiedenis verloren (de database zelf bleef intact, alleen het migratie-*bestand* niet). Inmiddels staat `backend/pb_migrations/` als volume gekoppeld aan de container, met een snapshot-migratie van het volledige huidige schema als startpunt. Vanaf nu wordt elke schemawijziging via de Admin-UI/API automatisch als migratiebestand weggeschreven op een plek die wél in git zit — kloon je de repo vers, dan bouwt PocketBase het schema zelf op bij het opstarten.
+
 ### Collecties
 
 | Collectie | Doel | Belangrijkste velden |
