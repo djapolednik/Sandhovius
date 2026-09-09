@@ -23,11 +23,11 @@ func main() {
 	}
 
 	// 2. MQTT Client Websocket
-	brokerURL := fmt.Sprintf("%s:%s", cfg.MQTTBroker, cfg.MQTTPort)
+	brokerURL := fmt.Sprintf("%s:%s", cfg.MQTT.Broker, cfg.MQTT.Port)
 	mqttClient := mqtt.NewClient(brokerURL, "", "", "sandhovius-local-agent")
 
 	// 3. Home Assistant WebSocket
-	haClient := homeassistant.NewClient(cfg.HA_URL, cfg.HA_Token)
+	haClient := homeassistant.NewClient(cfg.HomeAssistant.URL, cfg.HomeAssistant.Token)
 
 	// 4. De Agent aanmaken
 	agent := app.New(mqttClient, haClient)

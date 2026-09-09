@@ -8,6 +8,7 @@ volumes:
   mosquitto_log:
   ha_config:
   z2m_data:
+  pb_data:
 
 services:
   # ==========================================
@@ -75,8 +76,26 @@ services:
       - MQTT_PORT=1883
       - HA_URL=ws://homeassistant:8123/api/websocket
       - HA_TOKEN=${HA_TOKEN}
+      - POCKETBASE_URL=http://pocketbase:8090
+      - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL}
+      - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD}
     depends_on:
       - mosquitto
       - homeassistant
+      - pocketbase
+    networks:
+      - sandhovius-net
+
+  # ==========================================
+  # 5. Pocketbase (Backend database)
+  # ==========================================
+  pocketbase:
+    image: pocketbase/pocketbase:latest
+    container_name: sandhovius-pocketbase
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - pb_data:/data
     networks:
       - sandhovius-net
