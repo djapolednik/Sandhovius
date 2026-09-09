@@ -11,6 +11,7 @@ import (
 	"sandhovius/local-agent/internal/config"
 	"sandhovius/local-agent/internal/homeassistant"
 	"sandhovius/local-agent/internal/mqtt"
+	"sandhovius/local-agent/internal/pocketbase"
 )
 
 func main() {
@@ -29,15 +30,21 @@ func main() {
 	// 3. Home Assistant WebSocket
 	haClient := homeassistant.NewClient(cfg.HomeAssistant.URL, cfg.HomeAssistant.Token)
 
-	// 4. De Agent aanmaken
-	agent := app.New(mqttClient, haClient)
+	// 4. PocketBase Client
+	pbClient := pocketbase.NewClient(cfg.PocketBase.URL)
+	if err := pbClient.Authenticate(cfg.PocketBase.AdminEmail, cfg.PocketBase.AdminPassword); err != nil {
+		log.Fatalf("[FATAL] Fout bij het inloggen bij PocketBase: %v", err)
+	}
 
-	// 5. Start de agent
+	// 5. De Agent aanmaken
+	agent := app.New(mqttClient, haClient, pbClient)
+
+	// 6. Start de agent
 	if err := agent.Start(); err != nil {
 		log.Fatalf("[FATAL] Fout bij het starten van de agent: %v", err)
 	}
 
-	// 6. Graceful Shutdown
+	// 7. Graceful Shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -47,7 +54,7 @@ func main() {
 	sig := <-sigChan
 	fmt.Printf("\n[SYS] Ontvangen signaal: %s. Agent wordt afgesloten...\n", sig)
 
-	// 7. Alles netjes afsluiten
+	// 8. Alles netjes afsluiten
 	agent.Stop()
 	fmt.Println("[SYS] Agent is succesvol afgesloten. Tot ziens!")
 }

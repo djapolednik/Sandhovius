@@ -107,10 +107,17 @@ func (c *Client) Subscribe() error {
 	return nil
 }
 
-func (c *Client) ReadEvent() (map[string]interface{}, error) {
-	var event map[string]interface{}
-	err := c.connection.ReadJSON(&event)
-	return event, err
+// ReadEvent blocks until the next message arrives on the websocket and
+// parses it. ok reports whether the message was a relevant state_changed
+// event — non-event messages (e.g. the subscribe_events confirmation)
+// return ok=false with no error.
+func (c *Client) ReadEvent() (event HAEvent, ok bool, err error) {
+	var raw rawMessage
+	if err := c.connection.ReadJSON(&raw); err != nil {
+		return HAEvent{}, false, err
+	}
+	event, ok = parseStateChanged(raw)
+	return event, ok, nil
 }
 
 func (c *Client) Disconnect(quiesce uint) {

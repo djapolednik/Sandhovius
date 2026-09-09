@@ -1,0 +1,66 @@
+package app
+
+import (
+	"sync"
+
+	"sandhovius/local-agent/internal/pocketbase"
+)
+
+// deviceCache maps a Home Assistant entity_id to its PocketBase device
+// record id. It is populated from PocketBase and refreshed on demand: a
+// lookup miss triggers one refresh before giving up, so devices added
+// while the agent is already running are still picked up — just not
+// instantly.
+type deviceCache struct {
+	pb *pocketbase.Client
+
+	mu       sync.RWMutex
+	byEntity map[string]string
+}
+
+func newDeviceCache(pb *pocketbase.Client) *deviceCache {
+	return &deviceCache{
+		pb:       pb,
+		byEntity: make(map[string]string),
+	}
+}
+
+func (d *deviceCache) refresh() error {
+	devices, err := d.pb.ListDevices()
+	if err != nil {
+		return err
+	}
+
+	byEntity := make(map[string]string, len(devices))
+	for _, dev := range devices {
+		if dev.EntityID == "" {
+			continue
+		}
+		byEntity[dev.EntityID] = dev.ID
+	}
+
+	d.mu.Lock()
+	d.byEntity = byEntity
+	d.mu.Unlock()
+	return nil
+}
+
+// lookup returns the PocketBase device id for entityID, refreshing the
+// cache once from PocketBase if it isn't found yet.
+func (d *deviceCache) lookup(entityID string) (deviceID string, found bool, err error) {
+	d.mu.RLock()
+	id, ok := d.byEntity[entityID]
+	d.mu.RUnlock()
+	if ok {
+		return id, true, nil
+	}
+
+	if err := d.refresh(); err != nil {
+		return "", false, err
+	}
+
+	d.mu.RLock()
+	id, ok = d.byEntity[entityID]
+	d.mu.RUnlock()
+	return id, ok, nil
+}

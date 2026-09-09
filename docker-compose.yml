@@ -8,7 +8,7 @@ volumes:
   mosquitto_log:
   ha_config:
   z2m_data:
-  pb_data:
+  pocketbase_data:
 
 services:
   # ==========================================
@@ -90,12 +90,12 @@ services:
   # 5. Pocketbase (Backend database)
   # ==========================================
   pocketbase:
-    image: pocketbase/pocketbase:latest
+    image: ghcr.io/muchobien/pocketbase:latest
     container_name: sandhovius-pocketbase
     restart: unless-stopped
     ports:
       - "8090:8090"
     volumes:
-      - pb_data:/data
+      - pocketbase_data:/pb_data
     networks:
       - sandhovius-net
