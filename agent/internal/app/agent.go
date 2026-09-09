@@ -273,13 +273,40 @@ func (a *Agent) forwardZigbeeAvailability(avail mqtt.ZigbeeAvailability) {
 	log.Printf("[APP] Online-status bijgewerkt: %s -> online=%v\n", avail.FriendlyName, avail.Online)
 }
 
+// listenToHAEvents leest events van de HA websocket totdat de agent stopt.
+// Bij een verbroken verbinding wordt herverbonden met exponentiële
+// backoff (1s tot 30s) i.p.v. in een tight loop te blijven lezen van een
+// dode socket — haClient.Connect() doet de volledige handshake opnieuw,
+// inclusief de subscribe_events-aanvraag.
 func (a *Agent) listenToHAEvents() {
+	backoff := 1 * time.Second
+	const maxBackoff = 30 * time.Second
+
 	for {
+		if a.ctx.Err() != nil {
+			return
+		}
+
 		event, ok, err := a.haClient.ReadEvent()
 		if err != nil {
-			log.Printf("[APP] HA Event error: %v\n", err)
+			log.Printf("[APP] HA-verbinding verbroken: %v — herverbinden over %s\n", err, backoff)
+			select {
+			case <-a.ctx.Done():
+				return
+			case <-time.After(backoff):
+			}
+
+			if reconnectErr := a.haClient.Connect(); reconnectErr != nil {
+				log.Printf("[APP] HA-herverbinden mislukt: %v\n", reconnectErr)
+				backoff = min(backoff*2, maxBackoff)
+				continue
+			}
+			log.Println("[APP] HA-verbinding hersteld")
+			backoff = 1 * time.Second
 			continue
 		}
+		backoff = 1 * time.Second
+
 		if !ok {
 			continue // niet-relevant bericht (bv. subscribe-bevestiging)
 		}
