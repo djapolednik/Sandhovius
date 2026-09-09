@@ -25,3 +25,17 @@ func (c *Client) ListDevices() ([]Device, error) {
 	}
 	return resp.Items, nil
 }
+
+// SetDeviceOnline updates a device's online flag.
+func (c *Client) SetDeviceOnline(deviceID string, online bool) error {
+	err := c.doAuthed(
+		"PATCH",
+		"/api/collections/devices/records/"+deviceID,
+		map[string]any{"online": online},
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("pocketbase: set device %s online=%v: %w", deviceID, online, err)
+	}
+	return nil
+}

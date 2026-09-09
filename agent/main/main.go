@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// 5. De Agent aanmaken
-	agent := app.New(mqttClient, haClient, pbClient)
+	agent := app.New(mqttClient, haClient, pbClient, cfg.Gateway.Name)
 
 	// 6. Start de agent
 	if err := agent.Start(); err != nil {

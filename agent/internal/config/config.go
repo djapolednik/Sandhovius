@@ -4,6 +4,7 @@ type Config struct {
 	MQTT          MQTTConfig
 	HomeAssistant HomeAssistantConfig
 	PocketBase    PocketBaseConfig
+	Gateway       GatewayConfig
 }
 
 func LoadConfig() (*Config, error) {
@@ -19,9 +20,12 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
+	gatewayCfg := loadGatewayConfig()
+
 	return &Config{
 		MQTT:          mqttCfg,
 		HomeAssistant: haCfg,
 		PocketBase:    pbCfg,
+		Gateway:       gatewayCfg,
 	}, nil
 }
