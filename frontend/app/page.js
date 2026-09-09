@@ -2,16 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import PocketBase from 'pocketbase'
+import { useTheme } from '../lib/useTheme'
+import Header from '../components/Header'
+import DeviceCard from '../components/DeviceCard'
 
 const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL)
 
 export default function Home() {
+  const { isDarkMode, toggleTheme } = useTheme()
+
   const [loggedIn, setLoggedIn] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [gateways, setGateways] = useState([])
+  const [gatewayName, setGatewayName] = useState('')
   const [devices, setDevices] = useState([])
+  const [pendingDeviceIds, setPendingDeviceIds] = useState([])
 
   useEffect(() => {
     setLoggedIn(pb.authStore.isValid)
@@ -37,14 +43,12 @@ export default function Home() {
   function logout() {
     pb.authStore.clear()
     setLoggedIn(false)
-    setGateways([])
+    setGatewayName('')
     setDevices([])
   }
 
-  // De devices-collectie heeft haar eigen listRule die al filtert op
-  // gateway.user = @request.auth.id, dus we hoeven niet eerst zelf de
-  // devices per gateway te filteren — PocketBase doet dat al server-side.
-  // We halen gateways er wel apart bij om de status/naam te kunnen tonen.
+  // devices.listRule filtert al op gateway.user = @request.auth.id, dus we
+  // vragen devices rechtstreeks op i.p.v. eerst zelf per gateway te filteren.
   async function fetchDevices() {
     setError('')
     try {
@@ -52,19 +56,47 @@ export default function Home() {
         pb.collection('gateways').getFullList(),
         pb.collection('devices').getFullList({ expand: 'device_state_via_device' }),
       ])
-      setGateways(gatewayRecords)
+      setGatewayName(gatewayRecords[0]?.name ?? '')
       setDevices(deviceRecords)
     } catch (err) {
       setError('Kon devices niet ophalen: ' + err.message)
     }
   }
 
+  // Stuurt een "toggle"-commando naar PocketBase; de agent pikt dit
+  // realtime op en voert het uit via Home Assistant. Geen live-subscription
+  // hier — na een korte wachttijd wordt gewoon opnieuw opgehaald.
+  async function toggleDevice(device) {
+    setPendingDeviceIds((prev) => [...prev, device.id])
+    setError('')
+    try {
+      await pb.collection('commands').create({
+        device: device.id,
+        action: 'toggle',
+        status: 'pending',
+      })
+      setTimeout(fetchDevices, 1500)
+    } catch (err) {
+      setError('Commando versturen mislukt: ' + err.message)
+    } finally {
+      setTimeout(() => {
+        setPendingDeviceIds((prev) => prev.filter((id) => id !== device.id))
+      }, 1500)
+    }
+  }
+
+  const themeAction = {
+    label: isDarkMode ? 'Lichte modus' : 'Donkere modus',
+    onClick: toggleTheme,
+  }
+
   if (!loggedIn) {
     return (
-      <main style={{ maxWidth: 320, margin: '4rem auto', fontFamily: 'sans-serif' }}>
-        <h1>Sandhovius</h1>
-        <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div className="login-container">
+        <Header actions={[themeAction]} />
+        <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
           <input
+            className="input"
             type="email"
             placeholder="Email"
             value={email}
@@ -72,52 +104,40 @@ export default function Home() {
             required
           />
           <input
+            className="input"
             type="password"
             placeholder="Wachtwoord"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button type="submit">Inloggen</button>
+          <button type="submit" className="btn btn-primary">
+            Inloggen
+          </button>
         </form>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </main>
+        {error && <p className="error-banner">{error}</p>}
+      </div>
     )
   }
 
   return (
-    <main style={{ maxWidth: 480, margin: '2rem auto', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Sandhovius</h1>
-        <button onClick={logout}>Uitloggen</button>
-      </div>
+    <div className="container">
+      <Header actions={[themeAction, { label: 'Uitloggen', onClick: logout }]} />
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {gatewayName && <p className="gateway-name">{gatewayName}</p>}
 
-      <h2>Gateways</h2>
-      <ul>
-        {gateways.map((gw) => (
-          <li key={gw.id}>
-            {gw.name} — {gw.select} (laatst gezien: {gw.last_seen || 'nog nooit'})
-          </li>
+      {error && <p className="error-banner">{error}</p>}
+
+      <ul className="device-list">
+        {devices.map((device) => (
+          <DeviceCard
+            key={device.id}
+            device={device}
+            onToggle={() => toggleDevice(device)}
+            isPending={pendingDeviceIds.includes(device.id)}
+          />
         ))}
       </ul>
-
-      <h2>Devices</h2>
-      <ul>
-        {devices.map((device) => {
-          const state = device.expand?.device_state_via_device?.[0]
-          return (
-            <li key={device.id} style={{ marginBottom: '0.75rem' }}>
-              <strong>{device.name}</strong> ({device.type}) —{' '}
-              {device.online ? 'online' : 'offline'}
-              <pre style={{ background: '#f0f0f0', padding: '0.5rem', margin: '0.25rem 0' }}>
-                {state ? JSON.stringify(state.state, null, 2) : 'geen state bekend'}
-              </pre>
-            </li>
-          )
-        })}
-      </ul>
-    </main>
+    </div>
   )
 }
