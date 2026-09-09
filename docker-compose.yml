@@ -107,3 +107,25 @@ services:
       - ./backend/pb_migrations:/pb_migrations
     networks:
       - sandhovius-net
+
+  # ==========================================
+  # 6. Sandhovius PWA Frontend (Next.js)
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Reachable from the browser, not from other containers — the
+        # browser runs on the host/LAN, and PocketBase's port is published
+        # to the host, so this stays correct regardless of where the
+        # frontend container itself runs.
+        NEXT_PUBLIC_POCKETBASE_URL: http://localhost:8090
+    container_name: sandhovius-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - pocketbase
+    networks:
+      - sandhovius-net
