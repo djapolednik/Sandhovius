@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -20,9 +22,13 @@ type Agent struct {
 	gatewayID   string
 
 	historyRetention time.Duration
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName string, historyRetentionDays int) *Agent {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Agent{
 		mqttClient:       mqttClient,
 		haClient:         haClient,
@@ -31,6 +37,8 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 		devices:          newDeviceCache(pbClient),
 		gatewayName:      gatewayName,
 		historyRetention: time.Duration(historyRetentionDays) * 24 * time.Hour,
+		ctx:              ctx,
+		cancel:           cancel,
 	}
 }
 
@@ -66,7 +74,91 @@ func (a *Agent) Start() error {
 		go a.listenToHAEvents()
 	}
 
+	a.catchUpPendingCommands()
+	go a.listenForCommands()
+
 	return nil
+}
+
+// catchUpPendingCommands verwerkt commando's die al "pending" waren vóórdat
+// de agent (opnieuw) opstartte. De realtime-subscribe hieronder levert
+// alleen wijzigingen vanaf het moment van verbinden — geen geschiedenis —
+// dus zonder deze stap zou zo'n commando nooit uitgevoerd worden.
+func (a *Agent) catchUpPendingCommands() {
+	pending, err := a.pbClient.ListPendingCommands()
+	if err != nil {
+		log.Printf("[APP] Kon openstaande commando's niet ophalen: %v\n", err)
+		return
+	}
+	for _, cmd := range pending {
+		log.Printf("[APP] Openstaand commando gevonden bij opstarten: %s\n", cmd.ID)
+		a.handleCommand(cmd)
+	}
+}
+
+// listenForCommands abonneert zich op de PocketBase "commands"-collectie
+// via realtime (SSE) en blijft herverbinden totdat de agent stopt.
+func (a *Agent) listenForCommands() {
+	for {
+		err := a.pbClient.SubscribeCommands(a.ctx, a.handleCommandEvent)
+		if a.ctx.Err() != nil {
+			return // Stop() is aangeroepen
+		}
+		log.Printf("[APP] Command-stream verbroken: %v — probeer over 5s opnieuw\n", err)
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-time.After(5 * time.Second):
+		}
+	}
+}
+
+func (a *Agent) handleCommandEvent(event pocketbase.CommandEvent) {
+	if event.EventType != "create" {
+		return // alleen nieuwe commando's oppakken, niet onze eigen status-updates erop
+	}
+	a.handleCommand(event.Record)
+}
+
+// handleCommand voert één commando uit via Home Assistant's domein-
+// agnostische homeassistant.<action> services (turn_on/turn_off/toggle),
+// die werken voor licht, switches, climate, input_boolean, etc. zonder dat
+// de agent het specifieke domein van het device hoeft te kennen.
+func (a *Agent) handleCommand(cmd pocketbase.Command) {
+	if cmd.Status != "pending" {
+		return
+	}
+
+	device, err := a.pbClient.GetDevice(cmd.Device)
+	if err != nil {
+		log.Printf("[APP] Commando %s mislukt: kon device niet ophalen: %v\n", cmd.ID, err)
+		a.failCommand(cmd.ID, err)
+		return
+	}
+	if device.EntityID == "" {
+		err := fmt.Errorf("device %s heeft geen entity_id", device.ID)
+		log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
+		a.failCommand(cmd.ID, err)
+		return
+	}
+
+	if err := a.haClient.CallService("homeassistant", cmd.Action, device.EntityID, cmd.Payload); err != nil {
+		log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
+		a.failCommand(cmd.ID, err)
+		return
+	}
+
+	if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
+		log.Printf("[APP] Kon commando %s niet als 'sent' markeren: %v\n", cmd.ID, err)
+		return
+	}
+	log.Printf("[APP] Commando uitgevoerd: %s %s (commando %s)\n", cmd.Action, device.EntityID, cmd.ID)
+}
+
+func (a *Agent) failCommand(commandID string, reason error) {
+	if err := a.pbClient.MarkCommandFailed(commandID, reason); err != nil {
+		log.Printf("[APP] Kon commando %s niet als 'failed' markeren: %v\n", commandID, err)
+	}
 }
 
 // registerGateway zoekt het gateways-record voor deze agent op naam op, en
@@ -237,6 +329,8 @@ func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
 
 func (a *Agent) Stop() {
 	log.Println("[APP] Agent stopt, netwerkverbindingen sluiten...")
+
+	a.cancel()
 
 	if a.gatewayID != "" {
 		if err := a.pbClient.SetGatewayStatus(a.gatewayID, "offline"); err != nil {

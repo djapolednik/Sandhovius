@@ -26,6 +26,15 @@ func (c *Client) ListDevices() ([]Device, error) {
 	return resp.Items, nil
 }
 
+// GetDevice fetches a single device record by id.
+func (c *Client) GetDevice(deviceID string) (*Device, error) {
+	var device Device
+	if err := c.doAuthed("GET", "/api/collections/devices/records/"+deviceID, nil, &device); err != nil {
+		return nil, fmt.Errorf("pocketbase: get device %s: %w", deviceID, err)
+	}
+	return &device, nil
+}
+
 // SetDeviceOnline updates a device's online flag.
 func (c *Client) SetDeviceOnline(deviceID string, online bool) error {
 	err := c.doAuthed(

@@ -6,8 +6,9 @@ import (
 )
 
 type HomeAssistantConfig struct {
-	URL   string
-	Token string
+	URL     string
+	RestURL string
+	Token   string
 }
 
 func loadHomeAssistantConfig() (HomeAssistantConfig, error) {
@@ -15,12 +16,17 @@ func loadHomeAssistantConfig() (HomeAssistantConfig, error) {
 	if url == "" {
 		url = "http://localhost:8123"
 	}
+	restURL := os.Getenv("HA_REST_URL")
+	if restURL == "" {
+		restURL = "http://localhost:8123"
+	}
 	token := os.Getenv("HA_TOKEN")
 	if token == "" {
 		return HomeAssistantConfig{}, fmt.Errorf("HA_TOKEN omgevingsvariabele is niet ingesteld in docker-compose.yml")
 	}
 	return HomeAssistantConfig{
-		URL:   url,
-		Token: token,
+		URL:     url,
+		RestURL: restURL,
+		Token:   token,
 	}, nil
 }

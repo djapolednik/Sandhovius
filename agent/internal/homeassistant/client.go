@@ -3,14 +3,17 @@ package homeassistant
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
 	url        string
+	restURL    string
 	token      string
 	connection *websocket.Conn
+	httpClient *http.Client
 }
 
 type AuthMessage struct {
@@ -29,10 +32,12 @@ type BaseMessage struct {
 	Message string `json:"message,omitempty"`
 }
 
-func NewClient(haURL, haToken string) *Client {
+func NewClient(haURL, restURL, haToken string) *Client {
 	return &Client{
-		url:   haURL,
-		token: haToken,
+		url:        haURL,
+		restURL:    restURL,
+		token:      haToken,
+		httpClient: &http.Client{},
 	}
 }
 

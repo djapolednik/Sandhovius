@@ -34,8 +34,8 @@ func main() {
 	brokerURL := fmt.Sprintf("%s:%s", cfg.MQTT.Broker, cfg.MQTT.Port)
 	mqttClient := mqtt.NewClient(brokerURL, "", "", "sandhovius-local-agent")
 
-	// 4. Home Assistant WebSocket
-	haClient := homeassistant.NewClient(cfg.HomeAssistant.URL, cfg.HomeAssistant.Token)
+	// 4. Home Assistant WebSocket + REST
+	haClient := homeassistant.NewClient(cfg.HomeAssistant.URL, cfg.HomeAssistant.RestURL, cfg.HomeAssistant.Token)
 
 	// 5. PocketBase Client
 	pbClient := pocketbase.NewClient(cfg.PocketBase.URL)
