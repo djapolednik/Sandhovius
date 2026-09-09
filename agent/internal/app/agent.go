@@ -2,6 +2,9 @@ package app
 
 import (
 	"log"
+	"time"
+
+	"sandhovius/local-agent/internal/history"
 	"sandhovius/local-agent/internal/homeassistant"
 	"sandhovius/local-agent/internal/mqtt"
 	"sandhovius/local-agent/internal/pocketbase"
@@ -11,18 +14,23 @@ type Agent struct {
 	mqttClient  *mqtt.Client
 	haClient    *homeassistant.Client
 	pbClient    *pocketbase.Client
+	history     *history.Store
 	devices     *deviceCache
 	gatewayName string
 	gatewayID   string
+
+	historyRetention time.Duration
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, gatewayName string) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName string, historyRetentionDays int) *Agent {
 	return &Agent{
-		mqttClient:  mqttClient,
-		haClient:    haClient,
-		pbClient:    pbClient,
-		devices:     newDeviceCache(pbClient),
-		gatewayName: gatewayName,
+		mqttClient:       mqttClient,
+		haClient:         haClient,
+		pbClient:         pbClient,
+		history:          historyStore,
+		devices:          newDeviceCache(pbClient),
+		gatewayName:      gatewayName,
+		historyRetention: time.Duration(historyRetentionDays) * 24 * time.Hour,
 	}
 }
 
@@ -41,6 +49,8 @@ func (a *Agent) Start() error {
 	}
 
 	log.Println("[APP] Geabonneerd op MQTT topics")
+
+	go a.runHistoryCleanup()
 
 	if err := a.registerGateway(); err != nil {
 		return err
@@ -82,6 +92,30 @@ func (a *Agent) registerGateway() error {
 	return a.pbClient.SetGatewayStatus(a.gatewayID, "online")
 }
 
+// runHistoryCleanup verwijdert periodiek geschiedenis ouder dan de
+// geconfigureerde retentieperiode, zodat de lokale SQLite-database niet
+// onbeperkt blijft groeien.
+func (a *Agent) runHistoryCleanup() {
+	a.pruneHistory()
+
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		a.pruneHistory()
+	}
+}
+
+func (a *Agent) pruneHistory() {
+	deleted, err := a.history.Prune(a.historyRetention)
+	if err != nil {
+		log.Printf("[APP] Opruimen lokale geschiedenis mislukt: %v\n", err)
+		return
+	}
+	if deleted > 0 {
+		log.Printf("[APP] Lokale geschiedenis opgeruimd: %d oude rijen verwijderd\n", deleted)
+	}
+}
+
 func (a *Agent) handleMQTTMessage(topic string, payload []byte) {
 	if avail, ok := mqtt.ParseZigbeeAvailability(topic, payload); ok {
 		a.forwardZigbeeAvailability(avail)
@@ -94,10 +128,15 @@ func (a *Agent) handleMQTTMessage(topic string, payload []byte) {
 	// geen device-state (bv. zigbee2mqtt/bridge/state, of een sandhovius/* bericht)
 }
 
-// forwardZigbeeEvent vertaalt een Zigbee2MQTT state-update naar een
-// PocketBase device_state upsert. Zelfde patroon als forwardHAEvent:
-// onbekende friendly_names worden gelogd en overgeslagen.
+// forwardZigbeeEvent slaat een Zigbee2MQTT state-update lokaal op en
+// vertaalt 'm naar een PocketBase device_state upsert. De lokale write
+// gebeurt eerst en altijd — ook voor devices die (nog) niet in PocketBase
+// staan, en ongeacht of PocketBase zelf bereikbaar is.
 func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
+	if err := a.history.Record(event.FriendlyName, event.State); err != nil {
+		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.FriendlyName, err)
+	}
+
 	deviceID, found, err := a.devices.lookup(event.FriendlyName)
 	if err != nil {
 		log.Printf("[APP] Device-lookup mislukt voor %s: %v\n", event.FriendlyName, err)
@@ -156,11 +195,22 @@ func (a *Agent) listenToHAEvents() {
 	}
 }
 
-// forwardHAEvent vertaalt een HA state_changed event naar een PocketBase
-// device_state upsert. Onbekende entity_ids (nog niet geregistreerd als
-// device in PocketBase) worden gelogd en overgeslagen, niet als fout
-// behandeld.
+// forwardHAEvent slaat een HA state_changed event lokaal op en vertaalt
+// 'm naar een PocketBase device_state upsert. De lokale write gebeurt
+// eerst en altijd — ook voor entities die (nog) niet als device in
+// PocketBase staan, en ongeacht of PocketBase zelf bereikbaar is.
+// Onbekende entity_ids worden voor de PocketBase-kant gelogd en
+// overgeslagen, niet als fout behandeld.
 func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
+	state := map[string]any{
+		"state":      event.State,
+		"attributes": event.Attributes,
+	}
+
+	if err := a.history.Record(event.EntityID, state); err != nil {
+		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.EntityID, err)
+	}
+
 	deviceID, found, err := a.devices.lookup(event.EntityID)
 	if err != nil {
 		log.Printf("[APP] Device-lookup mislukt voor %s: %v\n", event.EntityID, err)
@@ -169,11 +219,6 @@ func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
 	if !found {
 		log.Printf("[APP] Onbekend device, genegeerd: %s\n", event.EntityID)
 		return
-	}
-
-	state := map[string]any{
-		"state":      event.State,
-		"attributes": event.Attributes,
 	}
 
 	if err := a.pbClient.UpsertDeviceState(deviceID, state); err != nil {
@@ -204,5 +249,10 @@ func (a *Agent) Stop() {
 	}
 	if a.haClient != nil {
 		a.haClient.Disconnect(250)
+	}
+	if a.history != nil {
+		if err := a.history.Close(); err != nil {
+			log.Printf("[APP] Kon lokale geschiedenis niet netjes sluiten: %v\n", err)
+		}
 	}
 }

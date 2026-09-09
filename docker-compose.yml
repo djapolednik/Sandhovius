@@ -9,6 +9,7 @@ volumes:
   ha_config:
   z2m_data:
   pocketbase_data:
+  agent_data:
 
 services:
   # ==========================================
@@ -80,6 +81,10 @@ services:
       - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL}
       - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD}
       - GATEWAY_NAME=Woonkamer
+      - HISTORY_DB_PATH=/data/history.db
+      - HISTORY_RETENTION_DAYS=30
+    volumes:
+      - agent_data:/data
     depends_on:
       - mosquitto
       - homeassistant
