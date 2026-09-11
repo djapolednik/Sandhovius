@@ -1,1 +1,7 @@
 .env
+
+# Go build output — the agent is built via its Dockerfile for actual
+# deployment, a local `go build` binary here is a leftover dev artifact.
+agent/main
+agent/main.exe
+agent/bin/

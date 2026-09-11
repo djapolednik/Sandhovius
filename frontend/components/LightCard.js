@@ -1,28 +1,16 @@
 'use client'
 
-export default function LightCard({ device, state, onToggle, isPending }) {
+export default function LightCard({ state, header }) {
   const raw = state?.state
   const isOn = raw === 'on'
   const isKnown = raw === 'on' || raw === 'off'
 
   return (
-    <li className="card">
-      <div className="device-card-header">
-        <div>
-          <div className="device-name">{device.name}</div>
-          <div className="device-meta">{device.online ? 'Online' : 'Offline'}</div>
-        </div>
-        <button
-          className={`btn ${isOn ? 'btn-on' : 'btn-off'}`}
-          onClick={onToggle}
-          disabled={isPending}
-        >
-          {isPending ? 'Bezig' : isOn ? 'Aan' : 'Uit'}
-        </button>
-      </div>
+    <>
+      {header}
       <div className={`status-line ${isOn ? 'status-on' : 'status-off'}`}>
         {isKnown ? (isOn ? 'Ingeschakeld' : 'Uitgeschakeld') : 'Status onbekend'}
       </div>
-    </li>
+    </>
   )
 }

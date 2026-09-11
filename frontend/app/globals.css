@@ -4,15 +4,31 @@
   --border: #e5e7eb;
   --text-primary: #111111;
   --text-secondary: #6b7280;
-  --accent: #2563eb;
+  --accent: #0891b2;
+  --accent-hover: #06b6d4;
   --accent-contrast: #ffffff;
-  --secondary: #6b7280;
   --on: #16a34a;
-  --on-contrast: #ffffff;
   --off: #9ca3af;
-  --off-contrast: #ffffff;
   --warning: #d97706;
   --warning-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger-contrast: #ffffff;
+  --danger-bg: #fee2e2;
+
+  --icon-light-bg: #fef3c7;
+  --icon-light-fg: #d97706;
+  --icon-switch-bg: #dbeafe;
+  --icon-switch-fg: #2563eb;
+  --icon-sensor-bg: #ccfbf1;
+  --icon-sensor-fg: #0d9488;
+  --icon-climate-bg: #ffe4e6;
+  --icon-climate-fg: #e11d48;
+
+  /* Vast, niet thema-afhankelijk — de header is bewust altijd een donkere
+     merk-balk, ongeacht licht/donker thema van de rest van de app. */
+  --header-bg: #0f172a;
+  --header-fg: #f1f5f9;
+  --header-fg-secondary: #94a3b8;
 }
 
 [data-theme='dark'] {
@@ -21,15 +37,25 @@
   --border: #2a2e37;
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
-  --accent: #3b82f6;
-  --accent-contrast: #ffffff;
-  --secondary: #94a3b8;
+  --accent: #22d3ee;
+  --accent-hover: #67e8f9;
+  --accent-contrast: #0f1115;
   --on: #22c55e;
-  --on-contrast: #0f1115;
   --off: #4b5563;
-  --off-contrast: #f3f4f6;
   --warning: #f59e0b;
   --warning-bg: #451a03;
+  --danger: #f87171;
+  --danger-contrast: #1a0505;
+  --danger-bg: #450a0a;
+
+  --icon-light-bg: #45330a;
+  --icon-light-fg: #fbbf24;
+  --icon-switch-bg: #1e3a5f;
+  --icon-switch-fg: #60a5fa;
+  --icon-sensor-bg: #0f3d38;
+  --icon-sensor-fg: #2dd4bf;
+  --icon-climate-bg: #4c1123;
+  --icon-climate-fg: #fb7185;
 }
 
 * {
@@ -57,10 +83,91 @@ input {
   padding: 1.5rem;
 }
 
-.login-container {
-  max-width: 340px;
-  margin: 0 auto;
-  padding-top: 4rem;
+@media (min-width: 768px) {
+  .container {
+    max-width: 900px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1100px;
+  }
+}
+
+/* Grote/4K-schermen: laat de content meegroeien i.p.v. hem vast te
+   klemmen op 1100px met veel braakliggende ruimte ernaast. */
+@media (min-width: 1600px) {
+  .container {
+    max-width: 1500px;
+  }
+}
+
+@media (min-width: 2200px) {
+  .container {
+    max-width: 2200px;
+  }
+}
+
+/* ==================== Login ==================== */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(120deg, #0f172a 0%, #0e7490 55%, #06b6d4 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-background);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+}
+
+.login-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--text-primary);
+  margin: 0 0 1.75rem;
+}
+
+.login-error {
+  color: var(--danger);
+  font-size: 0.82rem;
+  text-align: center;
+  margin: 0.75rem 0 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 0.5rem;
+  vertical-align: -2px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ==================== Header ==================== */
+
+.header-bar {
+  background: var(--header-bg);
+  color: var(--header-fg);
 }
 
 .header {
@@ -68,7 +175,9 @@ input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
 }
 
 .brand {
@@ -76,24 +185,20 @@ input {
   font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0;
+  color: var(--header-fg);
 }
 
 .gateway-name {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 1.5rem;
+  margin: 0 0 0.25rem;
 }
 
-.nav-desktop {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.nav-mobile {
-  display: none;
-  position: relative;
-  margin-left: auto;
+.realtime-status {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0 0 1.25rem;
 }
 
 .dropdown-menu {
@@ -125,21 +230,61 @@ input {
   background: var(--background);
 }
 
-.section-title {
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 1.5rem 0 0.75rem;
-}
+/* ==================== Cards ==================== */
 
 .card {
   background: var(--card-background);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.1rem 1.25rem;
+  padding: 0.85rem 0.9rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
+
+.card-clickable {
+  cursor: pointer;
+}
+
+.card-clickable:hover {
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.28);
+  transform: scale(1.01);
+}
+
+.card-clickable:active {
+  transform: scale(0.98);
+}
+
+.card-clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card-on {
+  border: 1px solid var(--on);
+  /* Groen blijft groen, maar lekt als een zachte gloed vanaf de rand naar
+     binnen (inset shadow met blur) i.p.v. een strakke, vlakke lijn. */
+  box-shadow: inset 0 0 22px -6px var(--on);
+}
+
+.card-offline {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+@keyframes card-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(8, 145, 178, 0);
+  }
+}
+
+.card-pulse {
+  animation: card-pulse 1s ease-out;
+}
+
+/* ==================== Buttons ==================== */
 
 .btn {
   border: none;
@@ -148,18 +293,29 @@ input {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
+  min-height: 44px;
+  transition: all 0.2s ease;
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
+  transform: none !important;
 }
 
 .btn-primary {
   background: var(--accent);
   color: var(--accent-contrast);
   width: 100%;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  min-height: 48px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: scale(1.02);
 }
 
 .btn-secondary {
@@ -173,18 +329,38 @@ input {
   align-items: center;
   justify-content: center;
   padding: 0.45rem;
+  min-width: 44px;
 }
 
-.btn-on {
-  background: var(--on);
-  color: var(--on-contrast);
-  min-width: 64px;
+.btn-danger {
+  background: var(--danger);
+  color: var(--danger-contrast);
 }
 
-.btn-off {
-  background: var(--off);
-  color: var(--off-contrast);
-  min-width: 64px;
+.btn-danger-text {
+  color: var(--danger);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+}
+
+.btn-plain {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+}
+
+.btn-plain:hover {
+  color: var(--text-primary);
+}
+
+.theme-toggle-button {
+  color: var(--header-fg-secondary);
+}
+
+.theme-toggle-button:hover {
+  color: var(--header-fg);
 }
 
 .input {
@@ -194,6 +370,13 @@ input {
   background: var(--card-background);
   color: var(--text-primary);
   font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.18);
 }
 
 .error-banner {
@@ -205,9 +388,56 @@ input {
   margin-bottom: 1rem;
 }
 
-.device-list {
+/* ==================== Room tabs ==================== */
+
+.room-tabs {
   display: flex;
-  flex-direction: column;
+  gap: 1.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.room-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.room-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0.5rem 0.1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.room-tab-active {
+  color: var(--accent);
+  font-weight: 700;
+  border-bottom-color: var(--accent);
+}
+
+/* ==================== Device cards ==================== */
+
+/* Vaste kaartbreedte op elk formaat, ook mobiel. Met auto-fill zijn de
+   grid-tracks exact zo breed als de card zelf, dus geen opgerekte kolom
+   met dode ruimte ernaast — enkel de opgegeven `gap` tussen cards.
+   Schaalt vanzelf door naar meer kolommen op grote/4K-schermen, zonder
+   een harde bovengrens aan het aantal kolommen; op mobiel (waar maar één
+   kolom past) staat de smalle card gecentreerd i.p.v. tegen de linkerrand. */
+.device-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 220px);
+  justify-content: center;
   gap: 0.75rem;
   list-style: none;
   padding: 0;
@@ -215,26 +445,65 @@ input {
 }
 
 .device-card-header {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.device-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.device-icon-light {
+  background: var(--icon-light-bg);
+  color: var(--icon-light-fg);
+}
+
+.device-icon-switch {
+  background: var(--icon-switch-bg);
+  color: var(--icon-switch-fg);
+}
+
+.device-icon-sensor {
+  background: var(--icon-sensor-bg);
+  color: var(--icon-sensor-fg);
+}
+
+.device-icon-climate {
+  background: var(--icon-climate-bg);
+  color: var(--icon-climate-fg);
+}
+
+.gear-button {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.35rem;
 }
 
 .device-name {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .device-meta {
   color: var(--text-secondary);
   font-size: 0.8rem;
-  margin-top: 0.15rem;
 }
 
 .status-line {
-  margin-top: 0.75rem;
+  margin-top: 0.6rem;
   font-size: 0.85rem;
   font-weight: 500;
+  text-align: center;
 }
 
 .status-on {
@@ -248,6 +517,7 @@ input {
 .sensor-readings {
   margin-top: 0.75rem;
   display: flex;
+  justify-content: center;
   gap: 1.5rem;
   flex-wrap: wrap;
 }
@@ -255,6 +525,7 @@ input {
 .reading {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .reading-label {
@@ -279,6 +550,7 @@ input {
   font-size: 0.85rem;
   font-style: italic;
   margin-top: 0.5rem;
+  text-align: center;
 }
 
 .battery-badge {
@@ -305,19 +577,319 @@ input {
   transition: width 0.2s ease;
 }
 
-/* Mobile: centered brand, hamburger menu instead of the inline button row */
-@media (max-width: 640px) {
-  .brand {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+/* ==================== Toggle switch (settings) ==================== */
 
-  .nav-desktop {
-    display: none;
-  }
+.switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: var(--off);
+  padding: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
 
-  .nav-mobile {
-    display: block;
+.switch-thumb {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.2s ease;
+}
+
+.switch-on {
+  background: var(--on);
+}
+
+.switch-on .switch-thumb {
+  transform: translateX(20px);
+}
+
+/* ==================== User menu / avatar ==================== */
+
+.header-user-slot {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.avatar-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--header-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==================== Modals ==================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.modal {
+  background: var(--card-background);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  padding: 1.25rem;
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-divider {
+  border-top: 1px solid var(--border);
+  margin: 1.1rem 0;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.form-label {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.danger-zone {
+  background: var(--danger-bg);
+  border-radius: 10px;
+  padding: 0.9rem;
+}
+
+.danger-text {
+  color: var(--danger);
+  font-size: 0.88rem;
+  margin: 0 0 0.75rem;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0;
+}
+
+.house-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.room-list-item {
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.room-list-item:last-child {
+  border-bottom: none;
+}
+
+.room-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.room-row-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.room-row-name {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 0.3rem 0.1rem;
+}
+
+.room-row-name-editable {
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.room-row-name-editable:hover {
+  background: var(--background);
+}
+
+.room-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.room-edit-form .input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+}
+
+.form-inline {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.form-inline .input {
+  flex: 1;
+}
+
+.sensor-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sensor-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.sensor-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ==================== FAB ==================== */
+
+.fab {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 1.6rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.fab:hover {
+  background: var(--accent-hover);
+  transform: scale(1.05);
+}
+
+/* ==================== Toasts ==================== */
+
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: calc(100vw - 2rem);
+}
+
+@keyframes toast-in-out {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
   }
+  10%,
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.toast {
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  /* Bewust vaste kleuren (niet de thema-variabelen) — een snackbar
+     mag altijd hoog contrast hebben, ongeacht licht/donker thema. */
+  color: #ffffff;
+  background: #1f2430;
+  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.35);
+  animation: toast-in-out 2s ease forwards;
+}
+
+.toast-error {
+  background: #b91c1c;
 }

@@ -23,6 +23,41 @@ type CommandEvent struct {
 // ctx is canceled or the connection drops, returning an error in the
 // latter case so the caller can decide whether to reconnect.
 func (c *Client) SubscribeCommands(ctx context.Context, handler func(CommandEvent)) error {
+	return c.subscribeCollection(ctx, "commands", func(data []byte) {
+		var event CommandEvent
+		if err := json.Unmarshal(data, &event); err == nil {
+			handler(event)
+		}
+	})
+}
+
+// DeviceEvent is a realtime notification about a change to a "devices"
+// record. EventType is PocketBase's own action name ("create", "update",
+// "delete").
+type DeviceEvent struct {
+	EventType string `json:"action"`
+	Record    Device `json:"record"`
+}
+
+// SubscribeDevices opens a PocketBase realtime (SSE) connection and calls
+// handler for every change on the "devices" collection — used to notice
+// when a user renames a device so the change can be mirrored into Home
+// Assistant. Blocks until ctx is canceled or the connection drops.
+func (c *Client) SubscribeDevices(ctx context.Context, handler func(DeviceEvent)) error {
+	return c.subscribeCollection(ctx, "devices", func(data []byte) {
+		var event DeviceEvent
+		if err := json.Unmarshal(data, &event); err == nil {
+			handler(event)
+		}
+	})
+}
+
+// subscribeCollection opens a PocketBase realtime (SSE) connection
+// subscribed to a single collection and calls handler with the raw JSON of
+// every matching event's "data" line. Blocks until ctx is canceled or the
+// connection drops, returning an error in the latter case so the caller can
+// decide whether to reconnect.
+func (c *Client) subscribeCollection(ctx context.Context, collectionName string, handler func(data []byte)) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/realtime", nil)
 	if err != nil {
 		return fmt.Errorf("pocketbase: build realtime request: %w", err)
@@ -52,8 +87,8 @@ func (c *Client) SubscribeCommands(ctx context.Context, handler func(CommandEven
 		case strings.HasPrefix(line, "id:"):
 			clientID := strings.TrimSpace(strings.TrimPrefix(line, "id:"))
 			if !subscribed {
-				if err := c.subscribeRealtime(clientID, []string{"commands"}); err != nil {
-					return fmt.Errorf("pocketbase: subscribe to commands: %w", err)
+				if err := c.subscribeRealtime(clientID, []string{collectionName}); err != nil {
+					return fmt.Errorf("pocketbase: subscribe to %s: %w", collectionName, err)
 				}
 				subscribed = true
 			}
@@ -63,11 +98,8 @@ func (c *Client) SubscribeCommands(ctx context.Context, handler func(CommandEven
 
 		case strings.HasPrefix(line, "data:"):
 			data := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
-			if eventName == "commands" {
-				var event CommandEvent
-				if err := json.Unmarshal([]byte(data), &event); err == nil {
-					handler(event)
-				}
+			if eventName == collectionName {
+				handler([]byte(data))
 			}
 			eventName = ""
 		}

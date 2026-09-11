@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"sandhovius/local-agent/internal/history"
@@ -23,6 +24,13 @@ type Agent struct {
 
 	historyRetention time.Duration
 
+	// deviceNames is a snapshot of each device's last-known PocketBase name,
+	// keyed by device id. Used to tell a genuine rename apart from any other
+	// field update (e.g. the agent's own online/offline flips) on the
+	// "devices" collection — see handleDeviceEvent.
+	deviceNamesMu sync.Mutex
+	deviceNames   map[string]string
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -36,6 +44,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 		history:          historyStore,
 		devices:          newDeviceCache(pbClient),
 		gatewayName:      gatewayName,
+		deviceNames:      make(map[string]string),
 		historyRetention: time.Duration(historyRetentionDays) * 24 * time.Hour,
 		ctx:              ctx,
 		cancel:           cancel,
@@ -67,6 +76,7 @@ func (a *Agent) Start() error {
 	if err := a.devices.refresh(); err != nil {
 		log.Printf("[APP] Kon device-cache niet opwarmen: %v\n", err)
 	}
+	a.warmDeviceNames()
 
 	if err := a.haClient.Connect(); err != nil {
 		return err
@@ -76,8 +86,27 @@ func (a *Agent) Start() error {
 
 	a.catchUpPendingCommands()
 	go a.listenForCommands()
+	go a.listenForDeviceChanges()
 
 	return nil
+}
+
+// warmDeviceNames snapshots every device's current name before the
+// realtime listener starts, so handleDeviceEvent has a baseline to diff
+// against and doesn't mistake "first time we see this device" for a
+// rename.
+func (a *Agent) warmDeviceNames() {
+	devices, err := a.pbClient.ListDevices()
+	if err != nil {
+		log.Printf("[APP] Kon device-namen niet opwarmen: %v\n", err)
+		return
+	}
+
+	a.deviceNamesMu.Lock()
+	for _, device := range devices {
+		a.deviceNames[device.ID] = device.Name
+	}
+	a.deviceNamesMu.Unlock()
 }
 
 // catchUpPendingCommands verwerkt commando's die al "pending" waren vóórdat
@@ -118,6 +147,100 @@ func (a *Agent) handleCommandEvent(event pocketbase.CommandEvent) {
 		return // alleen nieuwe commando's oppakken, niet onze eigen status-updates erop
 	}
 	a.handleCommand(event.Record)
+}
+
+// listenForDeviceChanges abonneert zich op de PocketBase "devices"-
+// collectie via realtime (SSE), om een naamswijziging vanuit de
+// Sandhovius-omgeving door te zetten naar Home Assistant. Blijft
+// herverbinden totdat de agent stopt.
+func (a *Agent) listenForDeviceChanges() {
+	for {
+		err := a.pbClient.SubscribeDevices(a.ctx, a.handleDeviceEvent)
+		if a.ctx.Err() != nil {
+			return // Stop() is aangeroepen
+		}
+		log.Printf("[APP] Device-stream verbroken: %v — probeer over 5s opnieuw\n", err)
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-time.After(5 * time.Second):
+		}
+	}
+}
+
+// handleDeviceEvent zet een naamswijziging van een device door naar Home
+// Assistant's entity registry, zodat de naam overal — Sandhovius,
+// PocketBase, HA — gelijk blijft. Het gaat om echte hernoemingen: elke
+// andere update (bv. de agent die zelf online/offline bijwerkt) verandert
+// de naam niet, en wordt hier genegeerd door tegen de laatst bekende naam
+// te vergelijken.
+func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
+	device := event.Record
+
+	if event.EventType == "create" && device.EntityID == "" {
+		a.provisionDeviceEntity(device)
+		return
+	}
+
+	a.deviceNamesMu.Lock()
+	previousName, seen := a.deviceNames[device.ID]
+	a.deviceNames[device.ID] = device.Name
+	a.deviceNamesMu.Unlock()
+
+	if event.EventType != "update" || !seen || previousName == device.Name {
+		return
+	}
+	if device.EntityID == "" {
+		return
+	}
+
+	if err := a.haClient.RenameEntity(device.EntityID, device.Name); err != nil {
+		log.Printf("[APP] Kon HA-naam voor %s niet bijwerken: %v\n", device.EntityID, err)
+		return
+	}
+	log.Printf("[APP] HA-naam bijgewerkt: %s -> %q\n", device.EntityID, device.Name)
+}
+
+// provisionDeviceEntity maakt automatisch een passende Home Assistant
+// helper-entity aan voor een device dat vanuit de Sandhovius-UI is
+// toegevoegd zonder zelf een entity_id op te geven — niemand hoeft dus
+// zelf iets in Home Assistant te configureren.
+//
+// light/switch/climate krijgen een input_boolean (aan/uit-relais). Voor
+// climate is dat een simpele schakelaar, geen volledige thermostaat met
+// eigen meetwaarden — dat vraagt om een generic_thermostat-platform met
+// een gekoppelde sensor (zie configuration.yaml), wat hier niet
+// automatisch wordt opgezet. sensor krijgt een input_number.
+func (a *Agent) provisionDeviceEntity(device pocketbase.Device) {
+	var entityID string
+	var err error
+
+	if device.Type == "sensor" {
+		entityID, err = a.haClient.CreateInputNumber(device.Name)
+	} else {
+		entityID, err = a.haClient.CreateInputBoolean(device.Name)
+	}
+	if err != nil {
+		log.Printf("[APP] Kon geen HA-entity aanmaken voor device %s: %v\n", device.ID, err)
+		return
+	}
+
+	if err := a.pbClient.SetDeviceEntityID(device.ID, entityID); err != nil {
+		log.Printf("[APP] Kon entity_id niet opslaan voor device %s: %v\n", device.ID, err)
+		return
+	}
+
+	a.deviceNamesMu.Lock()
+	a.deviceNames[device.ID] = device.Name
+	a.deviceNamesMu.Unlock()
+
+	// Zorgt dat de nieuwe entity_id meteen in de lookup-cache zit, i.p.v.
+	// te wachten op de eerstvolgende lookup-miss-refresh.
+	if err := a.devices.refresh(); err != nil {
+		log.Printf("[APP] Kon device-cache niet verversen na provisioning: %v\n", err)
+	}
+
+	log.Printf("[APP] HA-entity aangemaakt voor device %s: %s\n", device.ID, entityID)
 }
 
 // handleCommand voert één commando uit via Home Assistant's domein-

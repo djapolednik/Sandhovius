@@ -895,15 +895,15 @@ migrate((app) => {
       "id": "pbc_2616067426",
       "indexes": [],
       "listRule": "user = @request.auth.id",
-      "name": "gateways",
+      "name": "houses",
       "system": false,
       "type": "base",
-      "updateRule": null,
+      "updateRule": "user = @request.auth.id",
       "viewRule": "user = @request.auth.id"
     },
     {
-      "createRule": null,
-      "deleteRule": null,
+      "createRule": "@request.body.gateway.user = @request.auth.id",
+      "deleteRule": "gateway.user = @request.auth.id",
       "fields": [
         {
           "autogeneratePattern": "[a-z0-9]{15}",
@@ -990,6 +990,20 @@ migrate((app) => {
           "required": false,
           "system": false,
           "type": "bool"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "pbc_3085411453",
+          "help": "",
+          "hidden": false,
+          "id": "relation_device_room",
+          "maxSelect": 1,
+          "minSelect": 0,
+          "name": "room",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
         }
       ],
       "id": "pbc_2153001328",
@@ -998,7 +1012,7 @@ migrate((app) => {
       "name": "devices",
       "system": false,
       "type": "base",
-      "updateRule": null,
+      "updateRule": "gateway.user = @request.auth.id",
       "viewRule": "gateway.user = @request.auth.id"
     },
     {
@@ -1165,6 +1179,77 @@ migrate((app) => {
       "type": "base",
       "updateRule": null,
       "viewRule": "device.gateway.user = @request.auth.id"
+    },
+    {
+      "createRule": "@request.body.house.user = @request.auth.id",
+      "deleteRule": "house.user = @request.auth.id",
+      "fields": [
+        {
+          "autogeneratePattern": "[a-z0-9]{15}",
+          "help": "",
+          "hidden": false,
+          "id": "text3208210256",
+          "max": 15,
+          "min": 15,
+          "name": "id",
+          "pattern": "^[a-z0-9]+$",
+          "presentable": false,
+          "primaryKey": true,
+          "required": true,
+          "system": true,
+          "type": "text"
+        },
+        {
+          "cascadeDelete": false,
+          "collectionId": "pbc_2616067426",
+          "help": "",
+          "hidden": false,
+          "id": "relation1807172885",
+          "maxSelect": 0,
+          "minSelect": 0,
+          "name": "house",
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "relation"
+        },
+        {
+          "autogeneratePattern": "",
+          "help": "",
+          "hidden": false,
+          "id": "text1579384326",
+          "max": 0,
+          "min": 0,
+          "name": "name",
+          "pattern": "",
+          "presentable": false,
+          "primaryKey": false,
+          "required": false,
+          "system": false,
+          "type": "text"
+        },
+        {
+          "help": "",
+          "hidden": false,
+          "id": "number4113142680",
+          "max": null,
+          "min": null,
+          "name": "order",
+          "onlyInt": false,
+          "presentable": false,
+          "required": false,
+          "system": false,
+          "type": "number"
+        }
+      ],
+      "id": "pbc_3085411453",
+      "indexes": [],
+      "listRule": "house.user = @request.auth.id",
+      "name": "rooms",
+      "system": false,
+      "type": "base",
+      "updateRule": "house.user = @request.auth.id",
+      "viewRule": "house.user = @request.auth.id"
     }
   ];
 

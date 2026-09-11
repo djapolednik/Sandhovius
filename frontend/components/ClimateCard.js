@@ -2,9 +2,14 @@
 
 import { temperatureColor } from '../lib/temperature'
 
-export default function ClimateCard({ device, state, onToggle, isPending }) {
-  const current = state?.local_temperature ?? state?.temperature
-  const target = state?.occupied_heating_setpoint ?? state?.target_temperature
+export default function ClimateCard({ state, isOn, header }) {
+  const attrs = state?.attributes ?? {}
+  // Zigbee-achtige apparaten leggen dit plat in de state neer
+  // (local_temperature/occupied_heating_setpoint); een echte Home
+  // Assistant climate-entity draagt het genest onder attributes
+  // (current_temperature/temperature) — beide worden ondersteund.
+  const current = state?.local_temperature ?? attrs.current_temperature
+  const target = state?.occupied_heating_setpoint ?? attrs.temperature
   const hasCurrent = typeof current === 'number'
   const hasTarget = typeof target === 'number'
 
@@ -14,15 +19,11 @@ export default function ClimateCard({ device, state, onToggle, isPending }) {
     hasCurrent && hasTarget ? Math.max(0, Math.min(1, 1 - Math.abs(target - current) / 5)) : null
 
   return (
-    <li className="card">
-      <div className="device-card-header">
-        <div>
-          <div className="device-name">{device.name}</div>
-          <div className="device-meta">{device.online ? 'Online' : 'Offline'}</div>
-        </div>
-        <button className="btn btn-secondary" onClick={onToggle} disabled={isPending}>
-          {isPending ? 'Bezig' : 'Aan/uit'}
-        </button>
+    <>
+      {header}
+
+      <div className={`status-line ${isOn ? 'status-on' : 'status-off'}`}>
+        {isOn ? 'Ingeschakeld' : 'Uitgeschakeld'}
       </div>
 
       {(hasCurrent || hasTarget) && (
@@ -51,6 +52,6 @@ export default function ClimateCard({ device, state, onToggle, isPending }) {
       )}
 
       {!hasCurrent && !hasTarget && <div className="reading-empty">Geen bekende meetwaarden</div>}
-    </li>
+    </>
   )
 }

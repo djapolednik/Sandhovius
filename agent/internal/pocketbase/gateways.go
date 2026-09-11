@@ -18,7 +18,7 @@ type gatewayListResponse struct {
 // nil, nil when no gateway with that name exists yet.
 func (c *Client) FindGatewayByName(name string) (*Gateway, error) {
 	filter := url.QueryEscape(fmt.Sprintf("name='%s'", name))
-	path := fmt.Sprintf("/api/collections/gateways/records?filter=%s&perPage=1", filter)
+	path := fmt.Sprintf("/api/collections/houses/records?filter=%s&perPage=1", filter)
 
 	var resp gatewayListResponse
 	if err := c.doAuthed("GET", path, nil, &resp); err != nil {
@@ -36,7 +36,7 @@ func (c *Client) CreateGateway(name string) (*Gateway, error) {
 	var created Gateway
 	err := c.doAuthed(
 		"POST",
-		"/api/collections/gateways/records",
+		"/api/collections/houses/records",
 		map[string]any{"name": name, "select": "online"},
 		&created,
 	)
@@ -51,7 +51,7 @@ func (c *Client) CreateGateway(name string) (*Gateway, error) {
 func (c *Client) SetGatewayStatus(gatewayID, status string) error {
 	err := c.doAuthed(
 		"PATCH",
-		"/api/collections/gateways/records/"+gatewayID,
+		"/api/collections/houses/records/"+gatewayID,
 		map[string]any{"select": status},
 		nil,
 	)

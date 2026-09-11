@@ -89,29 +89,6 @@ func (c *Client) Connect() error {
 	return nil
 }
 
-func (c *Client) Auth() error {
-	msg := AuthMessage{
-		Type:        "auth",
-		AccessToken: c.token,
-	}
-	if err := c.connection.WriteJSON(msg); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) Subscribe() error {
-	msg := SubscribeMessage{
-		ID:        1,
-		Type:      "subscribe",
-		EventType: "",
-	}
-	if err := c.connection.WriteJSON(msg); err != nil {
-		return err
-	}
-	return nil
-}
-
 // ReadEvent blocks until the next message arrives on the websocket and
 // parses it. ok reports whether the message was a relevant state_changed
 // event — non-event messages (e.g. the subscribe_events confirmation)

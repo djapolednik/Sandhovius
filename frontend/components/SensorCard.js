@@ -1,26 +1,22 @@
 'use client'
 
-import { temperatureColor } from '../lib/temperature'
+import { temperatureColor, readTemperature } from '../lib/temperature'
 
-export default function SensorCard({ device, state }) {
+export default function SensorCard({ device, state, header }) {
   const occupancy = state?.occupancy ?? state?.motion
   const hasMotionReading = typeof occupancy === 'boolean'
 
-  const temperature = state?.temperature ?? state?.local_temperature
+  const temperature = readTemperature(state)
   const hasTemperatureReading = typeof temperature === 'number'
 
   const battery = state?.battery
   const hasBattery = typeof battery === 'number'
 
   return (
-    <li className="card">
-      <div className="device-card-header">
-        <div>
-          <div className="device-name">{device.name}</div>
-          <div className="device-meta">{device.online ? 'Online' : 'Offline'}</div>
-        </div>
-        {hasBattery && <div className="battery-badge">{battery}% batterij</div>}
-      </div>
+    <>
+      {header}
+
+      {hasBattery && <div className="battery-badge">{battery}% batterij</div>}
 
       {(hasMotionReading || hasTemperatureReading) && (
         <div className="sensor-readings">
@@ -46,6 +42,6 @@ export default function SensorCard({ device, state }) {
       {!hasMotionReading && !hasTemperatureReading && (
         <div className="reading-empty">Geen bekende meetwaarden</div>
       )}
-    </li>
+    </>
   )
 }
