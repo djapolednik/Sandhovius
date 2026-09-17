@@ -242,6 +242,45 @@ export default function Home() {
     }
   }
 
+  // Zelfde optimistisch patroon als toggleDevice, maar voor climate-
+  // entities: het doel zit genest onder attributes.temperature i.p.v. het
+  // vlakke state-veld dat lampen/switches gebruiken.
+  async function setDeviceTemperature(device, temperature) {
+    const stateRecord = device.expand?.device_state_via_device?.[0]
+    const optimisticState = {
+      ...stateRecord,
+      state: {
+        ...stateRecord?.state,
+        attributes: { ...stateRecord?.state?.attributes, temperature },
+      },
+    }
+
+    setDevices((prev) =>
+      prev.map((d) =>
+        d.id === device.id
+          ? { ...d, expand: { ...d.expand, device_state_via_device: [optimisticState] } }
+          : d
+      )
+    )
+    showToast(`${device.name} ingesteld op ${temperature}°C`)
+
+    setError('')
+    try {
+      const command = await pb.collection('commands').create({
+        device: device.id,
+        action: 'set_temperature',
+        payload: { temperature },
+        status: 'pending',
+      })
+      watchCommandForFailure(command.id)
+      setTimeout(fetchAll, 1500)
+    } catch (err) {
+      showToast(`Fout: ${err.message}`, 'error')
+      setError('Commando versturen mislukt: ' + err.message)
+      fetchAll()
+    }
+  }
+
   // Luistert kort mee op één specifiek commando om te zien of de agent het
   // als mislukt markeert (bv. device offline) — succes is al gedekt door
   // de optimistic toast hierboven, dus alleen falen verdient hier een
@@ -403,6 +442,7 @@ export default function Home() {
               device={device}
               rooms={roomsInHouse}
               onToggle={() => toggleDevice(device)}
+              onSetTemperature={(temperature) => setDeviceTemperature(device, temperature)}
               onOpenDetail={() => setSensorDetailDeviceId(device.id)}
               isAnimating={animatingDeviceIds.includes(device.id)}
               onSaveDevice={saveDevice}

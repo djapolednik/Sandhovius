@@ -2,6 +2,9 @@
 
 import { temperatureColor } from '../lib/temperature'
 
+// De doeltemperatuur is hier alleen af te lezen, niet in te stellen — dat
+// kan alleen via de instellingen op de achterkant (lang indrukken van de
+// kaart), zie DeviceCardBack.
 export default function ClimateCard({ state, isOn, header }) {
   const attrs = state?.attributes ?? {}
   // Zigbee-achtige apparaten leggen dit plat in de state neer
