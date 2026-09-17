@@ -243,6 +243,10 @@ input {
 
 .card-clickable {
   cursor: pointer;
+  /* Zonder dit vangt een lange press op mobiel de native tekstselectie of
+     callout-menu af, wat de long-press-naar-instellingen-gebaar verstoort. */
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .card-clickable:hover {
@@ -444,6 +448,48 @@ input {
   margin: 0;
 }
 
+/* ==================== Device card flip (front/instellingen-achterkant) ====================
+   Ingedrukt houden (of de gear-knop) draait de kaart om via een 3D-flip in
+   plaats van een los modal-venster te openen. Beide zijden zijn absoluut
+   gepositioneerd binnen eenzelfde vlak, dus de wrapper krijgt een vaste
+   min-height die ook de (compactere) instellingenkant comfortabel laat
+   passen — de voorkant centreert zijn eigen, vaak kortere inhoud verticaal
+   zodat dat niet als "afgekapt" oogt. */
+.device-card-flip {
+  perspective: 1200px;
+  min-height: 300px;
+}
+
+.device-card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.device-card-flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.device-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.device-card-face-front {
+  justify-content: center;
+}
+
+.device-card-face-back {
+  transform: rotateY(180deg);
+  overflow-y: auto;
+}
+
 .device-card-header {
   position: relative;
   display: flex;
@@ -561,6 +607,21 @@ input {
   font-size: 0.72rem;
   color: var(--text-secondary);
   white-space: nowrap;
+}
+
+.temp-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.temp-stepper .btn-icon {
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .heat-bar-track {
@@ -719,6 +780,78 @@ input {
   color: var(--danger);
   font-size: 0.88rem;
   margin: 0 0 0.75rem;
+}
+
+/* ==================== Device card back (instellingen, zie device-card-face-back) ====================
+   Compactere varianten van de modal-formulierstijlen — dezelfde velden,
+   maar passend binnen een 220px-brede kaart i.p.v. een los venster. */
+.card-back-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  height: 100%;
+}
+
+.card-back-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.card-back-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.card-back-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.form-field-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.input-compact {
+  padding: 0.4rem 0.55rem;
+  font-size: 0.85rem;
+  min-height: 34px;
+}
+
+.btn-compact {
+  min-height: 34px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.error-banner-compact {
+  background: var(--warning-bg);
+  color: var(--warning);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.danger-zone-compact {
+  background: var(--danger-bg);
+  border-radius: 8px;
+  padding: 0.55rem;
+}
+
+.danger-text-compact {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem;
+}
+
+.card-back-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
 }
 
 .settings-row {

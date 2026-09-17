@@ -1,0 +1,59 @@
+:root {
+  --background: #f5f5f7;
+  --card-background: #ffffff;
+  --border: #e5e7eb;
+  --text-primary: #111111;
+  --text-secondary: #6b7280;
+  --accent: #0891b2;
+  --accent-hover: #06b6d4;
+  --accent-contrast: #ffffff;
+  --on: #16a34a;
+  --off: #9ca3af;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --danger: #dc2626;
+  --danger-contrast: #ffffff;
+  --danger-bg: #fee2e2;
+
+  --icon-light-bg: #fef3c7;
+  --icon-light-fg: #d97706;
+  --icon-switch-bg: #dbeafe;
+  --icon-switch-fg: #2563eb;
+  --icon-sensor-bg: #ccfbf1;
+  --icon-sensor-fg: #0d9488;
+  --icon-climate-bg: #ffe4e6;
+  --icon-climate-fg: #e11d48;
+
+  /* Vast, niet thema-afhankelijk — de header is bewust altijd een donkere
+     merk-balk, ongeacht licht/donker thema van de rest van de app. */
+  --header-bg: #0f172a;
+  --header-fg: #f1f5f9;
+  --header-fg-secondary: #94a3b8;
+}
+
+[data-theme='dark'] {
+  --background: #0f1115;
+  --card-background: #1c1f26;
+  --border: #2a2e37;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --accent: #22d3ee;
+  --accent-hover: #67e8f9;
+  --accent-contrast: #0f1115;
+  --on: #22c55e;
+  --off: #4b5563;
+  --warning: #f59e0b;
+  --warning-bg: #451a03;
+  --danger: #f87171;
+  --danger-contrast: #1a0505;
+  --danger-bg: #450a0a;
+
+  --icon-light-bg: #45330a;
+  --icon-light-fg: #fbbf24;
+  --icon-switch-bg: #1e3a5f;
+  --icon-switch-fg: #60a5fa;
+  --icon-sensor-bg: #0f3d38;
+  --icon-sensor-fg: #2dd4bf;
+  --icon-climate-bg: #4c1123;
+  --icon-climate-fg: #fb7185;
+}

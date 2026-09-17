@@ -1,0 +1,357 @@
+/* ==================== Cards ==================== */
+
+.card {
+  background: var(--card-background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 0.9rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.card-clickable {
+  cursor: pointer;
+  /* Zonder dit vangt een lange press op mobiel de native tekstselectie of
+     callout-menu af, wat de long-press-naar-instellingen-gebaar verstoort. */
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.card-clickable:hover {
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.28);
+  transform: scale(1.01);
+}
+
+.card-clickable:active {
+  transform: scale(0.98);
+}
+
+.card-clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card-on {
+  border: 1px solid var(--on);
+  /* Groen blijft groen, maar lekt als een zachte gloed vanaf de rand naar
+     binnen (inset shadow met blur) i.p.v. een strakke, vlakke lijn. */
+  box-shadow: inset 0 0 22px -6px var(--on);
+}
+
+.card-offline {
+  opacity: 0.5;
+  filter: grayscale(0.6);
+}
+
+@keyframes card-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(8, 145, 178, 0);
+  }
+}
+
+.card-pulse {
+  animation: card-pulse 1s ease-out;
+}
+
+/* ==================== Device cards ==================== */
+
+/* Vaste kaartbreedte op elk formaat, ook mobiel. Met auto-fill zijn de
+   grid-tracks exact zo breed als de card zelf, dus geen opgerekte kolom
+   met dode ruimte ernaast — enkel de opgegeven `gap` tussen cards.
+   Schaalt vanzelf door naar meer kolommen op grote/4K-schermen, zonder
+   een harde bovengrens aan het aantal kolommen; op mobiel (waar maar één
+   kolom past) staat de smalle card gecentreerd i.p.v. tegen de linkerrand. */
+.device-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 220px);
+  justify-content: center;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ==================== Device card flip (front/instellingen-achterkant) ====================
+   Ingedrukt houden (of de gear-knop) draait de kaart om via een 3D-flip in
+   plaats van een los modal-venster te openen. Beide zijden zijn absoluut
+   gepositioneerd binnen eenzelfde vlak, dus de wrapper krijgt een vaste
+   min-height die ook de (compactere) instellingenkant comfortabel laat
+   passen — de voorkant centreert zijn eigen, vaak kortere inhoud verticaal
+   zodat dat niet als "afgekapt" oogt. */
+.device-card-flip {
+  perspective: 1200px;
+  min-height: 300px;
+}
+
+.device-card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.device-card-flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.device-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.device-card-face-front {
+  justify-content: center;
+}
+
+.device-card-face-back {
+  transform: rotateY(180deg);
+  overflow-y: auto;
+}
+
+.device-card-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.device-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.device-icon-light {
+  background: var(--icon-light-bg);
+  color: var(--icon-light-fg);
+}
+
+.device-icon-switch {
+  background: var(--icon-switch-bg);
+  color: var(--icon-switch-fg);
+}
+
+.device-icon-sensor {
+  background: var(--icon-sensor-bg);
+  color: var(--icon-sensor-fg);
+}
+
+.device-icon-climate {
+  background: var(--icon-climate-bg);
+  color: var(--icon-climate-fg);
+}
+
+.gear-button {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.35rem;
+}
+
+.device-name {
+  font-weight: 700;
+}
+
+.device-meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.status-line {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.status-on {
+  color: var(--on);
+}
+
+.status-off {
+  color: var(--text-secondary);
+}
+
+.sensor-readings {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.reading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.reading-label {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.reading-value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 0.1rem;
+}
+
+.reading-alert {
+  color: var(--warning);
+}
+
+.reading-empty {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.battery-badge {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.temp-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.temp-stepper .btn-icon {
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.heat-bar-track {
+  margin-top: 0.85rem;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.heat-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--warning));
+  transition: width 0.2s ease;
+}
+
+/* ==================== Device card back (instellingen, zie device-card-face-back) ====================
+   Compactere varianten van de modal-formulierstijlen — dezelfde velden,
+   maar passend binnen een 220px-brede kaart i.p.v. een los venster. */
+.card-back-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  height: 100%;
+}
+
+.card-back-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.card-back-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.card-back-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.form-field-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.input-compact {
+  padding: 0.4rem 0.55rem;
+  font-size: 0.85rem;
+  min-height: 34px;
+}
+
+.btn-compact {
+  min-height: 34px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.error-banner-compact {
+  background: var(--warning-bg);
+  color: var(--warning);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.danger-zone-compact {
+  background: var(--danger-bg);
+  border-radius: 8px;
+  padding: 0.55rem;
+}
+
+.danger-text-compact {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem;
+}
+
+.card-back-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+/* ==================== Sensor detail modal ==================== */
+
+.sensor-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sensor-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.sensor-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

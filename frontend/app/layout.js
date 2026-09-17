@@ -1,5 +1,10 @@
 import Script from 'next/script'
-import './globals.css'
+import './styles/theme.css'
+import './styles/base.css'
+import './styles/login.css'
+import './styles/rooms.css'
+import './styles/devices.css'
+import './styles/components.css'
 import { ThemeProvider } from './ThemeContext'
 
 export const metadata = {
