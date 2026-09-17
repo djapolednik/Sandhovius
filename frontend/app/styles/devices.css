@@ -261,7 +261,7 @@
 .heat-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--accent), var(--warning));
-  transition: width 0.2s ease;
+  transition: width 0.2s ease, background-size 0.2s ease;
 }
 
 /* ==================== Device card back (instellingen, zie device-card-face-back) ====================

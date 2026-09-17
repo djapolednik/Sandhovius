@@ -50,7 +50,19 @@ export default function ClimateCard({ state, isOn, header }) {
 
       {heatingIntensity !== null && (
         <div className="heat-bar-track">
-          <div className="heat-bar-fill" style={{ width: `${heatingIntensity * 100}%` }} />
+          <div
+            className="heat-bar-fill"
+            style={{
+              width: `${heatingIntensity * 100}%`,
+              // Het gradient staat op de vulling, maar moet ogen alsof het
+              // over de hele track loopt (links altijd koud, rechts altijd
+              // warm) — niet opnieuw uitgerekt over de eigen (krimpende/
+              // groeiende) breedte van de vulling. Door het canvas te
+              // schalen naar de volledige trackbreedte i.p.v. 100% van de
+              // vulling zelf, verandert alleen hoeveel ervan zichtbaar is.
+              backgroundSize: heatingIntensity > 0 ? `${100 / heatingIntensity}% 100%` : '100% 100%',
+            }}
+          />
         </div>
       )}
 

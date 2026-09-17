@@ -246,7 +246,8 @@ func (a *Agent) provisionDeviceEntity(device pocketbase.Device) {
 // handleCommand voert één commando uit via Home Assistant's domein-
 // agnostische homeassistant.<action> services (turn_on/turn_off/toggle),
 // die werken voor licht, switches, climate, input_boolean, etc. zonder dat
-// de agent het specifieke domein van het device hoeft te kennen.
+// de agent het specifieke domein van het device hoeft te kennen. set_temperature
+// is de uitzondering — die bestaat alleen binnen het climate-domein.
 func (a *Agent) handleCommand(cmd pocketbase.Command) {
 	if cmd.Status != "pending" {
 		return
@@ -265,7 +266,15 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		return
 	}
 
-	if err := a.haClient.CallService("homeassistant", cmd.Action, device.EntityID, cmd.Payload); err != nil {
+	// set_temperature bestaat niet als domein-agnostische "homeassistant"-
+	// service — dat moet naar climate.set_temperature, specifiek voor
+	// climate-entities.
+	domain := "homeassistant"
+	if cmd.Action == "set_temperature" {
+		domain = "climate"
+	}
+
+	if err := a.haClient.CallService(domain, cmd.Action, device.EntityID, cmd.Payload); err != nil {
 		log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
 		a.failCommand(cmd.ID, err)
 		return
