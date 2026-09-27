@@ -126,11 +126,6 @@
     color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.device-icon-large {
-  width: 64px;
-  height: 64px;
-}
-
 /* De stand van een tegel: groot woord of groot getal, met een korte
    regel eronder (soort apparaat, of de kamer op Home). Neemt de vrije
    ruimte in, zodat "Details" altijd onderaan staat. */
@@ -191,13 +186,6 @@
   outline-offset: 2px;
 }
 
-/* De aan-knop zweeft rechtsboven, net als het tandwiel van de
-   thermostaat: de naam loopt eromheen. */
-.tile-top-float {
-  float: right;
-  margin: -0.1rem -0.3rem 0 0.4rem;
-}
-
 /* Onderrand: de stand, als grootste tekst van de tegel. */
 .device-state-row {
   display: flex;
@@ -221,8 +209,71 @@
   color: var(--text-secondary);
 }
 
+/* "Aan" in de gewone tekstkleur (wit op zwart, zwart op mist): de gloed
+   en het oplichtende icoon zeggen al dat de lamp brandt. */
 .device-state-word-on {
-  color: var(--on-text);
+  color: var(--text-primary);
+}
+
+/* ==================== Lamp: groot icoon en warm licht ==================== */
+
+.lamp-visual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  /* Uit: rustig terug naar neutraal, even traag als de gloed dooft. */
+  transition:
+    background-color 1.6s ease-in,
+    color 1.6s ease-in;
+}
+
+.card-lit .lamp-visual {
+  background: var(--lamp-icon-bg);
+  color: var(--lamp-icon-fg);
+  transition:
+    background-color 1.2s cubic-bezier(0.3, 0, 0.2, 1),
+    color 1.2s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+/* De gloed: warm licht dat vanachter het icoon de tegel in straalt. Hij
+   ligt onder de inhoud (eerste laag in de tegel) en volgt de ronde hoeken.
+   Aan: hij zwelt traag op, eerst zacht en dan voller, zoals een gloeidraad
+   die opwarmt. Uit: hij dooft nog trager. */
+.tile-light {
+  isolation: isolate;
+}
+
+.tile-light > :not(.device-card-action) {
+  position: relative;
+}
+
+.tile-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 3.4rem 3.4rem, var(--lamp-glow) 0, transparent 70%);
+  opacity: 0;
+  transform: scale(0.92);
+  transform-origin: 3.4rem 3.4rem;
+  pointer-events: none;
+  transition:
+    opacity 1.8s ease-in,
+    transform 1.8s ease-in;
+}
+
+.card-lit::before {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 1.2s cubic-bezier(0.3, 0, 0.2, 1),
+    transform 1.4s cubic-bezier(0.3, 0, 0.2, 1);
 }
 
 .device-state-word-offline {
@@ -236,29 +287,6 @@
   font-size: 0.9rem;
   line-height: 1.35;
   color: var(--text-secondary);
-}
-
-/* De ronde aan-knop: uit is een rustig rondje, aan licht op in Signal
-   Green met een zwart symbool (10.8:1 in beide thema's). Puur visueel —
-   de hele tegel is de knop. */
-.power-indicator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--text-secondary);
-  transition:
-    background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.power-indicator-on {
-  background: var(--on);
-  color: var(--on-contrast);
 }
 
 /* Offline: alleen het icoon vervaagt. Laatst bekende waarden blijven op
@@ -647,6 +675,19 @@
   .dial-value,
   .dial-knob {
     transition: none;
+  }
+
+  .tile-light::before,
+  .card-lit::before {
+    transform: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .lamp-visual,
+  .card-lit .lamp-visual {
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
   }
 }
 

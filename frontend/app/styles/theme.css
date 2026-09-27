@@ -29,6 +29,12 @@
   /* De zachte blauwe gloed van het merkblad — alleen rond de thermostaat-
      draaiknop, nergens anders. */
   --glow: rgba(0, 102, 255, 0.3);
+  /* Warm lamplicht: de gloed in een tegel van een lamp die aan staat, en
+     het icoon dat mee oplicht. Net als het blauw van de thermostaat een
+     echte lichtbron, geen versiering. */
+  --lamp-glow: rgba(255, 170, 60, 0.42);
+  --lamp-icon-bg: #fff1d6;
+  --lamp-icon-fg: #b45309;
 
   /* Signal Green: "dit staat aan". */
   --on: #04d800;
@@ -72,6 +78,9 @@
   --accent-ring: rgba(0, 102, 255, 0.38);
   --accent-pulse: rgba(0, 102, 255, 0.55);
   --glow: rgba(0, 102, 255, 0.5);
+  --lamp-glow: rgba(255, 166, 64, 0.34);
+  --lamp-icon-bg: #3a2a14;
+  --lamp-icon-fg: #ffc46b;
 
   --on: #04d800;
   --on-contrast: #000000;

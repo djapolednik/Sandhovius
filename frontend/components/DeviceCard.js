@@ -4,7 +4,7 @@ import { memo, useRef } from 'react'
 import LightCard from './LightCard'
 import SensorCard from './SensorCard'
 import ClimateCard from './ClimateCard'
-import { ArrowUpRightIcon, GearIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
+import { ArrowUpRightIcon, GearIcon, deviceTypeIcon } from '../lib/icons'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
@@ -66,6 +66,10 @@ export default memo(function DeviceCard({
   // tik iets doet. Een sensor opent met een tik zijn details (laatst
   // bekende waarden blijven daar leesbaar).
   const canToggle = isToggleable && isOnline && !isPairing && !setupFailed
+  // Een lamp die aan staat licht op: een warme gloed in de tegel (zie
+  // .card-lit). Alleen bij een lamp — een stopcontact is geen lichtbron —
+  // en alleen als we de stand zeker weten (online).
+  const isLit = device.type === 'light' && canToggle && isOn
   const opensDetails = device.type === 'sensor' && !isPairing && !setupFailed
   const isClickable = canToggle || opensDetails
 
@@ -126,8 +130,8 @@ export default memo(function DeviceCard({
     </button>
   )
 
-  // De thermostaat houdt zijn tandwiel rechtsboven; de andere tegels tonen
-  // daar hun stand (de aan-knop) en hebben "Details" onderin.
+  // De thermostaat houdt zijn tandwiel rechtsboven; de andere tegels hebben
+  // "Details" onderin.
   const climateHeader = (
     <div className="tile-top">
       {/* Vóór de naam in de DOM: het tandwiel zweeft rechts (float) en de
@@ -141,19 +145,6 @@ export default memo(function DeviceCard({
       >
         <GearIcon width="20" height="20" />
       </button>
-      <span className="tile-name">{device.name}</span>
-    </div>
-  )
-
-  // De ronde aan-knop rechtsboven is puur visueel: hij vertelt dat tikken
-  // schakelt; de echte knop met aria-pressed is de hele tegel.
-  const lightHeader = (
-    <div className="tile-top">
-      {canToggle && (
-        <span className={`power-indicator tile-top-float ${isOn ? 'power-indicator-on' : ''}`} aria-hidden="true">
-          <PowerIcon />
-        </span>
-      )}
       <span className="tile-name">{device.name}</span>
     </div>
   )
@@ -189,7 +180,7 @@ export default memo(function DeviceCard({
         state={state}
         isOnline={isOnline}
         offlineText={offlineText}
-        header={lightHeader}
+        header={plainHeader}
         caption={caption}
         Icon={Icon}
         footer={detailsChip}
@@ -225,7 +216,7 @@ export default memo(function DeviceCard({
       <div
         className={`panel tile tile-${device.type} ${isAnimating ? 'card-pulse' : ''} ${
           isClickable ? 'card-clickable' : ''
-        } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
+        } ${isLit ? 'card-lit' : ''} ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
           isPairing || setupFailed ? 'card-pairing' : ''
         }`}
         onPointerDown={startPress}
