@@ -87,6 +87,7 @@ func (a *Agent) Start() error {
 	a.catchUpPendingCommands()
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
+	go a.runHeartbeat()
 
 	return nil
 }
@@ -314,6 +315,32 @@ func (a *Agent) registerGateway() error {
 
 	a.gatewayID = gateway.ID
 	return a.pbClient.SetGatewayStatus(a.gatewayID, "online")
+}
+
+// heartbeatInterval is hoe vaak de agent laat weten dat de box leeft. De
+// PWA noemt de box onbereikbaar na drie gemiste slagen (zie
+// HEARTBEAT_STALE_MS in frontend/lib/connection.js) — pas die mee aan als
+// je dit verandert.
+const heartbeatInterval = 30 * time.Second
+
+// runHeartbeat zet de gateway elke heartbeatInterval opnieuw op "online".
+// PocketBase ververst last_seen bij elke update, ook als de waarde gelijk
+// blijft, dus last_seen wordt zo een hartslag. Alleen een nette Stop()
+// zet de status op "offline"; bij stroomuitval of een crash is het
+// uitblijven van deze slag het enige signaal dat de PWA krijgt.
+func (a *Agent) runHeartbeat() {
+	ticker := time.NewTicker(heartbeatInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-ticker.C:
+			if err := a.pbClient.SetGatewayStatus(a.gatewayID, "online"); err != nil {
+				log.Printf("[APP] Hartslag naar PocketBase mislukt: %v\n", err)
+			}
+		}
+	}
 }
 
 // runHistoryCleanup verwijdert periodiek geschiedenis ouder dan de
