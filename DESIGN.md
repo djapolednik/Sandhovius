@@ -151,12 +151,14 @@ components:
     rounded: "{rounded.pill}"
     size: "52px"
   room-tab:
-    textColor: "{colors.quiet-slate}"
+    backgroundColor: "{colors.panel-white}"
+    textColor: "{colors.ink-black}"
     typography: "{typography.body}"
     rounded: "{rounded.pill}"
-    height: "44px"
+    height: "48px"
   room-tab-active:
-    textColor: "{colors.ink-black}"
+    backgroundColor: "{colors.electric-blue}"
+    textColor: "{colors.electric-blue-contrast}"
   switch:
     backgroundColor: "{colors.resting-gray}"
     rounded: "{rounded.pill}"
@@ -164,11 +166,19 @@ components:
     height: "28px"
   switch-on:
     backgroundColor: "{colors.signal-green}"
-  fab:
+  bottom-nav:
+    backgroundColor: "{colors.panel-white}"
+    textColor: "{colors.quiet-slate}"
+    rounded: "{rounded.pill}"
+    height: "64px"
+  bottom-nav-active:
     backgroundColor: "{colors.electric-blue}"
     textColor: "{colors.electric-blue-contrast}"
+  details-chip:
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.ink-black}"
     rounded: "{rounded.pill}"
-    size: "60px"
+    height: "44px"
   modal:
     backgroundColor: "{colors.panel-white}"
     rounded: "{rounded.panel}"
@@ -189,30 +199,31 @@ components:
 
 Walk into a dark house in the evening and you know at once what is on: the lamp that glows, the thermostat's small light, everything else resting in the dark. Sandhovius works the same way. The surfaces are calm and quiet: black at night, soft mist by day. Only the things that are on light up: a power button that burns Signal Green, and the one live dial that glows Electric Blue. You never have to read to know the state of the house; you see it, the way you see a lit window from the street.
 
-The app is still a set of familiar household controls, arranged by room, and the user should never feel they are "using a smart-home system". They are turning on the kitchen light. The layout is a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with one big word ("Aan" or "Uit") and a round power button. The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, the power button lights up over 0.4s, and a tile that just changed pulses once in Electric Blue. Settings sit behind the gear (or a long-press) in a sheet and never crowd a tile.
+The app is still a set of familiar household controls, arranged by room, and the user should never feel they are "using a smart-home system". They are turning on the kitchen light. The app is made for a phone or an iPad in the hand, so its navigation sits at the bottom, within reach of the thumb: **Home** (how the house is doing, favourites and the thermostat), **Kamers** (every device, room by room) and **Instellingen**. The screens are a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with one big word ("Aan" or "Uit") and a round power button. The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, the power button lights up over 0.4s, and a tile that just changed pulses once in Electric Blue. Everything else about a device sits behind "Details" (or a long-press) in a sheet and never crowds a tile.
 
-**The tile is the state.** A lamp that is on is unmistakable from across the room: the power button burns green with a black symbol, "Aan" is the largest word, and the tile gets a green edge. Off is quiet: a gray button, "Uit" in the secondary color.
+**The tile is the state.** A lamp that is on is unmistakable from across the room: the power button burns green with a black symbol and "Aan" is the largest word, in green. The tile itself stays calm. Off is quiet: a gray button, "Uit" in the secondary color.
 
 This is explicitly **not** a Home Assistant dashboard, which is dense, entity-centric and built for power users. It is not a generic SaaS admin (sidebars, data tables, KPI tiles). And although it is dark, it is not a techy neon console: there is exactly one glow per screen, glassmorphism is banned, and there are no sci-fi decorations.
 
 **Key Characteristics:**
+- Navigation at the bottom, in thumb reach: Home, Kamers, Instellingen, each with icon and word
 - A bento of rounded panels (28px): a house panel plus one tile per device, sized by the control it needs
 - State is readable at a glance: a green power button with "Aan" for on, a quiet tile with "Uit" for off, text for offline, amber for attention
 - One glow per screen: the thermostat dial's soft Electric Blue light, only while heating is on
 - Connection is always honest: "Verbonden met je huis" when everything works, a plain-language notice when it doesn't
 - Light and dark themes are equal citizens: black with dark panels at night, mist with white panels by day
 - One friendly geometric family (Urbanist), sentence case throughout, never uppercase labels
-- Generous touch targets (44px minimum, 52px for primary actions and thermostat steps, 60px for the + button)
+- Generous touch targets (44px minimum, 48px for room pills, 52px for primary actions and thermostat steps, 56px for the navigation items)
 
 ## Colors
 
 A black-and-mist palette from the brand sheet, with one interactive voice (Electric Blue), one "on" signal (Signal Green) and a small, fixed vocabulary of state colors.
 
 ### Primary
-- **Electric Blue** (`electric-blue`): the single interactive voice. It is used for primary buttons, the active thermostat mode, the dial's value arc and knob, focus rings, input focus, the dot under the active room, the + button and the "just changed" pulse. White text on it is 4.8:1. As *text* it stays `electric-blue-text` in the light theme and lightens to `electric-blue-text-dark` on black (5.9:1 on a night panel). Soft rings and the pulse use the per-theme `--accent-ring` / `--accent-pulse` tokens; the dial's glow uses `--glow`. None of them are hard-coded rgba.
+- **Electric Blue** (`electric-blue`): the single interactive voice. It is used for primary buttons, the active thermostat mode, the dial's value arc and knob, focus rings, input focus, the active room pill, the active navigation item, "Toevoegen" and the "just changed" pulse. White text on it is 4.8:1. As *text* it stays `electric-blue-text` in the light theme and lightens to `electric-blue-text-dark` on black (5.9:1 on a night panel). Soft rings and the pulse use the per-theme `--accent-ring` / `--accent-pulse` tokens; the dial's glow uses `--glow`. None of them are hard-coded rgba.
 
 ### State colors
-- **Signal Green** (`signal-green`): means "this device is on". It fills the power indicator (with a black symbol, `signal-green-contrast`, 10.8:1 in both themes), colors the on-tile border, the device-state switch track and the count badges in the house summary. It fails as text on white (1.9:1), so as text it is **Deep Leaf** (`deep-leaf`, 5.1:1+) in the light theme and Signal Green itself on black. It is never used for success messages, app settings or decoration: the dark-mode switch in Instellingen uses Electric Blue, because a theme is not device state.
+- **Signal Green** (`signal-green`): means "this device is on". It fills the power indicator (with a black symbol, `signal-green-contrast`, 10.8:1 in both themes) and the count badges in the house summary, and colors "Aan". It never fills a whole tile. It fails as text on white (1.9:1), so as text it is **Deep Leaf** (`deep-leaf`, 5.1:1+) in the light theme and Signal Green itself on black. It is never used for success messages, app settings or decoration: the dark-mode and "Op Home tonen" switches use Electric Blue, because a theme or a favourite is not device state.
 - **Resting Gray** (`resting-gray` / `-dark`): the off track of a switch, and the dial's arc when heating is off.
 - **Amber Notice** (`amber-notice` with `amber-notice-bg`): something needs attention but is not broken, such as the connection notices, recoverable errors in banners and the low-battery badge.
 - **Alarm Red** (`alarm-red` with `alarm-red-bg`): destructive actions and danger zones only.
@@ -245,11 +256,13 @@ Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, s
 ### Hierarchy
 - **Display** (600, 2.5rem, −0.03em): the login title only.
 - **Dial** (600, 3.4rem, −0.04em): the thermostat target inside the dial, the largest number in the app.
-- **Headline** (600, 1.75rem, −0.02em): the house name, which is the page's h1. The date in the top bar is 1.35rem (1.6rem on wide screens) at weight 500 and is not a heading.
-- **State** (600, 2rem, −0.02em): "Aan"/"Uit" on light tiles, the count in the house summary. The sensor temperature is 2.75rem.
+- **Page title** (600, 2rem, −0.03em): the h1 of each tab ("Welkom thuis", "Kamers", "Instellingen"). On Home the date sits above it at 1rem/500 in Quiet Slate.
+- **Headline** (600, 1.75rem, −0.02em): the house name in the house panel (an h2).
+- **State** (600, 2.4rem, −0.02em): "Aan"/"Uit" on light tiles. The sensor temperature is 2.75rem, the house-summary count 2rem.
 - **Title** (600, 1.35rem): modal and sheet titles.
-- **Body** (500–600, 0.95–1.05rem): tile names (600, 1rem), tabs, buttons, inputs, status lines.
-- **Meta** (500, 0.85–0.95rem): the connection line, labels, "Laatst aan", dial scale and "Nu".
+- **Section** (600, 1.15rem): section headings on Home ("Favorieten", "Temperatuur") and the "N apparaten" count on Kamers.
+- **Body** (500–600, 0.95–1.05rem): tile names (600, 1rem), room pills, buttons, inputs, status lines.
+- **Meta** (500, 0.85–0.95rem): the connection line, labels, tile captions, navigation labels, "Laatst aan", dial scale and "Nu".
 
 ### Named Rules
 **The Readings Are Loudest Rule.** On a tile, the value a person came to check (on/off state, temperature, the thermostat target) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use the Dutch decimal comma with one decimal ("21,5°", `formatTemperature`).
@@ -260,15 +273,23 @@ Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, s
 
 ## Layout
 
-The page is centered on `--content-max` (640px on phones, 1000px from 768px, 1240px from 1200px, 1480px from 1600px) with 1rem side padding (1.5rem from 768px), extra room at the bottom for the + button, and safe-area insets.
+The page is centered on `--content-max` (640px on phones, 1000px from 768px, 1240px from 1200px, 1480px from 1600px) with 1rem side padding (1.5rem from 768px), extra room at the bottom for the navigation, and safe-area insets.
 
-**Top bar** (on the page itself, not a colored bar): the date on the left ("Zondag 27 september"), the room tabs, and the avatar on the right. On phones the date and avatar share the first row and the tabs get their own full-width, horizontally scrolling row (no visible scrollbar; the edge fades where more tabs are hidden; the active tab scrolls into view). From 900px the tabs sit in the middle of one row.
+**Navigation** sits at the bottom: a floating pill bar (max 26rem wide, centered, above the safe area) with three items, **Home**, **Kamers** and **Instellingen**, each an icon plus a word. The tab lives in the URL hash (`#kamers`), so the phone's back button steps between tabs and a reload keeps your place.
 
-**Dashboard:** from 900px, a two-column grid with the house panel as a fixed (sticky) column of 15–18rem on the left and the device bento beside it. Below 900px they stack, with the house panel first. The house panel stands in for the weather tile in the inspiration, but carries real information: the house name, the connection line or notice, and the house summary ("3 staan aan" with room chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable).
+**Page head:** each tab opens with a large title on the page itself (no colored bar) and at most one action on the right: the date above "Welkom thuis" on Home, "+ Toevoegen" on Kamers.
+
+**Home:** the house panel, then **Favorieten** (devices marked "Op Home tonen", with their room as the caption; a short hint when there are none), then **Temperatuur** (every thermostat, always shown). Favourites come first because they are the quick switches; the thermostat panel is tall.
+
+**Kamers:** a horizontally scrolling row of filled room pills (no visible scrollbar; the edge fades where more pills are hidden; the active pill scrolls into view), "N apparaten", then that room's bento.
+
+**Instellingen:** stacked panels (max 40rem): Huis (opens house and rooms), Weergave (dark mode), Account (who is logged in, Uitloggen).
+
+**Home on wide screens:** from 900px (iPad landscape and up), a two-column grid with the house panel as a fixed (sticky) column of 15–18rem on the left and the sections beside it; the device area always takes the right column, even while the house panel is still loading. Below 900px they stack, with the house panel first. The house panel stands in for the weather tile in the inspiration, but carries real information: the house name, the connection line or notice, and the house summary ("3 staan aan" with room chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable).
 
 **Device bento:** fluid columns of at least 10.5rem (`repeat(auto-fill, minmax(min(10.5rem, 100%), 1fr))`, `grid-auto-flow: dense`) with 0.9rem gaps, which gives two columns on a phone. Tiles are at least 12rem tall and equally tall within a row. The thermostat spans two columns once there are two (container query at 21.9rem), and also two rows once there are three columns (33.3rem). The container queries mean that at 200% text it falls back to one full-width column instead of forcing a phantom column.
 
-Overlays are centered modals (max 420px wide) on wide screens and **bottom sheets** on phones (≤480px: full width, 28px top corners, anchored to the bottom, safe-area padding), so forms sit in thumb reach. Toasts stack above the + button on phones and at the top right from 768px. While loading, four breathing tile-shaped placeholders hold the grid, the first shaped like the thermostat.
+Overlays are centered modals (max 420px wide) on wide screens and **bottom sheets** on phones (≤480px: full width, 28px top corners, anchored to the bottom, safe-area padding), so forms sit in thumb reach. Toasts stack above the navigation on phones and at the top right from 768px. While loading, four breathing tile-shaped placeholders hold the grid, the first shaped like the thermostat.
 
 Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg 1.25rem, xl 1.5rem.
 
@@ -277,17 +298,16 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 **Surface steps, one glow.** Depth comes from surface steps rather than shadows: page < panel < inset. In the light theme panels rest on a soft, diffuse shadow (`--shadow-panel`). On black there are no shadows at all; dark panels carry a 1px hairline instead. The single light effect is the dial's glow.
 
 ### Shadow Vocabulary
-- **Panel** (light only: `0 1px 2px rgba(0,0,0,0.04), 0 14px 32px -20px rgba(0,0,0,0.16)`): every panel, tile and the avatar at rest.
+- **Panel** (light only: `0 1px 2px rgba(0,0,0,0.04), 0 14px 32px -20px rgba(0,0,0,0.16)`): every panel, tile and inactive room pill at rest.
 - **Dial glow** (a blurred disc of `--glow` behind the dial, `blur(32px)`, fading in over 0.6s): only while heating is on.
 - **Change pulse** (an Electric Blue ring expanding 0 to 14px and fading over 1s): plays once when a tile changes.
-- **Menu** (`0 16px 40px -16px rgba(0,0,0,0.35)`): the account menu.
-- **+ button** (`0 12px 28px -10px var(--glow)`): a faint blue shadow under the one primary action.
+- **Navigation** (`0 12px 36px -14px rgba(0,0,0,0.35)`; on black a hairline with a deeper shadow): the bottom bar floats above the content.
 - **Toast** (`0 12px 28px -10px rgba(0,0,0,0.45)`).
 - **Modal / sheet** (`0 24px 56px -16px rgba(0,0,0,0.45)`) over a 55% black scrim.
 - **Login** (a large blurred Electric Blue disc behind the login panel, 35% light / 45% dark): the brand sheet's glow as the first thing you see.
 
 ### Named Rules
-**The One Glow Rule.** Each screen has at most one glowing element: the most important *live* control, which on the dashboard is the thermostat dial while it heats. Everything else is flat. "On" is shown by a filled green button and a green edge, not by light. A second glow turns the room into a neon console.
+**The One Glow Rule.** Each screen has at most one glowing element: the most important *live* control, which on the dashboard is the thermostat dial while it heats. Everything else is flat. "On" is shown by a filled green button and a green word, not by light. A second glow turns the room into a neon console.
 
 **The Offline Fade Rule.** An unreachable device stays in place and says so in text: "Offline" when the device itself is gone, "Niet bereikbaar" when the whole box is (with "Laatst aan/uit" or "…, laatst bekende stand"). Only its icon fades (45% opacity); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.
 
@@ -295,7 +315,7 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 
 ## Shapes
 
-Rounded, and rounder as surfaces get larger and more "held": 14px for inputs and menu items, 18px for surfaces inside a panel (thermostat modes, type tiles, notices, danger zone, toasts, the account menu), and 28px for panels, tiles, modals, sheets and the login panel. Everything you press that isn't a tile is fully round: buttons are pills, and the power indicator, thermostat steps, room tabs, summary chips, avatar and + button are circles or pills. Dark panels have a 1px hairline; light panels have none. New and not-yet-provisioned tiles use a dashed hairline. The only thick outline is the 2px focus ring.
+Rounded, and rounder as surfaces get larger and more "held": 14px for inputs and menu items, 18px for surfaces inside a panel (thermostat modes, type tiles, notices, danger zone, toasts), and 28px for panels, tiles, modals, sheets and the login panel. Everything you press that isn't a tile is fully round: buttons are pills, and the power indicator, thermostat steps, room pills, "Details", summary chips and the navigation bar and its items are circles or pills. Dark panels have a 1px hairline; light panels have none. New and not-yet-provisioned tiles use a dashed hairline. The only thick outline is the 2px focus ring.
 
 ## Components
 
@@ -310,16 +330,16 @@ Round and confident: pills, generous, gently responsive.
 - **Disabled:** 50% opacity with no transform.
 
 ### Device tile (signature component)
-The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem tall. The gear (44px target) floats top-right, and the name wraps around it on its first line and uses the full width after that, so names never break mid-word. The whole tile is one invisible action button (toggle for lights and switches, open details for sensors); the gear sits beside it, never inside it.
-- **Light / switch:** the name, a large device icon (64px neutral circle) in the free space, and at the bottom "Aan" or "Uit" at State size next to the round **power indicator** (aria-hidden; the tile button carries `aria-pressed`). On: the indicator fills Signal Green with a black symbol, the text is green, and the tile gets a green edge. Off: quiet.
+The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem tall. Whatever sits top-right (the power indicator, or the thermostat's gear) floats, and the name wraps around it on its first line and uses the full width after that, so names never break mid-word. The whole tile is one invisible action button (toggle for lights and switches, open details for sensors); "Details" and the gear sit beside it, never inside it.
+- **Light / switch:** the name with the round 44px **power indicator** top-right (aria-hidden; the tile button carries `aria-pressed`), then "Aan" or "Uit" at State size, a caption with the device icon (the type, or the room on Home), and a **Details** chip at the bottom. On: the indicator fills Signal Green with a black symbol and "Aan" is green. The tile itself stays neutral, with no colored edge or fill. Off: quiet.
 - **Thermostat** (spans two columns, and two rows on wide grids): a 270° **dial** (open at the bottom) with the target as the value arc and a knob, a dot on the arc for the current temperature, and min/max at the arc ends. Inside it are "Doel" and the target at Dial size, with "Nu 21,0°" below. Under the dial are two 52px round −/+ steps (0.5°) with the status between them ("Verwarmt" in blue, "Op temperatuur", "Verwarming uit"), then two 72px mode tiles, **Verwarmen** / **Uit**, as a radiogroup, the active one Electric Blue. Taps on −/+ are batched: one `set_temperature` command 800ms after the last tap, flushed if the tile unmounts. A tap on the panel itself does nothing. With heating off, the arc turns Resting Gray and the glow goes out.
-- **Sensor:** the temperature at 2.75rem in the temperature scale; motion as a plain sentence ("Er is nu beweging" / "Geen beweging", never amber); a low-battery badge only at ≤20%.
-- **Settings:** the gear or a 500ms long-press opens a sheet with rename, room, and delete with an inline confirmation.
+- **Sensor:** the name, the temperature at 2.75rem in the temperature scale, motion as a plain sentence ("Er is nu beweging" / "Geen beweging", never amber), the caption, and a low-battery badge only at ≤20%. A tap opens the details.
+- **Details:** "Details", the thermostat's gear, a tap on a sensor or a 500ms long-press opens one **detail sheet**: a sensor's readings (with "Laatst bijgewerkt"), the **Op Home tonen** switch (favourite, Electric Blue, saved immediately), name and room with "Opslaan", and delete with an inline confirmation.
 - **States:** tap compresses the tile (`scale(0.98)`), hover darkens the edge, "on" lights the button, offline/unreachable says so in text and fades the icon, new tiles say "Wordt klaargezet", and a realtime change pulses blue. Focus shows a 2px Electric Blue outline with a 3px offset.
 - Long-press must not trigger text selection or the iOS callout.
 
 ### House panel
-The first panel of the dashboard: the house name (Headline, the page's h1), the connection line, a divider, then the summary. That is either the count at State size in green ("3 staan aan") with room chips (Inset Mist pills whose count sits in a small Signal Green badge), or the quiet sentence "Alle lampen en stopcontacten zijn uit".
+The first panel on Home: the house name (Headline, an h2), the connection line, a divider, then the summary. That is either the count at State size in green ("3 staan aan") with room chips (Inset Mist pills whose count sits in a small Signal Green badge), or the quiet sentence "Alle lampen en stopcontacten zijn uit". A room chip opens that room on the Kamers tab.
 
 ### Switch
 A 48×28 pill with a 22px white thumb that slides 20px over 0.2s. The track is Resting Gray when off and Signal Green when on, for device state. App settings use the `switch-accent` variant (Electric Blue when on).
@@ -330,8 +350,11 @@ A 48×28 pill with a 22px white thumb that slides 20px over 0.2s. The track is R
 - **Labels:** sentence case in Quiet Slate, 0.9rem/500, above the field.
 - **Errors:** an Amber Notice banner (18px radius); login errors are red text above the button.
 
-### Navigation (room tabs)
-Pill-shaped text tabs in the top bar, each at least 44px tall. Inactive tabs are Quiet Slate at weight 500. The active tab is Ink at weight 600 with a small Electric Blue dot beneath it. Color transitions take 0.15s.
+### Navigation bar
+Three items in a floating pill at the bottom: an icon above a word (0.85rem/600), each at least 56px tall. Inactive items are Quiet Slate; the active one is an Electric Blue pill with white icon and word, marked `aria-current="page"`. Always words as well as icons: people who do not live in apps should not have to guess.
+
+### Room pills
+Filled pills on the Kamers tab, 48px tall. Inactive pills are a Panel White pill with Ink text (Night Inset on black); the active pill is Electric Blue with white text at weight 600. Color transitions take 0.15s.
 
 ### Modals and sheets
 A 28px panel, max 420px wide, with 1.35rem padding; a bottom sheet on phones (see Layout). The title is on the left and the close button on the right, with 1px dividers between sections and actions right-aligned. Adding a device starts with four large type tiles (a radio group on Inset Mist; the chosen tile gets a 2px blue border and its icon circle turns blue), then name and room; the room defaults to the one you were viewing.
@@ -340,17 +363,18 @@ A 28px panel, max 420px wide, with 1.35rem padding; a bottom sheet on phones (se
 In the house panel, under the name. Healthy: a quiet line with a green check, "Verbonden met je huis". Phone ↔ Sandhovius lost: an Amber Notice, "Geen verbinding met Sandhovius…". Box silent for 90s (three missed 30s heartbeats on `houses.last_seen`) or stopped: an Amber Notice, "Je Sandhovius-box reageert niet sinds 14:02…". While either notice shows, tiles show last-known state and cannot be toggled. On reconnect everything is re-fetched.
 
 ### Toasts
-Fixed dark ink snackbars with white text, 18px radius, above the + button on phones and at the top right on wide screens. They are **not** confirmations of taps (the tile is the confirmation). They appear only when a command is slow ("… reageert nog niet. Even geduld…" after 4s) or fails. They hold for 3.5s (errors 6s, dismissible, in a separate `role="alert"` region). Errors turn toast-error red.
+Fixed dark ink snackbars with white text, 18px radius, above the navigation on phones and at the top right on wide screens. They are **not** confirmations of taps (the tile is the confirmation). They appear only when a command is slow ("… reageert nog niet. Even geduld…" after 4s) or fails. They hold for 3.5s (errors 6s, dismissible, in a separate `role="alert"` region). Errors turn toast-error red.
 
-### + button
-A 60px Electric Blue circle with a "+", fixed at the bottom right, with a faint blue shadow. There is only one per screen.
+### Instellingen
+Stacked panels with a quiet heading each. **Huis** is one large row (icon, house name, "3 kamers. Naam en kamers wijzigen") that opens the house-and-rooms sheet; **Weergave** holds the dark-mode switch (it follows the phone's theme until you choose); **Account** says who is logged in and has "Uitloggen" as a secondary pill.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** make every control reachable and obvious in one tap from the room view: toggling, reading and adjusting never require navigation.
+- **Do** make every control reachable and obvious in one tap from its room (and from Home once it is a favourite): toggling, reading and adjusting never require a deeper screen.
+- **Do** keep primary navigation at the bottom, in thumb reach, with a word under every icon.
 - **Do** size a tile by the control it needs: small for a lamp, large for the thermostat. Let the bento decide the columns.
-- **Do** keep touch targets at 44px or more (52px for primary actions and thermostat steps, 60px for the + button).
+- **Do** keep touch targets at 44px or more (48px for room pills, 52px for primary actions and thermostat steps, 56px for navigation items).
 - **Do** pair every state color with a word or an icon ("Aan", "Uit", "Offline", a battery %).
 - **Do** design every screen in both themes: black with night panels, and mist with white panels. The dark-mode tokens are part of the spec, not an afterthought.
 - **Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 0.4s for a power button lighting up, 0.6s for the glow fading in, 0.25s for a sheet sliding up, and 1s for the one-time change pulse. Exits are faster than entrances.
