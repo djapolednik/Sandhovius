@@ -1,22 +1,45 @@
+/* Contrastregel (zie DESIGN.md, "The Legibility Floor Rule"): elke kleur
+   die tekst draagt of waar tekst op staat haalt ≥4.5:1 in het thema waarin
+   hij staat; bedieningselementen (switch-track, iconen) ≥3:1. Het lichte
+   thema gebruikt daarom een stap donkerdere cyaan/groen/amber/rood dan het
+   donkere — dezelfde tint, geen mechanische omkering. */
 :root {
+  /* Laat de browser zijn eigen onderdelen (select-dropdown, scrollbar,
+     datum-/formulierbesturing) in hetzelfde thema tekenen. */
+  color-scheme: light;
   --background: #f5f5f7;
   --card-background: #ffffff;
   --border: #e5e7eb;
   --text-primary: #111111;
-  --text-secondary: #6b7280;
-  --accent: #0891b2;
-  --accent-hover: #06b6d4;
+  --text-secondary: #5f6672;
+  --accent: #0e7490;
+  --accent-hover: #155e75;
   --accent-contrast: #ffffff;
-  --on: #16a34a;
-  --off: #9ca3af;
-  --warning: #d97706;
+  /* Zachte ring/pulse rond de accentkleur (input-focus, "net veranderd"-
+     pulse) — per thema, zodat hij op beide ondergronden zichtbaar blijft. */
+  --accent-ring: rgba(14, 116, 144, 0.22);
+  --accent-pulse: rgba(14, 116, 144, 0.45);
+  --on: #15803d;
+  /* Een kaart die aan staat kleurt als geheel mee: een zacht groen vlak,
+     met "Aan" in een stap donkerder groen zodat die tekst ook op dat
+     vlak ≥4.5:1 haalt. */
+  --on-surface: #ecf6ef;
+  --on-text: #166534;
+  --off: #6b7280;
+  --warning: #b45309;
   --warning-bg: #fef3c7;
-  --danger: #dc2626;
+  --danger: #b91c1c;
   --danger-contrast: #ffffff;
   --danger-bg: #fee2e2;
 
+  /* Temperatuurschaal (koud → warm) voor meetwaarden, zie
+     lib/temperature.js — een dataschaal, maar wel per thema, want de
+     uiteinden moeten op beide kaartkleuren als tekst leesbaar zijn. */
+  --temp-cold: #2563eb;
+  --temp-hot: #dc2626;
+
   --icon-light-bg: #fef3c7;
-  --icon-light-fg: #d97706;
+  --icon-light-fg: #b45309;
   --icon-switch-bg: #dbeafe;
   --icon-switch-fg: #2563eb;
   --icon-sensor-bg: #ccfbf1;
@@ -32,6 +55,7 @@
 }
 
 [data-theme='dark'] {
+  color-scheme: dark;
   --background: #0f1115;
   --card-background: #1c1f26;
   --border: #2a2e37;
@@ -40,8 +64,15 @@
   --accent: #22d3ee;
   --accent-hover: #67e8f9;
   --accent-contrast: #0f1115;
+  --accent-ring: rgba(34, 211, 238, 0.28);
+  --accent-pulse: rgba(34, 211, 238, 0.5);
   --on: #22c55e;
-  --off: #4b5563;
+  --on-surface: #1a2b22;
+  --on-text: #4ade80;
+  --off: #6b7280;
+
+  --temp-cold: #60a5fa;
+  --temp-hot: #f87171;
   --warning: #f59e0b;
   --warning-bg: #451a03;
   --danger: #f87171;

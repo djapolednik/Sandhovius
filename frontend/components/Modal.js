@@ -1,28 +1,65 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { CloseIcon } from '../lib/icons'
 
+// Native <dialog> via showModal(): de browser regelt zelf de focus-trap,
+// maakt de rest van de pagina inert en geeft het venster de juiste
+// dialog-rol — geen eigen focus-management-code nodig. React blijft de
+// eigenaar van open/dicht: Escape (het 'cancel'-event) en een klik op de
+// backdrop roepen onClose aan, de ouder unmount ons dan.
 export default function Modal({ title, onClose, children }) {
+  const dialogRef = useRef(null)
+  const openerRef = useRef(null)
+  const titleId = useId()
+
   useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose()
+    const dialog = dialogRef.current
+    // Het element dat de modal opende (knop, menu-item) krijgt de focus
+    // terug bij sluiten — een unmount zonder close() doet dat niet vanzelf.
+    // Maar één keer vastleggen: StrictMode draait dit effect in dev twee
+    // keer, en de tweede keer staat de focus al ín de dialog.
+    if (!openerRef.current) openerRef.current = document.activeElement
+    if (!dialog.open) dialog.showModal()
+    return () => {
+      // Eerst sluiten: zolang de dialog modaal open staat is de rest van de
+      // pagina inert en kan de opener geen focus krijgen.
+      if (dialog.open) dialog.close()
+      const opener = openerRef.current
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus()
     }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [])
+
+  function handleCancel(e) {
+    e.preventDefault()
+    onClose()
+  }
+
+  // Een klik die rechtstreeks op het <dialog>-element landt (en niet op
+  // .modal binnenin) valt buiten het venster: dat is de backdrop.
+  function handleClick(e) {
+    if (e.target === dialogRef.current) onClose()
+  }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <dialog
+      ref={dialogRef}
+      className="modal-dialog"
+      aria-labelledby={titleId}
+      onCancel={handleCancel}
+      onClick={handleClick}
+    >
+      <div className="modal">
         <div className="modal-header">
-          <h2 className="modal-title">{title}</h2>
+          <h2 className="modal-title" id={titleId}>
+            {title}
+          </h2>
           <button className="btn btn-icon btn-plain" aria-label="Sluiten" onClick={onClose}>
             <CloseIcon />
           </button>
         </div>
         <div className="modal-body">{children}</div>
       </div>
-    </div>
+    </dialog>
   )
 }

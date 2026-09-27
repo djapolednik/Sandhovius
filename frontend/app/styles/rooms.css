@@ -1,16 +1,99 @@
 /* ==================== House header ==================== */
 
 .gateway-name {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
   color: var(--text-primary);
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
+  overflow-wrap: anywhere;
 }
 
-.realtime-status {
-  font-size: 0.78rem;
+/* Rustig als alles werkt (zie ConnectionStatus): een regel, geen melding. */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   margin: 0 0 1.25rem;
+}
+
+.connection-status-live svg {
+  color: var(--on-text);
+  flex-shrink: 0;
+}
+
+/* Iets is niet bereikbaar: amber (aandacht, niet kapot — DESIGN.md), met
+   wat je ziet en wat er gebeurt in gewone woorden. */
+.connection-notice {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.connection-notice strong {
+  font-weight: 700;
+}
+
+/* ==================== Huis-samenvatting (HouseSummary) ==================== */
+
+.house-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.house-summary-lead {
+  color: var(--on-text);
+}
+
+.house-summary-rooms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.house-summary-room {
+  min-height: 44px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--on);
+  background: var(--on-surface);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .house-summary-room:hover {
+    background: var(--card-background);
+  }
+}
+
+.house-summary-room:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.house-summary-count {
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* ==================== Room tabs ==================== */
@@ -30,6 +113,20 @@
   display: none;
 }
 
+/* Er zijn meer kamers dan er passen: de rand vervaagt aan de kant waar
+   nog iets verborgen zit (zie RoomTabs). */
+.room-tabs-more-end {
+  mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+}
+
+.room-tabs-more-start {
+  mask-image: linear-gradient(to left, #000 calc(100% - 3rem), transparent);
+}
+
+.room-tabs-more-start.room-tabs-more-end {
+  mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+}
+
 .room-tab {
   flex-shrink: 0;
   min-height: 44px;
@@ -42,7 +139,18 @@
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
+  /* Een extreem lange kamernaam mag de strip niet domineren; de volle
+     naam staat in de title-tooltip en in het huis-beheer. */
+  max-width: 14em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.room-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 4px;
 }
 
 .room-tab-active {
@@ -104,6 +212,20 @@
 
 .room-row-name-editable:hover {
   background: var(--background);
+}
+
+.room-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+}
+
+.room-confirm-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .room-edit-form {

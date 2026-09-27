@@ -1,29 +1,18 @@
 'use client'
 
-import { useTheme } from '../lib/useTheme'
-import { SunIcon, MoonIcon } from '../lib/icons'
-
-// Altijd een donkere merk-balk (zie --header-bg in globals.css), los van
-// het licht/donker thema van de rest van de app. userMenu is de avatar-
-// dropdown; wordt alleen getoond wanneer ingelogd.
+// Altijd een donkere merk-balk (zie --header-bg in theme.css), los van het
+// licht/donker thema van de rest van de app. userMenu is de avatar-
+// dropdown; wordt alleen getoond wanneer ingelogd. De merknaam is geen
+// kop: de kop van de pagina is de naam van je huis.
+//
+// Licht/donker staat alleen in Instellingen (één plek, geen dubbele
+// knop), en volgt standaard het thema van de telefoon.
 export default function Header({ userMenu }) {
-  const { isDarkMode, toggleTheme } = useTheme()
-
   return (
     <div className="header-bar">
       <header className="header">
-        <h1 className="brand">Sandhovius</h1>
-
-        <div className="header-user-slot">
-          <button
-            className="btn btn-icon btn-plain theme-toggle-button"
-            aria-label={isDarkMode ? 'Lichte modus' : 'Donkere modus'}
-            onClick={toggleTheme}
-          >
-            {isDarkMode ? <SunIcon /> : <MoonIcon />}
-          </button>
-          {userMenu}
-        </div>
+        <span className="brand">Sandhovius</span>
+        <div className="header-user-slot">{userMenu}</div>
       </header>
     </div>
   )

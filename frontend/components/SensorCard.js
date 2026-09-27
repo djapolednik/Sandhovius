@@ -1,8 +1,9 @@
 'use client'
 
-import { temperatureColor, readTemperature } from '../lib/temperature'
+import { formatTemperature, temperatureColor, readTemperature } from '../lib/temperature'
+import { isBatteryLow } from '../lib/battery'
 
-export default function SensorCard({ device, state, header }) {
+export default function SensorCard({ state, isOnline, offlineText = 'Offline', header }) {
   const occupancy = state?.occupancy ?? state?.motion
   const hasMotionReading = typeof occupancy === 'boolean'
 
@@ -10,38 +11,41 @@ export default function SensorCard({ device, state, header }) {
   const hasTemperatureReading = typeof temperature === 'number'
 
   const battery = state?.battery
-  const hasBattery = typeof battery === 'number'
+  // Alleen melden als er iets te doen is: 90% batterij is geen nieuws.
+  const batteryLow = isBatteryLow(battery)
 
   return (
     <>
       {header}
 
-      {hasBattery && <div className="battery-badge">{battery}% batterij</div>}
+      {!isOnline && <div className="status-line status-offline">{offlineText} · laatst bekend</div>}
 
       {(hasMotionReading || hasTemperatureReading) && (
         <div className="sensor-readings">
-          {hasMotionReading && (
-            <div className="reading">
-              <span className="reading-label">Beweging</span>
-              <span className={`reading-value ${occupancy ? 'reading-alert' : ''}`}>
-                {occupancy ? 'Ja' : 'Nee'}
-              </span>
-            </div>
-          )}
           {hasTemperatureReading && (
             <div className="reading">
               <span className="reading-label">Temperatuur</span>
-              <span className="reading-value" style={{ color: temperatureColor(temperature) }}>
-                {temperature}°C
+              <span className="reading-value reading-value-large" style={{ color: temperatureColor(temperature) }}>
+                {formatTemperature(temperature)}
               </span>
+            </div>
+          )}
+          {hasMotionReading && (
+            // Beweging is gewoon leven in huis, geen alarm: neutrale tekst,
+            // geen waarschuwingskleur.
+            <div className="reading">
+              <span className="reading-label">Beweging</span>
+              <span className="reading-value">{occupancy ? 'Nu beweging' : 'Geen beweging'}</span>
             </div>
           )}
         </div>
       )}
 
       {!hasMotionReading && !hasTemperatureReading && (
-        <div className="reading-empty">Geen bekende meetwaarden</div>
+        <div className="reading-empty">Nog geen meetwaarden ontvangen</div>
       )}
+
+      {batteryLow && <div className="battery-badge battery-badge-low">Batterij bijna leeg · {battery}%</div>}
     </>
   )
 }

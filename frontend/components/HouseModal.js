@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Modal from './Modal'
+import { describeError } from '../lib/errors'
 import { CheckIcon, CloseIcon, TrashIcon } from '../lib/icons'
 
 function RoomRow({ room, onRename, onDelete }) {
@@ -19,7 +20,7 @@ function RoomRow({ room, onRename, onDelete }) {
       await onRename(room.id, name)
       setEditing(false)
     } catch (err) {
-      setError('Opslaan mislukt: ' + err.message)
+      setError(describeError('Kamernaam opslaan', err))
     } finally {
       setBusy(false)
     }
@@ -31,7 +32,7 @@ function RoomRow({ room, onRename, onDelete }) {
     try {
       await onDelete(room.id)
     } catch (err) {
-      setError('Verwijderen mislukt: ' + err.message)
+      setError(describeError('Kamer verwijderen', err))
       setBusy(false)
     }
   }
@@ -45,6 +46,7 @@ function RoomRow({ room, onRename, onDelete }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            aria-label={`Nieuwe naam voor kamer "${room.name}"`}
             autoFocus
             required
           />
@@ -72,18 +74,24 @@ function RoomRow({ room, onRename, onDelete }) {
   if (confirmingDelete) {
     return (
       <li className="room-list-item">
-        <div className="room-row">
-          <span className="room-row-name">"{room.name}" verwijderen?</span>
+        {/* Gevolg benoemd, en knoppen die zeggen wat ze doen i.p.v. Ja/Nee.
+            Apparaten verliezen alleen hun kamer (geen cascade) en komen
+            onder "Overig" — er wordt niets weggegooid. */}
+        <div className="room-confirm">
+          <p className="room-confirm-text">
+            Kamer "{room.name}" verwijderen? Apparaten in deze kamer blijven bestaan en komen onder
+            "Overig".
+          </p>
           <div className="room-row-actions">
             <button
               className="btn btn-plain"
               onClick={() => setConfirmingDelete(false)}
               disabled={busy}
             >
-              Nee
+              Annuleren
             </button>
             <button className="btn btn-danger-text" onClick={handleDelete} disabled={busy}>
-              Ja
+              Kamer verwijderen
             </button>
           </div>
         </div>
@@ -95,7 +103,11 @@ function RoomRow({ room, onRename, onDelete }) {
   return (
     <li className="room-list-item">
       <div className="room-row">
-        <button className="room-row-name room-row-name-editable" onClick={() => setEditing(true)}>
+        <button
+          className="room-row-name room-row-name-editable"
+          aria-label={`Kamer "${room.name}" hernoemen`}
+          onClick={() => setEditing(true)}
+        >
           {room.name}
         </button>
         <button
@@ -124,7 +136,7 @@ export default function HouseModal({ house, rooms, onRenameHouse, onAddRoom, onR
     try {
       await onRenameHouse(houseName)
     } catch (err) {
-      setError('Naam opslaan mislukt: ' + err.message)
+      setError(describeError('Naam opslaan', err))
     } finally {
       setSavingName(false)
     }
@@ -138,7 +150,7 @@ export default function HouseModal({ house, rooms, onRenameHouse, onAddRoom, onR
       await onAddRoom(newRoomName)
       setNewRoomName('')
     } catch (err) {
-      setError('Kamer toevoegen mislukt: ' + err.message)
+      setError(describeError('Kamer toevoegen', err))
     } finally {
       setAddingRoom(false)
     }
@@ -181,7 +193,8 @@ export default function HouseModal({ house, rooms, onRenameHouse, onAddRoom, onR
           type="text"
           value={newRoomName}
           onChange={(e) => setNewRoomName(e.target.value)}
-          placeholder="Nieuwe kamer, bijv. Slaapkamer"
+          aria-label="Naam van de nieuwe kamer"
+          placeholder="Bijv. Slaapkamer"
           required
         />
         <button type="submit" className="btn btn-secondary" disabled={addingRoom}>

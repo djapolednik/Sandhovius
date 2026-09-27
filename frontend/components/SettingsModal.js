@@ -9,11 +9,12 @@ export default function SettingsModal({ onClose }) {
   return (
     <Modal title="Instellingen" onClose={onClose}>
       <div className="settings-row">
-        <span>Donkere modus</span>
+        <span id="setting-dark-mode">Donkere modus</span>
         <button
-          className={`switch ${isDarkMode ? 'switch-on' : ''}`}
+          className={`switch switch-accent ${isDarkMode ? 'switch-on' : ''}`}
           role="switch"
           aria-checked={isDarkMode}
+          aria-labelledby="setting-dark-mode"
           onClick={toggleTheme}
         >
           <span className="switch-thumb" />

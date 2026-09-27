@@ -2,41 +2,73 @@
 
 import { useState } from 'react'
 import Modal from './Modal'
+import { describeError } from '../lib/errors'
+import { deviceTypeIcon } from '../lib/icons'
 
 const DEVICE_TYPES = [
-  { value: 'light', label: 'Lamp' },
-  { value: 'switch', label: 'Stopcontact' },
-  { value: 'sensor', label: 'Sensor' },
-  { value: 'climate', label: 'Thermostaat' },
+  { value: 'light', label: 'Lamp', example: 'Bijv. Leeslamp' },
+  { value: 'switch', label: 'Stopcontact', example: 'Bijv. Stopcontact tv' },
+  { value: 'sensor', label: 'Sensor', example: 'Bijv. Bewegingssensor gang' },
+  { value: 'climate', label: 'Thermostaat', example: 'Bijv. Thermostaat woonkamer' },
 ]
 
-export default function AddDeviceModal({ rooms, onClose, onCreate }) {
+// Soort eerst, dan de naam: de soort is een keuze uit vier grote tegels
+// (sneller en duidelijker dan een uitklaplijst), en de voorbeeldnaam past
+// zich erop aan. De kamer staat al op de kamer die je net bekeek.
+export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onCreate }) {
   const [name, setName] = useState('')
   const [type, setType] = useState('light')
-  const [roomId, setRoomId] = useState('')
+  const [roomId, setRoomId] = useState(defaultRoomId)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   // Geen entity_id-veld: de agent maakt na het aanmaken automatisch een
   // passende Home Assistant helper aan (zie provisionDeviceEntity in de
   // agent) en vult entity_id vanzelf in — niemand hoeft zelf iets in HA
-  // te configureren.
+  // te configureren. Tot dan toont de kaart "Wordt klaargezet".
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
     setError('')
     try {
-      await onCreate({ name, type, room: roomId || null })
+      await onCreate({ name: name.trim(), type, room: roomId || null })
       onClose()
     } catch (err) {
-      setError('Toevoegen mislukt: ' + err.message)
+      setError(describeError('Apparaat toevoegen', err))
       setSaving(false)
     }
   }
 
+  const example = DEVICE_TYPES.find((t) => t.value === type)?.example
+
   return (
-    <Modal title="Device toevoegen" onClose={onClose}>
+    <Modal title="Apparaat toevoegen" onClose={onClose}>
       <form onSubmit={handleSubmit} className="form-stack">
+        <fieldset className="type-picker">
+          <legend className="form-label">Wat voeg je toe?</legend>
+          <div className="type-picker-grid">
+            {DEVICE_TYPES.map((t) => {
+              const Icon = deviceTypeIcon(t.value)
+              return (
+                <label key={t.value} className={`type-tile ${type === t.value ? 'type-tile-selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="device-type"
+                    value={t.value}
+                    checked={type === t.value}
+                    onChange={() => setType(t.value)}
+                    className="visually-hidden"
+                  />
+                  <span className={`device-icon device-icon-${t.value} type-tile-icon`}>
+                    <Icon />
+                  </span>
+                  <span className="type-tile-label">{t.label}</span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
+
         <label className="form-field">
           <span className="form-label">Naam</span>
           <input
@@ -44,20 +76,9 @@ export default function AddDeviceModal({ rooms, onClose, onCreate }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Bijv. Leeslamp"
+            placeholder={example}
             required
           />
-        </label>
-
-        <label className="form-field">
-          <span className="form-label">Type</span>
-          <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
-            {DEVICE_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
         </label>
 
         <label className="form-field">
@@ -76,7 +97,7 @@ export default function AddDeviceModal({ rooms, onClose, onCreate }) {
 
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            Toevoegen
+            {saving ? 'Bezig met toevoegen…' : 'Toevoegen'}
           </button>
         </div>
       </form>

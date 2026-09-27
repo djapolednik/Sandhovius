@@ -6,7 +6,11 @@
   border-radius: 12px;
   padding: 0.85rem 0.9rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .card-clickable {
@@ -17,38 +21,101 @@
   -webkit-touch-callout: none;
 }
 
-.card-clickable:hover {
-  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.28);
-  transform: scale(1.01);
+/* Alleen op apparaten die echt kunnen hoveren: op touch blijft :hover na
+   een tik "hangen" en tilt de kaart dan onterecht op. */
+@media (hover: hover) {
+  .card-clickable:hover {
+    box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.28);
+    transform: scale(1.01);
+  }
 }
 
 .card-clickable:active {
   transform: scale(0.98);
 }
 
-.card-clickable:focus-visible {
+/* De hoofdactie van een device-kaart: een echte, onzichtbare <button> die
+   de hele kaart bedekt (zie DeviceCard). Zo is de kaart één groot
+   tikdoel, maar blijft de gear-knop een los element ernaast i.p.v. een
+   knop-in-een-knop. De focusring hoort bij de kaart, dus volgt hij de
+   kaartvorm. */
+.device-card-action {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.device-card-action:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 .card-on {
+  background: var(--on-surface);
   border: 1px solid var(--on);
   /* Groen blijft groen, maar lekt als een zachte gloed vanaf de rand naar
      binnen (inset shadow met blur) i.p.v. een strakke, vlakke lijn. */
   box-shadow: inset 0 0 22px -6px var(--on);
+  /* Aangaan gloeit iets trager op dan de rest, zoals een lamp die
+     opwarmt; uitgaan (terug naar .card) blijft 0.2s. */
+  transition:
+    transform 0.2s ease,
+    background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card-offline {
-  opacity: 0.5;
-  filter: grayscale(0.6);
+/* Offline: alleen het icoon vervaagt. De laatst bekende meetwaarden
+   blijven op vol contrast — die zijn nog steeds informatie, en de status
+   staat er in tekst bij ("Offline · laatst bekend"). */
+.card-offline .device-icon {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+
+/* Net toegevoegd of (nog) niet klaargezet: een gestippelde rand, zoals
+   een plek die nog ingevuld wordt — geen storing, dus geen vervaging. */
+.card-pairing {
+  border-style: dashed;
+  border-color: var(--text-secondary);
+  box-shadow: none;
+}
+
+/* Laden: kaartvormige plaatshouders die zacht ademen (zie page.js). */
+.card-skeleton {
+  min-height: 8.5rem;
+  background: var(--card-background);
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* De spinner uit login.css, maar in de tekstkleur van de kaart. */
+.spinner-inline {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-color: var(--border);
+  border-top-color: var(--text-secondary);
 }
 
 @keyframes card-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.4);
+    box-shadow: 0 0 0 0 var(--accent-pulse);
   }
   100% {
-    box-shadow: 0 0 0 14px rgba(8, 145, 178, 0);
+    box-shadow: 0 0 0 14px transparent;
   }
 }
 
@@ -58,77 +125,59 @@
 
 /* ==================== Device cards ==================== */
 
-/* Vaste kaartbreedte op elk formaat, ook mobiel. Met auto-fill zijn de
-   grid-tracks exact zo breed als de card zelf, dus geen opgerekte kolom
-   met dode ruimte ernaast — enkel de opgegeven `gap` tussen cards.
-   Schaalt vanzelf door naar meer kolommen op grote/4K-schermen, zonder
-   een harde bovengrens aan het aantal kolommen; op mobiel (waar maar één
-   kolom past) staat de smalle card gecentreerd i.p.v. tegen de linkerrand. */
+/* Twee kolommen op een telefoon, meer op grotere schermen: een kaart is
+   zo breed als het scherm toelaat (minimaal 10rem = 160px, groeit mee met
+   een grotere systeemtekst) en zo hoog als zijn inhoud. Een lamp is dus
+   een kleine kaart, een thermostaat een brede. Bij 200% tekst of zoom
+   past er nog één kolom — min(…, 100%) houdt die binnen het scherm.
+   dense: kleine kaarten vullen de gaten naast een brede thermostaat. */
 .device-list {
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: repeat(auto-fill, 220px);
-  justify-content: center;
+  grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 1fr));
+  grid-auto-flow: dense;
   gap: 0.75rem;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-/* ==================== Device card flip (front/instellingen-achterkant) ====================
-   Ingedrukt houden (of de gear-knop) draait de kaart om via een 3D-flip in
-   plaats van een los modal-venster te openen. Beide zijden zijn absoluut
-   gepositioneerd binnen eenzelfde vlak, dus de wrapper krijgt een vaste
-   min-height die ook de (compactere) instellingenkant comfortabel laat
-   passen — de voorkant centreert zijn eigen, vaak kortere inhoud verticaal
-   zodat dat niet als "afgekapt" oogt. */
-.device-card-flip {
-  perspective: 1200px;
-  min-height: 300px;
+.device-card-cell {
+  display: grid;
+  min-width: 0;
 }
 
-.device-card-flip-inner {
+/* De thermostaat krijgt twee kolommen zodra die er zijn: ruimte voor de
+   temperatuur van nu naast grote −/+-knoppen. Een container query i.p.v.
+   een media query, zodat hij bij grote tekst (één kolom) niet een
+   onzichtbare tweede kolom afdwingt. */
+@container (min-width: 20.75rem) {
+  .device-card-cell-climate {
+    grid-column: span 2;
+  }
+}
+
+.device-card {
   position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-  transform-style: preserve-3d;
-}
-
-.device-card-flip-inner.flipped {
-  transform: rotateY(180deg);
-}
-
-.device-card-face {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  min-width: 0;
 }
 
-.device-card-face-front {
-  justify-content: center;
-}
-
-.device-card-face-back {
-  transform: rotateY(180deg);
-  overflow-y: auto;
-}
-
+/* Icoon linksboven (de gear staat rechtsboven, zie .gear-button), naam
+   eronder: links uitgelijnd leest een rij kaarten als een lijst. */
 .device-card-header {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.35rem;
-  padding-top: 0.5rem;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-right: 2rem;
 }
 
 .device-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -136,12 +185,24 @@
   flex-shrink: 0;
 }
 
-.device-icon-light {
+/* Lampen en stopcontacten tonen hun kleur alleen als ze aan staan: een
+   uitgeschakelde lamp met een brandend geel icoon spreekt zijn eigen
+   status tegen. Uit = neutraal. */
+.device-icon-light,
+.device-icon-switch {
+  background: var(--background);
+  color: var(--text-secondary);
+  transition:
+    background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-on .device-icon-light {
   background: var(--icon-light-bg);
   color: var(--icon-light-fg);
 }
 
-.device-icon-switch {
+.card-on .device-icon-switch {
   background: var(--icon-switch-bg);
   color: var(--icon-switch-fg);
 }
@@ -156,14 +217,22 @@
   color: var(--icon-climate-fg);
 }
 
+/* Staat boven de .device-card-action-laag, zodat een tik op de gear niet
+   bij de hoofdactie van de kaart belandt. 44px tikdoel, tegen de hoek. */
 .gear-button {
   position: absolute;
-  top: -0.5rem;
-  right: -0.35rem;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 2;
 }
 
+/* Lange of spatieloze namen breken af i.p.v. buiten de kaart te lopen. */
 .device-name {
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .device-meta {
@@ -171,11 +240,56 @@
   font-size: 0.8rem;
 }
 
+/* "Aan" / "Uit" / "Offline": het antwoord waarvoor je de app opent, dus
+   de grootste tekst op de kaart (DESIGN.md, Readings Are Loudest). */
+.device-state-row {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.device-state {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.device-state-word {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-secondary);
+}
+
+.device-state-word-on {
+  color: var(--on-text);
+}
+
+.device-state-word-offline {
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.device-state-sub {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Visuele echo van de schakelaar (zelfde vorm als .switch), geen eigen
+   knop: de hele kaart is het tikdoel. */
+.switch-indicator {
+  display: inline-block;
+  pointer-events: none;
+}
+
 .status-line {
-  margin-top: 0.6rem;
+  margin-top: 0.35rem;
   font-size: 0.85rem;
   font-weight: 500;
-  text-align: center;
 }
 
 .status-on {
@@ -186,18 +300,21 @@
   color: var(--text-secondary);
 }
 
+.status-offline {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 .sensor-readings {
   margin-top: 0.75rem;
   display: flex;
-  justify-content: center;
-  gap: 1.5rem;
+  gap: 0.75rem 1.5rem;
   flex-wrap: wrap;
 }
 
 .reading {
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .reading-label {
@@ -213,6 +330,13 @@
   margin-top: 0.1rem;
 }
 
+.reading-value-large {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
 .reading-alert {
   color: var(--warning);
 }
@@ -220,120 +344,158 @@
 .reading-empty {
   color: var(--text-secondary);
   font-size: 0.85rem;
-  font-style: italic;
-  margin-top: 0.5rem;
-  text-align: center;
+  margin-top: 0.75rem;
 }
 
 .battery-badge {
-  background: var(--background);
-  border: 1px solid var(--border);
+  align-self: flex-start;
+  margin-top: 0.75rem;
   border-radius: 999px;
-  padding: 0.15rem 0.55rem;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.temp-stepper {
+.battery-badge-low {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+/* ==================== Thermostaat (voorkant) ====================
+   Hoe warm het nu is, is de luidste tekst op de kaart; daaronder het doel
+   met twee grote −/+-knoppen die boven de kaartlaag liggen. */
+.climate-status-heating {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.climate-status-idle,
+.climate-status-off,
+.climate-status-offline {
+  color: var(--text-secondary);
+}
+
+.climate-body {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+}
+
+.climate-now {
+  display: flex;
+  flex-direction: column;
+}
+
+.climate-now-value {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.climate-target {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.1rem;
 }
 
-.temp-stepper .btn-icon {
-  min-height: 32px;
-  min-width: 32px;
-  padding: 0;
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.heat-bar-track {
-  margin-top: 0.85rem;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--background);
-  overflow: hidden;
-}
-
-.heat-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--warning));
-  transition: width 0.2s ease, background-size 0.2s ease;
-}
-
-/* ==================== Device card back (instellingen, zie device-card-face-back) ====================
-   Compactere varianten van de modal-formulierstijlen — dezelfde velden,
-   maar passend binnen een 220px-brede kaart i.p.v. een los venster. */
-.card-back-content {
+.climate-target-value {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  height: 100%;
-}
-
-.card-back-header {
-  display: flex;
   align-items: center;
-  gap: 0.4rem;
+  min-width: 4.5rem;
 }
 
-.card-back-title {
-  font-size: 0.85rem;
-  font-weight: 700;
+.climate-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
-.card-back-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+@media (hover: hover) {
+  .climate-step:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }
 
-.form-field-compact {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.climate-step:active:not(:disabled) {
+  transform: scale(0.92);
 }
 
-.input-compact {
-  padding: 0.4rem 0.55rem;
-  font-size: 0.85rem;
-  min-height: 34px;
+.climate-step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-.btn-compact {
-  min-height: 34px;
-  padding: 0.35rem 0.7rem;
-  font-size: 0.82rem;
+.climate-step:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
-.error-banner-compact {
-  background: var(--warning-bg);
-  color: var(--warning);
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  margin: 0;
+/* ==================== Minder beweging ====================
+   Voor wie "beweging beperken" aan heeft staan: geen groei of schaal
+   meer, maar elke statuswissel blijft zichtbaar — de "net veranderd"-ring
+   vervaagt ter plekke i.p.v. uit te dijen. */
+@keyframes card-pulse-still {
+  0% {
+    box-shadow: 0 0 0 3px var(--accent-pulse);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
 }
 
-.danger-zone-compact {
+@media (prefers-reduced-motion: reduce) {
+  .card-clickable:hover,
+  .card-clickable:active,
+  .climate-step:active:not(:disabled) {
+    transform: none;
+  }
+
+  .card-pulse {
+    animation: card-pulse-still 1s ease-out;
+  }
+
+  .card-skeleton {
+    animation: none;
+  }
+}
+
+/* ==================== Apparaat-instellingen (DeviceSettingsModal) ==================== */
+
+.danger-zone {
   background: var(--danger-bg);
   border-radius: 8px;
-  padding: 0.55rem;
+  padding: 0.75rem;
 }
 
-.danger-text-compact {
+.danger-text {
   color: var(--danger);
-  font-size: 0.8rem;
-  margin: 0 0 0.5rem;
-}
-
-.card-back-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  margin: 0 0 0.75rem;
+  overflow-wrap: anywhere;
 }
 
 /* ==================== Sensor detail modal ==================== */

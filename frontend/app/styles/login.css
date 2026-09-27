@@ -25,11 +25,13 @@
   margin: 0 0 1.75rem;
 }
 
+/* Staat nu in het formulier, boven de knop (form-stack regelt de
+   afstand) — zo lees je de fout vóórdat je opnieuw op Inloggen tikt. */
 .login-error {
   color: var(--danger);
-  font-size: 0.82rem;
-  text-align: center;
-  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
 }
 
 @keyframes spin {

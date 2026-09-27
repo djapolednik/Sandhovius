@@ -1,63 +1,74 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { memo, useRef } from 'react'
 import LightCard from './LightCard'
 import SensorCard from './SensorCard'
 import ClimateCard from './ClimateCard'
-import DeviceCardBack from './DeviceCardBack'
 import { GearIcon, deviceTypeIcon } from '../lib/icons'
 
-const TOGGLEABLE_TYPES = ['light', 'switch', 'climate']
+// Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
+// mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
+export const TOGGLEABLE_TYPES = ['light', 'switch']
 const LONG_PRESS_MS = 500
 
 // Climate-entities rapporteren hun state als hvac_mode ("heat", "off", ...)
 // i.p.v. het simpele "on"/"off" van lampen/stopcontacten — vandaar het
 // aparte geval hier.
-function isDeviceOn(type, state) {
+export function isDeviceOn(type, state) {
   if (!state?.state) return false
   if (type === 'climate') return state.state !== 'off'
   return state.state === 'on'
 }
 
-export default function DeviceCard({
+// memo: de pagina her-rendert bij elke toast, modal of realtime-update;
+// een kaart alleen als zijn eigen props veranderen (de handlers zijn
+// stabiel, zie cardHandlers in page.js). De handlers krijgen het device
+// mee als argument i.p.v. per kaart een nieuwe closure te krijgen.
+export default memo(function DeviceCard({
   device,
-  rooms,
+  houseReachable = true,
+  isNew = false,
   onToggle,
   onSetTemperature,
   onOpenDetail,
+  onOpenSettings,
   isAnimating,
-  onSaveDevice,
-  onDeleteDevice,
 }) {
-  const [flipped, setFlipped] = useState(false)
-  // Blijft na de eerste keer omdraaien gemonteerd, zodat het terugdraaien
-  // niet halverwege de animatie de inhoud laat verdwijnen — maar wordt niet
-  // voor elke kaart alvast gemonteerd voordat hij ooit is omgedraaid.
-  const [everFlipped, setEverFlipped] = useState(false)
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
   const Icon = deviceTypeIcon(device.type)
 
+  // Twee manieren om onbereikbaar te zijn: het apparaat zelf is weg, of de
+  // hele box (dan zegt "Offline" per apparaat het verkeerde).
+  const isOnline = !!device.online && houseReachable
+  const offlineText = houseReachable ? 'Offline' : 'Niet bereikbaar'
+  // Net toegevoegd (isNew, zie page.js): de agent maakt er nog een Home
+  // Assistant-entity voor aan (entity_id leeg), of die heeft nog geen
+  // eerste stand gemeld. Dat is geen storing — "Offline" zou hier ten
+  // onrechte alarm slaan. Is hij niet nieuw en nog steeds niet klaargezet,
+  // dan is dat mislukt: dat zeggen we eerlijk, met wat je kunt doen.
+  const isPairing = isNew && houseReachable && !device.online && (!device.entity_id || !stateRecord)
+  const setupFailed = !isNew && houseReachable && !device.entity_id
   const isToggleable = TOGGLEABLE_TYPES.includes(device.type)
   const isOn = isDeviceOn(device.type, state)
-  const isClickable = isToggleable || !!onOpenDetail
+  // Een offline apparaat kan geen commando ontvangen: niet doen alsof de
+  // tik iets doet. Sensordetails (laatst bekende waarden) blijven wel open
+  // te klappen.
+  const canToggle = isToggleable && isOnline
+  const canOpenDetail = device.type === 'sensor' && !isPairing && !setupFailed && !!onOpenDetail
+  const isClickable = canToggle || canOpenDetail
 
-  // Ingedrukt houden draait de kaart om naar de instellingen (naam/kamer/
-  // verwijderen, en voor climate de doeltemperatuur), los van de korte tik
-  // die toggelt/detail opent — de gear-knop doet hetzelfde als snelkoppeling.
+  // Ingedrukt houden opent de instellingen (naam/kamer/verwijderen), los
+  // van de korte tik die schakelt of details opent — de gear-knop doet
+  // hetzelfde, zichtbaar.
   const pressTimer = useRef(null)
   const longPressTriggered = useRef(false)
-
-  function flipToSettings() {
-    setFlipped(true)
-    setEverFlipped(true)
-  }
 
   function startPress() {
     longPressTriggered.current = false
     pressTimer.current = setTimeout(() => {
       longPressTriggered.current = true
-      flipToSettings()
+      onOpenSettings(device)
     }, LONG_PRESS_MS)
   }
 
@@ -68,38 +79,26 @@ export default function DeviceCard({
     }
   }
 
-  function handleCardClick() {
+  function handleActionClick() {
     // Voorkomt dat de tap/click die na het loslaten van een long-press
-    // volgt alsnog toggelt/detail opent.
+    // volgt alsnog schakelt/detail opent.
     if (longPressTriggered.current) {
       longPressTriggered.current = false
       return
     }
-    if (isToggleable) onToggle()
-    else if (onOpenDetail) onOpenDetail()
+    if (canToggle) onToggle(device)
+    else if (canOpenDetail) onOpenDetail(device)
   }
 
-  function handleGearClick(e) {
-    e.stopPropagation()
-    flipToSettings()
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      handleCardClick()
-    }
-  }
+  // De hoofdactie is een echte <button>, over de hele kaart uitgerekt
+  // (zie .device-card-action). De gear-knop staat er als broertje naast
+  // i.p.v. erin genest — een knop-in-een-knop heeft voor schermlezers geen
+  // betrouwbare naam of gedrag. De leesbare inhoud (naam, status,
+  // meetwaarden) blijft gewone tekst in de kaart.
+  const actionLabel = canToggle ? device.name : `Details van ${device.name}`
 
   const header = (
     <div className="device-card-header">
-      <button
-        className="btn btn-icon btn-plain gear-button"
-        aria-label="Device-opties"
-        onClick={handleGearClick}
-      >
-        <GearIcon />
-      </button>
       <div className={`device-icon device-icon-${device.type}`}>
         <Icon />
       </div>
@@ -108,47 +107,79 @@ export default function DeviceCard({
   )
 
   return (
-    <li className="device-card-flip">
-      <div className={`device-card-flip-inner ${flipped ? 'flipped' : ''}`}>
-        <div
-          className={`card device-card device-card-face device-card-face-front ${
-            isAnimating ? 'card-pulse' : ''
-          } ${isClickable ? 'card-clickable' : ''} ${isToggleable && isOn ? 'card-on' : ''} ${
-            !device.online ? 'card-offline' : ''
-          }`}
-          onClick={isClickable ? handleCardClick : undefined}
-          onPointerDown={startPress}
-          onPointerUp={cancelPress}
-          onPointerLeave={cancelPress}
-          onPointerCancel={cancelPress}
-          onContextMenu={(e) => e.preventDefault()}
-          role={isClickable ? 'button' : undefined}
-          tabIndex={isClickable ? 0 : undefined}
-          onKeyDown={isClickable ? handleKeyDown : undefined}
-        >
-          {device.type === 'light' || device.type === 'switch' ? (
-            <LightCard state={state} header={header} />
-          ) : device.type === 'climate' ? (
-            <ClimateCard state={state} isOn={isOn} header={header} />
-          ) : (
-            <SensorCard device={device} state={state} header={header} />
-          )}
-        </div>
+    <li className={`device-card-cell device-card-cell-${device.type}`}>
+      <div
+        className={`card device-card ${isAnimating ? 'card-pulse' : ''} ${isClickable ? 'card-clickable' : ''} ${
+          canToggle && isOn ? 'card-on' : ''
+        } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
+          isPairing || setupFailed ? 'card-pairing' : ''
+        }`}
+        onPointerDown={startPress}
+        onPointerUp={cancelPress}
+        onPointerLeave={cancelPress}
+        onPointerCancel={cancelPress}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {isClickable && (
+          <button
+            type="button"
+            className="device-card-action"
+            aria-label={actionLabel}
+            aria-pressed={canToggle ? isOn : undefined}
+            onClick={handleActionClick}
+          />
+        )}
 
-        <div className="card device-card device-card-face device-card-face-back">
-          {everFlipped && (
-            <DeviceCardBack
-              device={device}
-              rooms={rooms}
-              state={state}
-              onSetTemperature={onSetTemperature}
-              onFlipBack={() => setFlipped(false)}
-              onSave={onSaveDevice}
-              onDelete={onDeleteDevice}
-            />
-          )}
-        </div>
+        <button
+          type="button"
+          className="btn btn-icon btn-plain gear-button"
+          aria-label={`Instellingen van ${device.name}`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onOpenSettings(device)}
+        >
+          <GearIcon width="20" height="20" />
+        </button>
+
+        {isPairing ? (
+          <>
+            {header}
+            <div className="device-state-row">
+              <div className="device-state">
+                <span className="device-state-word device-state-word-offline">
+                  <span className="spinner spinner-inline" aria-hidden="true" />
+                  Wordt klaargezet
+                </span>
+                <span className="device-state-sub">Dit duurt meestal een paar seconden.</span>
+              </div>
+            </div>
+          </>
+        ) : setupFailed ? (
+          <>
+            {header}
+            <div className="device-state-row">
+              <div className="device-state">
+                <span className="device-state-word device-state-word-offline">Niet klaargezet</span>
+                <span className="device-state-sub">
+                  Verwijder dit apparaat via het tandwiel en voeg het opnieuw toe.
+                </span>
+              </div>
+            </div>
+          </>
+        ) : device.type === 'light' || device.type === 'switch' ? (
+          <LightCard state={state} isOnline={isOnline} offlineText={offlineText} header={header} />
+        ) : device.type === 'climate' ? (
+          <ClimateCard
+            state={state}
+            isOn={isOn}
+            isOnline={isOnline}
+            offlineText={offlineText}
+            header={header}
+            onSetTemperature={(temperature) => onSetTemperature(device, temperature)}
+          />
+        ) : (
+          <SensorCard state={state} isOnline={isOnline} offlineText={offlineText} header={header} />
+        )}
       </div>
     </li>
   )
-}
+})

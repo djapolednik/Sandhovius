@@ -8,6 +8,7 @@ import { UserIcon } from '../lib/icons'
 export default function UserMenu({ avatarUrl, onChangeHouse, onOpenSettings, onLogout }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef(null)
+  const buttonRef = useRef(null)
 
   useEffect(() => {
     if (!open) return
@@ -16,20 +17,38 @@ export default function UserMenu({ avatarUrl, onChangeHouse, onOpenSettings, onL
         setOpen(false)
       }
     }
+    // Escape sluit het menu en zet de focus terug op de avatar, zodat een
+    // toetsenbordgebruiker niet "kwijt" is.
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        buttonRef.current?.focus()
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [open])
 
+  // Focus eerst terug naar de avatar: het menu-item verdwijnt zo meteen,
+  // en een modal die hierna opent onthoudt het actieve element om de
+  // focus bij sluiten naar terug te zetten.
   function pick(action) {
     setOpen(false)
+    buttonRef.current?.focus()
     action()
   }
 
   return (
     <div className="user-menu" ref={menuRef}>
       <button
+        ref={buttonRef}
         className="avatar-button"
         aria-label="Gebruikersmenu"
+        aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -43,7 +62,7 @@ export default function UserMenu({ avatarUrl, onChangeHouse, onOpenSettings, onL
       {open && (
         <div className="dropdown-menu">
           <button className="dropdown-item" onClick={() => pick(onChangeHouse)}>
-            Huis wijzigen
+            Huis en kamers
           </button>
           <button className="dropdown-item" onClick={() => pick(onOpenSettings)}>
             Instellingen

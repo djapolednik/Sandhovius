@@ -131,6 +131,25 @@ export function CheckIcon(props) {
   )
 }
 
+// Plus/min in dezelfde lijnstijl als de andere iconen, i.p.v. de tekst-
+// tekens "+" en "−" — die hangen af van het systeemfont en staan optisch
+// net niet in het midden van een ronde of vierkante knop.
+export function PlusIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function MinusIcon(props) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function TrashIcon(props) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>

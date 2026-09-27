@@ -3,9 +3,13 @@
 import Modal from './Modal'
 import { deviceTypeIcon } from '../lib/icons'
 import { relativeTimeNL } from '../lib/relativeTime'
-import { temperatureColor, readTemperature } from '../lib/temperature'
+import { useNow } from '../lib/useNow'
+import { formatTemperature, temperatureColor, readTemperature } from '../lib/temperature'
+import { isBatteryLow } from '../lib/battery'
 
-export default function SensorDetailModal({ device, now, onClose }) {
+export default function SensorDetailModal({ device, onClose }) {
+  // Eigen klok: alleen deze modal tikt mee voor "Laatst bijgewerkt".
+  const now = useNow(5000)
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
   const Icon = deviceTypeIcon(device.type)
@@ -22,7 +26,7 @@ export default function SensorDetailModal({ device, now, onClose }) {
   const updatedAt = stateRecord?.updated_at ? new Date(stateRecord.updated_at).getTime() : null
 
   return (
-    <Modal title="Sensor details" onClose={onClose}>
+    <Modal title="Sensorgegevens" onClose={onClose}>
       <div className="sensor-detail-header">
         <div className={`device-icon device-icon-${device.type}`}>
           <Icon />
@@ -40,22 +44,22 @@ export default function SensorDetailModal({ device, now, onClose }) {
           <div className="sensor-detail-row">
             <span className="form-label">Temperatuur</span>
             <span className="reading-value" style={{ color: temperatureColor(temperature) }}>
-              {temperature}°C
+              {formatTemperature(temperature)}
             </span>
           </div>
         )}
         {hasMotionReading && (
           <div className="sensor-detail-row">
             <span className="form-label">Beweging</span>
-            <span className={`reading-value ${occupancy ? 'reading-alert' : ''}`}>
-              {occupancy ? 'Ja' : 'Nee'}
-            </span>
+            <span className="reading-value">{occupancy ? 'Nu beweging' : 'Geen beweging'}</span>
           </div>
         )}
         {hasBattery && (
           <div className="sensor-detail-row">
             <span className="form-label">Batterij</span>
-            <span className="reading-value">{battery}%</span>
+            <span className={`reading-value ${isBatteryLow(battery) ? 'reading-alert' : ''}`}>
+              {isBatteryLow(battery) ? `Bijna leeg · ${battery}%` : `${battery}%`}
+            </span>
           </div>
         )}
         {updatedAt && (
@@ -65,7 +69,7 @@ export default function SensorDetailModal({ device, now, onClose }) {
           </div>
         )}
         {!hasTemperatureReading && !hasMotionReading && !hasBattery && (
-          <p className="reading-empty">Geen bekende meetwaarden</p>
+          <p className="reading-empty">Nog geen meetwaarden ontvangen</p>
         )}
       </div>
     </Modal>

@@ -12,23 +12,36 @@ export const metadata = {
   description: 'Sandhovius smart home PWA',
 }
 
+// viewport-fit=cover laat de app tot in de hoeken van het scherm lopen
+// (notch, afgeronde hoeken); de safe-area-insets in de CSS houden de
+// header, +-knop en toasts daarbij vrij van de notch en de home-balk.
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
 // Runs before hydration so the correct theme's CSS variables are already
 // active on first paint — without this, the page would briefly render the
 // light theme and then flash to dark once React mounts and reads
 // localStorage.
+// Zonder eigen keuze volgt de app het thema van de telefoon.
 const themeInitScript = `
 (function() {
   try {
-    if (localStorage.getItem('sandhovius-theme') === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
+    var stored = localStorage.getItem('sandhovius-theme');
+    var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
   } catch (e) {}
 })();
 `
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="nl">
+    // suppressHydrationWarning: themeInitScript zet data-theme bewust al
+    // vóór hydration; dat verschil met de server-HTML is precies de
+    // bedoeling (geldt alleen voor dit ene element, niet voor kinderen).
+    <html lang="nl" suppressHydrationWarning>
       <body>
         <Script id="theme-init" strategy="beforeInteractive">
           {themeInitScript}
