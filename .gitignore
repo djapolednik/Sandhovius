@@ -2,7 +2,10 @@
 
 # Go build output — the agent is built via its Dockerfile for actual
 # deployment, a local `go build` binary here is a leftover dev artifact.
-agent/main
+# The binary, not the agent/main/ source folder (go build ./main writes
+# into that folder when it already exists).
+agent/main/main
+agent/main/main.exe
 agent/main.exe
 agent/bin/
 

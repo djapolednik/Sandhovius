@@ -1,6 +1,6 @@
 # Design and accessibility pass on the PWA (2026-09-26)
 
-This file summarises what changed in `frontend/` during the Impeccable run (`init` → `document` → `audit` → `harden` → `colorize` → `clarify` → `adapt` → `animate` → `optimize` → `polish`). None of it has been committed yet.
+This file summarises what changed in `frontend/` during the Impeccable run (`init` → `document` → `audit` → `harden` → `colorize` → `clarify` → `adapt` → `animate` → `optimize` → `polish`). It was committed on 2026-09-27 together with the dashboard redesign that followed it (commit d20d385).
 
 ## Outcome
 
