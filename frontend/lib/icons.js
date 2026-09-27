@@ -174,3 +174,31 @@ const ICONS_BY_TYPE = {
 export function deviceTypeIcon(type) {
   return ICONS_BY_TYPE[type] ?? ThermometerIcon
 }
+
+// Aan/uit-symbool voor de ronde aan-knop op een tegel.
+export function PowerIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M12 3.5v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M7.05 6.6a7.5 7.5 0 1 0 9.9 0"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function FlameIcon(props) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M12 21c3.6 0 6-2.4 6-5.8 0-3.1-2.1-5.3-3.6-7.2-.3 1.6-1.1 2.7-2.1 3.2.2-2.9-1.1-5.6-3.4-7.2.2 2.4-1 4.2-2.2 5.8C5.6 11.4 6 12.8 6 15.2 6 18.6 8.4 21 12 21Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}

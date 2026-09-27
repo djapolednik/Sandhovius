@@ -5,15 +5,13 @@ import PocketBase, { LocalAuthStore } from 'pocketbase'
 import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
-import RoomTabs from '../components/RoomTabs'
-import HouseSummary from '../components/HouseSummary'
+import HousePanel from '../components/HousePanel'
 import UserMenu from '../components/UserMenu'
 import SettingsModal from '../components/SettingsModal'
 import HouseModal from '../components/HouseModal'
 import AddDeviceModal from '../components/AddDeviceModal'
 import ToastContainer from '../components/ToastContainer'
 import SensorDetailModal from '../components/SensorDetailModal'
-import ConnectionStatus from '../components/ConnectionStatus'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -587,6 +585,9 @@ export default function Home() {
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       <Header
+        tabs={roomTabs}
+        selectedId={selectedRoomId}
+        onSelect={selectRoom}
         userMenu={
           <UserMenu
             onChangeHouse={() => setHouseModalOpen(true)}
@@ -597,9 +598,6 @@ export default function Home() {
       />
 
       <main className="container">
-        {house && <h1 className="gateway-name">{house.name}</h1>}
-        {house && <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />}
-
         {error && (
           <div className="error-banner" role="alert">
             <span>{error}</span>
@@ -611,51 +609,65 @@ export default function Home() {
           </div>
         )}
 
-        {/* Alleen als de box bereikbaar is: anders weten we niet zeker wat
-            er aan staat, en zegt de melding hierboven al genoeg. */}
-        {loaded && houseReachable && hasSwitchables && <HouseSummary rooms={roomsWithSomethingOn} onSelectRoom={selectRoom} />}
-
-        <RoomTabs tabs={roomTabs} selectedId={selectedRoomId} onSelect={selectRoom} />
-
-        {loaded && house && devicesInSelectedRoom.length === 0 && (
-          <p className="empty-state">
-            {roomsInHouse.length === 0 && unassignedDevices.length === 0
-              ? 'Nog geen apparaten. Tik op de plusknop rechtsonder om je eerste lamp, stopcontact, sensor of thermostaat toe te voegen.'
-              : 'Nog geen apparaten in deze kamer. Voeg er een toe met de plusknop, of verplaats een apparaat hierheen via het tandwiel op zijn kaart.'}
-          </p>
-        )}
-
-        {loaded && !house && (
-          <p className="empty-state">
-            Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box verbonden is,
-            verschijnt je huis hier vanzelf.
-          </p>
-        )}
-
-        {!loaded && !error && (
-          // Plaatshouders in de vorm van kaarten, zodat het scherm niet
-          // leeg is en niet verspringt als de apparaten binnenkomen.
-          <ul className="device-list" aria-hidden="true">
-            {[0, 1, 2, 3].map((i) => (
-              <li key={i} className="device-card-cell">
-                <div className="card device-card card-skeleton" />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <ul className="device-list">
-          {devicesInSelectedRoom.map((device) => (
-            <DeviceCard
-              key={device.id}
-              device={device}
-              houseReachable={houseReachable}
-              isNew={newDeviceIds.includes(device.id)}
-              isAnimating={animatingDeviceIds.includes(device.id)}
-              {...cardHandlers}
+        <div className="dashboard">
+          {house && (
+            <HousePanel
+              house={house}
+              realtimeLink={realtimeLink}
+              houseLink={houseLink}
+              now={now}
+              // Alleen als de box bereikbaar is: anders weten we niet zeker
+              // wat er aan staat, en zegt de verbindingsmelding genoeg.
+              summary={
+                loaded && houseReachable && hasSwitchables
+                  ? { rooms: roomsWithSomethingOn, onSelectRoom: selectRoom }
+                  : null
+              }
             />
-          ))}
-        </ul>
+          )}
+
+          <div className="dashboard-devices">
+            {loaded && house && devicesInSelectedRoom.length === 0 && (
+              <p className="empty-state">
+                {roomsInHouse.length === 0 && unassignedDevices.length === 0
+                  ? 'Nog geen apparaten. Tik op de plusknop rechtsonder om je eerste lamp, stopcontact, sensor of thermostaat toe te voegen.'
+                  : 'Nog geen apparaten in deze kamer. Voeg er een toe met de plusknop, of verplaats een apparaat hierheen via het tandwiel op zijn kaart.'}
+              </p>
+            )}
+
+            {loaded && !house && (
+              <p className="empty-state">
+                Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box verbonden is,
+                verschijnt je huis hier vanzelf.
+              </p>
+            )}
+
+            {!loaded && !error && (
+              // Plaatshouders in de vorm van kaarten, zodat het scherm niet
+              // leeg is en niet verspringt als de apparaten binnenkomen.
+              <ul className="device-list" aria-hidden="true">
+                {[0, 1, 2, 3].map((i) => (
+                  <li key={i} className={`device-cell ${i === 0 ? 'device-cell-climate' : ''}`}>
+                    <div className="panel tile card-skeleton" />
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <ul className="device-list">
+              {devicesInSelectedRoom.map((device) => (
+                <DeviceCard
+                  key={device.id}
+                  device={device}
+                  houseReachable={houseReachable}
+                  isNew={newDeviceIds.includes(device.id)}
+                  isAnimating={animatingDeviceIds.includes(device.id)}
+                  {...cardHandlers}
+                />
+              ))}
+            </ul>
+          </div>
+        </div>
 
         {house && (
           <button className="fab" aria-label="Apparaat toevoegen" onClick={() => setAddDeviceOpen(true)}>
@@ -691,9 +703,6 @@ export default function Home() {
             key={settingsDevice.id}
             device={settingsDevice}
             rooms={roomsInHouse}
-            isOn={isDeviceOn(settingsDevice.type, settingsDevice.expand?.device_state_via_device?.[0]?.state)}
-            isOnline={!!settingsDevice.online && houseReachable}
-            onToggle={() => toggleDevice(settingsDevice)}
             onSave={saveDevice}
             onDelete={deleteDevice}
             onClose={() => setSettingsDeviceId(null)}

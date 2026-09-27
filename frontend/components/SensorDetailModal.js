@@ -58,7 +58,7 @@ export default function SensorDetailModal({ device, onClose }) {
           <div className="sensor-detail-row">
             <span className="form-label">Batterij</span>
             <span className={`reading-value ${isBatteryLow(battery) ? 'reading-alert' : ''}`}>
-              {isBatteryLow(battery) ? `Bijna leeg · ${battery}%` : `${battery}%`}
+              {isBatteryLow(battery) ? `Bijna leeg (${battery}%)` : `${battery}%`}
             </span>
           </div>
         )}

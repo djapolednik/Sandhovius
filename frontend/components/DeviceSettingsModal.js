@@ -5,13 +5,12 @@ import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { TrashIcon } from '../lib/icons'
 
-// Instellingen van één apparaat: naam, kamer, verwijderen, en voor een
-// thermostaat de verwarming helemaal aan/uit. Opent via de gear-knop of
+// Instellingen van één apparaat: naam, kamer en verwijderen. Opent via de gear-knop of
 // door de kaart ingedrukt te houden (zie DeviceCard). Een sheet i.p.v. de
 // achterkant van de kaart: zo kan de kaart zelf zo compact zijn als zijn
 // inhoud, en staat dit formulier op een telefoon onderin, binnen bereik
 // van je duim.
-export default function DeviceSettingsModal({ device, rooms, isOn, isOnline, onToggle, onSave, onDelete, onClose }) {
+export default function DeviceSettingsModal({ device, rooms, onSave, onDelete, onClose }) {
   const [name, setName] = useState(device.name ?? '')
   const [roomId, setRoomId] = useState(device.room ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -45,28 +44,6 @@ export default function DeviceSettingsModal({ device, rooms, isOn, isOnline, onT
 
   return (
     <Modal title={device.name} onClose={onClose}>
-      {device.type === 'climate' && (
-        // Direct, net als een lichtknop — hoort niet bij "Opslaan", dat is
-        // alleen voor naam en kamer.
-        <>
-          <div className="settings-row settings-row-compact">
-            <span id={`heating-${device.id}`}>Verwarming</span>
-            <button
-              type="button"
-              className={`switch ${isOn ? 'switch-on' : ''}`}
-              role="switch"
-              aria-checked={isOn}
-              aria-labelledby={`heating-${device.id}`}
-              disabled={!isOnline}
-              onClick={onToggle}
-            >
-              <span className="switch-thumb" />
-            </button>
-          </div>
-          <div className="modal-divider" />
-        </>
-      )}
-
       <form onSubmit={handleSave} className="form-stack">
         <label className="form-field">
           <span className="form-label">Naam</span>

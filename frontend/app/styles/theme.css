@@ -1,90 +1,93 @@
-/* Contrastregel (zie DESIGN.md, "The Legibility Floor Rule"): elke kleur
-   die tekst draagt of waar tekst op staat haalt ≥4.5:1 in het thema waarin
-   hij staat; bedieningselementen (switch-track, iconen) ≥3:1. Het lichte
-   thema gebruikt daarom een stap donkerdere cyaan/groen/amber/rood dan het
-   donkere — dezelfde tint, geen mechanische omkering. */
+/* Sandhovius — merkblad: Electric Blue #0066FF, Signal Green #04D800,
+   zwart #000000, Mist #F0F0F0, wit #FFFFFF (zie DESIGN.md).
+
+   Contrastregel: elke kleur die tekst draagt of waar tekst op staat haalt
+   ≥4.5:1 in het thema waarin hij staat; bedieningselementen ≥3:1. Het
+   heldere merkgroen haalt dat als tekst op wit niet (1.9:1): het is daarom
+   vooral een vlak (de brandende aan-knop, met een zwart symbool erop,
+   10.8:1), en "Aan" als tekst gebruikt in het lichte thema een diepere
+   stap. Blauw als tekst op zwart krijgt in het donkere thema een lichtere
+   stap (#4D94FF). */
 :root {
-  /* Laat de browser zijn eigen onderdelen (select-dropdown, scrollbar,
-     datum-/formulierbesturing) in hetzelfde thema tekenen. */
   color-scheme: light;
-  --background: #f5f5f7;
+
+  /* Oppervlakken: pagina < paneel < binnen-tegel (in een paneel). */
+  --background: #f0f0f0;
   --card-background: #ffffff;
-  --border: #e5e7eb;
-  --text-primary: #111111;
-  --text-secondary: #5f6672;
-  --accent: #0e7490;
-  --accent-hover: #155e75;
+  --surface-2: #f3f3f4;
+  --border: #e4e4e7;
+  --text-primary: #000000;
+  --text-secondary: #5e626b;
+
+  /* Electric Blue: de enige interactieve stem. */
+  --accent: #0066ff;
+  --accent-hover: #0052cc;
   --accent-contrast: #ffffff;
-  /* Zachte ring/pulse rond de accentkleur (input-focus, "net veranderd"-
-     pulse) — per thema, zodat hij op beide ondergronden zichtbaar blijft. */
-  --accent-ring: rgba(14, 116, 144, 0.22);
-  --accent-pulse: rgba(14, 116, 144, 0.45);
-  --on: #15803d;
-  /* Een kaart die aan staat kleurt als geheel mee: een zacht groen vlak,
-     met "Aan" in een stap donkerder groen zodat die tekst ook op dat
-     vlak ≥4.5:1 haalt. */
-  --on-surface: #ecf6ef;
-  --on-text: #166534;
-  --off: #6b7280;
+  --accent-text: #0066ff;
+  --accent-ring: rgba(0, 102, 255, 0.22);
+  --accent-pulse: rgba(0, 102, 255, 0.4);
+  /* De zachte blauwe gloed van het merkblad — alleen rond de thermostaat-
+     draaiknop, nergens anders. */
+  --glow: rgba(0, 102, 255, 0.3);
+
+  /* Signal Green: "dit staat aan". */
+  --on: #04d800;
+  --on-contrast: #000000;
+  --on-surface: #eaf9e6;
+  --on-text: #027a00;
+  --off: #8a8f98;
+
   --warning: #b45309;
   --warning-bg: #fef3c7;
   --danger: #b91c1c;
   --danger-contrast: #ffffff;
   --danger-bg: #fee2e2;
 
-  /* Temperatuurschaal (koud → warm) voor meetwaarden, zie
-     lib/temperature.js — een dataschaal, maar wel per thema, want de
-     uiteinden moeten op beide kaartkleuren als tekst leesbaar zijn. */
-  --temp-cold: #2563eb;
+  /* Temperatuurschaal (koud → warm) voor meetwaarden, zie lib/temperature.js. */
+  --temp-cold: #0066ff;
   --temp-hot: #dc2626;
 
-  --icon-light-bg: #fef3c7;
-  --icon-light-fg: #b45309;
-  --icon-switch-bg: #dbeafe;
-  --icon-switch-fg: #2563eb;
-  --icon-sensor-bg: #ccfbf1;
-  --icon-sensor-fg: #0d9488;
-  --icon-climate-bg: #ffe4e6;
-  --icon-climate-fg: #e11d48;
+  /* Vorm: hoe groter en "vaster" het vlak, hoe ronder. */
+  --radius-panel: 28px;
+  --radius-tile: 18px;
+  --radius-control: 14px;
 
-  /* Vast, niet thema-afhankelijk — de header is bewust altijd een donkere
-     merk-balk, ongeacht licht/donker thema van de rest van de app. */
-  --header-bg: #0f172a;
-  --header-fg: #f1f5f9;
-  --header-fg-secondary: #94a3b8;
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.04), 0 14px 32px -20px rgba(0, 0, 0, 0.16);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --background: #0f1115;
-  --card-background: #1c1f26;
-  --border: #2a2e37;
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --accent: #22d3ee;
-  --accent-hover: #67e8f9;
-  --accent-contrast: #0f1115;
-  --accent-ring: rgba(34, 211, 238, 0.28);
-  --accent-pulse: rgba(34, 211, 238, 0.5);
-  --on: #22c55e;
-  --on-surface: #1a2b22;
-  --on-text: #4ade80;
-  --off: #6b7280;
 
-  --temp-cold: #60a5fa;
-  --temp-hot: #f87171;
+  --background: #000000;
+  --card-background: #17191d;
+  --surface-2: #22252a;
+  --border: #2a2d33;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a5ad;
+
+  --accent: #0066ff;
+  --accent-hover: #1a75ff;
+  --accent-contrast: #ffffff;
+  --accent-text: #4d94ff;
+  --accent-ring: rgba(0, 102, 255, 0.38);
+  --accent-pulse: rgba(0, 102, 255, 0.55);
+  --glow: rgba(0, 102, 255, 0.5);
+
+  --on: #04d800;
+  --on-contrast: #000000;
+  --on-surface: #122413;
+  --on-text: #04d800;
+  --off: #5b6069;
+
   --warning: #f59e0b;
-  --warning-bg: #451a03;
+  --warning-bg: #3a2305;
   --danger: #f87171;
   --danger-contrast: #1a0505;
-  --danger-bg: #450a0a;
+  --danger-bg: #3b0d0d;
 
-  --icon-light-bg: #45330a;
-  --icon-light-fg: #fbbf24;
-  --icon-switch-bg: #1e3a5f;
-  --icon-switch-fg: #60a5fa;
-  --icon-sensor-bg: #0f3d38;
-  --icon-sensor-fg: #2dd4bf;
-  --icon-climate-bg: #4c1123;
-  --icon-climate-fg: #fb7185;
+  --temp-cold: #4d94ff;
+  --temp-hot: #f87171;
+
+  /* Op zwart dragen oppervlakstappen de diepte, geen schaduw. */
+  --shadow-panel: none;
 }

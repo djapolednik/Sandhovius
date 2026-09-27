@@ -1,4 +1,5 @@
 import Script from 'next/script'
+import { Urbanist } from 'next/font/google'
 import './styles/theme.css'
 import './styles/base.css'
 import './styles/login.css'
@@ -6,6 +7,16 @@ import './styles/rooms.css'
 import './styles/devices.css'
 import './styles/components.css'
 import { ThemeProvider } from './ThemeContext'
+
+// Een open (OFL) stand-in voor Lufga uit het merkblad: zelfde vriendelijk-
+// geometrische vormen. next/font host hem zelf mee, dus geen verzoek naar
+// Google en hij werkt ook als de box geen internet heeft.
+const urbanist = Urbanist({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
 export const metadata = {
   title: 'Sandhovius',
@@ -41,7 +52,7 @@ export default function RootLayout({ children }) {
     // suppressHydrationWarning: themeInitScript zet data-theme bewust al
     // vóór hydration; dat verschil met de server-HTML is precies de
     // bedoeling (geldt alleen voor dit ene element, niet voor kinderen).
-    <html lang="nl" suppressHydrationWarning>
+    <html lang="nl" className={urbanist.variable} suppressHydrationWarning>
       <body>
         <Script id="theme-init" strategy="beforeInteractive">
           {themeInitScript}

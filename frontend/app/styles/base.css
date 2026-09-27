@@ -2,14 +2,16 @@
   box-sizing: border-box;
 }
 
+/* Urbanist (OFL), zelf gehost via next/font in layout.js — een open
+   stand-in voor Lufga uit het merkblad. Werkt dus ook zonder internet. */
 html,
 body {
   margin: 0;
   padding: 0;
   background: var(--background);
   color: var(--text-primary);
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -34,51 +36,51 @@ select {
 /* Temperaturen en percentages met cijfers van gelijke breedte, zodat
    21,5 → 22,0 niet heen en weer verspringt. */
 .reading-value,
-.battery-badge {
+.battery-badge,
+.dial-target,
+.dial-now {
   font-variant-numeric: tabular-nums;
 }
 
-/* Eén bron voor de inhoudsbreedte, gedeeld door .container en de header
-   (zie .header in components.css), zodat die op elk formaat uitlijnen. */
+/* Eén bron voor de inhoudsbreedte, gedeeld door de topbalk en de inhoud. */
 :root {
   --content-max: 640px;
 }
 
 @media (min-width: 768px) {
   :root {
-    --content-max: 900px;
+    --content-max: 1000px;
   }
 }
 
 @media (min-width: 1200px) {
   :root {
-    --content-max: 1100px;
+    --content-max: 1240px;
   }
 }
 
-/* Grote/4K-schermen: laat de content meegroeien i.p.v. hem vast te
-   klemmen op 1100px met veel braakliggende ruimte ernaast. */
 @media (min-width: 1600px) {
   :root {
-    --content-max: 1500px;
+    --content-max: 1480px;
   }
 }
 
-@media (min-width: 2200px) {
-  :root {
-    --content-max: 2200px;
-  }
-}
-
-/* Onderaan extra ruimte zodat de laatste kaart niet onder de vaste
+/* Onderaan extra ruimte zodat de laatste tegel niet onder de vaste
    +-knop verdwijnt; opzij de safe-area voor liggende telefoons. */
 .container {
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: 1.5rem;
-  padding-left: max(1.5rem, env(safe-area-inset-left));
-  padding-right: max(1.5rem, env(safe-area-inset-right));
+  padding: 0.5rem 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
 }
 
 /* Alleen voor schermlezers: extra context bij een waarde die visueel al

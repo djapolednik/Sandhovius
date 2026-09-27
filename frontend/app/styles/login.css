@@ -1,35 +1,64 @@
+/* Inloggen: één paneel op de pagina, met de zachte blauwe gloed van het
+   merkblad erachter — dezelfde gloed die later de thermostaat draagt. */
 .login-page {
+  position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: linear-gradient(120deg, #0f172a 0%, #0e7490 55%, #06b6d4 100%);
+  overflow: hidden;
+  background: var(--background);
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  width: min(34rem, 90vw);
+  aspect-ratio: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-30%, -62%);
+  border-radius: 50%;
+  background: var(--accent);
+  filter: blur(90px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .login-page::before {
+  opacity: 0.45;
 }
 
 .login-card {
+  position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   background: var(--card-background);
-  border-radius: 20px;
-  padding: 2.5rem 2rem;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-panel);
+  padding: 2.5rem 2rem 2rem;
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] .login-card {
+  border: 1px solid var(--border);
 }
 
 .login-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
   color: var(--text-primary);
-  margin: 0 0 1.75rem;
+  margin: 0 0 2rem;
 }
 
-/* Staat nu in het formulier, boven de knop (form-stack regelt de
-   afstand) — zo lees je de fout vóórdat je opnieuw op Inloggen tikt. */
+/* Staat in het formulier, boven de knop (form-stack regelt de afstand) —
+   zo lees je de fout vóórdat je opnieuw op Inloggen tikt. */
 .login-error {
   color: var(--danger);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   line-height: 1.4;
   margin: 0;
 }

@@ -97,21 +97,33 @@ export default memo(function DeviceCard({
   // meetwaarden) blijft gewone tekst in de kaart.
   const actionLabel = canToggle ? device.name : `Details van ${device.name}`
 
+  // Bovenrand van elke tegel: de naam, en rechts het tandwiel naar de
+  // instellingen. Het tandwiel ligt boven de kaartknop (z-index) en vangt
+  // zijn eigen pointerdown, zodat een tik erop niet schakelt of de
+  // long-press start.
   const header = (
-    <div className="device-card-header">
-      <div className={`device-icon device-icon-${device.type}`}>
-        <Icon />
-      </div>
-      <div className="device-name">{device.name}</div>
+    <div className="tile-top">
+      {/* Vóór de naam in de DOM: het tandwiel zweeft rechts (float) en de
+          naam loopt eromheen, zie .tile-top in devices.css. */}
+      <button
+        type="button"
+        className="btn btn-icon btn-plain gear-button"
+        aria-label={`Instellingen van ${device.name}`}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => onOpenSettings(device)}
+      >
+        <GearIcon width="20" height="20" />
+      </button>
+      <span className="tile-name">{device.name}</span>
     </div>
   )
 
   return (
-    <li className={`device-card-cell device-card-cell-${device.type}`}>
+    <li className={`device-cell device-cell-${device.type}`}>
       <div
-        className={`card device-card ${isAnimating ? 'card-pulse' : ''} ${isClickable ? 'card-clickable' : ''} ${
-          canToggle && isOn ? 'card-on' : ''
-        } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
+        className={`panel tile tile-${device.type} ${isAnimating ? 'card-pulse' : ''} ${
+          isClickable ? 'card-clickable' : ''
+        } ${canToggle && isOn ? 'card-on' : ''} ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
           isPairing || setupFailed ? 'card-pairing' : ''
         }`}
         onPointerDown={startPress}
@@ -130,19 +142,14 @@ export default memo(function DeviceCard({
           />
         )}
 
-        <button
-          type="button"
-          className="btn btn-icon btn-plain gear-button"
-          aria-label={`Instellingen van ${device.name}`}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => onOpenSettings(device)}
-        >
-          <GearIcon width="20" height="20" />
-        </button>
-
         {isPairing ? (
           <>
             {header}
+            <div className="tile-visual">
+              <span className={`device-icon device-icon-${device.type}`}>
+                <Icon />
+              </span>
+            </div>
             <div className="device-state-row">
               <div className="device-state">
                 <span className="device-state-word device-state-word-offline">
@@ -156,6 +163,11 @@ export default memo(function DeviceCard({
         ) : setupFailed ? (
           <>
             {header}
+            <div className="tile-visual">
+              <span className={`device-icon device-icon-${device.type}`}>
+                <Icon />
+              </span>
+            </div>
             <div className="device-state-row">
               <div className="device-state">
                 <span className="device-state-word device-state-word-offline">Niet klaargezet</span>
@@ -166,7 +178,7 @@ export default memo(function DeviceCard({
             </div>
           </>
         ) : device.type === 'light' || device.type === 'switch' ? (
-          <LightCard state={state} isOnline={isOnline} offlineText={offlineText} header={header} />
+          <LightCard state={state} isOnline={isOnline} offlineText={offlineText} header={header} Icon={Icon} />
         ) : device.type === 'climate' ? (
           <ClimateCard
             state={state}
@@ -175,6 +187,7 @@ export default memo(function DeviceCard({
             offlineText={offlineText}
             header={header}
             onSetTemperature={(temperature) => onSetTemperature(device, temperature)}
+            onToggleHeating={() => onToggle(device)}
           />
         ) : (
           <SensorCard state={state} isOnline={isOnline} offlineText={offlineText} header={header} />
