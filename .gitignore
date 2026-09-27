@@ -5,3 +5,7 @@
 agent/main
 agent/main.exe
 agent/bin/
+
+# Impeccable: machine-local settings and the detector hook's cache.
+.impeccable/config.local.json
+.impeccable/hook.cache.json
