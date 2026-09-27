@@ -1,42 +1,57 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-27T17:38:23.000Z",
+  "generatedAt": "2026-09-27T18:29:57.000Z",
   "title": "Design System: Sandhovius",
   "extensions": {
     "colorMeta": {
-      "canal-cyan": {
+      "electric-blue": {
         "role": "primary",
-        "displayName": "Canal Cyan",
-        "canonical": "#0e7490",
+        "displayName": "Electric Blue",
+        "canonical": "#0066ff",
         "tonalRamp": [
-          "hsl(193 82% 15%)",
-          "hsl(193 82% 26%)",
-          "hsl(193 82% 37%)",
-          "hsl(193 82% 48%)",
-          "hsl(193 82% 59%)",
-          "hsl(193 82% 70%)",
-          "hsl(193 82% 82%)",
-          "hsl(193 82% 95%)"
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
         ]
       },
-      "canal-cyan-hover": {
+      "electric-blue-hover": {
         "role": "primary",
-        "displayName": "Canal Cyan Hover",
-        "canonical": "#155e75",
+        "displayName": "Electric Blue Hover",
+        "canonical": "#0052cc",
         "tonalRamp": [
-          "hsl(194 70% 15%)",
-          "hsl(194 70% 26%)",
-          "hsl(194 70% 37%)",
-          "hsl(194 70% 48%)",
-          "hsl(194 70% 59%)",
-          "hsl(194 70% 70%)",
-          "hsl(194 70% 82%)",
-          "hsl(194 70% 95%)"
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
         ]
       },
-      "canal-cyan-contrast": {
+      "electric-blue-hover-dark": {
         "role": "primary",
-        "displayName": "Canal Cyan Contrast",
+        "displayName": "Electric Blue Hover Dark",
+        "canonical": "#1a75ff",
+        "tonalRamp": [
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
+        ]
+      },
+      "electric-blue-contrast": {
+        "role": "primary",
+        "displayName": "Electric Blue Contrast",
         "canonical": "#ffffff",
         "tonalRamp": [
           "hsl(0 0% 15%)",
@@ -49,169 +64,139 @@
           "hsl(0 0% 95%)"
         ]
       },
-      "canal-cyan-dark": {
+      "electric-blue-text": {
         "role": "primary",
-        "displayName": "Canal Cyan Dark",
-        "canonical": "#22d3ee",
+        "displayName": "Electric Blue Text",
+        "canonical": "#0066ff",
         "tonalRamp": [
-          "hsl(188 86% 15%)",
-          "hsl(188 86% 26%)",
-          "hsl(188 86% 37%)",
-          "hsl(188 86% 48%)",
-          "hsl(188 86% 59%)",
-          "hsl(188 86% 70%)",
-          "hsl(188 86% 82%)",
-          "hsl(188 86% 95%)"
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
         ]
       },
-      "canal-cyan-hover-dark": {
+      "electric-blue-text-dark": {
         "role": "primary",
-        "displayName": "Canal Cyan Hover Dark",
-        "canonical": "#67e8f9",
+        "displayName": "Electric Blue Text Dark",
+        "canonical": "#4d94ff",
         "tonalRamp": [
-          "hsl(187 92% 15%)",
-          "hsl(187 92% 26%)",
-          "hsl(187 92% 37%)",
-          "hsl(187 92% 48%)",
-          "hsl(187 92% 59%)",
-          "hsl(187 92% 70%)",
-          "hsl(187 92% 82%)",
-          "hsl(187 92% 95%)"
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
         ]
       },
-      "canal-cyan-contrast-dark": {
-        "role": "primary",
-        "displayName": "Canal Cyan Contrast Dark",
-        "canonical": "#0f1115",
-        "tonalRamp": [
-          "hsl(220 17% 15%)",
-          "hsl(220 17% 26%)",
-          "hsl(220 17% 37%)",
-          "hsl(220 17% 48%)",
-          "hsl(220 17% 59%)",
-          "hsl(220 17% 70%)",
-          "hsl(220 17% 82%)",
-          "hsl(220 17% 95%)"
-        ]
-      },
-      "lamp-on-green": {
-        "role": "secondary",
-        "displayName": "Lamp On Green",
-        "canonical": "#15803d",
-        "tonalRamp": [
-          "hsl(142 72% 15%)",
-          "hsl(142 72% 26%)",
-          "hsl(142 72% 37%)",
-          "hsl(142 72% 48%)",
-          "hsl(142 72% 59%)",
-          "hsl(142 72% 70%)",
-          "hsl(142 72% 82%)",
-          "hsl(142 72% 95%)"
-        ]
-      },
-      "lamp-on-green-dark": {
-        "role": "secondary",
-        "displayName": "Lamp On Green Dark",
-        "canonical": "#22c55e",
-        "tonalRamp": [
-          "hsl(142 71% 15%)",
-          "hsl(142 71% 26%)",
-          "hsl(142 71% 37%)",
-          "hsl(142 71% 48%)",
-          "hsl(142 71% 59%)",
-          "hsl(142 71% 70%)",
-          "hsl(142 71% 82%)",
-          "hsl(142 71% 95%)"
-        ]
-      },
-      "lamp-on-surface": {
+      "signal-green": {
         "role": "state",
-        "displayName": "Lamp On Surface",
-        "canonical": "#ecf6ef",
+        "displayName": "Signal Green",
+        "canonical": "#04d800",
         "tonalRamp": [
-          "hsl(138 36% 15%)",
-          "hsl(138 36% 26%)",
-          "hsl(138 36% 37%)",
-          "hsl(138 36% 48%)",
-          "hsl(138 36% 59%)",
-          "hsl(138 36% 70%)",
-          "hsl(138 36% 82%)",
-          "hsl(138 36% 95%)"
+          "hsl(119 100% 15%)",
+          "hsl(119 100% 26%)",
+          "hsl(119 100% 37%)",
+          "hsl(119 100% 48%)",
+          "hsl(119 100% 59%)",
+          "hsl(119 100% 70%)",
+          "hsl(119 100% 82%)",
+          "hsl(119 100% 95%)"
         ]
       },
-      "lamp-on-surface-dark": {
+      "signal-green-contrast": {
         "role": "state",
-        "displayName": "Lamp On Surface Dark",
-        "canonical": "#1a2b22",
+        "displayName": "Signal Green Contrast",
+        "canonical": "#000000",
         "tonalRamp": [
-          "hsl(148 25% 15%)",
-          "hsl(148 25% 26%)",
-          "hsl(148 25% 37%)",
-          "hsl(148 25% 48%)",
-          "hsl(148 25% 59%)",
-          "hsl(148 25% 70%)",
-          "hsl(148 25% 82%)",
-          "hsl(148 25% 95%)"
+          "hsl(0 0% 15%)",
+          "hsl(0 0% 26%)",
+          "hsl(0 0% 37%)",
+          "hsl(0 0% 48%)",
+          "hsl(0 0% 59%)",
+          "hsl(0 0% 70%)",
+          "hsl(0 0% 82%)",
+          "hsl(0 0% 95%)"
         ]
       },
-      "lamp-on-text": {
+      "signal-green-surface": {
         "role": "state",
-        "displayName": "Lamp On Text",
-        "canonical": "#166534",
+        "displayName": "Signal Green Surface",
+        "canonical": "#eaf9e6",
         "tonalRamp": [
-          "hsl(143 64% 15%)",
-          "hsl(143 64% 26%)",
-          "hsl(143 64% 37%)",
-          "hsl(143 64% 48%)",
-          "hsl(143 64% 59%)",
-          "hsl(143 64% 70%)",
-          "hsl(143 64% 82%)",
-          "hsl(143 64% 95%)"
+          "hsl(107 61% 15%)",
+          "hsl(107 61% 26%)",
+          "hsl(107 61% 37%)",
+          "hsl(107 61% 48%)",
+          "hsl(107 61% 59%)",
+          "hsl(107 61% 70%)",
+          "hsl(107 61% 82%)",
+          "hsl(107 61% 95%)"
         ]
       },
-      "lamp-on-text-dark": {
+      "signal-green-surface-dark": {
         "role": "state",
-        "displayName": "Lamp On Text Dark",
-        "canonical": "#4ade80",
+        "displayName": "Signal Green Surface Dark",
+        "canonical": "#122413",
         "tonalRamp": [
-          "hsl(142 69% 15%)",
-          "hsl(142 69% 26%)",
-          "hsl(142 69% 37%)",
-          "hsl(142 69% 48%)",
-          "hsl(142 69% 59%)",
-          "hsl(142 69% 70%)",
-          "hsl(142 69% 82%)",
-          "hsl(142 69% 95%)"
+          "hsl(123 33% 15%)",
+          "hsl(123 33% 26%)",
+          "hsl(123 33% 37%)",
+          "hsl(123 33% 48%)",
+          "hsl(123 33% 59%)",
+          "hsl(123 33% 70%)",
+          "hsl(123 33% 82%)",
+          "hsl(123 33% 95%)"
+        ]
+      },
+      "deep-leaf": {
+        "role": "state",
+        "displayName": "Deep Leaf",
+        "canonical": "#027a00",
+        "tonalRamp": [
+          "hsl(119 100% 15%)",
+          "hsl(119 100% 26%)",
+          "hsl(119 100% 37%)",
+          "hsl(119 100% 48%)",
+          "hsl(119 100% 59%)",
+          "hsl(119 100% 70%)",
+          "hsl(119 100% 82%)",
+          "hsl(119 100% 95%)"
         ]
       },
       "resting-gray": {
-        "role": "secondary",
+        "role": "state",
         "displayName": "Resting Gray",
-        "canonical": "#6b7280",
+        "canonical": "#8a8f98",
         "tonalRamp": [
-          "hsl(220 9% 15%)",
-          "hsl(220 9% 26%)",
-          "hsl(220 9% 37%)",
-          "hsl(220 9% 48%)",
-          "hsl(220 9% 59%)",
-          "hsl(220 9% 70%)",
-          "hsl(220 9% 82%)",
-          "hsl(220 9% 95%)"
+          "hsl(219 6% 15%)",
+          "hsl(219 6% 26%)",
+          "hsl(219 6% 37%)",
+          "hsl(219 6% 48%)",
+          "hsl(219 6% 59%)",
+          "hsl(219 6% 70%)",
+          "hsl(219 6% 82%)",
+          "hsl(219 6% 95%)"
         ]
       },
       "resting-gray-dark": {
-        "role": "secondary",
+        "role": "state",
         "displayName": "Resting Gray Dark",
-        "canonical": "#6b7280",
+        "canonical": "#5b6069",
         "tonalRamp": [
-          "hsl(220 9% 15%)",
-          "hsl(220 9% 26%)",
-          "hsl(220 9% 37%)",
-          "hsl(220 9% 48%)",
-          "hsl(220 9% 59%)",
-          "hsl(220 9% 70%)",
-          "hsl(220 9% 82%)",
-          "hsl(220 9% 95%)"
+          "hsl(219 7% 15%)",
+          "hsl(219 7% 26%)",
+          "hsl(219 7% 37%)",
+          "hsl(219 7% 48%)",
+          "hsl(219 7% 59%)",
+          "hsl(219 7% 70%)",
+          "hsl(219 7% 82%)",
+          "hsl(219 7% 95%)"
         ]
       },
       "amber-notice": {
@@ -260,18 +245,18 @@
         ]
       },
       "amber-notice-bg-dark": {
-        "role": "secondary",
+        "role": "state",
         "displayName": "Amber Notice Bg Dark",
-        "canonical": "#451a03",
+        "canonical": "#3a2305",
         "tonalRamp": [
-          "hsl(21 92% 15%)",
-          "hsl(21 92% 26%)",
-          "hsl(21 92% 37%)",
-          "hsl(21 92% 48%)",
-          "hsl(21 92% 59%)",
-          "hsl(21 92% 70%)",
-          "hsl(21 92% 82%)",
-          "hsl(21 92% 95%)"
+          "hsl(34 84% 15%)",
+          "hsl(34 84% 26%)",
+          "hsl(34 84% 37%)",
+          "hsl(34 84% 48%)",
+          "hsl(34 84% 59%)",
+          "hsl(34 84% 70%)",
+          "hsl(34 84% 82%)",
+          "hsl(34 84% 95%)"
         ]
       },
       "alarm-red": {
@@ -350,38 +335,38 @@
         ]
       },
       "alarm-red-bg-dark": {
-        "role": "secondary",
+        "role": "state",
         "displayName": "Alarm Red Bg Dark",
-        "canonical": "#450a0a",
+        "canonical": "#3b0d0d",
         "tonalRamp": [
-          "hsl(0 75% 15%)",
-          "hsl(0 75% 26%)",
-          "hsl(0 75% 37%)",
-          "hsl(0 75% 48%)",
-          "hsl(0 75% 59%)",
-          "hsl(0 75% 70%)",
-          "hsl(0 75% 82%)",
-          "hsl(0 75% 95%)"
+          "hsl(0 64% 15%)",
+          "hsl(0 64% 26%)",
+          "hsl(0 64% 37%)",
+          "hsl(0 64% 48%)",
+          "hsl(0 64% 59%)",
+          "hsl(0 64% 70%)",
+          "hsl(0 64% 82%)",
+          "hsl(0 64% 95%)"
         ]
       },
-      "hallway-white": {
+      "mist": {
         "role": "neutral",
-        "displayName": "Hallway White",
-        "canonical": "#f5f5f7",
+        "displayName": "Mist",
+        "canonical": "#f0f0f0",
         "tonalRamp": [
-          "hsl(240 11% 15%)",
-          "hsl(240 11% 26%)",
-          "hsl(240 11% 37%)",
-          "hsl(240 11% 48%)",
-          "hsl(240 11% 59%)",
-          "hsl(240 11% 70%)",
-          "hsl(240 11% 82%)",
-          "hsl(240 11% 95%)"
+          "hsl(0 0% 15%)",
+          "hsl(0 0% 26%)",
+          "hsl(0 0% 37%)",
+          "hsl(0 0% 48%)",
+          "hsl(0 0% 59%)",
+          "hsl(0 0% 70%)",
+          "hsl(0 0% 82%)",
+          "hsl(0 0% 95%)"
         ]
       },
-      "card-white": {
+      "panel-white": {
         "role": "neutral",
-        "displayName": "Card White",
+        "displayName": "Panel White",
         "canonical": "#ffffff",
         "tonalRamp": [
           "hsl(0 0% 15%)",
@@ -394,25 +379,40 @@
           "hsl(0 0% 95%)"
         ]
       },
+      "inset-mist": {
+        "role": "neutral",
+        "displayName": "Inset Mist",
+        "canonical": "#f3f3f4",
+        "tonalRamp": [
+          "hsl(240 4% 15%)",
+          "hsl(240 4% 26%)",
+          "hsl(240 4% 37%)",
+          "hsl(240 4% 48%)",
+          "hsl(240 4% 59%)",
+          "hsl(240 4% 70%)",
+          "hsl(240 4% 82%)",
+          "hsl(240 4% 95%)"
+        ]
+      },
       "hairline-gray": {
         "role": "neutral",
         "displayName": "Hairline Gray",
-        "canonical": "#e5e7eb",
+        "canonical": "#e4e4e7",
         "tonalRamp": [
-          "hsl(220 13% 15%)",
-          "hsl(220 13% 26%)",
-          "hsl(220 13% 37%)",
-          "hsl(220 13% 48%)",
-          "hsl(220 13% 59%)",
-          "hsl(220 13% 70%)",
-          "hsl(220 13% 82%)",
-          "hsl(220 13% 95%)"
+          "hsl(240 6% 15%)",
+          "hsl(240 6% 26%)",
+          "hsl(240 6% 37%)",
+          "hsl(240 6% 48%)",
+          "hsl(240 6% 59%)",
+          "hsl(240 6% 70%)",
+          "hsl(240 6% 82%)",
+          "hsl(240 6% 95%)"
         ]
       },
-      "ink": {
+      "ink-black": {
         "role": "neutral",
-        "displayName": "Ink",
-        "canonical": "#111111",
+        "displayName": "Ink Black",
+        "canonical": "#000000",
         "tonalRamp": [
           "hsl(0 0% 15%)",
           "hsl(0 0% 26%)",
@@ -427,82 +427,52 @@
       "quiet-slate": {
         "role": "neutral",
         "displayName": "Quiet Slate",
-        "canonical": "#5f6672",
+        "canonical": "#5e626b",
         "tonalRamp": [
-          "hsl(218 9% 15%)",
-          "hsl(218 9% 26%)",
-          "hsl(218 9% 37%)",
-          "hsl(218 9% 48%)",
-          "hsl(218 9% 59%)",
-          "hsl(218 9% 70%)",
-          "hsl(218 9% 82%)",
-          "hsl(218 9% 95%)"
+          "hsl(222 6% 15%)",
+          "hsl(222 6% 26%)",
+          "hsl(222 6% 37%)",
+          "hsl(222 6% 48%)",
+          "hsl(222 6% 59%)",
+          "hsl(222 6% 70%)",
+          "hsl(222 6% 82%)",
+          "hsl(222 6% 95%)"
         ]
       },
-      "night-floor": {
+      "night-black": {
         "role": "neutral",
-        "displayName": "Night Floor",
-        "canonical": "#0f1115",
+        "displayName": "Night Black",
+        "canonical": "#000000",
         "tonalRamp": [
-          "hsl(220 17% 15%)",
-          "hsl(220 17% 26%)",
-          "hsl(220 17% 37%)",
-          "hsl(220 17% 48%)",
-          "hsl(220 17% 59%)",
-          "hsl(220 17% 70%)",
-          "hsl(220 17% 82%)",
-          "hsl(220 17% 95%)"
+          "hsl(0 0% 15%)",
+          "hsl(0 0% 26%)",
+          "hsl(0 0% 37%)",
+          "hsl(0 0% 48%)",
+          "hsl(0 0% 59%)",
+          "hsl(0 0% 70%)",
+          "hsl(0 0% 82%)",
+          "hsl(0 0% 95%)"
         ]
       },
-      "night-card": {
+      "night-panel": {
         "role": "neutral",
-        "displayName": "Night Card",
-        "canonical": "#1c1f26",
+        "displayName": "Night Panel",
+        "canonical": "#17191d",
         "tonalRamp": [
-          "hsl(222 15% 15%)",
-          "hsl(222 15% 26%)",
-          "hsl(222 15% 37%)",
-          "hsl(222 15% 48%)",
-          "hsl(222 15% 59%)",
-          "hsl(222 15% 70%)",
-          "hsl(222 15% 82%)",
-          "hsl(222 15% 95%)"
+          "hsl(220 12% 15%)",
+          "hsl(220 12% 26%)",
+          "hsl(220 12% 37%)",
+          "hsl(220 12% 48%)",
+          "hsl(220 12% 59%)",
+          "hsl(220 12% 70%)",
+          "hsl(220 12% 82%)",
+          "hsl(220 12% 95%)"
         ]
       },
-      "night-hairline": {
+      "night-inset": {
         "role": "neutral",
-        "displayName": "Night Hairline",
-        "canonical": "#2a2e37",
-        "tonalRamp": [
-          "hsl(222 13% 15%)",
-          "hsl(222 13% 26%)",
-          "hsl(222 13% 37%)",
-          "hsl(222 13% 48%)",
-          "hsl(222 13% 59%)",
-          "hsl(222 13% 70%)",
-          "hsl(222 13% 82%)",
-          "hsl(222 13% 95%)"
-        ]
-      },
-      "night-ink": {
-        "role": "neutral",
-        "displayName": "Night Ink",
-        "canonical": "#f3f4f6",
-        "tonalRamp": [
-          "hsl(220 14% 15%)",
-          "hsl(220 14% 26%)",
-          "hsl(220 14% 37%)",
-          "hsl(220 14% 48%)",
-          "hsl(220 14% 59%)",
-          "hsl(220 14% 70%)",
-          "hsl(220 14% 82%)",
-          "hsl(220 14% 95%)"
-        ]
-      },
-      "night-quiet": {
-        "role": "neutral",
-        "displayName": "Night Quiet",
-        "canonical": "#9ca3af",
+        "displayName": "Night Inset",
+        "canonical": "#22252a",
         "tonalRamp": [
           "hsl(218 11% 15%)",
           "hsl(218 11% 26%)",
@@ -514,304 +484,64 @@
           "hsl(218 11% 95%)"
         ]
       },
-      "night-navy-bar": {
+      "night-hairline": {
         "role": "neutral",
-        "displayName": "Night Navy Bar",
-        "canonical": "#0f172a",
+        "displayName": "Night Hairline",
+        "canonical": "#2a2d33",
         "tonalRamp": [
-          "hsl(222 47% 15%)",
-          "hsl(222 47% 26%)",
-          "hsl(222 47% 37%)",
-          "hsl(222 47% 48%)",
-          "hsl(222 47% 59%)",
-          "hsl(222 47% 70%)",
-          "hsl(222 47% 82%)",
-          "hsl(222 47% 95%)"
+          "hsl(220 10% 15%)",
+          "hsl(220 10% 26%)",
+          "hsl(220 10% 37%)",
+          "hsl(220 10% 48%)",
+          "hsl(220 10% 59%)",
+          "hsl(220 10% 70%)",
+          "hsl(220 10% 82%)",
+          "hsl(220 10% 95%)"
         ]
       },
-      "night-navy-bar-fg": {
+      "night-ink": {
         "role": "neutral",
-        "displayName": "Night Navy Bar Fg",
-        "canonical": "#f1f5f9",
+        "displayName": "Night Ink",
+        "canonical": "#ffffff",
         "tonalRamp": [
-          "hsl(210 40% 15%)",
-          "hsl(210 40% 26%)",
-          "hsl(210 40% 37%)",
-          "hsl(210 40% 48%)",
-          "hsl(210 40% 59%)",
-          "hsl(210 40% 70%)",
-          "hsl(210 40% 82%)",
-          "hsl(210 40% 95%)"
+          "hsl(0 0% 15%)",
+          "hsl(0 0% 26%)",
+          "hsl(0 0% 37%)",
+          "hsl(0 0% 48%)",
+          "hsl(0 0% 59%)",
+          "hsl(0 0% 70%)",
+          "hsl(0 0% 82%)",
+          "hsl(0 0% 95%)"
         ]
       },
-      "night-navy-bar-fg-secondary": {
+      "night-quiet": {
         "role": "neutral",
-        "displayName": "Night Navy Bar Fg Secondary",
-        "canonical": "#94a3b8",
+        "displayName": "Night Quiet",
+        "canonical": "#a1a5ad",
         "tonalRamp": [
-          "hsl(215 20% 15%)",
-          "hsl(215 20% 26%)",
-          "hsl(215 20% 37%)",
-          "hsl(215 20% 48%)",
-          "hsl(215 20% 59%)",
-          "hsl(215 20% 70%)",
-          "hsl(215 20% 82%)",
-          "hsl(215 20% 95%)"
-        ]
-      },
-      "icon-light-bg": {
-        "role": "tertiary",
-        "displayName": "Icon Light Bg",
-        "canonical": "#fef3c7",
-        "tonalRamp": [
-          "hsl(48 96% 15%)",
-          "hsl(48 96% 26%)",
-          "hsl(48 96% 37%)",
-          "hsl(48 96% 48%)",
-          "hsl(48 96% 59%)",
-          "hsl(48 96% 70%)",
-          "hsl(48 96% 82%)",
-          "hsl(48 96% 95%)"
-        ]
-      },
-      "icon-light-fg": {
-        "role": "tertiary",
-        "displayName": "Icon Light Fg",
-        "canonical": "#b45309",
-        "tonalRamp": [
-          "hsl(26 90% 15%)",
-          "hsl(26 90% 26%)",
-          "hsl(26 90% 37%)",
-          "hsl(26 90% 48%)",
-          "hsl(26 90% 59%)",
-          "hsl(26 90% 70%)",
-          "hsl(26 90% 82%)",
-          "hsl(26 90% 95%)"
-        ]
-      },
-      "icon-switch-bg": {
-        "role": "tertiary",
-        "displayName": "Icon Switch Bg",
-        "canonical": "#dbeafe",
-        "tonalRamp": [
-          "hsl(214 95% 15%)",
-          "hsl(214 95% 26%)",
-          "hsl(214 95% 37%)",
-          "hsl(214 95% 48%)",
-          "hsl(214 95% 59%)",
-          "hsl(214 95% 70%)",
-          "hsl(214 95% 82%)",
-          "hsl(214 95% 95%)"
-        ]
-      },
-      "icon-switch-fg": {
-        "role": "tertiary",
-        "displayName": "Icon Switch Fg",
-        "canonical": "#2563eb",
-        "tonalRamp": [
-          "hsl(221 83% 15%)",
-          "hsl(221 83% 26%)",
-          "hsl(221 83% 37%)",
-          "hsl(221 83% 48%)",
-          "hsl(221 83% 59%)",
-          "hsl(221 83% 70%)",
-          "hsl(221 83% 82%)",
-          "hsl(221 83% 95%)"
-        ]
-      },
-      "icon-sensor-bg": {
-        "role": "tertiary",
-        "displayName": "Icon Sensor Bg",
-        "canonical": "#ccfbf1",
-        "tonalRamp": [
-          "hsl(167 85% 15%)",
-          "hsl(167 85% 26%)",
-          "hsl(167 85% 37%)",
-          "hsl(167 85% 48%)",
-          "hsl(167 85% 59%)",
-          "hsl(167 85% 70%)",
-          "hsl(167 85% 82%)",
-          "hsl(167 85% 95%)"
-        ]
-      },
-      "icon-sensor-fg": {
-        "role": "tertiary",
-        "displayName": "Icon Sensor Fg",
-        "canonical": "#0d9488",
-        "tonalRamp": [
-          "hsl(175 84% 15%)",
-          "hsl(175 84% 26%)",
-          "hsl(175 84% 37%)",
-          "hsl(175 84% 48%)",
-          "hsl(175 84% 59%)",
-          "hsl(175 84% 70%)",
-          "hsl(175 84% 82%)",
-          "hsl(175 84% 95%)"
-        ]
-      },
-      "icon-climate-bg": {
-        "role": "tertiary",
-        "displayName": "Icon Climate Bg",
-        "canonical": "#ffe4e6",
-        "tonalRamp": [
-          "hsl(356 100% 15%)",
-          "hsl(356 100% 26%)",
-          "hsl(356 100% 37%)",
-          "hsl(356 100% 48%)",
-          "hsl(356 100% 59%)",
-          "hsl(356 100% 70%)",
-          "hsl(356 100% 82%)",
-          "hsl(356 100% 95%)"
-        ]
-      },
-      "icon-climate-fg": {
-        "role": "tertiary",
-        "displayName": "Icon Climate Fg",
-        "canonical": "#e11d48",
-        "tonalRamp": [
-          "hsl(347 77% 15%)",
-          "hsl(347 77% 26%)",
-          "hsl(347 77% 37%)",
-          "hsl(347 77% 48%)",
-          "hsl(347 77% 59%)",
-          "hsl(347 77% 70%)",
-          "hsl(347 77% 82%)",
-          "hsl(347 77% 95%)"
-        ]
-      },
-      "icon-light-bg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Light Bg Dark",
-        "canonical": "#45330a",
-        "tonalRamp": [
-          "hsl(42 75% 15%)",
-          "hsl(42 75% 26%)",
-          "hsl(42 75% 37%)",
-          "hsl(42 75% 48%)",
-          "hsl(42 75% 59%)",
-          "hsl(42 75% 70%)",
-          "hsl(42 75% 82%)",
-          "hsl(42 75% 95%)"
-        ]
-      },
-      "icon-light-fg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Light Fg Dark",
-        "canonical": "#fbbf24",
-        "tonalRamp": [
-          "hsl(43 96% 15%)",
-          "hsl(43 96% 26%)",
-          "hsl(43 96% 37%)",
-          "hsl(43 96% 48%)",
-          "hsl(43 96% 59%)",
-          "hsl(43 96% 70%)",
-          "hsl(43 96% 82%)",
-          "hsl(43 96% 95%)"
-        ]
-      },
-      "icon-switch-bg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Switch Bg Dark",
-        "canonical": "#1e3a5f",
-        "tonalRamp": [
-          "hsl(214 52% 15%)",
-          "hsl(214 52% 26%)",
-          "hsl(214 52% 37%)",
-          "hsl(214 52% 48%)",
-          "hsl(214 52% 59%)",
-          "hsl(214 52% 70%)",
-          "hsl(214 52% 82%)",
-          "hsl(214 52% 95%)"
-        ]
-      },
-      "icon-switch-fg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Switch Fg Dark",
-        "canonical": "#60a5fa",
-        "tonalRamp": [
-          "hsl(213 94% 15%)",
-          "hsl(213 94% 26%)",
-          "hsl(213 94% 37%)",
-          "hsl(213 94% 48%)",
-          "hsl(213 94% 59%)",
-          "hsl(213 94% 70%)",
-          "hsl(213 94% 82%)",
-          "hsl(213 94% 95%)"
-        ]
-      },
-      "icon-sensor-bg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Sensor Bg Dark",
-        "canonical": "#0f3d38",
-        "tonalRamp": [
-          "hsl(173 61% 15%)",
-          "hsl(173 61% 26%)",
-          "hsl(173 61% 37%)",
-          "hsl(173 61% 48%)",
-          "hsl(173 61% 59%)",
-          "hsl(173 61% 70%)",
-          "hsl(173 61% 82%)",
-          "hsl(173 61% 95%)"
-        ]
-      },
-      "icon-sensor-fg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Sensor Fg Dark",
-        "canonical": "#2dd4bf",
-        "tonalRamp": [
-          "hsl(172 66% 15%)",
-          "hsl(172 66% 26%)",
-          "hsl(172 66% 37%)",
-          "hsl(172 66% 48%)",
-          "hsl(172 66% 59%)",
-          "hsl(172 66% 70%)",
-          "hsl(172 66% 82%)",
-          "hsl(172 66% 95%)"
-        ]
-      },
-      "icon-climate-bg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Climate Bg Dark",
-        "canonical": "#4c1123",
-        "tonalRamp": [
-          "hsl(342 63% 15%)",
-          "hsl(342 63% 26%)",
-          "hsl(342 63% 37%)",
-          "hsl(342 63% 48%)",
-          "hsl(342 63% 59%)",
-          "hsl(342 63% 70%)",
-          "hsl(342 63% 82%)",
-          "hsl(342 63% 95%)"
-        ]
-      },
-      "icon-climate-fg-dark": {
-        "role": "tertiary",
-        "displayName": "Icon Climate Fg Dark",
-        "canonical": "#fb7185",
-        "tonalRamp": [
-          "hsl(351 95% 15%)",
-          "hsl(351 95% 26%)",
-          "hsl(351 95% 37%)",
-          "hsl(351 95% 48%)",
-          "hsl(351 95% 59%)",
-          "hsl(351 95% 70%)",
-          "hsl(351 95% 82%)",
-          "hsl(351 95% 95%)"
+          "hsl(220 7% 15%)",
+          "hsl(220 7% 26%)",
+          "hsl(220 7% 37%)",
+          "hsl(220 7% 48%)",
+          "hsl(220 7% 59%)",
+          "hsl(220 7% 70%)",
+          "hsl(220 7% 82%)",
+          "hsl(220 7% 95%)"
         ]
       },
       "temp-cold": {
-        "role": "neutral",
+        "role": "state",
         "displayName": "Temp Cold",
-        "canonical": "#2563eb",
+        "canonical": "#0066ff",
         "tonalRamp": [
-          "hsl(221 83% 15%)",
-          "hsl(221 83% 26%)",
-          "hsl(221 83% 37%)",
-          "hsl(221 83% 48%)",
-          "hsl(221 83% 59%)",
-          "hsl(221 83% 70%)",
-          "hsl(221 83% 82%)",
-          "hsl(221 83% 95%)"
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
         ]
       },
       "temp-hot": {
@@ -830,18 +560,18 @@
         ]
       },
       "temp-cold-dark": {
-        "role": "neutral",
+        "role": "state",
         "displayName": "Temp Cold Dark",
-        "canonical": "#60a5fa",
+        "canonical": "#4d94ff",
         "tonalRamp": [
-          "hsl(213 94% 15%)",
-          "hsl(213 94% 26%)",
-          "hsl(213 94% 37%)",
-          "hsl(213 94% 48%)",
-          "hsl(213 94% 59%)",
-          "hsl(213 94% 70%)",
-          "hsl(213 94% 82%)",
-          "hsl(213 94% 95%)"
+          "hsl(216 100% 15%)",
+          "hsl(216 100% 26%)",
+          "hsl(216 100% 37%)",
+          "hsl(216 100% 48%)",
+          "hsl(216 100% 59%)",
+          "hsl(216 100% 70%)",
+          "hsl(216 100% 82%)",
+          "hsl(216 100% 95%)"
         ]
       },
       "temp-hot-dark": {
@@ -860,18 +590,18 @@
         ]
       },
       "toast-ink-bg": {
-        "role": "secondary",
+        "role": "provisional",
         "displayName": "Toast Ink Bg",
-        "canonical": "#1f2430",
+        "canonical": "#1f2126",
         "tonalRamp": [
-          "hsl(222 22% 15%)",
-          "hsl(222 22% 26%)",
-          "hsl(222 22% 37%)",
-          "hsl(222 22% 48%)",
-          "hsl(222 22% 59%)",
-          "hsl(222 22% 70%)",
-          "hsl(222 22% 82%)",
-          "hsl(222 22% 95%)"
+          "hsl(223 10% 15%)",
+          "hsl(223 10% 26%)",
+          "hsl(223 10% 37%)",
+          "hsl(223 10% 48%)",
+          "hsl(223 10% 59%)",
+          "hsl(223 10% 70%)",
+          "hsl(223 10% 82%)",
+          "hsl(223 10% 95%)"
         ]
       },
       "toast-error-bg": {
@@ -895,85 +625,76 @@
         "displayName": "Display",
         "purpose": "The login title only."
       },
+      "dial": {
+        "displayName": "Dial",
+        "purpose": "The thermostat target inside the dial; the largest number in the app."
+      },
       "headline": {
         "displayName": "Headline",
         "purpose": "The house name, the page's h1."
       },
       "state": {
         "displayName": "State",
-        "purpose": "\"Aan\"/\"Uit\" on light cards and the main temperature on sensor cards (2rem on the thermostat). The loudest text on a card."
+        "purpose": "\"Aan\"/\"Uit\" on light tiles and the house-summary count. The loudest text on a tile."
       },
       "title": {
         "displayName": "Title",
         "purpose": "Modal and sheet titles."
       },
-      "reading": {
-        "displayName": "Reading",
-        "purpose": "The thermostat target and secondary sensor values."
-      },
       "body": {
         "displayName": "Body",
-        "purpose": "Device names (600), status lines, tabs, buttons and inputs."
+        "purpose": "Tile names, tabs, buttons, inputs, status lines."
       },
       "meta": {
         "displayName": "Meta",
-        "purpose": "The connection line, \"Laatst aan\", relative times."
-      },
-      "label": {
-        "displayName": "Label",
-        "purpose": "Uppercase form and reading labels."
+        "purpose": "Connection line, labels, \"Laatst aan\", dial scale and \"Nu\"."
       }
     },
     "shadows": [
       {
-        "name": "card-resting",
-        "value": "0 1px 3px rgba(0,0,0,0.06)",
-        "purpose": "Every card at rest."
+        "name": "panel",
+        "value": "0 1px 2px rgba(0,0,0,0.04), 0 14px 32px -20px rgba(0,0,0,0.16)",
+        "purpose": "Light theme only: every panel, tile and the avatar at rest. Dark theme uses a 1px hairline and no shadow."
       },
       {
-        "name": "card-lifted",
-        "value": "0 12px 28px -10px rgba(0,0,0,0.28)",
-        "purpose": "Hover on a clickable card (with scale 1.01), hover-capable devices only."
-      },
-      {
-        "name": "on-glow",
-        "value": "inset 0 0 22px -6px var(--on)",
-        "purpose": "An \"on\" card, together with the Lamp-On Surface fill and a green 1px border: light from inside, like a lamp shade."
+        "name": "dial-glow",
+        "value": "blurred disc of var(--glow), filter: blur(32px), inset 18%",
+        "purpose": "The One Glow: behind the thermostat dial, only while heating is on."
       },
       {
         "name": "change-pulse",
         "value": "0 0 0 14px transparent (from 0 0 0 0 var(--accent-pulse))",
-        "purpose": "One-time Canal Cyan ring when a card changes; a stationary 3px ring under reduced motion."
+        "purpose": "One-time Electric Blue ring when a tile changes; a stationary 3px ring under reduced motion."
       },
       {
         "name": "menu",
-        "value": "0 4px 12px rgba(0,0,0,0.2)",
-        "purpose": "The user-menu dropdown."
+        "value": "0 16px 40px -16px rgba(0,0,0,0.35)",
+        "purpose": "The account menu."
       },
       {
         "name": "fab",
-        "value": "0 8px 24px -8px rgba(0,0,0,0.4)",
-        "purpose": "The add-device button."
+        "value": "0 12px 28px -10px var(--glow)",
+        "purpose": "A faint blue shadow under the + button."
       },
       {
         "name": "toast",
-        "value": "0 8px 20px -6px rgba(0,0,0,0.35)",
+        "value": "0 12px 28px -10px rgba(0,0,0,0.45)",
         "purpose": "Slow/failed-command snackbars."
       },
       {
         "name": "modal",
-        "value": "0 20px 48px -12px rgba(0,0,0,0.4)",
-        "purpose": "Modals and phone sheets, over a 50% black scrim."
+        "value": "0 24px 56px -16px rgba(0,0,0,0.45)",
+        "purpose": "Modals and phone sheets, over a 55% black scrim."
       },
       {
-        "name": "login-card",
-        "value": "0 30px 60px -20px rgba(0,0,0,0.5)",
-        "purpose": "The login card on the gradient."
+        "name": "login-glow",
+        "value": "blurred Electric Blue disc, filter: blur(90px), opacity 0.35 / 0.45",
+        "purpose": "Behind the login panel: the brand sheet glow as the first impression."
       },
       {
         "name": "input-focus",
         "value": "0 0 0 3px var(--accent-ring)",
-        "purpose": "Soft cyan halo around a focused input."
+        "purpose": "Soft blue halo around a focused input."
       }
     ],
     "motion": [
@@ -985,12 +706,22 @@
       {
         "name": "state",
         "value": "0.2s ease",
-        "purpose": "Card press/lift, buttons, switch thumb, turning off."
+        "purpose": "Tile press/edge, buttons, switch thumb, mode tiles."
       },
       {
-        "name": "lamp-warm",
+        "name": "dial-sweep",
+        "value": "0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Value arc and knob moving to a new target; instant under reduced motion."
+      },
+      {
+        "name": "power-on",
         "value": "0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-        "purpose": "An \"on\" card filling with light and its icon tint appearing; slower than turning off."
+        "purpose": "The power indicator filling Signal Green."
+      },
+      {
+        "name": "glow-fade",
+        "value": "0.6s ease",
+        "purpose": "The dial glow appearing/disappearing with heating."
       },
       {
         "name": "sheet-in",
@@ -1000,7 +731,7 @@
       {
         "name": "pop-in",
         "value": "0.15–0.22s cubic-bezier(0.16, 1, 0.3, 1)",
-        "purpose": "Dropdown and centered modals appearing; exits are instant."
+        "purpose": "Account menu and centered modals appearing; exits are instant."
       },
       {
         "name": "change-pulse",
@@ -1011,11 +742,6 @@
         "name": "skeleton-breathe",
         "value": "1.6s ease-in-out infinite",
         "purpose": "Loading placeholders; static under reduced motion."
-      },
-      {
-        "name": "toast",
-        "value": "3.5s (errors 6s) ease, rise 8px",
-        "purpose": "Slow/failed-command snackbars; fade only under reduced motion."
       }
     ],
     "breakpoints": [
@@ -1027,27 +753,32 @@
       {
         "name": "md",
         "value": "768px",
-        "purpose": "Content 900px; toasts move to the top right."
+        "purpose": "Content 1000px, 1.5rem gutters; toasts move to the top right."
+      },
+      {
+        "name": "dashboard",
+        "value": "900px",
+        "purpose": "Top bar becomes one row; house panel becomes a sticky left column."
       },
       {
         "name": "lg",
         "value": "1200px",
-        "purpose": "Content 1100px."
+        "purpose": "Content 1240px."
       },
       {
         "name": "xl",
         "value": "1600px",
-        "purpose": "Content 1500px."
+        "purpose": "Content 1480px."
       },
       {
-        "name": "2xl",
-        "value": "2200px",
-        "purpose": "Content 2200px."
+        "name": "thermostat-2col",
+        "value": "@container (min-width: 21.9rem)",
+        "purpose": "Bento has two columns: the thermostat spans both."
       },
       {
-        "name": "thermostat-span",
-        "value": "@container (min-width: 20.75rem)",
-        "purpose": "The device grid is wide enough for two columns: the thermostat spans both."
+        "name": "thermostat-2row",
+        "value": "@container (min-width: 33.3rem)",
+        "purpose": "Bento has three columns: the thermostat also spans two rows."
       }
     ]
   },
@@ -1056,99 +787,99 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main form action; full width, Canal Cyan, 48px.",
-      "html": "<button class=\"ds-btn-primary\">Opslaan</button>",
-      "css": ".ds-btn-primary{background:var(--accent,#0e7490);color:var(--accent-contrast,#fff);border:none;border-radius:8px;min-height:48px;width:100%;padding:.75rem 1rem;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:background-color .2s ease,transform .2s ease}.ds-btn-primary:hover{background:var(--accent-hover,#155e75);transform:scale(1.02)}.ds-btn-primary:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:2px}.ds-btn-primary:disabled{opacity:.6;transform:none}"
+      "description": "Main form action; full-width Electric Blue pill, 52px.",
+      "html": "<button class=\"ds-btn-primary\">Toevoegen</button>",
+      "css": ".ds-btn-primary{background:var(--accent,#0066ff);color:var(--accent-contrast,#fff);border:none;border-radius:999px;min-height:52px;width:100%;max-width:22rem;padding:.8rem 1.25rem;font-size:1.05rem;font-weight:600;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;cursor:pointer;transition:background-color .2s ease,transform .2s ease}.ds-btn-primary:hover{background:var(--accent-hover,#0052cc)}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:2px}"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Cancel and lesser actions; hairline border, ink text.",
+      "description": "Cancel and lesser actions; an Inset Mist pill.",
       "html": "<button class=\"ds-btn-secondary\">Annuleren</button>",
-      "css": ".ds-btn-secondary{background:transparent;color:var(--text-primary,#111);border:1px solid var(--border,#e5e7eb);border-radius:8px;min-height:44px;padding:.5rem 1rem;font-size:.9rem;font-weight:500;font-family:inherit;cursor:pointer;transition:background-color .2s ease}.ds-btn-secondary:hover{background:var(--background,#f5f5f7)}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:2px}"
+      "css": ".ds-btn-secondary{background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);border:none;border-radius:999px;min-height:44px;padding:.55rem 1.15rem;font-size:.95rem;font-weight:600;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;cursor:pointer;transition:background-color .2s ease}.ds-btn-secondary:hover{background:var(--border,#e4e4e7)}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:2px}"
     },
     {
       "name": "Danger Button",
       "kind": "button",
       "refersTo": "button-danger",
       "description": "Confirmed destructive action inside the red danger zone.",
-      "html": "<div class=\"ds-danger-zone\"><p>\"Leeslamp\" uit Sandhovius verwijderen?</p><button class=\"ds-btn-danger\">Verwijderen</button></div>",
-      "css": ".ds-danger-zone{background:var(--danger-bg,#fee2e2);border-radius:8px;padding:.75rem;max-width:20rem}.ds-danger-zone p{color:var(--danger,#b91c1c);font-size:.9rem;line-height:1.45;margin:0 0 .75rem}.ds-btn-danger{background:var(--danger,#b91c1c);color:var(--danger-contrast,#fff);border:none;border-radius:8px;min-height:44px;padding:.5rem 1rem;font-size:.9rem;font-weight:500;font-family:inherit;cursor:pointer}.ds-btn-danger:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:2px}"
+      "html": "<div class=\"ds-danger\"><p>\"Leeslamp\" uit Sandhovius verwijderen?</p><button class=\"ds-btn-danger\">Verwijderen</button></div>",
+      "css": ".ds-danger{background:var(--danger-bg,#fee2e2);border-radius:18px;padding:.9rem;max-width:20rem;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}.ds-danger p{color:var(--danger,#b91c1c);font-size:.95rem;line-height:1.45;margin:0 0 .75rem}.ds-btn-danger{background:var(--danger,#b91c1c);color:var(--danger-contrast,#fff);border:none;border-radius:999px;min-height:44px;padding:.55rem 1.15rem;font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer}.ds-btn-danger:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:2px}"
     },
     {
       "name": "Text Field",
       "kind": "input",
       "refersTo": "input",
-      "description": "Labeled field; uppercase label above, cyan border and halo on focus.",
+      "description": "Sentence-case label above an Inset Mist field; blue border and halo on focus.",
       "html": "<label class=\"ds-field\"><span>Naam</span><input class=\"ds-input\" placeholder=\"Bijv. Leeslamp\"></label>",
-      "css": ".ds-field{display:flex;flex-direction:column;gap:.3rem;max-width:20rem}.ds-field span{color:var(--text-secondary,#5f6672);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}.ds-input{padding:.6rem .75rem;border-radius:8px;border:1px solid var(--border,#e5e7eb);background:var(--card-background,#fff);color:var(--text-primary,#111);font-size:1rem;font-family:inherit;transition:border-color .15s ease,box-shadow .15s ease}.ds-input:focus{outline:none;border-color:var(--accent,#0e7490);box-shadow:0 0 0 3px var(--accent-ring,rgba(14,116,144,.22))}"
+      "css": ".ds-field{display:flex;flex-direction:column;gap:.4rem;max-width:20rem;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}.ds-field span{color:var(--text-secondary,#5e626b);font-size:.9rem;font-weight:500}.ds-input{min-height:48px;padding:.65rem .9rem;border-radius:14px;border:1px solid var(--border,#e4e4e7);background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);font-size:1rem;font-family:inherit;transition:border-color .15s ease,box-shadow .15s ease}.ds-input::placeholder{color:var(--text-secondary,#5e626b)}.ds-input:focus{outline:none;border-color:var(--accent,#0066ff);box-shadow:0 0 0 3px var(--accent-ring,rgba(0,102,255,.22))}"
     },
     {
       "name": "Room Tabs",
       "kind": "nav",
       "refersTo": "room-tab",
-      "description": "Horizontally scrolling room filter; active tab cyan with a 2px underline, edge fades when more tabs are hidden.",
-      "html": "<nav class=\"ds-tabs\" aria-label=\"Kamers\"><button class=\"active\" aria-current=\"true\">Woonkamer</button><button>Slaapkamer</button><button>Keuken</button><button>Badkamer</button><button>Zolder</button></nav>",
-      "css": ".ds-tabs{display:flex;gap:1.25rem;overflow-x:auto;max-width:20rem;border-bottom:1px solid var(--border,#e5e7eb);padding-bottom:.4rem;scrollbar-width:none;mask-image:linear-gradient(to right,#000 calc(100% - 3rem),transparent)}.ds-tabs button{flex-shrink:0;min-height:44px;padding:.5rem .1rem;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary,#5f6672);font-size:.9rem;font-weight:500;font-family:inherit;cursor:pointer;transition:color .15s ease,border-color .15s ease}.ds-tabs button:hover{color:var(--text-primary,#111)}.ds-tabs button.active{color:var(--accent,#0e7490);font-weight:700;border-bottom-color:var(--accent,#0e7490)}.ds-tabs button:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:-2px;border-radius:4px}"
+      "description": "Pill text tabs in the top bar; the active room is ink with a small blue dot; the edge fades when more tabs are hidden.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"Kamers\"><button class=\"on\" aria-current=\"true\">Woonkamer</button><button>Slaapkamer</button><button>Keuken</button><button>Badkamer</button><button>Zolder</button></nav>",
+      "css": ".ds-tabs{display:flex;gap:.25rem;overflow-x:auto;max-width:22rem;scrollbar-width:none;padding:3px;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;mask-image:linear-gradient(to right,#000 calc(100% - 3rem),transparent)}.ds-tabs button{position:relative;flex-shrink:0;min-height:44px;padding:.5rem .85rem;border:none;border-radius:999px;background:transparent;color:var(--text-secondary,#5e626b);font-size:1rem;font-weight:500;font-family:inherit;cursor:pointer;transition:color .15s ease}.ds-tabs button:hover{color:var(--text-primary,#000)}.ds-tabs button.on{color:var(--text-primary,#000);font-weight:600}.ds-tabs button.on::after{content:\"\";position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent,#0066ff)}.ds-tabs button:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:-2px}"
     },
     {
-      "name": "Light Card (on / off)",
+      "name": "Light Tile (on / off)",
       "kind": "card",
-      "refersTo": "device-card-on",
-      "description": "The signature: the card is the switch. On fills with Lamp-On light, lights the bulb and says \"Aan\" at State size; off is neutral \"Uit\".",
-      "html": "<div class=\"ds-cards\"><button class=\"ds-lcard on\" aria-pressed=\"true\"><span class=\"ds-icon lamp\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"ds-gear\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"3\" stroke=\"currentColor\" stroke-width=\"1.6\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg></span><span class=\"ds-name\">Leeslamp</span><span class=\"ds-row\"><span class=\"ds-word\">Aan</span><span class=\"ds-switch on\"><span></span></span></span></button><button class=\"ds-lcard\" aria-pressed=\"false\"><span class=\"ds-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8ZM12 17v4\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"ds-gear\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"3\" stroke=\"currentColor\" stroke-width=\"1.6\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg></span><span class=\"ds-name\">Stopcontact tv</span><span class=\"ds-row\"><span class=\"ds-word\">Uit</span><span class=\"ds-switch\"><span></span></span></span></button></div>",
-      "css": ".ds-cards{display:flex;gap:.75rem;flex-wrap:wrap}.ds-lcard{position:relative;display:flex;flex-direction:column;width:10rem;min-height:9rem;box-sizing:border-box;background:var(--card-background,#fff);color:var(--text-primary,#111);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:.85rem .9rem;box-shadow:0 1px 3px rgba(0,0,0,.06);font-family:inherit;text-align:left;cursor:pointer;transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease,border-color .2s ease}.ds-lcard:hover{box-shadow:0 12px 28px -10px rgba(0,0,0,.28);transform:scale(1.01)}.ds-lcard:active{transform:scale(.98)}.ds-lcard:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:2px}.ds-lcard.on{background:var(--on-surface,#ecf6ef);border-color:var(--on,#15803d);box-shadow:inset 0 0 22px -6px var(--on,#15803d);transition:transform .2s ease,background-color .4s cubic-bezier(.16,1,.3,1),box-shadow .4s cubic-bezier(.16,1,.3,1),border-color .4s cubic-bezier(.16,1,.3,1)}.ds-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--background,#f5f5f7);color:var(--text-secondary,#5f6672)}.ds-lcard.on .ds-icon.lamp{background:var(--icon-light-bg,#fef3c7);color:var(--icon-light-fg,#b45309)}.ds-gear{position:absolute;top:.25rem;right:.25rem;display:flex;align-items:center;justify-content:center;width:44px;height:44px;color:var(--text-secondary,#5f6672)}.ds-name{margin-top:.5rem;font-size:.95rem;font-weight:600;line-height:1.3}.ds-row{margin-top:auto;padding-top:.75rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}.ds-word{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--text-secondary,#5f6672)}.ds-lcard.on .ds-word{color:var(--on-text,#166534)}.ds-switch{position:relative;display:inline-block;width:44px;height:24px;border-radius:999px;background:var(--off,#6b7280);padding:3px;box-sizing:border-box;border:none;transition:background .2s ease}.ds-switch span{display:block;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s ease}.ds-switch.on{background:var(--on,#15803d)}.ds-switch.on span{transform:translateX(20px)}"
+      "refersTo": "device-tile",
+      "description": "The signature: the tile is the switch. On lights the round power indicator Signal Green (black symbol), says \"Aan\" and gets a green edge; off is quiet.",
+      "html": "<div class=\"ds-tiles\"><button class=\"ds-tile on\" aria-pressed=\"true\"><span class=\"ds-gear\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"3\" stroke=\"currentColor\" stroke-width=\"1.6\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg></span><span class=\"ds-name\">Leeslamp Woonkamer</span><span class=\"ds-visual\"><span class=\"ds-icon\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span></span><span class=\"ds-row\"><span class=\"ds-word\">Aan</span><span class=\"ds-power\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 3.5v8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M7.05 6.6a7.5 7.5 0 1 0 9.9 0\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></span></span></button><button class=\"ds-tile\" aria-pressed=\"false\"><span class=\"ds-gear\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"3\" stroke=\"currentColor\" stroke-width=\"1.6\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.9-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg></span><span class=\"ds-name\">Keuken Stopcontact</span><span class=\"ds-visual\"><span class=\"ds-icon\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8ZM12 17v4\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span></span><span class=\"ds-row\"><span class=\"ds-word\">Uit</span><span class=\"ds-power\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 3.5v8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M7.05 6.6a7.5 7.5 0 1 0 9.9 0\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg></span></span></button></div>",
+      "css": ".ds-tiles{display:flex;gap:.9rem;flex-wrap:wrap}.ds-tile{background:var(--card-background,#fff);color:var(--text-primary,#000);border:1px solid var(--border,transparent);border-radius:28px;box-shadow:var(--shadow-panel,0 1px 2px rgba(0,0,0,.04),0 14px 32px -20px rgba(0,0,0,.16));font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;position:relative;display:flex;flex-direction:column;width:11rem;min-height:12rem;padding:1rem .9rem 1.1rem 1rem;text-align:left;cursor:pointer;transition:transform .2s ease,border-color .2s ease}.ds-tile:hover{border-color:var(--text-secondary,#5e626b)}.ds-tile:active{transform:scale(.98)}.ds-tile:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:3px}.ds-tile.on{border-color:var(--on,#04d800)}.ds-gear{float:right;display:flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-.1rem -.4rem 0 .25rem;color:var(--text-secondary,#5e626b)}.ds-name{display:block;padding-top:.6rem;font-size:1rem;font-weight:600;line-height:1.3}.ds-visual{flex:1;display:flex;align-items:center;padding:.75rem 0}.ds-icon{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:var(--surface-2,#f3f3f4);color:var(--text-secondary,#5e626b)}.ds-tile.on .ds-icon{color:var(--text-primary,#000)}.ds-row{display:flex;align-items:flex-end;justify-content:space-between;gap:.5rem}.ds-word{font-size:2rem;font-weight:600;letter-spacing:-.02em;line-height:1;color:var(--text-secondary,#5e626b)}.ds-tile.on .ds-word{color:var(--on-text,#027a00)}.ds-power{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--surface-2,#f3f3f4);color:var(--text-secondary,#5e626b);transition:background-color .4s cubic-bezier(.16,1,.3,1),color .4s cubic-bezier(.16,1,.3,1)}.ds-tile.on .ds-power{background:var(--on,#04d800);color:var(--on-contrast,#000)}"
     },
     {
-      "name": "Thermostat Card",
+      "name": "Thermostat Dial",
       "kind": "custom",
-      "refersTo": "device-card",
-      "description": "Spans two grid columns: status line, the current temperature at 2rem, the target between 48px round −/+ buttons (batched into one command).",
-      "html": "<div class=\"ds-tcard\"><span class=\"ds-icon clim\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"8\" stroke=\"currentColor\" stroke-width=\"1.6\"/><path d=\"M12 8v4l2.5 2\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/></svg></span><span class=\"ds-name\">Thermostaat woonkamer</span><span class=\"ds-status\">Verwarmt</span><div class=\"ds-body\"><div class=\"ds-now\"><span class=\"ds-lbl\">Nu</span><span class=\"ds-big\">19,5°</span></div><div class=\"ds-target\"><button class=\"ds-step\" aria-label=\"Kouder\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6 12h12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg></button><div class=\"ds-tv\"><span class=\"ds-lbl\">Doel</span><span class=\"ds-read\">21,0°</span></div><button class=\"ds-step\" aria-label=\"Warmer\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 6v12M6 12h12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg></button></div></div></div>",
-      "css": ".ds-tcard{display:flex;flex-direction:column;width:21rem;box-sizing:border-box;background:var(--card-background,#fff);color:var(--text-primary,#111);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:.85rem .9rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}.ds-icon.clim{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--icon-climate-bg,#ffe4e6);color:var(--icon-climate-fg,#e11d48)}.ds-name{margin-top:.5rem;font-size:.95rem;font-weight:600}.ds-status{margin-top:.35rem;font-size:.85rem;font-weight:600}.ds-body{padding-top:.75rem;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:.75rem 1rem}.ds-now,.ds-tv{display:flex;flex-direction:column}.ds-tv{align-items:center;min-width:4.5rem}.ds-lbl{color:var(--text-secondary,#5f6672);font-size:.72rem;text-transform:uppercase;letter-spacing:.03em}.ds-big{font-size:2rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;color:color-mix(in oklab,var(--temp-hot,#dc2626) 56%,var(--temp-cold,#2563eb))}.ds-read{font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums}.ds-target{display:flex;align-items:center;gap:.5rem}.ds-step{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;border:1px solid var(--border,#e5e7eb);background:var(--background,#f5f5f7);color:var(--text-primary,#111);cursor:pointer;transition:border-color .15s ease,transform .15s ease}.ds-step:hover{border-color:var(--accent,#0e7490);color:var(--accent,#0e7490)}.ds-step:active{transform:scale(.92)}.ds-step:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:2px}"
+      "refersTo": "climate-mode",
+      "description": "The One Glow: a 270° dial with the target at Dial size, the current temperature as a dot, −/+ steps and Verwarmen/Uit mode tiles.",
+      "html": "<div class=\"ds-therm\"><span class=\"ds-tname\">Thermostaat</span><div class=\"ds-dial\"><svg viewBox=\"0 0 200 200\" aria-hidden=\"true\"><circle class=\"t\" cx=\"100\" cy=\"100\" r=\"84\" stroke-dasharray=\"395.8 527.8\" transform=\"rotate(135 100 100)\"/><circle class=\"v\" cx=\"100\" cy=\"100\" r=\"84\" stroke-dasharray=\"257.3 527.8\" transform=\"rotate(135 100 100)\"/><circle class=\"k\" cx=\"154.6\" cy=\"36.1\" r=\"9\"/><circle class=\"c\" cx=\"138.1\" cy=\"25.2\" r=\"3.5\"/></svg><div class=\"ds-dc\"><span class=\"ds-lbl\">Doel</span><span class=\"ds-target\">21,5°</span><span class=\"ds-now\">Nu <b>21,0°</b></span></div><span class=\"ds-min\">15,0°</span><span class=\"ds-max\">25,0°</span></div><div class=\"ds-steps\"><button class=\"ds-step\" aria-label=\"Kouder\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6 12h12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg></button><span class=\"ds-status\">Verwarmt</span><button class=\"ds-step\" aria-label=\"Warmer\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 6v12M6 12h12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg></button></div><div class=\"ds-modes\" role=\"radiogroup\" aria-label=\"Verwarming\"><button class=\"ds-mode on\" role=\"radio\" aria-checked=\"true\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 21c3.6 0 6-2.4 6-5.8 0-3.1-2.1-5.3-3.6-7.2-.3 1.6-1.1 2.7-2.1 3.2.2-2.9-1.1-5.6-3.4-7.2.2 2.4-1 4.2-2.2 5.8C5.6 11.4 6 12.8 6 15.2 6 18.6 8.4 21 12 21Z\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linejoin=\"round\"/></svg>Verwarmen</button><button class=\"ds-mode\" role=\"radio\" aria-checked=\"false\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 3.5v8\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><path d=\"M7.05 6.6a7.5 7.5 0 1 0 9.9 0\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>Uit</button></div></div>",
+      "css": ".ds-therm{background:var(--card-background,#fff);color:var(--text-primary,#000);border:1px solid var(--border,transparent);border-radius:28px;box-shadow:var(--shadow-panel,0 1px 2px rgba(0,0,0,.04),0 14px 32px -20px rgba(0,0,0,.16));font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;gap:1.1rem;width:22rem;padding:1rem 1rem 1.25rem}.ds-tname{align-self:flex-start;padding:.6rem 0 0 .15rem;font-size:1rem;font-weight:600}.ds-dial{position:relative;width:15rem;aspect-ratio:1}.ds-dial::before{content:\"\";position:absolute;inset:18%;border-radius:50%;background:var(--glow,rgba(0,102,255,.3));filter:blur(32px)}.ds-dial svg{position:relative;display:block;width:100%;height:100%;overflow:visible}.ds-dial .t,.ds-dial .v{fill:none;stroke-width:14;stroke-linecap:round}.ds-dial .t{stroke:var(--surface-2,#f3f3f4)}.ds-dial .v{stroke:var(--accent,#0066ff)}.ds-dial .k{fill:var(--card-background,#fff);stroke:var(--accent,#0066ff);stroke-width:4}.ds-dial .c{fill:var(--text-primary,#000)}.ds-dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem}.ds-lbl,.ds-now{font-size:.95rem;color:var(--text-secondary,#5e626b)}.ds-now b{font-weight:600;color:color-mix(in oklab,var(--temp-hot,#dc2626) 60%,var(--temp-cold,#0066ff))}.ds-target{font-size:3.4rem;font-weight:600;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}.ds-min,.ds-max{position:absolute;bottom:6%;font-size:.85rem;color:var(--text-secondary,#5e626b)}.ds-min{left:8%}.ds-max{right:8%}.ds-steps{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%}.ds-step{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;border:none;background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);cursor:pointer;transition:color .15s ease,transform .15s ease}.ds-step:hover{color:var(--accent-text,#0066ff)}.ds-step:active{transform:scale(.92)}.ds-step:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:2px}.ds-status{flex:1;text-align:center;font-size:.95rem;font-weight:600;color:var(--accent-text,#0066ff)}.ds-modes{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;width:100%}.ds-mode{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;min-height:72px;border:none;border-radius:18px;background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background-color .2s ease,color .2s ease}.ds-mode.on{background:var(--accent,#0066ff);color:var(--accent-contrast,#fff)}.ds-mode:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:2px}"
     },
     {
-      "name": "Connection Line / Notice",
+      "name": "House Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "House name, honest connection line, and what is still on — with chips that jump to the room.",
+      "html": "<section class=\"ds-house\"><h1>Lassche huis</h1><p class=\"ds-live\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M5 12.5 9.5 17 19 7\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Verbonden met je huis</p><div class=\"ds-sum\"><p><span>3</span> staan aan</p><div class=\"ds-chips\"><button class=\"ds-chip\">Woonkamer<i>2</i></button><button class=\"ds-chip\">Keuken</button></div></div></section>",
+      "css": ".ds-house{background:var(--card-background,#fff);color:var(--text-primary,#000);border:1px solid var(--border,transparent);border-radius:28px;box-shadow:var(--shadow-panel,0 1px 2px rgba(0,0,0,.04),0 14px 32px -20px rgba(0,0,0,.16));font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;gap:1rem;width:17rem;padding:1.25rem 1.25rem 1.35rem}.ds-house h1{margin:0;font-size:1.75rem;font-weight:600;letter-spacing:-.02em;line-height:1.15}.ds-live{display:flex;align-items:center;gap:.4rem;margin:-.5rem 0 0;font-size:.95rem;color:var(--text-secondary,#5e626b)}.ds-live svg{color:var(--on-text,#027a00)}.ds-sum{display:flex;flex-direction:column;gap:.6rem;padding-top:1rem;border-top:1px solid var(--border,#e4e4e7)}.ds-sum p{margin:0;font-size:1rem;font-weight:500;color:var(--text-secondary,#5e626b)}.ds-sum p span{font-size:2rem;font-weight:600;letter-spacing:-.02em;color:var(--on-text,#027a00);vertical-align:-.12em;margin-right:.15rem}.ds-chips{display:flex;flex-wrap:wrap;gap:.45rem}.ds-chip{display:inline-flex;align-items:center;gap:.45rem;min-height:44px;padding:.35rem .95rem;border-radius:999px;border:none;background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background-color .15s ease}.ds-chip:hover{background:var(--border,#e4e4e7)}.ds-chip:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:2px}.ds-chip i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;min-width:1.75rem;height:1.75rem;margin-right:-.45rem;border-radius:999px;background:var(--on,#04d800);color:var(--on-contrast,#000);font-size:.85rem;font-weight:700}"
+    },
+    {
+      "name": "Connection Notice",
       "kind": "custom",
-      "refersTo": "connection-status",
-      "description": "Quiet when healthy; an Amber Notice in household words when the phone or the box cannot be reached.",
-      "html": "<div class=\"ds-conn\"><p class=\"ds-live\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M5 12.5 9.5 17 19 7\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Verbonden met je huis</p><div class=\"ds-notice\" role=\"status\"><strong>Je Sandhovius-box reageert niet sinds 14:02.</strong> Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.</div></div>",
-      "css": ".ds-conn{display:flex;flex-direction:column;gap:1rem;max-width:24rem}.ds-live{display:flex;align-items:center;gap:.35rem;margin:0;font-size:.85rem;color:var(--text-secondary,#5f6672)}.ds-live svg{color:var(--on-text,#166534)}.ds-notice{background:var(--warning-bg,#fef3c7);color:var(--warning,#b45309);border-radius:10px;padding:.75rem .9rem;font-size:.9rem;line-height:1.45}.ds-notice strong{font-weight:700}"
+      "refersTo": "panel",
+      "description": "When the box or the connection is gone: an Amber Notice in household words, never silence.",
+      "html": "<div class=\"ds-notice\" role=\"status\"><strong>Je Sandhovius-box reageert niet sinds 14:02.</strong> Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.</div>",
+      "css": ".ds-notice{max-width:22rem;background:var(--warning-bg,#fef3c7);color:var(--warning,#b45309);border-radius:18px;padding:.85rem .95rem;font-size:.95rem;line-height:1.45;font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}.ds-notice strong{font-weight:700}"
     },
     {
-      "name": "House Summary Chips",
-      "kind": "chip",
-      "refersTo": "house-summary",
-      "description": "\"What is still on?\" for the whole house; each chip jumps to its room.",
-      "html": "<div class=\"ds-summary\"><span class=\"ds-lead\">3 aan in</span><button class=\"ds-chip\">Woonkamer<span> · 2</span></button><button class=\"ds-chip\">Keuken</button></div>",
-      "css": ".ds-summary{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .5rem;font-size:.95rem;font-weight:600;color:var(--text-primary,#111)}.ds-lead{color:var(--on-text,#166534)}.ds-chip{min-height:44px;padding:.35rem .85rem;border-radius:999px;border:1px solid var(--on,#15803d);background:var(--on-surface,#ecf6ef);color:var(--text-primary,#111);font-size:.9rem;font-weight:600;font-family:inherit;cursor:pointer;transition:background-color .15s ease}.ds-chip span{color:var(--text-secondary,#5f6672);font-weight:500}.ds-chip:hover{background:var(--card-background,#fff)}.ds-chip:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:2px}"
-    },
-    {
-      "name": "FAB",
+      "name": "+ Button",
       "kind": "button",
       "refersTo": "fab",
-      "description": "The single add-device action, fixed bottom right.",
+      "description": "The single add-device action: a 60px Electric Blue circle with a faint blue shadow.",
       "html": "<button class=\"ds-fab\" aria-label=\"Apparaat toevoegen\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M12 6v12M6 12h12\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"/></svg></button>",
-      "css": ".ds-fab{width:48px;height:48px;border-radius:50%;border:none;background:var(--accent,#0e7490);color:var(--accent-contrast,#fff);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px -8px rgba(0,0,0,.4);transition:background-color .2s ease,transform .2s ease}.ds-fab:hover{background:var(--accent-hover,#155e75);transform:scale(1.05)}.ds-fab:focus-visible{outline:2px solid var(--accent,#0e7490);outline-offset:3px}"
+      "css": ".ds-fab{width:60px;height:60px;border-radius:50%;border:none;background:var(--accent,#0066ff);color:var(--accent-contrast,#fff);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 28px -10px var(--glow,rgba(0,102,255,.3));transition:background-color .2s ease,transform .2s ease}.ds-fab:hover{background:var(--accent-hover,#0052cc)}.ds-fab:active{transform:scale(.94)}.ds-fab:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:3px}"
     }
   ],
   "narrative": {
-    "northStar": "The Light Switch by the Door",
-    "overview": "Every control in Sandhovius should be as obvious as the switch you reach for when you walk into a room. You know where it is, what it does, and whether it worked, and none of that takes a moment's thought. The app is a set of familiar household controls, arranged by room, that disappear into the routine of the house. The user should never feel they are \"using a smart-home system\". They are turning on the kitchen light.\n\nThe mood is soft and reassuring. Surfaces are softly layered and sit calmly on a pale hallway ground (or a deep night floor in dark mode). Each device is a single, generously sized card with one clear state and one obvious action. Motion confirms and never performs: cards compress slightly under the thumb, an \"on\" card fills with a soft green light from the inside, and a card that just changed pulses once in Canal Cyan. Settings sit behind the gear (or a long-press) in a sheet and never crowd the front of a card.\n\n**The card is the state.** A light card that is on is unmistakably on from across the room: the whole surface turns Lamp-On green, the bulb icon lights up in its amber tint, and \"Aan\" is the largest word on the card, next to a small switch. Off is neutral: gray icon, \"Uit\", switch to the left.\n\nThis is explicitly **not** a Home Assistant dashboard, which is dense, entity-centric and built for power users. It is not a generic SaaS admin (sidebars, data tables, KPI tiles), and it is not a techy \"smart home\" console (neon glows, glassmorphism, sci-fi dark panels).",
+    "northStar": "The Lit Room at Night",
+    "overview": "Walk into a dark house in the evening and you know at once what is on: the lamp that glows, the thermostat's small light, everything else resting in the dark. Sandhovius works the same way. The surfaces are calm and quiet: black at night, soft mist by day. Only the things that are on light up: a power button that burns Signal Green, and the one live dial that glows Electric Blue. You never have to read to know the state of the house; you see it, the way you see a lit window from the street.\n\nThe app is still a set of familiar household controls, arranged by room, and the user should never feel they are \"using a smart-home system\". They are turning on the kitchen light. The layout is a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with one big word (\"Aan\" or \"Uit\") and a round power button. The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, the power button lights up over 0.4s, and a tile that just changed pulses once in Electric Blue. Settings sit behind the gear (or a long-press) in a sheet and never crowd a tile.\n\n**The tile is the state.** A lamp that is on is unmistakable from across the room: the power button burns green with a black symbol, \"Aan\" is the largest word, and the tile gets a green edge. Off is quiet: a gray button, \"Uit\" in the secondary color.\n\nThis is explicitly **not** a Home Assistant dashboard, which is dense, entity-centric and built for power users. It is not a generic SaaS admin (sidebars, data tables, KPI tiles). And although it is dark, it is not a techy neon console: there is exactly one glow per screen, glassmorphism is banned, and there are no sci-fi decorations.",
     "keyCharacteristics": [
-      "One card per device, as tall as its content: two compact columns on a phone, a thermostat spans two",
-      "State is readable at a glance: a green card with \"Aan\" for on, a neutral card with \"Uit\" for off, text for offline, amber for attention",
+      "A bento of rounded panels (28px): a house panel plus one tile per device, sized by the control it needs",
+      "State is readable at a glance: a green power button with \"Aan\" for on, a quiet tile with \"Uit\" for off, text for offline, amber for attention",
+      "One glow per screen: the thermostat dial's soft Electric Blue light, only while heating is on",
       "Connection is always honest: \"Verbonden met je huis\" when everything works, a plain-language notice when it doesn't",
-      "Softly layered depth: surfaces rest on gentle ambient shadow and lift further under interaction",
-      "Light and dark themes are equal citizens and are both required",
-      "System font stack; hierarchy comes from weight and size, not from typeface contrast",
-      "Generous touch targets (44px minimum, 48px for primary actions)"
+      "Light and dark themes are equal citizens: black with dark panels at night, mist with white panels by day",
+      "One friendly geometric family (Urbanist), sentence case throughout, never uppercase labels",
+      "Generous touch targets (44px minimum, 52px for primary actions and thermostat steps, 60px for the + button)"
     ],
     "rules": [
       {
         "name": "The One Voice Rule",
-        "body": "Canal Cyan is the only interactive accent. If something needs to look tappable and important, it is cyan. If it is not the main action on the screen, it is not cyan.",
+        "body": "Electric Blue is the only interactive accent. If something needs to look tappable and important, it is blue. If it is not the main action on the screen, it is not blue.",
         "section": "colors"
       },
       {
@@ -1158,22 +889,27 @@
       },
       {
         "name": "The Readings Are Loudest Rule",
-        "body": "On a device card the value a person came to check (on/off state, current temperature) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use the Dutch decimal comma with one decimal (\"21,5°\", `formatTemperature`).",
+        "body": "On a tile, the value a person came to check (on/off state, temperature, the thermostat target) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use the Dutch decimal comma with one decimal (\"21,5°\", `formatTemperature`).",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels, buttons and headings are written as sentences (\"Wat voeg je toe?\", \"Naam\"), never in uppercase or with letter-spaced stamps. Meta is written as sentences too (\"Offline, laatst bekende stand\"), not as strings joined with middle dots.",
         "section": "typography"
       },
       {
         "name": "The Legibility Floor Rule",
-        "body": "Some users are older or have reduced sight. No text that carries information may go below 0.72rem. Meta text at that size must still meet 4.5:1 contrast.",
+        "body": "Some users are older or have reduced sight. No text that carries information may go below 0.85rem. Meta text at that size must still meet 4.5:1 contrast.",
         "section": "typography"
       },
       {
-        "name": "The Lamp Shade Rule",
-        "body": "\"On\" glows inward, never outward. Outer glows and neon halos are banned; they read as a techy console, not a lit room.",
+        "name": "The One Glow Rule",
+        "body": "Each screen has at most one glowing element: the most important *live* control, which on the dashboard is the thermostat dial while it heats. Everything else is flat. \"On\" is shown by a filled green button and a green edge, not by light. A second glow turns the room into a neon console.",
         "section": "elevation"
       },
       {
         "name": "The Offline Fade Rule",
-        "body": "An unreachable device stays in place and says so in text: \"Offline\" when the device itself is gone, \"Niet bereikbaar\" when the whole box is (with \"Laatst aan/uit\" or \"· laatst bekend\"). Only its icon fades (45% opacity, full grayscale); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.",
+        "body": "An unreachable device stays in place and says so in text: \"Offline\" when the device itself is gone, \"Niet bereikbaar\" when the whole box is (with \"Laatst aan/uit\" or \"…, laatst bekende stand\"). Only its icon fades (45% opacity); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.",
         "section": "elevation"
       },
       {
@@ -1184,22 +920,22 @@
     ],
     "dos": [
       "**Do** make every control reachable and obvious in one tap from the room view: toggling, reading and adjusting never require navigation.",
-      "**Do** let cards be as tall as their content and let the grid decide the columns; give a device more width only when its control needs it (the thermostat).",
-      "**Do** keep touch targets at 44px or more (48px for primary actions and the FAB).",
+      "**Do** size a tile by the control it needs: small for a lamp, large for the thermostat. Let the bento decide the columns.",
+      "**Do** keep touch targets at 44px or more (52px for primary actions and thermostat steps, 60px for the + button).",
       "**Do** pair every state color with a word or an icon (\"Aan\", \"Uit\", \"Offline\", a battery %).",
-      "**Do** design every screen in both themes; the dark-mode tokens are part of the spec, not an afterthought.",
-      "**Do** keep motion confirming and brief (0.15–0.2s for state, 0.4s for a lamp's glow warming up, 0.25s for a sheet sliding up, 1s for the one-time change pulse). Exits are faster than entrances.",
-      "**Do** give every animation a `prefers-reduced-motion` path that removes movement (scaling, sliding, growing rings, the loading breath) but keeps the state change visible, as a crossfade, a fade or a stationary ring.",
-      "**Do** keep information-bearing text at 4.5:1 or better in both themes, and controls or icons at 3:1. The light theme uses a deeper step of each hue than the dark theme to get there. Check both themes whenever a token changes."
+      "**Do** design every screen in both themes: black with night panels, and mist with white panels. The dark-mode tokens are part of the spec, not an afterthought.",
+      "**Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 0.4s for a power button lighting up, 0.6s for the glow fading in, 0.25s for a sheet sliding up, and 1s for the one-time change pulse. Exits are faster than entrances.",
+      "**Do** give every animation a `prefers-reduced-motion` path that removes movement (scaling, sliding, growing rings, the dial sweep, the loading breath) but keeps the state change visible.",
+      "**Do** keep information-bearing text at 4.5:1 or better in both themes, and controls or icons at 3:1. Where a brand color fails as text (Signal Green on white), use its deeper step as text and keep the bright color for fills."
     ],
     "donts": [
       "**Don't** make it look like a Home Assistant dashboard: no dense entity lists, no tiny tiles, no power-user toggle walls.",
       "**Don't** make it look like a generic SaaS admin: no sidebars, data tables or KPI tiles.",
-      "**Don't** make it look like a techy/neon smart-home console: no outer glows, glassmorphism, neon gradients or sci-fi dark panels.",
-      "**Don't** introduce a second accent color; Canal Cyan is the only interactive voice.",
-      "**Don't** use gradients inside the app. The login gradient is provisional.",
+      "**Don't** make it a neon console: no more than one glow per screen, no glassmorphism, no neon gradients, no sci-fi decoration.",
+      "**Don't** introduce a second accent color; Electric Blue is the only interactive voice.",
+      "**Don't** show tiles for things the house can't do or data it doesn't have (weather, music, energy, brightness, scenes) just because an inspiration board has them.",
+      "**Don't** use uppercase labels, letter-spaced stamps or middle-dot meta strings.",
       "**Don't** show a toast for every tap, or make a tap on a thermostat change the heating.",
-      "**Don't** treat the navy header bar or the login gradient as brand identity; they are current state until real brand assets exist.",
       "**Don't** hide offline or stale devices, or signal them with color alone."
     ]
   }

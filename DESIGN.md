@@ -2,179 +2,182 @@
 name: Sandhovius
 description: Calm, glanceable control for a home that runs itself locally.
 colors:
-  canal-cyan: "#0e7490"
-  canal-cyan-hover: "#155e75"
-  canal-cyan-contrast: "#ffffff"
-  canal-cyan-dark: "#22d3ee"
-  canal-cyan-hover-dark: "#67e8f9"
-  canal-cyan-contrast-dark: "#0f1115"
-  lamp-on-green: "#15803d"
-  lamp-on-green-dark: "#22c55e"
-  lamp-on-surface: "#ecf6ef"
-  lamp-on-surface-dark: "#1a2b22"
-  lamp-on-text: "#166534"
-  lamp-on-text-dark: "#4ade80"
-  resting-gray: "#6b7280"
-  resting-gray-dark: "#6b7280"
+  electric-blue: "#0066ff"
+  electric-blue-hover: "#0052cc"
+  electric-blue-hover-dark: "#1a75ff"
+  electric-blue-contrast: "#ffffff"
+  electric-blue-text: "#0066ff"
+  electric-blue-text-dark: "#4d94ff"
+  signal-green: "#04d800"
+  signal-green-contrast: "#000000"
+  signal-green-surface: "#eaf9e6"
+  signal-green-surface-dark: "#122413"
+  deep-leaf: "#027a00"
+  resting-gray: "#8a8f98"
+  resting-gray-dark: "#5b6069"
   amber-notice: "#b45309"
   amber-notice-bg: "#fef3c7"
   amber-notice-dark: "#f59e0b"
-  amber-notice-bg-dark: "#451a03"
+  amber-notice-bg-dark: "#3a2305"
   alarm-red: "#b91c1c"
   alarm-red-contrast: "#ffffff"
   alarm-red-bg: "#fee2e2"
   alarm-red-dark: "#f87171"
   alarm-red-contrast-dark: "#1a0505"
-  alarm-red-bg-dark: "#450a0a"
-  hallway-white: "#f5f5f7"
-  card-white: "#ffffff"
-  hairline-gray: "#e5e7eb"
-  ink: "#111111"
-  quiet-slate: "#5f6672"
-  night-floor: "#0f1115"
-  night-card: "#1c1f26"
-  night-hairline: "#2a2e37"
-  night-ink: "#f3f4f6"
-  night-quiet: "#9ca3af"
-  night-navy-bar: "#0f172a"
-  night-navy-bar-fg: "#f1f5f9"
-  night-navy-bar-fg-secondary: "#94a3b8"
-  icon-light-bg: "#fef3c7"
-  icon-light-fg: "#b45309"
-  icon-switch-bg: "#dbeafe"
-  icon-switch-fg: "#2563eb"
-  icon-sensor-bg: "#ccfbf1"
-  icon-sensor-fg: "#0d9488"
-  icon-climate-bg: "#ffe4e6"
-  icon-climate-fg: "#e11d48"
-  icon-light-bg-dark: "#45330a"
-  icon-light-fg-dark: "#fbbf24"
-  icon-switch-bg-dark: "#1e3a5f"
-  icon-switch-fg-dark: "#60a5fa"
-  icon-sensor-bg-dark: "#0f3d38"
-  icon-sensor-fg-dark: "#2dd4bf"
-  icon-climate-bg-dark: "#4c1123"
-  icon-climate-fg-dark: "#fb7185"
-  temp-cold: "#2563eb"
+  alarm-red-bg-dark: "#3b0d0d"
+  mist: "#f0f0f0"
+  panel-white: "#ffffff"
+  inset-mist: "#f3f3f4"
+  hairline-gray: "#e4e4e7"
+  ink-black: "#000000"
+  quiet-slate: "#5e626b"
+  night-black: "#000000"
+  night-panel: "#17191d"
+  night-inset: "#22252a"
+  night-hairline: "#2a2d33"
+  night-ink: "#ffffff"
+  night-quiet: "#a1a5ad"
+  temp-cold: "#0066ff"
   temp-hot: "#dc2626"
-  temp-cold-dark: "#60a5fa"
+  temp-cold-dark: "#4d94ff"
   temp-hot-dark: "#f87171"
-  toast-ink-bg: "#1f2430"
+  toast-ink-bg: "#1f2126"
   toast-error-bg: "#b91c1c"
 typography:
   display:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "1.8rem"
-    fontWeight: 800
-    letterSpacing: "-0.02em"
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "2.5rem"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.03em"
+  dial:
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "3.4rem"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.04em"
   headline:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "1.5rem"
-    fontWeight: 700
-    letterSpacing: "-0.015em"
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 600
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
   state:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "1.6rem"
-    fontWeight: 700
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "2rem"
+    fontWeight: 600
+    lineHeight: 1
     letterSpacing: "-0.02em"
   title:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "1.05rem"
-    fontWeight: 700
-  reading:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "1.15rem"
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "1.35rem"
     fontWeight: 600
+    letterSpacing: "-0.01em"
   body:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "0.9rem"
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "1rem"
     fontWeight: 500
   meta:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "0.8rem"
-    fontWeight: 400
-  label:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "0.78rem"
-    fontWeight: 600
-    letterSpacing: "0.04em"
+    fontFamily: "Urbanist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "0.9rem"
+    fontWeight: 500
 rounded:
-  xs: "6px"
-  sm: "8px"
-  toast: "10px"
-  card: "12px"
-  modal: "16px"
-  sheet: "20px"
+  control: "14px"
+  tile: "18px"
+  panel: "28px"
   pill: "999px"
 spacing:
   xs: "0.4rem"
-  sm: "0.75rem"
-  md: "1rem"
+  sm: "0.6rem"
+  md: "0.9rem"
   lg: "1.25rem"
   xl: "1.5rem"
 components:
   button-primary:
-    backgroundColor: "{colors.canal-cyan}"
-    textColor: "{colors.canal-cyan-contrast}"
-    rounded: "{rounded.sm}"
-    padding: "0.75rem 1rem"
-    height: "48px"
+    backgroundColor: "{colors.electric-blue}"
+    textColor: "{colors.electric-blue-contrast}"
+    rounded: "{rounded.pill}"
+    padding: "0.8rem 1.25rem"
+    height: "52px"
   button-primary-hover:
-    backgroundColor: "{colors.canal-cyan-hover}"
+    backgroundColor: "{colors.electric-blue-hover}"
   button-secondary:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "0.5rem 1rem"
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.ink-black}"
+    rounded: "{rounded.pill}"
+    padding: "0.55rem 1.15rem"
     height: "44px"
   button-danger:
     backgroundColor: "{colors.alarm-red}"
     textColor: "{colors.alarm-red-contrast}"
-    rounded: "{rounded.sm}"
-    padding: "0.5rem 1rem"
+    rounded: "{rounded.pill}"
+    padding: "0.55rem 1.15rem"
     height: "44px"
   input:
-    backgroundColor: "{colors.card-white}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "0.6rem 0.75rem"
-  device-card:
-    backgroundColor: "{colors.card-white}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.card}"
-    padding: "0.85rem 0.9rem"
-    minWidth: "10rem"
-    height: "auto"
-  device-card-on:
-    backgroundColor: "{colors.lamp-on-surface}"
-    textColor: "{colors.lamp-on-text}"
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.ink-black}"
+    rounded: "{rounded.control}"
+    padding: "0.65rem 0.9rem"
+    height: "48px"
+  panel:
+    backgroundColor: "{colors.panel-white}"
+    textColor: "{colors.ink-black}"
+    rounded: "{rounded.panel}"
+  device-tile:
+    backgroundColor: "{colors.panel-white}"
+    textColor: "{colors.ink-black}"
+    rounded: "{rounded.panel}"
+    padding: "1rem 0.9rem 1.1rem 1rem"
+    height: "12rem"
+  power-indicator:
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.quiet-slate}"
+    rounded: "{rounded.pill}"
+    size: "44px"
+  power-indicator-on:
+    backgroundColor: "{colors.signal-green}"
+    textColor: "{colors.signal-green-contrast}"
+  climate-mode:
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.ink-black}"
+    rounded: "{rounded.tile}"
+    height: "72px"
+  climate-mode-active:
+    backgroundColor: "{colors.electric-blue}"
+    textColor: "{colors.electric-blue-contrast}"
+  climate-step:
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.ink-black}"
+    rounded: "{rounded.pill}"
+    size: "52px"
   room-tab:
     textColor: "{colors.quiet-slate}"
     typography: "{typography.body}"
+    rounded: "{rounded.pill}"
     height: "44px"
   room-tab-active:
-    textColor: "{colors.canal-cyan}"
+    textColor: "{colors.ink-black}"
   switch:
     backgroundColor: "{colors.resting-gray}"
     rounded: "{rounded.pill}"
-    width: "44px"
-    height: "24px"
+    width: "48px"
+    height: "28px"
   switch-on:
-    backgroundColor: "{colors.lamp-on-green}"
+    backgroundColor: "{colors.signal-green}"
   fab:
-    backgroundColor: "{colors.canal-cyan}"
-    textColor: "{colors.canal-cyan-contrast}"
+    backgroundColor: "{colors.electric-blue}"
+    textColor: "{colors.electric-blue-contrast}"
     rounded: "{rounded.pill}"
-    size: "48px"
+    size: "60px"
   modal:
-    backgroundColor: "{colors.card-white}"
-    rounded: "{rounded.modal}"
-    padding: "1.25rem"
-    width: "400px"
+    backgroundColor: "{colors.panel-white}"
+    rounded: "{rounded.panel}"
+    padding: "1.35rem"
+    width: "420px"
   sheet:
-    backgroundColor: "{colors.card-white}"
-    rounded: "{rounded.sheet}"
-    padding: "1.25rem"
+    backgroundColor: "{colors.panel-white}"
+    rounded: "{rounded.panel}"
+    padding: "1.35rem"
     width: "100%"
 ---
 
@@ -182,180 +185,184 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Light Switch by the Door"**
+**Creative North Star: "The Lit Room at Night"**
 
-Every control in Sandhovius should be as obvious as the switch you reach for when you walk into a room. You know where it is, what it does, and whether it worked, and none of that takes a moment's thought. The app is a set of familiar household controls, arranged by room, that disappear into the routine of the house. The user should never feel they are "using a smart-home system". They are turning on the kitchen light.
+Walk into a dark house in the evening and you know at once what is on: the lamp that glows, the thermostat's small light, everything else resting in the dark. Sandhovius works the same way. The surfaces are calm and quiet: black at night, soft mist by day. Only the things that are on light up: a power button that burns Signal Green, and the one live dial that glows Electric Blue. You never have to read to know the state of the house; you see it, the way you see a lit window from the street.
 
-The mood is soft and reassuring. Surfaces are softly layered and sit calmly on a pale hallway ground (or a deep night floor in dark mode). Each device is a single, generously sized card with one clear state and one obvious action. Motion confirms and never performs: cards compress slightly under the thumb, an "on" card fills with a soft green light from the inside, and a card that just changed pulses once in Canal Cyan. Settings sit behind the gear (or a long-press) in a sheet and never crowd the front of a card.
+The app is still a set of familiar household controls, arranged by room, and the user should never feel they are "using a smart-home system". They are turning on the kitchen light. The layout is a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with one big word ("Aan" or "Uit") and a round power button. The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, the power button lights up over 0.4s, and a tile that just changed pulses once in Electric Blue. Settings sit behind the gear (or a long-press) in a sheet and never crowd a tile.
 
-**The card is the state.** A light card that is on is unmistakably on from across the room: the whole surface turns Lamp-On green, the bulb icon lights up in its amber tint, and "Aan" is the largest word on the card, next to a small switch. Off is neutral: gray icon, "Uit", switch to the left.
+**The tile is the state.** A lamp that is on is unmistakable from across the room: the power button burns green with a black symbol, "Aan" is the largest word, and the tile gets a green edge. Off is quiet: a gray button, "Uit" in the secondary color.
 
-This is explicitly **not** a Home Assistant dashboard, which is dense, entity-centric and built for power users. It is not a generic SaaS admin (sidebars, data tables, KPI tiles), and it is not a techy "smart home" console (neon glows, glassmorphism, sci-fi dark panels).
+This is explicitly **not** a Home Assistant dashboard, which is dense, entity-centric and built for power users. It is not a generic SaaS admin (sidebars, data tables, KPI tiles). And although it is dark, it is not a techy neon console: there is exactly one glow per screen, glassmorphism is banned, and there are no sci-fi decorations.
 
 **Key Characteristics:**
-- One card per device, as tall as its content: two compact columns on a phone, a thermostat spans two
-- State is readable at a glance: a green card with "Aan" for on, a neutral card with "Uit" for off, text for offline, amber for attention
+- A bento of rounded panels (28px): a house panel plus one tile per device, sized by the control it needs
+- State is readable at a glance: a green power button with "Aan" for on, a quiet tile with "Uit" for off, text for offline, amber for attention
+- One glow per screen: the thermostat dial's soft Electric Blue light, only while heating is on
 - Connection is always honest: "Verbonden met je huis" when everything works, a plain-language notice when it doesn't
-- Softly layered depth: surfaces rest on gentle ambient shadow and lift further under interaction
-- Light and dark themes are equal citizens and are both required
-- System font stack; hierarchy comes from weight and size, not from typeface contrast
-- Generous touch targets (44px minimum, 48px for primary actions)
+- Light and dark themes are equal citizens: black with dark panels at night, mist with white panels by day
+- One friendly geometric family (Urbanist), sentence case throughout, never uppercase labels
+- Generous touch targets (44px minimum, 52px for primary actions and thermostat steps, 60px for the + button)
 
 ## Colors
 
-A restrained, cool-neutral palette with one clear voice (Canal Cyan) and a small, fixed vocabulary of state colors.
+A black-and-mist palette from the brand sheet, with one interactive voice (Electric Blue), one "on" signal (Signal Green) and a small, fixed vocabulary of state colors.
 
 ### Primary
-- **Canal Cyan** (light `canal-cyan`, dark `canal-cyan-dark`): the single interactive voice. It is used for primary buttons, the active room tab, focus rings, input focus, the FAB and the "just changed" pulse. The name evokes clear Dutch city water: cool and local. In the light theme it is a deep cyan (white text 5.4:1) and hover darkens further; in dark mode it brightens and flips its contrast color to the night floor. Soft rings and the change pulse use per-theme `--accent-ring` / `--accent-pulse` tokens, never a hard-coded rgba.
+- **Electric Blue** (`electric-blue`): the single interactive voice. It is used for primary buttons, the active thermostat mode, the dial's value arc and knob, focus rings, input focus, the dot under the active room, the + button and the "just changed" pulse. White text on it is 4.8:1. As *text* it stays `electric-blue-text` in the light theme and lightens to `electric-blue-text-dark` on black (5.9:1 on a night panel). Soft rings and the pulse use the per-theme `--accent-ring` / `--accent-pulse` tokens; the dial's glow uses `--glow`. None of them are hard-coded rgba.
 
 ### State colors
-- **Lamp-On Green** (`lamp-on-green` / `-dark`): means "this device is on". It is used for the card's inner glow and border, the switch track and the house-summary chips. The on-card surface is **Lamp-On Surface** (`lamp-on-surface`), and "Aan" on it is **Lamp-On Text** (`lamp-on-text`, 6.4:1 light / 8.5:1 dark). It is never used for success messages, app settings or decoration: the dark-mode switch in Instellingen uses Canal Cyan, because a theme is not device state.
-- **Resting Gray** (`resting-gray` / `-dark`): the off track of a switch.
-- **Amber Notice** (`amber-notice` with `amber-notice-bg`): something needs attention but is not broken, for example sensor readings out of range or recoverable errors in banners.
+- **Signal Green** (`signal-green`): means "this device is on". It fills the power indicator (with a black symbol, `signal-green-contrast`, 10.8:1 in both themes), colors the on-tile border, the device-state switch track and the count badges in the house summary. It fails as text on white (1.9:1), so as text it is **Deep Leaf** (`deep-leaf`, 5.1:1+) in the light theme and Signal Green itself on black. It is never used for success messages, app settings or decoration: the dark-mode switch in Instellingen uses Electric Blue, because a theme is not device state.
+- **Resting Gray** (`resting-gray` / `-dark`): the off track of a switch, and the dial's arc when heating is off.
+- **Amber Notice** (`amber-notice` with `amber-notice-bg`): something needs attention but is not broken, such as the connection notices, recoverable errors in banners and the low-battery badge.
 - **Alarm Red** (`alarm-red` with `alarm-red-bg`): destructive actions and danger zones only.
 
-### Device-type tints
-Each device type owns a soft tinted circle behind its icon, with a paler background and a saturated foreground, redefined for dark mode: **light** (amber), **switch** (blue), **sensor** (teal) and **climate** (rose). The tints identify *kind*. The one exception is lights and switches: they show their tint **only when on** (a lit bulb), and a neutral gray circle when off or offline, so the icon never contradicts the state. **Temperature readings** use a per-theme cold→hot scale (`temp-cold`/`temp-hot`, mixed in OKLab by `lib/temperature.js`) so every point on the scale stays ≥4.5:1 as text on its card. There are no gradients inside the app; the old climate heat bar was removed because people read it as "how hot" rather than "how close to the target".
+### Device icons and temperatures
+Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, secondary color). There are no per-type color tints anymore: the kind of device is carried by the icon shape and the name, and color is kept for state. In the add-device tiles, the chosen type's icon circle turns Electric Blue. **Temperature readings** use a per-theme cold→hot scale (`temp-cold` / `temp-hot`, mixed in OKLab by `lib/temperature.js`) so every point stays ≥4.5:1 as text on its panel.
 
 ### Neutral
-- **Hallway White** (`hallway-white`) / **Night Floor** (`night-floor`): the page ground.
-- **Card White** (`card-white`) / **Night Card** (`night-card`): card, modal and input surfaces.
-- **Hairline Gray** (`hairline-gray`) / **Night Hairline** (`night-hairline`): 1px borders and dividers.
-- **Ink** (`ink`) / **Night Ink** (`night-ink`): primary text.
-- **Quiet Slate** (`quiet-slate`) / **Night Quiet** (`night-quiet`): secondary text, meta, labels and inactive tabs.
+- **Mist** (`mist`) / **Night Black** (`night-black`): the page ground. It is true black, not a tinted near-black, as the brand sheet specifies.
+- **Panel White** (`panel-white`) / **Night Panel** (`night-panel`): panels, tiles, modals and sheets.
+- **Inset Mist** (`inset-mist`) / **Night Inset** (`night-inset`): surfaces *inside* a panel, such as inputs, secondary buttons, thermostat steps and modes, the off power indicator, icon circles and summary chips.
+- **Hairline Gray** (`hairline-gray`) / **Night Hairline** (`night-hairline`): dividers, and the 1px border that dark panels need.
+- **Ink Black** (`ink-black`) / **Night Ink** (`night-ink`): primary text.
+- **Quiet Slate** (`quiet-slate`) / **Night Quiet** (`night-quiet`): secondary text, labels, inactive tabs, "Uit".
 
 ### Provisional (current state, not a brand commitment)
-- **Night Navy Bar** (`night-navy-bar` with its fg tokens): the header is a fixed dark bar in *both* themes. This is recorded as current state only. No brand identity exists yet (see PRODUCT.md), so do not treat it as a logo-grade commitment.
-- **Login gradient** (navy `#0f172a` to `#0e7490` to `#06b6d4`, 120°): the full-bleed login background. It is provisional for the same reason.
 - **Toast ink** (`toast-ink-bg`, `toast-error-bg` with white text): fixed high-contrast snackbars that are deliberately theme-independent.
 
 ### Named Rules
-**The One Voice Rule.** Canal Cyan is the only interactive accent. If something needs to look tappable and important, it is cyan. If it is not the main action on the screen, it is not cyan.
+**The One Voice Rule.** Electric Blue is the only interactive accent. If something needs to look tappable and important, it is blue. If it is not the main action on the screen, it is not blue.
 
 **The State Means State Rule.** Green, gray, amber and red describe device or system state and nothing else. Never use them decoratively, and never use state alone as the signal: pair color with text (e.g. "Aan", "Offline") or an icon.
 
 ## Typography
 
-**Body Font:** System UI stack (`-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif`)
+**Font:** Urbanist (OFL), self-hosted through `next/font` (no request to Google at runtime; it works without internet), falling back to the system stack. It is an open stand-in for Lufga from the brand sheet and can be swapped for Lufga with a license in `app/layout.js`.
 
-**Character:** A single native family that feels at home on every phone. The type is intentionally invisible, so hierarchy is carried entirely by weight (400 to 800) and a compact size ramp.
+**Character:** Friendly and geometric, with round bowls and open shapes, calm at large sizes. One family carries everything. Hierarchy comes from size and a narrow weight range (400 to 700, mostly 500 and 600), with tighter tracking as size grows.
 
 ### Hierarchy
-- **Display** (800, 1.8rem, −0.02em): the login title only.
-- **Headline** (700, 1.5rem, −0.015em): the house name, which is the page's h1. The brand in the header bar is 1.1rem/700 and is not a heading.
-- **State** (700, 1.6rem, −0.02em): "Aan"/"Uit" on light cards, the current temperature on sensor cards (2rem on the thermostat). The loudest text on a card.
-- **Title** (700, 1.05rem): modal and sheet titles.
-- **Reading** (600, 1.15rem): the thermostat target and secondary sensor values (motion).
-- **Body** (500–600, 0.85–0.95rem): device names (600), status lines, tabs, buttons and inputs.
-- **Meta** (400, 0.8–0.85rem): the connection line, "Laatst aan", relative times.
-- **Label** (600, 0.72–0.78rem, uppercase, 0.03–0.04em): form labels and reading labels.
+- **Display** (600, 2.5rem, −0.03em): the login title only.
+- **Dial** (600, 3.4rem, −0.04em): the thermostat target inside the dial, the largest number in the app.
+- **Headline** (600, 1.75rem, −0.02em): the house name, which is the page's h1. The date in the top bar is 1.35rem (1.6rem on wide screens) at weight 500 and is not a heading.
+- **State** (600, 2rem, −0.02em): "Aan"/"Uit" on light tiles, the count in the house summary. The sensor temperature is 2.75rem.
+- **Title** (600, 1.35rem): modal and sheet titles.
+- **Body** (500–600, 0.95–1.05rem): tile names (600, 1rem), tabs, buttons, inputs, status lines.
+- **Meta** (500, 0.85–0.95rem): the connection line, labels, "Laatst aan", dial scale and "Nu".
 
 ### Named Rules
-**The Readings Are Loudest Rule.** On a device card the value a person came to check (on/off state, current temperature) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use the Dutch decimal comma with one decimal ("21,5°", `formatTemperature`).
+**The Readings Are Loudest Rule.** On a tile, the value a person came to check (on/off state, temperature, the thermostat target) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use the Dutch decimal comma with one decimal ("21,5°", `formatTemperature`).
 
-**The Legibility Floor Rule.** Some users are older or have reduced sight. No text that carries information may go below 0.72rem. Meta text at that size must still meet 4.5:1 contrast.
+**The Sentence Case Rule.** Labels, buttons and headings are written as sentences ("Wat voeg je toe?", "Naam"), never in uppercase or with letter-spaced stamps. Meta is written as sentences too ("Offline, laatst bekende stand"), not as strings joined with middle dots.
+
+**The Legibility Floor Rule.** Some users are older or have reduced sight. No text that carries information may go below 0.85rem. Meta text at that size must still meet 4.5:1 contrast.
 
 ## Layout
 
-The layout is a single centered column. The container grows in steps: 640px on phones, 900px from 768px, 1100px from 1200px, 1500px from 1600px and 2200px from 2200px, with 1.5rem padding. The header bar spans the full width, and its inner content is capped at 1100px.
+The page is centered on `--content-max` (640px on phones, 1000px from 768px, 1240px from 1200px, 1480px from 1600px) with 1rem side padding (1.5rem from 768px), extra room at the bottom for the + button, and safe-area insets.
 
-The main view reads top-down: the header bar, then the house name (h1) with the connection line or notice, then the house summary ("2 aan in [Woonkamer] [Keuken]", chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable), then a horizontally scrolling room-tab strip (no visible scrollbar; the edge fades where more tabs are hidden; the active tab scrolls into view), then the device grid.
+**Top bar** (on the page itself, not a colored bar): the date on the left ("Zondag 27 september"), the room tabs, and the avatar on the right. On phones the date and avatar share the first row and the tabs get their own full-width, horizontally scrolling row (no visible scrollbar; the edge fades where more tabs are hidden; the active tab scrolls into view). From 900px the tabs sit in the middle of one row.
 
-The device grid uses fluid columns of at least 10rem (`repeat(auto-fill, minmax(min(10rem, 100%), 1fr))`, `grid-auto-flow: dense`) with 0.75rem gaps: two columns on a phone, more on wider screens. Cards are as tall as their content (a light is compact, a sensor a little taller) and equally tall within a row. The thermostat spans two columns whenever two exist (a container query on the grid, so at 200% text it falls back to one full-width column instead of forcing a phantom column). The header content shares the page's max-width steps (`--content-max`), so the brand and avatar line up with the content at every width. The header, + button and toasts respect the safe-area insets for notches and home bars.
+**Dashboard:** from 900px, a two-column grid with the house panel as a fixed (sticky) column of 15–18rem on the left and the device bento beside it. Below 900px they stack, with the house panel first. The house panel stands in for the weather tile in the inspiration, but carries real information: the house name, the connection line or notice, and the house summary ("3 staan aan" with room chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable).
 
-Overlays are centered modals (max 400px wide) on wide screens and **bottom sheets** on phones (≤480px: full width, 20px top corners, anchored to the bottom, safe-area padding), so forms sit in thumb reach. Toasts stack above the + button on phones and at the top right from 768px. A single FAB (add device) sits fixed 1.5rem from the bottom-right corner. While loading, four breathing card-shaped placeholders hold the grid.
+**Device bento:** fluid columns of at least 10.5rem (`repeat(auto-fill, minmax(min(10.5rem, 100%), 1fr))`, `grid-auto-flow: dense`) with 0.9rem gaps, which gives two columns on a phone. Tiles are at least 12rem tall and equally tall within a row. The thermostat spans two columns once there are two (container query at 21.9rem), and also two rows once there are three columns (33.3rem). The container queries mean that at 200% text it falls back to one full-width column instead of forcing a phantom column.
 
-Spacing rhythm is rem-based and runs xs 0.4rem, sm 0.75rem, md 1rem, lg 1.25rem, xl 1.5rem. Inside cards it is tighter (0.35–0.6rem gaps).
+Overlays are centered modals (max 420px wide) on wide screens and **bottom sheets** on phones (≤480px: full width, 28px top corners, anchored to the bottom, safe-area padding), so forms sit in thumb reach. Toasts stack above the + button on phones and at the top right from 768px. While loading, four breathing tile-shaped placeholders hold the grid, the first shaped like the thermostat.
+
+Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg 1.25rem, xl 1.5rem.
 
 ## Elevation & Depth
 
-**Softly layered.** Surfaces rest on a gentle ambient shadow and lift further in response to interaction. Depth expresses closeness to the user's hand: page ground < resting card < hovered card < menu < modal < login card.
+**Surface steps, one glow.** Depth comes from surface steps rather than shadows: page < panel < inset. In the light theme panels rest on a soft, diffuse shadow (`--shadow-panel`). On black there are no shadows at all; dark panels carry a 1px hairline instead. The single light effect is the dial's glow.
 
 ### Shadow Vocabulary
-- **Resting card** (`0 1px 3px rgba(0,0,0,0.06)`): every card at rest. It is currently very faint. The chosen direction is a slightly more present ambient layer, still soft and diffuse.
-- **Lifted card** (`0 12px 28px -10px rgba(0,0,0,0.28)` with `scale(1.01)`): hover on a clickable card.
-- **On-glow** (Lamp-On Surface fill, `inset 0 0 22px -6px` Lamp-On Green, plus a green 1px border): the light comes from *inside* an "on" card, like a lit lamp shade. The fill and glow warm up over 0.4s.
-- **Change pulse** (a Canal Cyan ring expanding 0 to 14px and fading over 1s): plays once when realtime state changes a card.
-- **Menu** (`0 4px 12px rgba(0,0,0,0.2)`): dropdowns.
-- **FAB** (`0 8px 24px -8px rgba(0,0,0,0.4)`).
-- **Toast** (`0 8px 20px -6px rgba(0,0,0,0.35)`).
-- **Modal** (`0 20px 48px -12px rgba(0,0,0,0.4)`) over a 50% black scrim.
-- **Login card** (`0 30px 60px -20px rgba(0,0,0,0.5)`).
+- **Panel** (light only: `0 1px 2px rgba(0,0,0,0.04), 0 14px 32px -20px rgba(0,0,0,0.16)`): every panel, tile and the avatar at rest.
+- **Dial glow** (a blurred disc of `--glow` behind the dial, `blur(32px)`, fading in over 0.6s): only while heating is on.
+- **Change pulse** (an Electric Blue ring expanding 0 to 14px and fading over 1s): plays once when a tile changes.
+- **Menu** (`0 16px 40px -16px rgba(0,0,0,0.35)`): the account menu.
+- **+ button** (`0 12px 28px -10px var(--glow)`): a faint blue shadow under the one primary action.
+- **Toast** (`0 12px 28px -10px rgba(0,0,0,0.45)`).
+- **Modal / sheet** (`0 24px 56px -16px rgba(0,0,0,0.45)`) over a 55% black scrim.
+- **Login** (a large blurred Electric Blue disc behind the login panel, 35% light / 45% dark): the brand sheet's glow as the first thing you see.
 
 ### Named Rules
-**The Lamp Shade Rule.** "On" glows inward, never outward. Outer glows and neon halos are banned; they read as a techy console, not a lit room.
+**The One Glow Rule.** Each screen has at most one glowing element: the most important *live* control, which on the dashboard is the thermostat dial while it heats. Everything else is flat. "On" is shown by a filled green button and a green edge, not by light. A second glow turns the room into a neon console.
 
-**The Offline Fade Rule.** An unreachable device stays in place and says so in text: "Offline" when the device itself is gone, "Niet bereikbaar" when the whole box is (with "Laatst aan/uit" or "· laatst bekend"). Only its icon fades (45% opacity, full grayscale); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.
+**The Offline Fade Rule.** An unreachable device stays in place and says so in text: "Offline" when the device itself is gone, "Niet bereikbaar" when the whole box is (with "Laatst aan/uit" or "…, laatst bekende stand"). Only its icon fades (45% opacity); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.
 
 **The Not-Broken-Yet Rule.** A device added in this session shows "Wordt klaargezet" (dashed border, small spinner, "Dit duurt meestal een paar seconden.") until the box has provisioned it, never "Offline". One that never got provisioned says "Niet klaargezet" and what to do.
 
 ## Shapes
 
-Softly rounded throughout. Corners get rounder as surfaces get larger and more "held": 6px for inline elements and compact banners, 8px for buttons, inputs and menus, 10px for toasts, 12px for cards, 16px for modals and 20px for the login card and the top corners of phone sheets. Pills (999px) are used for switches, the low-battery badge and the house-summary chips. Circles are used for device icons (44px), the thermostat −/+ buttons (48px), the avatar (44px) and the FAB (48px). New and not-yet-provisioned cards use a dashed hairline. Borders are always 1px hairlines. There are no thick outlines except the 2px focus ring and the 2px active-tab underline.
+Rounded, and rounder as surfaces get larger and more "held": 14px for inputs and menu items, 18px for surfaces inside a panel (thermostat modes, type tiles, notices, danger zone, toasts, the account menu), and 28px for panels, tiles, modals, sheets and the login panel. Everything you press that isn't a tile is fully round: buttons are pills, and the power indicator, thermostat steps, room tabs, summary chips, avatar and + button are circles or pills. Dark panels have a 1px hairline; light panels have none. New and not-yet-provisioned tiles use a dashed hairline. The only thick outline is the 2px focus ring.
 
 ## Components
 
 ### Buttons
-Soft and reassuring: generous, rounded, gently responsive.
-- **Shape:** gently rounded (8px); minimum height 44px.
-- **Primary:** Canal Cyan with its contrast text, full width in forms, 48px tall, weight 700, 1rem. Hover shifts to Canal Cyan Hover (darker in light, brighter in dark) and grows slightly (`scale(1.02)`).
-- **Secondary:** transparent with a hairline border and Ink text.
+Round and confident: pills, generous, gently responsive.
+- **Shape:** pill (999px); minimum height 44px.
+- **Primary:** Electric Blue with white text, full width in forms, 52px tall, weight 600, 1.05rem. Hover darkens (light) or brightens (dark); press compresses slightly (`scale(0.98)`).
+- **Secondary:** an Inset Mist pill with Ink text; hover steps to the hairline color.
 - **Danger:** Alarm Red fill for confirmed destructive actions. **Danger text** is a red text-only button with an icon, for the first step of a destructive flow.
-- **Icon:** a 44×44 square. All buttons share one 2px Canal Cyan focus ring with a 2px offset.
+- **Icon:** 44×44. All buttons share one 2px Electric Blue focus ring with a 2px offset.
 - **Plain:** a text-only Quiet Slate button that darkens to Ink on hover.
-- **Disabled:** 60% opacity with no transform.
+- **Disabled:** 50% opacity with no transform.
 
-### Device Card (signature component)
-The heart of the system. A card is at least 10rem wide and as tall as its content, with a 12px radius, a hairline border and resting shadow. The icon sits top-left, the gear (44px target) top-right, the name below the icon, and the state at the bottom. The whole card is one invisible action button (toggle for lights and switches, open details for sensors); the gear button sits beside it, never inside it.
-- **Light / switch:** "Aan" or "Uit" at State size, with a visual switch (aria-hidden; the card button carries `aria-pressed`). On: Lamp-On surface, green border and inner glow, tinted icon. Off: neutral.
-- **Thermostat:** spans two columns. A status line ("Verwarmt", "Op temperatuur", "Verwarming uit"), the current temperature at 2rem in the temperature scale, and the target between two 48px round −/+ buttons (0.5° steps). Taps are batched: one `set_temperature` command 800ms after the last tap, flushed if the card unmounts. A tap on the card itself does nothing; heating on/off is a switch in the settings sheet.
-- **Sensor:** the temperature at State size; motion as plain text ("Nu beweging" / "Geen beweging", never amber); a low-battery badge only at ≤20%.
-- **Settings:** the gear or a 500ms long-press opens a sheet (not a flip) with rename, room, heating on/off for thermostats, and delete with an inline confirmation.
-- **States:** tap compresses the card (`scale(0.98)`), hover lifts it, "on" fills green, offline/unreachable says so in text and fades its icon, new cards say "Wordt klaargezet", and a realtime change pulses cyan. Focus shows a 2px Canal Cyan outline with a 2px offset.
+### Device tile (signature component)
+The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem tall. The gear (44px target) floats top-right, and the name wraps around it on its first line and uses the full width after that, so names never break mid-word. The whole tile is one invisible action button (toggle for lights and switches, open details for sensors); the gear sits beside it, never inside it.
+- **Light / switch:** the name, a large device icon (64px neutral circle) in the free space, and at the bottom "Aan" or "Uit" at State size next to the round **power indicator** (aria-hidden; the tile button carries `aria-pressed`). On: the indicator fills Signal Green with a black symbol, the text is green, and the tile gets a green edge. Off: quiet.
+- **Thermostat** (spans two columns, and two rows on wide grids): a 270° **dial** (open at the bottom) with the target as the value arc and a knob, a dot on the arc for the current temperature, and min/max at the arc ends. Inside it are "Doel" and the target at Dial size, with "Nu 21,0°" below. Under the dial are two 52px round −/+ steps (0.5°) with the status between them ("Verwarmt" in blue, "Op temperatuur", "Verwarming uit"), then two 72px mode tiles, **Verwarmen** / **Uit**, as a radiogroup, the active one Electric Blue. Taps on −/+ are batched: one `set_temperature` command 800ms after the last tap, flushed if the tile unmounts. A tap on the panel itself does nothing. With heating off, the arc turns Resting Gray and the glow goes out.
+- **Sensor:** the temperature at 2.75rem in the temperature scale; motion as a plain sentence ("Er is nu beweging" / "Geen beweging", never amber); a low-battery badge only at ≤20%.
+- **Settings:** the gear or a 500ms long-press opens a sheet with rename, room, and delete with an inline confirmation.
+- **States:** tap compresses the tile (`scale(0.98)`), hover darkens the edge, "on" lights the button, offline/unreachable says so in text and fades the icon, new tiles say "Wordt klaargezet", and a realtime change pulses blue. Focus shows a 2px Electric Blue outline with a 3px offset.
 - Long-press must not trigger text selection or the iOS callout.
 
+### House panel
+The first panel of the dashboard: the house name (Headline, the page's h1), the connection line, a divider, then the summary. That is either the count at State size in green ("3 staan aan") with room chips (Inset Mist pills whose count sits in a small Signal Green badge), or the quiet sentence "Alle lampen en stopcontacten zijn uit".
+
 ### Switch
-A 44×24 pill with an 18px white thumb that slides 20px over 0.2s. The track is Resting Gray when off and Lamp-On Green when on, for device state (the card indicator, heating on/off). App settings use the `switch-accent` variant (Canal Cyan when on).
+A 48×28 pill with a 22px white thumb that slides 20px over 0.2s. The track is Resting Gray when off and Signal Green when on, for device state. App settings use the `switch-accent` variant (Electric Blue when on).
 
 ### Inputs / Fields
-- **Style:** Card surface, hairline border, 8px radius, 0.6rem 0.75rem padding, 0.95rem text.
-- **Focus:** the border turns Canal Cyan with a soft 3px cyan halo (18% alpha). The native outline is replaced, never just removed.
-- **Labels:** uppercase Label style in Quiet Slate, above the field.
-- **Errors:** an Amber Notice banner above the form (8px radius); login errors are red text below the button.
+- **Style:** an Inset Mist field with a hairline border, 14px radius, 48px tall, 1rem text.
+- **Focus:** the border turns Electric Blue with a soft 3px blue halo. The native outline is replaced, never just removed.
+- **Labels:** sentence case in Quiet Slate, 0.9rem/500, above the field.
+- **Errors:** an Amber Notice banner (18px radius); login errors are red text above the button.
 
 ### Navigation (room tabs)
-Text tabs in a horizontally scrolling strip, each at least 44px tall. Inactive tabs are Quiet Slate at weight 500. The active tab is Canal Cyan at weight 700 with a 2px underline. Color transitions take 0.15s.
+Pill-shaped text tabs in the top bar, each at least 44px tall. Inactive tabs are Quiet Slate at weight 500. The active tab is Ink at weight 600 with a small Electric Blue dot beneath it. Color transitions take 0.15s.
 
 ### Modals and sheets
-A centered card surface, 16px radius, max 400px wide and 1.25rem padding; a bottom sheet on phones (see Layout). The title is on the left and the close button on the right, with 1px dividers between sections and actions right-aligned. Adding a device starts with four large type tiles (a radio group; the chosen tile gets a 2px cyan border and its icon lights up), then name and room; the room defaults to the one you were viewing.
+A 28px panel, max 420px wide, with 1.35rem padding; a bottom sheet on phones (see Layout). The title is on the left and the close button on the right, with 1px dividers between sections and actions right-aligned. Adding a device starts with four large type tiles (a radio group on Inset Mist; the chosen tile gets a 2px blue border and its icon circle turns blue), then name and room; the room defaults to the one you were viewing.
 
 ### Connection line
-Under the house name. Healthy: a quiet line with a check, "Verbonden met je huis". Phone ↔ Sandhovius lost: an Amber Notice, "Geen verbinding met Sandhovius…". Box silent for 90s (three missed 30s heartbeats on `houses.last_seen`) or stopped: an Amber Notice, "Je Sandhovius-box reageert niet sinds 14:02…". While either notice shows, cards show last-known state and cannot be toggled. On reconnect everything is re-fetched.
+In the house panel, under the name. Healthy: a quiet line with a green check, "Verbonden met je huis". Phone ↔ Sandhovius lost: an Amber Notice, "Geen verbinding met Sandhovius…". Box silent for 90s (three missed 30s heartbeats on `houses.last_seen`) or stopped: an Amber Notice, "Je Sandhovius-box reageert niet sinds 14:02…". While either notice shows, tiles show last-known state and cannot be toggled. On reconnect everything is re-fetched.
 
 ### Toasts
-Fixed dark ink snackbars with white text, 10px radius, above the + button on phones and top right on wide screens. They are **not** confirmations of taps (the card is the confirmation); they appear only when a command is slow ("… reageert nog niet. Even geduld…" after 4s) or fails, and they hold for 3.5s (errors 6s, dismissible, in a separate `role="alert"` region). Errors turn toast-error red.
+Fixed dark ink snackbars with white text, 18px radius, above the + button on phones and at the top right on wide screens. They are **not** confirmations of taps (the tile is the confirmation). They appear only when a command is slow ("… reageert nog niet. Even geduld…" after 4s) or fails. They hold for 3.5s (errors 6s, dismissible, in a separate `role="alert"` region). Errors turn toast-error red.
 
-### FAB
-A 48px Canal Cyan circle with a "+", fixed at the bottom right. There is only one FAB per screen.
+### + button
+A 60px Electric Blue circle with a "+", fixed at the bottom right, with a faint blue shadow. There is only one per screen.
 
 ## Do's and Don'ts
 
 ### Do:
 - **Do** make every control reachable and obvious in one tap from the room view: toggling, reading and adjusting never require navigation.
-- **Do** let cards be as tall as their content and let the grid decide the columns; give a device more width only when its control needs it (the thermostat).
-- **Do** keep touch targets at 44px or more (48px for primary actions and the FAB).
+- **Do** size a tile by the control it needs: small for a lamp, large for the thermostat. Let the bento decide the columns.
+- **Do** keep touch targets at 44px or more (52px for primary actions and thermostat steps, 60px for the + button).
 - **Do** pair every state color with a word or an icon ("Aan", "Uit", "Offline", a battery %).
-- **Do** design every screen in both themes; the dark-mode tokens are part of the spec, not an afterthought.
-- **Do** keep motion confirming and brief (0.15–0.2s for state, 0.4s for a lamp's glow warming up, 0.25s for a sheet sliding up, 1s for the one-time change pulse). Exits are faster than entrances.
-- **Do** give every animation a `prefers-reduced-motion` path that removes movement (scaling, sliding, growing rings, the loading breath) but keeps the state change visible, as a crossfade, a fade or a stationary ring.
-- **Do** keep information-bearing text at 4.5:1 or better in both themes, and controls or icons at 3:1. The light theme uses a deeper step of each hue than the dark theme to get there. Check both themes whenever a token changes.
+- **Do** design every screen in both themes: black with night panels, and mist with white panels. The dark-mode tokens are part of the spec, not an afterthought.
+- **Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 0.4s for a power button lighting up, 0.6s for the glow fading in, 0.25s for a sheet sliding up, and 1s for the one-time change pulse. Exits are faster than entrances.
+- **Do** give every animation a `prefers-reduced-motion` path that removes movement (scaling, sliding, growing rings, the dial sweep, the loading breath) but keeps the state change visible.
+- **Do** keep information-bearing text at 4.5:1 or better in both themes, and controls or icons at 3:1. Where a brand color fails as text (Signal Green on white), use its deeper step as text and keep the bright color for fills.
 
 ### Don't:
 - **Don't** make it look like a Home Assistant dashboard: no dense entity lists, no tiny tiles, no power-user toggle walls.
 - **Don't** make it look like a generic SaaS admin: no sidebars, data tables or KPI tiles.
-- **Don't** make it look like a techy/neon smart-home console: no outer glows, glassmorphism, neon gradients or sci-fi dark panels.
-- **Don't** introduce a second accent color; Canal Cyan is the only interactive voice.
-- **Don't** use gradients inside the app. The login gradient is provisional.
+- **Don't** make it a neon console: no more than one glow per screen, no glassmorphism, no neon gradients, no sci-fi decoration.
+- **Don't** introduce a second accent color; Electric Blue is the only interactive voice.
+- **Don't** show tiles for things the house can't do or data it doesn't have (weather, music, energy, brightness, scenes) just because an inspiration board has them.
+- **Don't** use uppercase labels, letter-spaced stamps or middle-dot meta strings.
 - **Don't** show a toast for every tap, or make a tap on a thermostat change the heating.
-- **Don't** treat the navy header bar or the login gradient as brand identity; they are current state until real brand assets exist.
 - **Don't** hide offline or stale devices, or signal them with color alone.
