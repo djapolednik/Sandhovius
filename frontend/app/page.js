@@ -59,7 +59,6 @@ export default function Home() {
   const [rooms, setRooms] = useState([])
   const [devices, setDevices] = useState([])
   const [selectedRoomId, setSelectedRoomId] = useState('')
-  const [animatingDeviceIds, setAnimatingDeviceIds] = useState([])
   // Deze telefoon ↔ Sandhovius: 'connecting' tot de eerste realtime-
   // verbinding staat, 'lost' zodra die wegvalt (de SDK herverbindt zelf).
   const [realtimeLink, setRealtimeLink] = useState('connecting')
@@ -384,12 +383,8 @@ export default function Home() {
           : d
       )
     )
-    setAnimatingDeviceIds((prev) => [...prev, device.id])
-    setTimeout(() => {
-      setAnimatingDeviceIds((prev) => prev.filter((id) => id !== device.id))
-    }, 500)
-    // Geen melding bij elke tik: de kaart zelf (kleur, "Aan"/"Uit", de
-    // pulse) is de bevestiging, zoals bij een echte lichtknop. Een melding
+    // Geen melding bij elke tik: de tegel zelf ("Aan"/"Uit", het licht dat
+    // opgloeit of dooft) is de bevestiging, zoals bij een echte lichtknop. Een melding
     // komt er alleen als het traag gaat of mislukt (watchCommand).
 
     // Eén foutmelding per fout: de (blijvende, wegklikbare) fouttoast. De
@@ -665,7 +660,6 @@ export default function Home() {
             context={showRoom ? roomNameById[device.room] ?? 'Geen kamer' : undefined}
             houseReachable={houseReachable}
             isNew={newDeviceIds.includes(device.id)}
-            isAnimating={animatingDeviceIds.includes(device.id)}
             {...cardHandlers}
           />
         ))}

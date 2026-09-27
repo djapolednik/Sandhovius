@@ -220,12 +220,14 @@
    stroomblauw voor een stopcontact. */
 .tile-light {
   --tile-glow: var(--lamp-glow);
+  --tile-glow-mid: var(--lamp-glow-mid);
   --tile-icon-bg: var(--lamp-icon-bg);
   --tile-icon-fg: var(--lamp-icon-fg);
 }
 
 .tile-switch {
   --tile-glow: var(--power-glow);
+  --tile-glow-mid: var(--power-glow-mid);
   --tile-icon-bg: var(--power-icon-bg);
   --tile-icon-fg: var(--power-icon-fg);
 }
@@ -241,17 +243,30 @@
   background: var(--surface-2);
   color: var(--text-secondary);
   /* Uit: rustig terug naar neutraal, even traag als de gloed dooft. */
+  box-shadow: 0 0 0 0 transparent;
   transition:
     background-color 1.6s ease-in,
-    color 1.6s ease-in;
+    color 1.6s ease-in,
+    box-shadow 1.8s ease-in;
 }
 
+/* Aan: het icoon zelf wordt de lichtbron — gevuld in zijn kleur, met een
+   halo eromheen. Klein genoeg dat hij binnen de tegel blijft (het icoon
+   staat 1rem van de rand). */
 .card-lit .lamp-visual {
   background: var(--tile-icon-bg);
   color: var(--tile-icon-fg);
+  box-shadow: 0 0 16px 0 var(--tile-glow);
   transition:
     background-color 1.2s cubic-bezier(0.3, 0, 0.2, 1),
-    color 1.2s cubic-bezier(0.3, 0, 0.2, 1);
+    color 1.2s cubic-bezier(0.3, 0, 0.2, 1),
+    box-shadow 1.4s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+/* Op het gekleurde licht is grijs te zwak: de onderregel gaat mee naar
+   de gewone tekstkleur. */
+.card-lit .tile-caption {
+  color: var(--text-primary);
 }
 
 /* De gloed: licht dat vanachter het icoon de tegel in straalt. Hij
@@ -274,7 +289,12 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle at 3.4rem 3.4rem, var(--tile-glow) 0, transparent 70%);
+  background: radial-gradient(
+    circle at 3.4rem 3.4rem,
+    var(--tile-glow) 0,
+    var(--tile-glow-mid) 38%,
+    transparent 72%
+  );
   opacity: 0;
   transform: scale(0.92);
   transform-origin: 3.4rem 3.4rem;
@@ -339,20 +359,6 @@
   50% {
     opacity: 0.55;
   }
-}
-
-/* "Net veranderd": één blauwe ring die uitdijt en verdwijnt. */
-@keyframes card-pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-pulse);
-  }
-  100% {
-    box-shadow: 0 0 0 14px transparent;
-  }
-}
-
-.card-pulse {
-  animation: card-pulse 1s ease-out;
 }
 
 /* ==================== Sensor ==================== */
@@ -663,25 +669,12 @@
 }
 
 /* ==================== Minder beweging ====================
-   Geen schaal, geen uitdijende ring, geen ademende plaatshouders — maar
+   Geen schaal, geen zwellend licht, geen ademende plaatshouders — maar
    elke standwissel blijft zichtbaar. */
-@keyframes card-pulse-still {
-  0% {
-    box-shadow: 0 0 0 3px var(--accent-pulse);
-  }
-  100% {
-    box-shadow: 0 0 0 3px transparent;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .card-clickable:active,
   .climate-step:active:not(:disabled) {
     transform: none;
-  }
-
-  .card-pulse {
-    animation: card-pulse-still 1s ease-out;
   }
 
   .card-skeleton {
@@ -704,7 +697,8 @@
   .card-lit .lamp-visual {
     transition:
       background-color 0.3s ease,
-      color 0.3s ease;
+      color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 }
 

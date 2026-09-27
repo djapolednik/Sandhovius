@@ -25,22 +25,23 @@
   --accent-contrast: #ffffff;
   --accent-text: #0066ff;
   --accent-ring: rgba(0, 102, 255, 0.22);
-  --accent-pulse: rgba(0, 102, 255, 0.4);
   /* De zachte blauwe gloed van het merkblad — alleen rond de thermostaat-
      draaiknop, nergens anders. */
   --glow: rgba(0, 102, 255, 0.3);
   /* Warm lamplicht: de gloed in een tegel van een lamp die aan staat, en
      het icoon dat mee oplicht. Net als het blauw van de thermostaat een
      echte lichtbron, geen versiering. */
-  --lamp-glow: rgba(255, 170, 60, 0.42);
-  --lamp-icon-bg: #fff1d6;
-  --lamp-icon-fg: #b45309;
+  --lamp-glow: rgba(255, 176, 32, 0.72);
+  --lamp-glow-mid: rgba(255, 176, 32, 0.32);
+  --lamp-icon-bg: #ffb020;
+  --lamp-icon-fg: #3b2300;
   /* Stroomblauw: dezelfde gloed voor een stopcontact dat aan staat. Lichter
      en koeler dan Electric Blue, zodat het niet leest als een knop of als
      de verwarming. */
-  --power-glow: rgba(40, 150, 255, 0.3);
-  --power-icon-bg: #e2f0ff;
-  --power-icon-fg: #0b5cad;
+  --power-glow: rgba(40, 140, 255, 0.58);
+  --power-glow-mid: rgba(40, 140, 255, 0.26);
+  --power-icon-bg: #1f86ff;
+  --power-icon-fg: #ffffff;
 
   /* Signal Green: "dit staat aan". */
   --on: #04d800;
@@ -82,14 +83,15 @@
   --accent-contrast: #ffffff;
   --accent-text: #4d94ff;
   --accent-ring: rgba(0, 102, 255, 0.38);
-  --accent-pulse: rgba(0, 102, 255, 0.55);
   --glow: rgba(0, 102, 255, 0.5);
-  --lamp-glow: rgba(255, 166, 64, 0.34);
-  --lamp-icon-bg: #3a2a14;
-  --lamp-icon-fg: #ffc46b;
-  --power-glow: rgba(56, 170, 255, 0.32);
-  --power-icon-bg: #102a44;
-  --power-icon-fg: #7cc8ff;
+  --lamp-glow: rgba(255, 160, 40, 0.62);
+  --lamp-glow-mid: rgba(255, 160, 40, 0.26);
+  --lamp-icon-bg: #ffae2e;
+  --lamp-icon-fg: #2a1800;
+  --power-glow: rgba(50, 160, 255, 0.58);
+  --power-glow-mid: rgba(50, 160, 255, 0.24);
+  --power-icon-bg: #3aa0ff;
+  --power-icon-fg: #04121f;
 
   --on: #04d800;
   --on-contrast: #000000;

@@ -42,7 +42,6 @@ export default memo(function DeviceCard({
   onToggle,
   onSetTemperature,
   onOpenSettings,
-  isAnimating,
 }) {
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
@@ -214,7 +213,7 @@ export default memo(function DeviceCard({
   return (
     <li className={`device-cell device-cell-${device.type}`}>
       <div
-        className={`panel tile tile-${device.type} ${isAnimating ? 'card-pulse' : ''} ${
+        className={`panel tile tile-${device.type} ${
           isClickable ? 'card-clickable' : ''
         } ${isLit ? 'card-lit' : ''} ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
           isPairing || setupFailed ? 'card-pairing' : ''

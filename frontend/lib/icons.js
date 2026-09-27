@@ -44,16 +44,16 @@ export function LightbulbIcon(props) {
   )
 }
 
+// Een stopcontact zoals het in de muur zit: een afgeronde plaat met een
+// ronde kom en twee gaten (randaarde), niet de stekker.
 export function PlugIcon(props) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path
-        d="M9 2v5M15 2v5M7 7h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V7ZM12 15v4M9 22h6"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="5.2" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="9.7" cy="12" r="1.05" fill="currentColor" />
+      <circle cx="14.3" cy="12" r="1.05" fill="currentColor" />
+      <path d="M12 6.8v1.4M12 15.8v1.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   )
 }
