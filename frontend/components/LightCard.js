@@ -3,8 +3,9 @@
 // Een lamp of stopcontact: bovenin het apparaat als groot icoon, dan de
 // naam, de stand ("Aan"/"Uit") als grootste tekst, een korte regel (soort
 // apparaat, of de kamer als de tegel op Home staat) en onderin "Details".
-// Staat een lamp aan, dan licht de tegel warm op vanachter het icoon —
-// langzaam aan, langzaam uit, zoals een echte lamp (zie .card-lit).
+// Staat hij aan, dan licht de tegel op vanachter het icoon — warm bij een
+// lamp, stroomblauw bij een stopcontact — langzaam aan, langzaam uit,
+// zoals een echte lamp (zie .card-lit).
 export default function LightCard({ state, isOnline, offlineText = 'Offline', header, caption, Icon, footer }) {
   const raw = state?.state
   const isOn = raw === 'on'

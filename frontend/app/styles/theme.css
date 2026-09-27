@@ -35,6 +35,12 @@
   --lamp-glow: rgba(255, 170, 60, 0.42);
   --lamp-icon-bg: #fff1d6;
   --lamp-icon-fg: #b45309;
+  /* Stroomblauw: dezelfde gloed voor een stopcontact dat aan staat. Lichter
+     en koeler dan Electric Blue, zodat het niet leest als een knop of als
+     de verwarming. */
+  --power-glow: rgba(40, 150, 255, 0.3);
+  --power-icon-bg: #e2f0ff;
+  --power-icon-fg: #0b5cad;
 
   /* Signal Green: "dit staat aan". */
   --on: #04d800;
@@ -81,6 +87,9 @@
   --lamp-glow: rgba(255, 166, 64, 0.34);
   --lamp-icon-bg: #3a2a14;
   --lamp-icon-fg: #ffc46b;
+  --power-glow: rgba(56, 170, 255, 0.32);
+  --power-icon-bg: #102a44;
+  --power-icon-fg: #7cc8ff;
 
   --on: #04d800;
   --on-contrast: #000000;

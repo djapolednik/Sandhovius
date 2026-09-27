@@ -215,7 +215,20 @@
   color: var(--text-primary);
 }
 
-/* ==================== Lamp: groot icoon en warm licht ==================== */
+/* ==================== Lamp en stopcontact: groot icoon en licht ====================
+   Dezelfde gloed, per soort een eigen kleur: warm lamplicht voor een lamp,
+   stroomblauw voor een stopcontact. */
+.tile-light {
+  --tile-glow: var(--lamp-glow);
+  --tile-icon-bg: var(--lamp-icon-bg);
+  --tile-icon-fg: var(--lamp-icon-fg);
+}
+
+.tile-switch {
+  --tile-glow: var(--power-glow);
+  --tile-icon-bg: var(--power-icon-bg);
+  --tile-icon-fg: var(--power-icon-fg);
+}
 
 .lamp-visual {
   display: inline-flex;
@@ -234,31 +247,34 @@
 }
 
 .card-lit .lamp-visual {
-  background: var(--lamp-icon-bg);
-  color: var(--lamp-icon-fg);
+  background: var(--tile-icon-bg);
+  color: var(--tile-icon-fg);
   transition:
     background-color 1.2s cubic-bezier(0.3, 0, 0.2, 1),
     color 1.2s cubic-bezier(0.3, 0, 0.2, 1);
 }
 
-/* De gloed: warm licht dat vanachter het icoon de tegel in straalt. Hij
+/* De gloed: licht dat vanachter het icoon de tegel in straalt. Hij
    ligt onder de inhoud (eerste laag in de tegel) en volgt de ronde hoeken.
    Aan: hij zwelt traag op, eerst zacht en dan voller, zoals een gloeidraad
    die opwarmt. Uit: hij dooft nog trager. */
-.tile-light {
+.tile-light,
+.tile-switch {
   isolation: isolate;
 }
 
-.tile-light > :not(.device-card-action) {
+.tile-light > :not(.device-card-action),
+.tile-switch > :not(.device-card-action) {
   position: relative;
 }
 
-.tile-light::before {
+.tile-light::before,
+.tile-switch::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle at 3.4rem 3.4rem, var(--lamp-glow) 0, transparent 70%);
+  background: radial-gradient(circle at 3.4rem 3.4rem, var(--tile-glow) 0, transparent 70%);
   opacity: 0;
   transform: scale(0.92);
   transform-origin: 3.4rem 3.4rem;
@@ -678,6 +694,7 @@
   }
 
   .tile-light::before,
+  .tile-switch::before,
   .card-lit::before {
     transform: none;
     transition: opacity 0.3s ease;

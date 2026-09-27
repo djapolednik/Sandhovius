@@ -18,6 +18,11 @@ colors:
   lamp-icon-fg: "#b45309"
   lamp-icon-bg-dark: "#3a2a14"
   lamp-icon-fg-dark: "#ffc46b"
+  power-blue: "#2896ff"
+  power-icon-bg: "#e2f0ff"
+  power-icon-fg: "#0b5cad"
+  power-icon-bg-dark: "#102a44"
+  power-icon-fg-dark: "#7cc8ff"
   resting-gray: "#8a8f98"
   resting-gray-dark: "#5b6069"
   amber-notice: "#b45309"
@@ -202,7 +207,7 @@ components:
 
 **Creative North Star: "The Lit Room at Night"**
 
-Walk into a dark house in the evening and you know at once what is on: the lamp that glows, the thermostat's small light, everything else resting in the dark. Sandhovius works the same way. The surfaces are calm and quiet: black at night, soft mist by day. Only the things that are on light up: a lamp that is on fills its tile with warm light, and the thermostat's dial glows Electric Blue while it heats. You never have to read to know the state of the house; you see it, the way you see a lit window from the street.
+Walk into a dark house in the evening and you know at once what is on: the lamp that glows, the thermostat's small light, everything else resting in the dark. Sandhovius works the same way. The surfaces are calm and quiet: black at night, soft mist by day. Only the things that are on light up: a lamp that is on fills its tile with warm light, a plug that is on with a cool power blue, and the thermostat's dial glows Electric Blue while it heats. You never have to read to know the state of the house; you see it, the way you see a lit window from the street.
 
 The app is still a set of familiar household controls, arranged by room, and the user should never feel they are "using a smart-home system". They are turning on the kitchen light. The app is made for a phone or an iPad in the hand, so its navigation sits at the bottom, within reach of the thumb: **Home** (how the house is doing, favourites and the thermostat), **Kamers** (every device, room by room) and **Instellingen**. The screens are a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with a large lamp icon and one big word ("Aan" or "Uit"). The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, a lamp's warm light swells up over about a second and dies away even more slowly, and a tile that just changed pulses once in Electric Blue. Everything else about a device sits behind "Details" (or a long-press) in a sheet and never crowds a tile.
 
@@ -214,7 +219,7 @@ This is explicitly **not** a Home Assistant dashboard, which is dense, entity-ce
 - Navigation at the bottom, in thumb reach: Home, Kamers, Instellingen, each with icon and word
 - A bento of rounded panels (28px): a house panel plus one tile per device, sized by the control it needs
 - State is readable at a glance: a warmly lit lamp tile with "Aan" for on, a quiet tile with "Uit" for off, text for offline, amber for attention
-- Only light sources glow: warm light from a lamp that is on, Electric Blue from the thermostat while it heats
+- Only live energy glows: warm light from a lamp that is on, power blue from a plug that is on, Electric Blue from the thermostat while it heats
 - Connection is always honest: "Verbonden met je huis" when everything works, a plain-language notice when it doesn't
 - Light and dark themes are equal citizens: black with dark panels at night, mist with white panels by day
 - One friendly geometric family (Urbanist), sentence case throughout, never uppercase labels
@@ -228,7 +233,8 @@ A black-and-mist palette from the brand sheet, with one interactive voice (Elect
 - **Electric Blue** (`electric-blue`): the single interactive voice. It is used for primary buttons, the active thermostat mode, the dial's value arc and knob, focus rings, input focus, the active room pill, the active navigation item, "Toevoegen" and the "just changed" pulse. White text on it is 4.8:1. As *text* it stays `electric-blue-text` in the light theme and lightens to `electric-blue-text-dark` on black (5.9:1 on a night panel). Soft rings and the pulse use the per-theme `--accent-ring` / `--accent-pulse` tokens; the dial's glow uses `--glow`. None of them are hard-coded rgba.
 
 ### State colors
-- **Lamp Warm** (`lamp-warm`, as a translucent `--lamp-glow` per theme): the light of a lamp that is on. It glows out from behind the lamp icon, and the icon circle warms up with it (`lamp-icon-bg` / `lamp-icon-fg`, 4.5:1 light, 8.8:1 dark). It only ever means "this lamp gives light", never decoration, and not for plugs (a plug is not a light source).
+- **Lamp Warm** (`lamp-warm`, as a translucent `--lamp-glow` per theme): the light of a lamp that is on. It glows out from behind the lamp icon, and the icon circle warms up with it (`lamp-icon-bg` / `lamp-icon-fg`, 4.5:1 light, 8.8:1 dark). It only ever means "this lamp gives light", never decoration.
+- **Power Blue** (`power-blue`, as a translucent `--power-glow` per theme): the same glow for a plug that is on, with its icon circle in `power-icon-bg` / `power-icon-fg` (5.8:1 light, 8.1:1 dark). Lighter and cooler than Electric Blue, so a live plug never reads as a button or as heating.
 - **Signal Green** (`signal-green`): means "this is on" in the house summary: the count and the count badges on the room chips (with a black number, `signal-green-contrast`, 10.8:1). On tiles, "Aan" is plain primary text; the light itself carries the state. It fails as text on white (1.9:1), so as text it is **Deep Leaf** (`deep-leaf`, 5.1:1+) in the light theme and Signal Green itself on black. It is never used for success messages, app settings or decoration: the dark-mode and "Op Home tonen" switches use Electric Blue, because a theme or a favourite is not device state.
 - **Resting Gray** (`resting-gray` / `-dark`): the off track of a switch, and the dial's arc when heating is off.
 - **Amber Notice** (`amber-notice` with `amber-notice-bg`): something needs attention but is not broken, such as the connection notices, recoverable errors in banners and the low-battery badge.
@@ -301,12 +307,12 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 
 ## Elevation & Depth
 
-**Surface steps, real light.** Depth comes from surface steps rather than shadows: page < panel < inset. In the light theme panels rest on a soft, diffuse shadow (`--shadow-panel`). On black there are no shadows at all; dark panels carry a 1px hairline instead. The only light effects come from things that actually give light: a lamp that is on, and the thermostat while it heats.
+**Surface steps, real light.** Depth comes from surface steps rather than shadows: page < panel < inset. In the light theme panels rest on a soft, diffuse shadow (`--shadow-panel`). On black there are no shadows at all; dark panels carry a 1px hairline instead. The only light effects come from things that are actually live: a lamp or plug that is on, and the thermostat while it heats.
 
 ### Shadow Vocabulary
 - **Panel** (light only: `0 1px 2px rgba(0,0,0,0.04), 0 14px 32px -20px rgba(0,0,0,0.16)`): every panel, tile and inactive room pill at rest.
 - **Dial glow** (a blurred disc of `--glow` behind the dial, `blur(32px)`, fading in over 0.6s): only while heating is on.
-- **Lamp glow** (a radial gradient of `--lamp-glow` centered on the lamp icon, filling the tile to 70%): only while a lamp is on. On: it swells from 92% to full size and fades in over 1.2–1.4s with a slow start (`cubic-bezier(0.3, 0, 0.2, 1)`), like a filament warming up. Off: it dies away over 1.8s (`ease-in`). With reduced motion it simply fades in 0.3s.
+- **Tile glow** (a radial gradient centered on the device icon, filling the tile to 70%): `--lamp-glow` while a lamp is on, `--power-glow` while a plug is on. On: it swells from 92% to full size and fades in over 1.2–1.4s with a slow start (`cubic-bezier(0.3, 0, 0.2, 1)`), like a filament warming up. Off: it dies away over 1.8s (`ease-in`). With reduced motion it simply fades in 0.3s.
 - **Change pulse** (an Electric Blue ring expanding 0 to 14px and fading over 1s): plays once when a tile changes.
 - **Navigation** (`0 12px 36px -14px rgba(0,0,0,0.35)`; on black a hairline with a deeper shadow): the bottom bar floats above the content.
 - **Toast** (`0 12px 28px -10px rgba(0,0,0,0.45)`).
@@ -314,7 +320,7 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 - **Login** (a large blurred Electric Blue disc behind the login panel, 35% light / 45% dark): the brand sheet's glow as the first thing you see.
 
 ### Named Rules
-**The Real Light Rule.** Only something that actually gives light may glow: a lamp that is on (warm) and the thermostat while it heats (Electric Blue). Plugs, sensors, buttons and panels never glow. A glow that stands for anything other than real light turns the room into a neon console.
+**The Real Light Rule.** Only something that is actually live may glow: a lamp that is on (warm), a plug that is on (power blue) and the thermostat while it heats (Electric Blue). Sensors, buttons and panels never glow. A glow that stands for anything other than live energy turns the room into a neon console.
 
 **The Offline Fade Rule.** An unreachable device stays in place and says so in text: "Offline" when the device itself is gone, "Niet bereikbaar" when the whole box is (with "Laatst aan/uit" or "…, laatst bekende stand"). Only its icon fades (45% opacity); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.
 
@@ -338,11 +344,11 @@ Round and confident: pills, generous, gently responsive.
 
 ### Device tile (signature component)
 The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem tall. The thermostat's gear floats top-right, and its name wraps around it on its first line and uses the full width after that, so names never break mid-word. The whole tile is one invisible action button (toggle for lights and switches, open details for sensors); "Details" and the gear sit beside it, never inside it.
-- **Light / switch:** a large device icon in a 72px circle at the top, the name, "Aan" or "Uit" at State size, a caption (the type, or the room on Home), and a **Details** chip at the bottom. The tile is one button carrying `aria-pressed`. A lamp that is on lights up: the warm **lamp glow** fills the tile from behind the icon and the icon circle turns warm amber. "Aan" stays in the primary text color. A plug that is on says "Aan" but does not glow. Off: no glow, a gray icon, "Uit" in Quiet Slate.
+- **Light / switch:** a large device icon in a 72px circle at the top, the name, "Aan" or "Uit" at State size, a caption (the type, or the room on Home), and a **Details** chip at the bottom. The tile is one button carrying `aria-pressed`. A lamp that is on lights up: the warm **tile glow** fills the tile from behind the icon and the icon circle turns warm amber. A plug that is on does the same in power blue. "Aan" stays in the primary text color. Off: no glow, a gray icon, "Uit" in Quiet Slate.
 - **Thermostat** (spans two columns, and two rows on wide grids): a 270° **dial** (open at the bottom) with the target as the value arc and a knob, a dot on the arc for the current temperature, and min/max at the arc ends. Inside it are "Doel" and the target at Dial size, with "Nu 21,0°" below. Under the dial are two 52px round −/+ steps (0.5°) with the status between them ("Verwarmt" in blue, "Op temperatuur", "Verwarming uit"), then two 72px mode tiles, **Verwarmen** / **Uit**, as a radiogroup, the active one Electric Blue. Taps on −/+ are batched: one `set_temperature` command 800ms after the last tap, flushed if the tile unmounts. A tap on the panel itself does nothing. With heating off, the arc turns Resting Gray and the glow goes out.
 - **Sensor:** the name, the temperature at 2.75rem in the temperature scale, motion as a plain sentence ("Er is nu beweging" / "Geen beweging", never amber), the caption, and a low-battery badge only at ≤20%. A tap opens the details.
 - **Details:** "Details", the thermostat's gear, a tap on a sensor or a 500ms long-press opens one **detail sheet**: a sensor's readings (with "Laatst bijgewerkt"), the **Op Home tonen** switch (favourite, Electric Blue, saved immediately), name and room with "Opslaan", and delete with an inline confirmation.
-- **States:** tap compresses the tile (`scale(0.98)`), hover darkens the edge, a lamp that is on glows warm, offline/unreachable says so in text, fades the icon and shows no glow (the state is not certain), new tiles say "Wordt klaargezet", and a realtime change pulses blue. Focus shows a 2px Electric Blue outline with a 3px offset.
+- **States:** tap compresses the tile (`scale(0.98)`), hover darkens the edge, a lamp or plug that is on glows, offline/unreachable says so in text, fades the icon and shows no glow (the state is not certain), new tiles say "Wordt klaargezet", and a realtime change pulses blue. Focus shows a 2px Electric Blue outline with a 3px offset.
 - Long-press must not trigger text selection or the iOS callout.
 
 ### House panel
@@ -384,14 +390,14 @@ Stacked panels with a quiet heading each. **Huis** is one large row (icon, house
 - **Do** keep touch targets at 44px or more (48px for room pills, 52px for primary actions and thermostat steps, 56px for navigation items).
 - **Do** pair every state color with a word or an icon ("Aan", "Uit", "Offline", a battery %).
 - **Do** design every screen in both themes: black with night panels, and mist with white panels. The dark-mode tokens are part of the spec, not an afterthought.
-- **Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 1.2–1.4s for a lamp's light swelling up and 1.8s for it dying away, 0.6s for the dial's glow fading in, 0.25s for a sheet sliding up, and 1s for the one-time change pulse. Exits are faster than entrances.
+- **Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 1.2–1.4s for a lamp's or plug's glow swelling up and 1.8s for it dying away, 0.6s for the dial's glow fading in, 0.25s for a sheet sliding up, and 1s for the one-time change pulse. Exits are faster than entrances.
 - **Do** give every animation a `prefers-reduced-motion` path that removes movement (scaling, sliding, growing rings, the dial sweep, the lamp's swell, the loading breath) but keeps the state change visible.
 - **Do** keep information-bearing text at 4.5:1 or better in both themes, and controls or icons at 3:1. Where a brand color fails as text (Signal Green on white), use its deeper step as text and keep the bright color for fills.
 
 ### Don't:
 - **Don't** make it look like a Home Assistant dashboard: no dense entity lists, no tiny tiles, no power-user toggle walls.
 - **Don't** make it look like a generic SaaS admin: no sidebars, data tables or KPI tiles.
-- **Don't** make it a neon console: nothing glows unless it is a real light source (a lit lamp, a heating thermostat); no glassmorphism, no neon gradients, no sci-fi decoration.
+- **Don't** make it a neon console: nothing glows unless it is live (a lit lamp, a plug that is on, a heating thermostat); no glassmorphism, no neon gradients, no sci-fi decoration.
 - **Don't** introduce a second accent color; Electric Blue is the only interactive voice.
 - **Don't** show tiles for things the house can't do or data it doesn't have (weather, music, energy, brightness, scenes) just because an inspiration board has them.
 - **Don't** use uppercase labels, letter-spaced stamps or middle-dot meta strings.

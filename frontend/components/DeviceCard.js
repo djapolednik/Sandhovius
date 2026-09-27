@@ -66,10 +66,10 @@ export default memo(function DeviceCard({
   // tik iets doet. Een sensor opent met een tik zijn details (laatst
   // bekende waarden blijven daar leesbaar).
   const canToggle = isToggleable && isOnline && !isPairing && !setupFailed
-  // Een lamp die aan staat licht op: een warme gloed in de tegel (zie
-  // .card-lit). Alleen bij een lamp — een stopcontact is geen lichtbron —
-  // en alleen als we de stand zeker weten (online).
-  const isLit = device.type === 'light' && canToggle && isOn
+  // Een lamp of stopcontact dat aan staat licht op: een gloed in de tegel
+  // (zie .card-lit) — warm voor een lamp, stroomblauw voor een
+  // stopcontact. Alleen als we de stand zeker weten (online).
+  const isLit = isToggleable && canToggle && isOn
   const opensDetails = device.type === 'sensor' && !isPairing && !setupFailed
   const isClickable = canToggle || opensDetails
 
