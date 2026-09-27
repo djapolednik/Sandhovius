@@ -4,8 +4,9 @@ import { formatTemperature, temperatureColor, readTemperature } from '../lib/tem
 import { isBatteryLow } from '../lib/battery'
 
 // Een sensor laat zijn meting zien, dat is waarvoor je kijkt: de
-// temperatuur groot, beweging als gewone zin. Tikken opent de details.
-export default function SensorCard({ state, isOnline, offlineText = 'Offline', header }) {
+// temperatuur groot, beweging als gewone zin. Een tik op de tegel opent de
+// details (alle metingen, favoriet, naam en kamer).
+export default function SensorCard({ state, isOnline, offlineText = 'Offline', header, caption, Icon }) {
   const occupancy = state?.occupancy ?? state?.motion
   const hasMotionReading = typeof occupancy === 'boolean'
 
@@ -20,7 +21,7 @@ export default function SensorCard({ state, isOnline, offlineText = 'Offline', h
     <>
       {header}
 
-      <div className="sensor-body">
+      <div className="tile-state">
         {hasTemperatureReading && (
           <span className="reading-value reading-value-hero" style={{ color: temperatureColor(temperature) }}>
             {formatTemperature(temperature)}
@@ -35,6 +36,10 @@ export default function SensorCard({ state, isOnline, offlineText = 'Offline', h
         {!hasMotionReading && !hasTemperatureReading && (
           <span className="reading-empty">Nog geen meetwaarden ontvangen</span>
         )}
+        <span className="tile-caption">
+          <Icon width="18" height="18" aria-hidden="true" />
+          {caption}
+        </span>
       </div>
 
       {(!isOnline || batteryLow) && (

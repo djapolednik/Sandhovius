@@ -1,13 +1,10 @@
 'use client'
 
-import { PowerIcon } from '../lib/icons'
-
-// De tegel ís de schakelaar: onderin staat "Aan"/"Uit" als grootste tekst,
-// met de ronde aan-knop die groen oplicht (Signal Green met een zwart
-// symbool). Die knop is puur visueel — hij vertelt een nieuwe gebruiker
-// dat tikken schakelt; de echte knop met aria-pressed is de hele tegel
-// (zie DeviceCard).
-export default function LightCard({ state, isOnline, offlineText = 'Offline', header, Icon }) {
+// Een lamp of stopcontact: de stand ("Aan"/"Uit") als grootste tekst van
+// de tegel, daaronder een korte regel (soort apparaat, of de kamer als de
+// tegel op Home staat), en onderin "Details". De tegel zelf blijft rustig;
+// alleen de aan-knop rechtsboven licht groen op (zie DeviceCard).
+export default function LightCard({ state, isOnline, offlineText = 'Offline', header, caption, Icon, footer }) {
   const raw = state?.state
   const isOn = raw === 'on'
   const isKnown = raw === 'on' || raw === 'off'
@@ -16,31 +13,24 @@ export default function LightCard({ state, isOnline, offlineText = 'Offline', he
     <>
       {header}
 
-      <div className="tile-visual">
-        <span className="device-icon device-icon-large">
-          <Icon width="30" height="30" />
+      <div className="tile-state">
+        {isOnline ? (
+          <span className={`device-state-word ${isOn ? 'device-state-word-on' : ''}`}>
+            {isKnown ? (isOn ? 'Aan' : 'Uit') : 'Onbekend'}
+          </span>
+        ) : (
+          <>
+            <span className="device-state-word device-state-word-offline">{offlineText}</span>
+            {isKnown && <span className="device-state-sub">Laatst {isOn ? 'aan' : 'uit'}</span>}
+          </>
+        )}
+        <span className="tile-caption">
+          <Icon width="18" height="18" aria-hidden="true" />
+          {caption}
         </span>
       </div>
 
-      <div className="device-state-row">
-        {isOnline ? (
-          <>
-            <span className={`device-state-word ${isOn ? 'device-state-word-on' : ''}`}>
-              {isKnown ? (isOn ? 'Aan' : 'Uit') : 'Onbekend'}
-            </span>
-            {isKnown && (
-              <span className={`power-indicator ${isOn ? 'power-indicator-on' : ''}`} aria-hidden="true">
-                <PowerIcon />
-              </span>
-            )}
-          </>
-        ) : (
-          <span className="device-state">
-            <span className="device-state-word device-state-word-offline">{offlineText}</span>
-            {isKnown && <span className="device-state-sub">Laatst {isOn ? 'aan' : 'uit'}</span>}
-          </span>
-        )}
-      </div>
+      <div className="tile-bottom">{footer}</div>
     </>
   )
 }

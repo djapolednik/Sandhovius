@@ -6,16 +6,32 @@ import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
 import HousePanel from '../components/HousePanel'
-import UserMenu from '../components/UserMenu'
-import SettingsModal from '../components/SettingsModal'
 import HouseModal from '../components/HouseModal'
 import AddDeviceModal from '../components/AddDeviceModal'
 import ToastContainer from '../components/ToastContainer'
-import SensorDetailModal from '../components/SensorDetailModal'
+import BottomNav, { TABS } from '../components/BottomNav'
+import RoomTabs from '../components/RoomTabs'
+import SettingsView from '../components/SettingsView'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
 import { PlusIcon } from '../lib/icons'
+
+const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
+
+// "Zondag 27 september"
+function formatToday(ms) {
+  const text = DATE_FORMAT.format(ms)
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+// Het tabblad staat in de URL (#kamers), zodat de terugknop van de
+// telefoon tussen tabbladen terugspringt en een herlaadbeurt je laat waar
+// je was.
+function tabFromHash() {
+  const id = window.location.hash.replace('#', '')
+  return TABS.some((tab) => tab.id === id) ? id : 'home'
+}
 
 // Expliciete storageKey ("pocketbase_auth" i.p.v. de SDK-default "pb_auth")
 // zodat de sessie herkenbaar is in devtools/Application/LocalStorage. De
@@ -58,10 +74,9 @@ export default function Home() {
   // opnieuw alles op te halen.
   const [fetchFailed, setFetchFailed] = useState(false)
 
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [tab, setTab] = useState('home')
   const [houseModalOpen, setHouseModalOpen] = useState(false)
   const [addDeviceOpen, setAddDeviceOpen] = useState(false)
-  const [sensorDetailDeviceId, setSensorDetailDeviceId] = useState(null)
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   // Apparaten die je in deze sessie net toevoegde: hun kaart zegt "Wordt
   // klaargezet" i.p.v. "Offline" tot de box ze gekoppeld heeft.
@@ -270,6 +285,28 @@ export default function Home() {
     window.localStorage.setItem(SELECTED_ROOM_KEY, roomId)
   }
 
+  useEffect(() => {
+    setTab(tabFromHash())
+    function onHashChange() {
+      setTab(tabFromHash())
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  function selectTab(id) {
+    if (id === tab) return
+    window.location.hash = id
+    window.scrollTo(0, 0)
+  }
+
+  // Vanuit de samenvatting op Home ("staat aan in Woonkamer") meteen naar
+  // die kamer.
+  function openRoom(roomId) {
+    selectRoom(roomId)
+    selectTab('kamers')
+  }
+
   // Toont een korte melding rechtsboven die zichzelf weer verwijdert (de
   // fade-out zelf is puur CSS, zie .toast — dit ruimt alleen de state op
   // zodat de DOM-node niet blijft hangen). Fouten blijven langer staan en
@@ -286,7 +323,6 @@ export default function Home() {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }
 
-  const sensorDetailDevice = devices.find((d) => d.id === sensorDetailDeviceId) ?? null
   const settingsDevice = devices.find((d) => d.id === settingsDeviceId) ?? null
 
   const roomTabs = [
@@ -465,6 +501,10 @@ export default function Home() {
       })
   }
 
+  async function toggleFavorite(device) {
+    await saveDevice(device.id, { favorite: !device.favorite })
+  }
+
   async function saveDevice(deviceId, updates) {
     const updated = await pb.collection('devices').update(deviceId, updates)
     setDevices((prev) => prev.map((d) => (d.id === deviceId ? { ...d, ...updated } : d)))
@@ -521,7 +561,6 @@ export default function Home() {
     () => ({
       onToggle: (device) => latest.current.toggleDevice(device),
       onSetTemperature: (device, temperature) => latest.current.setDeviceTemperature(device, temperature),
-      onOpenDetail: (device) => setSensorDetailDeviceId(device.id),
       onOpenSettings: (device) => setSettingsDeviceId(device.id),
     }),
     []
@@ -580,35 +619,120 @@ export default function Home() {
     )
   }
 
-  return (
-    <>
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+  const roomNameById = Object.fromEntries(roomsInHouse.map((room) => [room.id, room.name]))
+  const climateDevices = devicesInHouse.filter((device) => device.type === 'climate')
+  // De thermostaat staat altijd op Home; de rest alleen als favoriet.
+  const favoriteDevices = devicesInHouse.filter((device) => device.favorite && device.type !== 'climate')
+  const userEmail = pb.authStore.record?.email
 
-      <Header
-        tabs={roomTabs}
-        selectedId={selectedRoomId}
-        onSelect={selectRoom}
-        userMenu={
-          <UserMenu
-            onChangeHouse={() => setHouseModalOpen(true)}
-            onOpenSettings={() => setSettingsOpen(true)}
-            onLogout={logout}
+  const errorBanner = error && (
+    <div className="error-banner" role="alert">
+      <span>{error}</span>
+      {fetchFailed && (
+        <button type="button" className="btn btn-secondary error-banner-action" onClick={retryFetch}>
+          Opnieuw proberen
+        </button>
+      )}
+    </div>
+  )
+
+  const skeleton = !loaded && !error && (
+    // Plaatshouders in de vorm van tegels, zodat het scherm niet leeg is en
+    // niet verspringt als de apparaten binnenkomen.
+    <ul className="device-list" aria-hidden="true">
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className={`device-cell ${i === 0 ? 'device-cell-climate' : ''}`}>
+          <div className="panel tile card-skeleton" />
+        </li>
+      ))}
+    </ul>
+  )
+
+  const noHouse = loaded && !house && (
+    <p className="empty-state">
+      Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box verbonden is, verschijnt je huis hier
+      vanzelf.
+    </p>
+  )
+
+  function renderDevices(list, { showRoom = false } = {}) {
+    return (
+      <ul className="device-list">
+        {list.map((device) => (
+          <DeviceCard
+            key={device.id}
+            device={device}
+            context={showRoom ? roomNameById[device.room] ?? 'Geen kamer' : undefined}
+            houseReachable={houseReachable}
+            isNew={newDeviceIds.includes(device.id)}
+            isAnimating={animatingDeviceIds.includes(device.id)}
+            {...cardHandlers}
           />
-        }
-      />
+        ))}
+      </ul>
+    )
+  }
 
-      <main className="container">
-        {error && (
-          <div className="error-banner" role="alert">
-            <span>{error}</span>
-            {fetchFailed && (
-              <button type="button" className="btn btn-secondary error-banner-action" onClick={retryFetch}>
-                Opnieuw proberen
-              </button>
-            )}
+  const addDeviceButton = house && (
+    <button
+      type="button"
+      className="btn btn-primary btn-add"
+      aria-label="Apparaat toevoegen"
+      onClick={() => setAddDeviceOpen(true)}
+    >
+      <PlusIcon width="20" height="20" aria-hidden="true" />
+      Toevoegen
+    </button>
+  )
+
+  let header
+  let content
+  if (tab === 'kamers') {
+    const count = devicesInSelectedRoom.length
+    header = <Header title="Kamers" action={addDeviceButton} />
+    content = (
+      <>
+        {errorBanner}
+        {noHouse}
+        {roomTabs.length > 0 && (
+          <div className="rooms-bar">
+            <RoomTabs tabs={roomTabs} selectedId={selectedRoomId} onSelect={selectRoom} />
           </div>
         )}
-
+        {loaded && house && count > 0 && (
+          <p className="section-count">{count === 1 ? '1 apparaat' : `${count} apparaten`}</p>
+        )}
+        {loaded && house && count === 0 && (
+          <p className="empty-state">
+            {roomsInHouse.length === 0 && unassignedDevices.length === 0
+              ? 'Nog geen apparaten. Voeg je eerste lamp, stopcontact, sensor of thermostaat toe met "Toevoegen" bovenaan.'
+              : 'Nog geen apparaten in deze kamer. Voeg er een toe met "Toevoegen", of verplaats een apparaat hierheen via Details.'}
+          </p>
+        )}
+        {skeleton}
+        {renderDevices(devicesInSelectedRoom)}
+      </>
+    )
+  } else if (tab === 'instellingen') {
+    header = <Header title="Instellingen" />
+    content = (
+      <>
+        {errorBanner}
+        <SettingsView
+          house={house}
+          roomCount={roomsInHouse.length}
+          userEmail={userEmail}
+          onOpenHouse={() => setHouseModalOpen(true)}
+          onLogout={logout}
+        />
+      </>
+    )
+  } else {
+    header = <Header title="Welkom thuis" subtitle={formatToday(now)} />
+    content = (
+      <>
+        {errorBanner}
+        {noHouse}
         <div className="dashboard">
           {house && (
             <HousePanel
@@ -620,102 +744,88 @@ export default function Home() {
               // wat er aan staat, en zegt de verbindingsmelding genoeg.
               summary={
                 loaded && houseReachable && hasSwitchables
-                  ? { rooms: roomsWithSomethingOn, onSelectRoom: selectRoom }
+                  ? { rooms: roomsWithSomethingOn, onSelectRoom: openRoom }
                   : null
               }
             />
           )}
 
           <div className="dashboard-devices">
-            {loaded && house && devicesInSelectedRoom.length === 0 && (
-              <p className="empty-state">
-                {roomsInHouse.length === 0 && unassignedDevices.length === 0
-                  ? 'Nog geen apparaten. Tik op de plusknop rechtsonder om je eerste lamp, stopcontact, sensor of thermostaat toe te voegen.'
-                  : 'Nog geen apparaten in deze kamer. Voeg er een toe met de plusknop, of verplaats een apparaat hierheen via het tandwiel op zijn kaart.'}
-              </p>
+            {skeleton}
+
+            {loaded && house && (
+              <section className="home-section" aria-labelledby="home-favorites">
+                <h2 id="home-favorites" className="section-heading">
+                  Favorieten
+                </h2>
+                {favoriteDevices.length > 0 ? (
+                  renderDevices(favoriteDevices, { showRoom: true })
+                ) : (
+                  <p className="section-hint">
+                    Zet apparaten die je vaak gebruikt hier: open een apparaat via Details en zet "Op Home tonen"
+                    aan.
+                  </p>
+                )}
+              </section>
             )}
 
-            {loaded && !house && (
-              <p className="empty-state">
-                Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box verbonden is,
-                verschijnt je huis hier vanzelf.
-              </p>
+            {loaded && house && climateDevices.length > 0 && (
+              <section className="home-section" aria-labelledby="home-climate">
+                <h2 id="home-climate" className="section-heading">
+                  Temperatuur
+                </h2>
+                {renderDevices(climateDevices, { showRoom: true })}
+              </section>
             )}
 
-            {!loaded && !error && (
-              // Plaatshouders in de vorm van kaarten, zodat het scherm niet
-              // leeg is en niet verspringt als de apparaten binnenkomen.
-              <ul className="device-list" aria-hidden="true">
-                {[0, 1, 2, 3].map((i) => (
-                  <li key={i} className={`device-cell ${i === 0 ? 'device-cell-climate' : ''}`}>
-                    <div className="panel tile card-skeleton" />
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <ul className="device-list">
-              {devicesInSelectedRoom.map((device) => (
-                <DeviceCard
-                  key={device.id}
-                  device={device}
-                  houseReachable={houseReachable}
-                  isNew={newDeviceIds.includes(device.id)}
-                  isAnimating={animatingDeviceIds.includes(device.id)}
-                  {...cardHandlers}
-                />
-              ))}
-            </ul>
           </div>
         </div>
+      </>
+    )
+  }
 
-        {house && (
-          <button className="fab" aria-label="Apparaat toevoegen" onClick={() => setAddDeviceOpen(true)}>
-            <PlusIcon width="22" height="22" />
-          </button>
-        )}
+  return (
+    <>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      {header}
 
-        {houseModalOpen && (
-          <HouseModal
-            house={house}
-            rooms={roomsInHouse}
-            onRenameHouse={renameHouse}
-            onAddRoom={addRoom}
-            onRenameRoom={renameRoom}
-            onDeleteRoom={deleteRoom}
-            onClose={() => setHouseModalOpen(false)}
-          />
-        )}
+      <main className="container">{content}</main>
 
-        {addDeviceOpen && (
-          <AddDeviceModal
-            rooms={roomsInHouse}
-            defaultRoomId={selectedRoomId === '__unassigned' ? '' : selectedRoomId}
-            onCreate={createDevice}
-            onClose={() => setAddDeviceOpen(false)}
-          />
-        )}
+      <BottomNav activeTab={tab} onSelect={selectTab} />
 
-        {settingsDevice && (
-          <DeviceSettingsModal
-            key={settingsDevice.id}
-            device={settingsDevice}
-            rooms={roomsInHouse}
-            onSave={saveDevice}
-            onDelete={deleteDevice}
-            onClose={() => setSettingsDeviceId(null)}
-          />
-        )}
+      {houseModalOpen && (
+        <HouseModal
+          house={house}
+          rooms={roomsInHouse}
+          onRenameHouse={renameHouse}
+          onAddRoom={addRoom}
+          onRenameRoom={renameRoom}
+          onDeleteRoom={deleteRoom}
+          onClose={() => setHouseModalOpen(false)}
+        />
+      )}
 
-        {sensorDetailDevice && (
-          <SensorDetailModal
-            device={sensorDetailDevice}
-            onClose={() => setSensorDetailDeviceId(null)}
-          />
-        )}
-      </main>
+      {addDeviceOpen && (
+        <AddDeviceModal
+          rooms={roomsInHouse}
+          defaultRoomId={selectedRoomId === '__unassigned' ? '' : selectedRoomId}
+          onCreate={createDevice}
+          onClose={() => setAddDeviceOpen(false)}
+        />
+      )}
+
+      {settingsDevice && (
+        <DeviceSettingsModal
+          key={settingsDevice.id}
+          device={settingsDevice}
+          rooms={roomsInHouse}
+          onSave={saveDevice}
+          onToggleFavorite={toggleFavorite}
+          onDelete={deleteDevice}
+          onClose={() => setSettingsDeviceId(null)}
+        />
+      )}
     </>
   )
 }

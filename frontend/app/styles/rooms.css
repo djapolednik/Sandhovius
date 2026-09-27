@@ -1,7 +1,6 @@
-/* ==================== Topbalk ====================
-   Vandaag links, de kamers in het midden, je account rechts — op de
-   pagina zelf, geen aparte gekleurde balk. Op een telefoon krijgen de
-   kamers een eigen rij onder datum en account. */
+/* ==================== Kop per tabblad ====================
+   Een grote titel (met op Home de datum erboven) en rechts één actie. De
+   navigatie zelf staat onderin (zie .bottom-nav). */
 .topbar {
   padding-top: env(safe-area-inset-top);
 }
@@ -9,55 +8,69 @@
 .topbar-inner {
   max-width: var(--content-max);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    'date user'
-    'rooms rooms';
-  align-items: center;
-  gap: 0.25rem 1rem;
-  padding: 1rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1rem 1rem;
   padding-left: max(1rem, env(safe-area-inset-left));
   padding-right: max(1rem, env(safe-area-inset-right));
 }
 
-.topbar-date {
-  grid-area: date;
-  margin: 0;
-  font-size: 1.35rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
-.topbar-rooms {
-  grid-area: rooms;
-  min-width: 0;
-}
-
-.topbar-user {
-  grid-area: user;
-  justify-self: end;
-}
-
-@media (min-width: 900px) {
+@media (min-width: 768px) {
   .topbar-inner {
-    grid-template-columns: minmax(12rem, 1fr) auto minmax(12rem, 1fr);
-    grid-template-areas: 'date rooms user';
-    padding: 1.5rem;
+    padding: 1.75rem 1.5rem 1.25rem;
     padding-left: max(1.5rem, env(safe-area-inset-left));
     padding-right: max(1.5rem, env(safe-area-inset-right));
   }
-
-  .topbar-date {
-    font-size: 1.6rem;
-  }
 }
 
-/* ==================== Kamers ==================== */
+.topbar-titles {
+  min-width: 0;
+}
+
+.topbar-subtitle {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.topbar-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.topbar-action {
+  flex-shrink: 0;
+}
+
+/* "Apparaat toevoegen": een primaire knop, maar niet over de volle
+   breedte zoals in een formulier. */
+.btn-add {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.05rem 0.55rem 0.85rem;
+  font-size: 1rem;
+  min-height: 48px;
+}
+
+/* ==================== Kamers ====================
+   Gevulde pillen: de gekozen kamer is Electric Blue, de andere rusten op
+   het binnenvlak. Scrollt horizontaal als er meer kamers zijn dan passen. */
+.rooms-bar {
+  margin: 0 -1rem 1rem;
+  padding: 0 1rem;
+}
 
 .room-tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -84,17 +97,15 @@
   mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
 }
 
-/* Rustige tekst; de gekozen kamer staat vet en krijgt een klein blauw
-   stipje eronder, zoals in het merkblad. */
 .room-tab {
-  position: relative;
   flex-shrink: 0;
-  min-height: 44px;
-  padding: 0.5rem 0.85rem;
+  min-height: 48px;
+  padding: 0.6rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: transparent;
-  color: var(--text-secondary);
+  background: var(--card-background);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-panel);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
@@ -104,35 +115,52 @@
   max-width: 14em;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
-@media (hover: hover) {
-  .room-tab:hover {
-    color: var(--text-primary);
-  }
+[data-theme='dark'] .room-tab {
+  background: var(--surface-2);
 }
 
 .room-tab:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
-.room-tab-active {
-  color: var(--text-primary);
+.room-tab-active,
+[data-theme='dark'] .room-tab-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
   font-weight: 600;
 }
 
-.room-tab-active::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: 4px;
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: var(--accent);
+/* ==================== Secties ==================== */
+
+.section-count {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.home-section + .home-section {
+  margin-top: 1.5rem;
+}
+
+.section-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.section-hint {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
 }
 
 /* ==================== Dashboard ====================
@@ -159,6 +187,14 @@
 
 .dashboard-devices {
   min-width: 0;
+}
+
+/* Breed: de apparaten altijd in de rechterkolom, ook zolang het
+   huis-paneel er nog niet is (tijdens het laden). */
+@media (min-width: 900px) {
+  .dashboard-devices {
+    grid-column: 2;
+  }
 }
 
 /* Twee kolommen op een telefoon, meer op grotere schermen. Een tegel is

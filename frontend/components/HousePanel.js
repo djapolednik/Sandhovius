@@ -9,9 +9,9 @@ import HouseSummary from './HouseSummary'
 export default function HousePanel({ house, realtimeLink, houseLink, now, summary }) {
   return (
     <section className="panel house-panel" aria-labelledby="house-name">
-      <h1 id="house-name" className="house-name">
+      <h2 id="house-name" className="house-name">
         {house.name}
-      </h1>
+      </h2>
       <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />
       {summary && (
         <HouseSummary rooms={summary.rooms} onSelectRoom={summary.onSelectRoom} />

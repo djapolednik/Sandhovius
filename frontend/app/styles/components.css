@@ -249,85 +249,6 @@
   background: var(--accent);
 }
 
-/* ==================== Account (avatar + menu) ==================== */
-
-.user-menu {
-  position: relative;
-}
-
-.avatar-button {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: none;
-  background: var(--card-background);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-panel);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  padding: 0;
-}
-
-[data-theme='dark'] .avatar-button {
-  border: 1px solid var(--border);
-}
-
-.avatar-button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Menu komt kort binnen (fade + minimale verschuiving); weggaan is
-   direct — sneller dan binnenkomen. */
-.dropdown-menu {
-  animation: pop-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: top right;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.5rem);
-  background: var(--card-background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-tile);
-  box-shadow: 0 16px 40px -16px rgba(0, 0, 0, 0.35);
-  min-width: 200px;
-  padding: 0.35rem;
-  z-index: 10;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  min-height: 48px;
-  text-align: left;
-  padding: 0.75rem 0.9rem;
-  border-radius: var(--radius-control);
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.dropdown-item:hover {
-  background: var(--surface-2);
-}
-
-.dropdown-item:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-  background: var(--surface-2);
-}
-
 /* ==================== Modals en sheets ==================== */
 
 /* Het <dialog>-element zelf is een onzichtbaar, padding-loos kader: zo
@@ -474,39 +395,72 @@
   outline-offset: 2px;
 }
 
-/* ==================== + knop ==================== */
-
-.fab {
+/* ==================== Navigatie onderin ====================
+   Drie tabbladen binnen bereik van je duim. Een zwevende balk op het
+   paneelvlak; het actieve tabblad is een Electric Blue pil. Icoon én woord,
+   48px+ hoog. */
+.bottom-nav {
   position: fixed;
-  right: max(1.25rem, calc(env(safe-area-inset-right) + 1rem));
-  bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 1rem));
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent);
-  color: var(--accent-contrast);
+  z-index: 50;
+  left: 50%;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(26rem, calc(100% - 1.5rem));
+}
+
+.bottom-nav-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: var(--card-background);
+  border-radius: 999px;
+  box-shadow: 0 12px 36px -14px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme='dark'] .bottom-nav-list {
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.8);
+}
+
+.bottom-nav-item {
+  width: 100%;
+  min-height: 56px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 12px 28px -10px var(--glow);
+  -webkit-tap-highlight-color: transparent;
   transition:
     background-color 0.2s ease,
-    transform 0.2s ease;
+    color 0.2s ease;
 }
 
-.fab:hover {
-  background: var(--accent-hover);
+@media (hover: hover) {
+  .bottom-nav-item:hover:not(.bottom-nav-item-active) {
+    color: var(--text-primary);
+  }
 }
 
-.fab:active {
-  transform: scale(0.94);
-}
-
-.fab:focus-visible {
+.bottom-nav-item:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 3px;
+  outline-offset: 2px;
+}
+
+.bottom-nav-item-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
 }
 
 /* ==================== Toasts ==================== */
@@ -517,10 +471,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /* Telefoon: onderaan, boven de +-knop, waar je duim en ogen al zijn. */
+  /* Telefoon: onderaan, boven de navigatie, waar je duim en ogen al zijn. */
   left: max(1rem, env(safe-area-inset-left));
   right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(max(1.25rem, env(safe-area-inset-bottom) + 1rem) + 60px + 0.75rem);
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 64px + 0.75rem);
 }
 
 /* Breed scherm: rechtsboven, zoals je het van desktop-apps kent. */
@@ -636,8 +590,84 @@
     animation-name: fade-in;
   }
 
-  .btn-primary:active:not(:disabled),
-  .fab:active {
+  .btn-primary:active:not(:disabled) {
     transform: none;
   }
+}
+
+/* ==================== Instellingen (tabblad) ==================== */
+
+.settings-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 40rem;
+}
+
+.settings-section {
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.settings-heading {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.settings-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 64px;
+  padding: 0.5rem;
+  margin: 0 -0.5rem;
+  width: calc(100% + 1rem);
+  border: none;
+  border-radius: var(--radius-tile);
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .settings-link:hover {
+    background: var(--surface-2);
+  }
+}
+
+.settings-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.settings-link-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.settings-link-sub {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.settings-account-email {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.settings-logout {
+  min-height: 48px;
 }

@@ -131,8 +131,71 @@
   height: 64px;
 }
 
-.card-on .device-icon {
+/* De stand van een tegel: groot woord of groot getal, met een korte
+   regel eronder (soort apparaat, of de kamer op Home). Neemt de vrije
+   ruimte in, zodat "Details" altijd onderaan staat. */
+.tile-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1rem 0 0.75rem;
+}
+
+.tile-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.tile-caption svg {
+  flex-shrink: 0;
+}
+
+.tile-bottom {
+  display: flex;
+}
+
+/* "Details": een kleine pil die boven de tegelknop ligt en de sheet met
+   alles over het apparaat opent. */
+.details-chip {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 44px;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface-2);
   color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .details-chip:hover {
+    background: var(--border);
+  }
+}
+
+.details-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* De aan-knop zweeft rechtsboven, net als het tandwiel van de
+   thermostaat: de naam loopt eromheen. */
+.tile-top-float {
+  float: right;
+  margin: -0.1rem -0.3rem 0 0.4rem;
 }
 
 /* Onderrand: de stand, als grootste tekst van de tegel. */
@@ -151,7 +214,7 @@
 }
 
 .device-state-word {
-  font-size: 2rem;
+  font-size: 2.4rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -196,16 +259,6 @@
 .power-indicator-on {
   background: var(--on);
   color: var(--on-contrast);
-}
-
-/* Een tegel die aan staat krijgt een groene rand — de knop zegt het al,
-   de rand laat het vanuit je ooghoek zien. */
-.card-on {
-  border-color: var(--on);
-}
-
-[data-theme='dark'] .card-on {
-  border-color: var(--on);
 }
 
 /* Offline: alleen het icoon vervaagt. Laatst bekende waarden blijven op

@@ -1,36 +1,16 @@
 'use client'
 
-import RoomTabs from './RoomTabs'
-import { useNow } from '../lib/useNow'
-
-const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
-
-// "Zaterdag 27 september"
-function formatToday(ms) {
-  const text = DATE_FORMAT.format(ms)
-  return text.charAt(0).toUpperCase() + text.slice(1)
-}
-
-// De topbalk: vandaag links, de kamers in het midden, je account rechts.
-// Op een telefoon schuiven de kamers naar een eigen rij eronder, waar ze
-// de volle breedte hebben om te scrollen.
-//
-// Licht/donker staat alleen in Instellingen (één plek, geen dubbele
-// knop), en volgt standaard het thema van de telefoon.
-export default function Header({ tabs, selectedId, onSelect, userMenu }) {
-  // Eén keer per minuut is genoeg om middernacht niet te missen.
-  const now = useNow(60000)
-
+// De kop van elk tabblad: een titel, eventueel een regel eronder (de
+// datum op Home), en rechts één actie (bv. "Apparaat toevoegen").
+export default function Header({ title, subtitle, action }) {
   return (
     <header className="topbar">
       <div className="topbar-inner">
-        <p className="topbar-date">{formatToday(now)}</p>
-        {tabs.length > 0 && (
-          <div className="topbar-rooms">
-            <RoomTabs tabs={tabs} selectedId={selectedId} onSelect={onSelect} />
-          </div>
-        )}
-        <div className="topbar-user">{userMenu}</div>
+        <div className="topbar-titles">
+          {subtitle && <p className="topbar-subtitle">{subtitle}</p>}
+          <h1 className="topbar-title">{title}</h1>
+        </div>
+        {action && <div className="topbar-action">{action}</div>}
       </div>
     </header>
   )
