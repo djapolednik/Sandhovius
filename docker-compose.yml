@@ -81,6 +81,9 @@ services:
       - POCKETBASE_URL=http://pocketbase:8090
       - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL}
       - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD}
+      # Alleen de beginnaam van een nieuw huis-record. De box herkent zijn
+      # huis daarna aan het ID in /data/gateway_id; hernoemen in de app
+      # breekt de koppeling niet.
       - GATEWAY_NAME=Woonkamer
       - HISTORY_DB_PATH=/data/history.db
       - HISTORY_RETENTION_DAYS=30

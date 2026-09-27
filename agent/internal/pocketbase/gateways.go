@@ -1,6 +1,7 @@
 package pocketbase
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 )
@@ -12,6 +13,22 @@ type Gateway struct {
 
 type gatewayListResponse struct {
 	Items []Gateway `json:"items"`
+}
+
+// GetGateway fetches a gateway record by ID. It returns nil, nil when the
+// record does not exist (anymore), so the caller can tell "gone" apart
+// from "PocketBase unreachable".
+func (c *Client) GetGateway(id string) (*Gateway, error) {
+	var gateway Gateway
+	err := c.doAuthed("GET", "/api/collections/houses/records/"+url.PathEscape(id), nil, &gateway)
+	var statusErr *StatusError
+	if errors.As(err, &statusErr) && statusErr.StatusCode == 404 {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("pocketbase: get gateway %s: %w", id, err)
+	}
+	return &gateway, nil
 }
 
 // FindGatewayByName looks up a gateway record by its name. It returns

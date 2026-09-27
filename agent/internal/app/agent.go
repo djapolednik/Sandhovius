@@ -2,8 +2,11 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,13 +17,14 @@ import (
 )
 
 type Agent struct {
-	mqttClient  *mqtt.Client
-	haClient    *homeassistant.Client
-	pbClient    *pocketbase.Client
-	history     *history.Store
-	devices     *deviceCache
-	gatewayName string
-	gatewayID   string
+	mqttClient    *mqtt.Client
+	haClient      *homeassistant.Client
+	pbClient      *pocketbase.Client
+	history       *history.Store
+	devices       *deviceCache
+	gatewayName   string
+	gatewayIDFile string
+	gatewayID     string
 
 	historyRetention time.Duration
 
@@ -35,7 +39,7 @@ type Agent struct {
 	cancel context.CancelFunc
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName string, historyRetentionDays int) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName, gatewayIDFile string, historyRetentionDays int) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Agent{
 		mqttClient:       mqttClient,
@@ -44,6 +48,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 		history:          historyStore,
 		devices:          newDeviceCache(pbClient),
 		gatewayName:      gatewayName,
+		gatewayIDFile:    gatewayIDFile,
 		deviceNames:      make(map[string]string),
 		historyRetention: time.Duration(historyRetentionDays) * 24 * time.Hour,
 		ctx:              ctx,
@@ -294,13 +299,42 @@ func (a *Agent) failCommand(commandID string, reason error) {
 	}
 }
 
-// registerGateway zoekt het gateways-record voor deze agent op naam op, en
-// maakt het aan als het nog niet bestaat (zelfregistratie — geen
-// handmatige provisioning-stap nodig). Zet de status meteen op "online".
+// registerGateway koppelt deze agent aan zijn houses-record en zet de
+// status op "online". De box herkent zijn record aan het ID dat hij bij de
+// eerste registratie lokaal opslaat (gatewayIDFile), niet aan de naam: de
+// bewoner kan het huis in de app hernoemen zonder dat de box zijn huis
+// kwijtraakt. Volgorde:
+//  1. ID-bestand aanwezig en het record bestaat → dat record.
+//  2. Geen ID-bestand → eenmalige migratie van de oude werkwijze: zoek op
+//     GATEWAY_NAME, en sla het gevonden ID op.
+//  3. Anders (niets gevonden, of het opgeslagen record is verwijderd) →
+//     nieuw record aanmaken en het ID opslaan.
+//
+// Een PocketBase-fout breekt de registratie af i.p.v. een nieuw record aan
+// te maken: "even onbereikbaar" mag nooit een dubbel huis opleveren.
 func (a *Agent) registerGateway() error {
-	gateway, err := a.pbClient.FindGatewayByName(a.gatewayName)
+	storedID, err := readGatewayID(a.gatewayIDFile)
 	if err != nil {
 		return err
+	}
+
+	var gateway *pocketbase.Gateway
+	if storedID != "" {
+		gateway, err = a.pbClient.GetGateway(storedID)
+		if err != nil {
+			return err
+		}
+		if gateway == nil {
+			log.Printf("[APP] Opgeslagen gateway %s bestaat niet meer; er wordt een nieuwe aangemaakt\n", storedID)
+		}
+	} else {
+		gateway, err = a.pbClient.FindGatewayByName(a.gatewayName)
+		if err != nil {
+			return err
+		}
+		if gateway != nil {
+			log.Printf("[APP] Gateway op naam gevonden (eenmalige migratie): %s (%s)\n", gateway.Name, gateway.ID)
+		}
 	}
 
 	if gateway == nil {
@@ -308,13 +342,45 @@ func (a *Agent) registerGateway() error {
 		if err != nil {
 			return err
 		}
-		log.Printf("[APP] Nieuwe gateway geregistreerd: %s (%s)\n", a.gatewayName, gateway.ID)
+		log.Printf("[APP] Nieuwe gateway geregistreerd: %s (%s)\n", gateway.Name, gateway.ID)
 	} else {
-		log.Printf("[APP] Bestaande gateway herkend: %s (%s)\n", a.gatewayName, gateway.ID)
+		log.Printf("[APP] Gateway herkend: %s (%s)\n", gateway.Name, gateway.ID)
+	}
+
+	if gateway.ID != storedID {
+		if err := writeGatewayID(a.gatewayIDFile, gateway.ID); err != nil {
+			return err
+		}
 	}
 
 	a.gatewayID = gateway.ID
 	return a.pbClient.SetGatewayStatus(a.gatewayID, "online")
+}
+
+// readGatewayID leest het opgeslagen gateway-ID. Een ontbrekend bestand is
+// geen fout (eerste start); een onleesbaar bestand wel.
+func readGatewayID(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("gateway-ID lezen uit %s: %w", path, err)
+	}
+	return strings.TrimSpace(string(data)), nil
+}
+
+// writeGatewayID schrijft atomisch (tijdelijk bestand + rename), zodat een
+// stroomstoring tijdens het schrijven nooit een half ID achterlaat.
+func writeGatewayID(path, id string) error {
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, []byte(id+"\n"), 0o644); err != nil {
+		return fmt.Errorf("gateway-ID opslaan in %s: %w", tmp, err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		return fmt.Errorf("gateway-ID opslaan in %s: %w", path, err)
+	}
+	return nil
 }
 
 // heartbeatInterval is hoe vaak de agent laat weten dat de box leeft. De
