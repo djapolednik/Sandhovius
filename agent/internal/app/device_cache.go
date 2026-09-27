@@ -45,6 +45,18 @@ func (d *deviceCache) refresh() error {
 	return nil
 }
 
+// entityIDs returns every entity_id the cache currently knows, so the
+// agent can reconcile their state with Home Assistant.
+func (d *deviceCache) entityIDs() []string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	ids := make([]string, 0, len(d.byEntity))
+	for id := range d.byEntity {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // lookup returns the PocketBase device id for entityID, refreshing the
 // cache once from PocketBase if it isn't found yet.
 func (d *deviceCache) lookup(entityID string) (deviceID string, found bool, err error) {

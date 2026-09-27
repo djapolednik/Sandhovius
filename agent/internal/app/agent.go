@@ -88,6 +88,9 @@ func (a *Agent) Start() error {
 	} else {
 		go a.listenToHAEvents()
 	}
+	// Wat er veranderde terwijl de agent niet draaide, zit niet in de
+	// event-stroom: één keer de actuele stand van elk device ophalen.
+	a.reconcileDeviceStates()
 
 	a.catchUpPendingCommands()
 	go a.listenForCommands()
@@ -247,6 +250,36 @@ func (a *Agent) provisionDeviceEntity(device pocketbase.Device) {
 	}
 
 	log.Printf("[APP] HA-entity aangemaakt voor device %s: %s\n", device.ID, entityID)
+
+	// HA meldt de eerste stand van een nieuwe helper al tijdens het
+	// aanmaken — vóórdat hierboven de entity_id is opgeslagen. Dat event is
+	// dus als "onbekend device" genegeerd, en er komt pas een volgende als
+	// de stand verandert: het device zou op "offline" blijven hangen.
+	// Daarom de stand nu zelf ophalen.
+	a.syncEntityState(entityID)
+}
+
+// syncEntityState haalt de actuele stand van één entity op bij Home
+// Assistant en verwerkt die als een gewoon state_changed event (lokale
+// geschiedenis, device_state, online-status).
+func (a *Agent) syncEntityState(entityID string) {
+	event, err := a.haClient.GetState(entityID)
+	if err != nil {
+		log.Printf("[APP] Kon actuele stand niet ophalen voor %s: %v\n", entityID, err)
+		return
+	}
+	a.forwardHAEvent(event)
+}
+
+// reconcileDeviceStates brengt elk bekend device in lijn met Home
+// Assistant: bij het opstarten en na een herverbinding, want wat er in
+// de tussentijd veranderde zit niet in de event-stroom.
+func (a *Agent) reconcileDeviceStates() {
+	ids := a.devices.entityIDs()
+	for _, entityID := range ids {
+		a.syncEntityState(entityID)
+	}
+	log.Printf("[APP] Stand van %d devices afgestemd met Home Assistant\n", len(ids))
 }
 
 // handleCommand voert één commando uit via Home Assistant's domein-
@@ -528,6 +561,9 @@ func (a *Agent) listenToHAEvents() {
 			}
 			log.Println("[APP] HA-verbinding hersteld")
 			backoff = 1 * time.Second
+			// Events van tijdens de onderbreking zijn weg: haal de actuele
+			// stand op i.p.v. te wachten tot elk device weer verandert.
+			a.reconcileDeviceStates()
 			continue
 		}
 		backoff = 1 * time.Second
