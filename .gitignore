@@ -12,3 +12,6 @@ agent/bin/
 # Impeccable: machine-local settings and the detector hook's cache.
 .impeccable/config.local.json
 .impeccable/hook.cache.json
+
+# Ontwerp-inspiratie (beelden van anderen): alleen lokaal, niet in de repo.
+frontend/dashboard-inspo/
