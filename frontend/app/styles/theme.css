@@ -33,15 +33,15 @@
      echte lichtbron, geen versiering. */
   --lamp-glow: rgba(255, 176, 32, 0.72);
   --lamp-glow-mid: rgba(255, 176, 32, 0.32);
-  --lamp-icon-bg: #ffb020;
-  --lamp-icon-fg: #3b2300;
+  /* Het symbool licht op, niet de cirkel: op het lichte binnenvlak een
+     diepere stap, zodat het icoon ≥3:1 haalt. */
+  --lamp-icon-fg: #c96f00;
   /* Stroomblauw: dezelfde gloed voor een stopcontact dat aan staat. Lichter
      en koeler dan Electric Blue, zodat het niet leest als een knop of als
      de verwarming. */
   --power-glow: rgba(40, 140, 255, 0.58);
   --power-glow-mid: rgba(40, 140, 255, 0.26);
-  --power-icon-bg: #1f86ff;
-  --power-icon-fg: #ffffff;
+  --power-icon-fg: #0a74f0;
 
   /* Signal Green: "dit staat aan". */
   --on: #04d800;
@@ -86,12 +86,10 @@
   --glow: rgba(0, 102, 255, 0.5);
   --lamp-glow: rgba(255, 160, 40, 0.62);
   --lamp-glow-mid: rgba(255, 160, 40, 0.26);
-  --lamp-icon-bg: #ffae2e;
-  --lamp-icon-fg: #2a1800;
+  --lamp-icon-fg: #ffb020;
   --power-glow: rgba(50, 160, 255, 0.58);
   --power-glow-mid: rgba(50, 160, 255, 0.24);
-  --power-icon-bg: #3aa0ff;
-  --power-icon-fg: #04121f;
+  --power-icon-fg: #3aa0ff;
 
   --on: #04d800;
   --on-contrast: #000000;

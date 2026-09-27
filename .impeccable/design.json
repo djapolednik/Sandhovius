@@ -618,6 +618,96 @@
           "hsl(0 74% 82%)",
           "hsl(0 74% 95%)"
         ]
+      },
+      "lamp-warm": {
+        "role": "state",
+        "displayName": "Lamp Warm",
+        "canonical": "#ffaa3c",
+        "tonalRamp": [
+          "hsl(34 100% 15%)",
+          "hsl(34 100% 26%)",
+          "hsl(34 100% 37%)",
+          "hsl(34 100% 48%)",
+          "hsl(34 100% 59%)",
+          "hsl(34 100% 70%)",
+          "hsl(34 100% 82%)",
+          "hsl(34 100% 95%)"
+        ]
+      },
+      "lamp-icon": {
+        "role": "state",
+        "displayName": "Lamp Icon",
+        "canonical": "#c96f00",
+        "tonalRamp": [
+          "hsl(33 100% 15%)",
+          "hsl(33 100% 26%)",
+          "hsl(33 100% 37%)",
+          "hsl(33 100% 48%)",
+          "hsl(33 100% 59%)",
+          "hsl(33 100% 70%)",
+          "hsl(33 100% 82%)",
+          "hsl(33 100% 95%)"
+        ]
+      },
+      "lamp-icon-dark": {
+        "role": "state",
+        "displayName": "Lamp Icon (dark)",
+        "canonical": "#ffb020",
+        "tonalRamp": [
+          "hsl(39 100% 15%)",
+          "hsl(39 100% 26%)",
+          "hsl(39 100% 37%)",
+          "hsl(39 100% 48%)",
+          "hsl(39 100% 59%)",
+          "hsl(39 100% 70%)",
+          "hsl(39 100% 82%)",
+          "hsl(39 100% 95%)"
+        ]
+      },
+      "power-blue": {
+        "role": "state",
+        "displayName": "Power Blue",
+        "canonical": "#2896ff",
+        "tonalRamp": [
+          "hsl(209 100% 15%)",
+          "hsl(209 100% 26%)",
+          "hsl(209 100% 37%)",
+          "hsl(209 100% 48%)",
+          "hsl(209 100% 59%)",
+          "hsl(209 100% 70%)",
+          "hsl(209 100% 82%)",
+          "hsl(209 100% 95%)"
+        ]
+      },
+      "power-icon": {
+        "role": "state",
+        "displayName": "Power Icon",
+        "canonical": "#0a74f0",
+        "tonalRamp": [
+          "hsl(212 92% 15%)",
+          "hsl(212 92% 26%)",
+          "hsl(212 92% 37%)",
+          "hsl(212 92% 48%)",
+          "hsl(212 92% 59%)",
+          "hsl(212 92% 70%)",
+          "hsl(212 92% 82%)",
+          "hsl(212 92% 95%)"
+        ]
+      },
+      "power-icon-dark": {
+        "role": "state",
+        "displayName": "Power Icon (dark)",
+        "canonical": "#3aa0ff",
+        "tonalRamp": [
+          "hsl(209 100% 15%)",
+          "hsl(209 100% 26%)",
+          "hsl(209 100% 37%)",
+          "hsl(209 100% 48%)",
+          "hsl(209 100% 59%)",
+          "hsl(209 100% 70%)",
+          "hsl(209 100% 82%)",
+          "hsl(209 100% 95%)"
+        ]
       }
     },
     "typographyMeta": {
@@ -817,9 +907,9 @@
       "name": "Light Tile (on / off)",
       "kind": "card",
       "refersTo": "device-tile",
-      "description": "The tile is the device: a large icon, \"Aan\"/\"Uit\" as the largest text, a caption and a Details chip. When on, light swells out from behind the icon (slowly on, even more slowly off): warm for a lamp, power blue for a plug.",
+      "description": "The tile is the device: a large icon, \"Aan\"/\"Uit\" as the largest text, a caption and a Details chip. When on, only the symbol lights up in its color, and light swells out from behind the icon (slowly on, even more slowly off): warm for a lamp, power blue for a plug.",
       "html": "<div class=\"ds-tiles\"><button class=\"ds-tile lit\" aria-pressed=\"true\"><span class=\"ds-lamp\"><svg width=\"36\" height=\"36\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"ds-name\">Leeslamp Woonkamer</span><span class=\"ds-state\"><span class=\"ds-word\">Aan</span><span class=\"ds-cap\">Lamp</span></span><span class=\"ds-details\">Details<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M7 17 17 7M9 7h8v8\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span></button><button class=\"ds-tile\" aria-pressed=\"false\"><span class=\"ds-lamp\"><svg width=\"36\" height=\"36\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span><span class=\"ds-name\">Hanglamp Keuken</span><span class=\"ds-state\"><span class=\"ds-word off\">Uit</span><span class=\"ds-cap\">Lamp</span></span><span class=\"ds-details\">Details<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M7 17 17 7M9 7h8v8\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span></button></div>",
-      "css": ".ds-tiles{display:flex;gap:.9rem;flex-wrap:wrap}.ds-tile{background:var(--card-background,#fff);color:var(--text-primary,#000);border:1px solid var(--border,transparent);border-radius:28px;box-shadow:var(--shadow-panel,0 1px 2px rgba(0,0,0,.04),0 14px 32px -20px rgba(0,0,0,.16));font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;width:11rem;min-height:12rem;padding:1rem .9rem 1.1rem 1rem;text-align:left;cursor:pointer;transition:transform .2s ease,border-color .2s ease}.ds-tile>*{position:relative}.ds-tile::before{content:\"\";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 3.4rem 3.4rem,var(--lamp-glow,rgba(255,176,32,.72)) 0,var(--lamp-glow-mid,rgba(255,176,32,.32)) 38%,transparent 72%);opacity:0;transform:scale(.92);transform-origin:3.4rem 3.4rem;pointer-events:none;transition:opacity 1.8s ease-in,transform 1.8s ease-in}.ds-tile.lit::before{opacity:1;transform:scale(1);transition:opacity 1.2s cubic-bezier(.3,0,.2,1),transform 1.4s cubic-bezier(.3,0,.2,1)}.ds-tile:hover{border-color:var(--text-secondary,#5e626b)}.ds-tile:active{transform:scale(.98)}.ds-tile:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:3px}.ds-lamp{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;margin-bottom:.75rem;border-radius:50%;background:var(--surface-2,#f3f3f4);color:var(--text-secondary,#5e626b);transition:background-color 1.6s ease-in,color 1.6s ease-in}.ds-tile.lit .ds-lamp{box-shadow:0 0 16px 0 var(--lamp-glow,rgba(255,176,32,.72));background:var(--lamp-icon-bg,#ffb020);color:var(--lamp-icon-fg,#3b2300);transition:background-color 1.2s cubic-bezier(.3,0,.2,1),color 1.2s cubic-bezier(.3,0,.2,1)}.ds-name{display:block;font-size:1rem;font-weight:600;line-height:1.3}.ds-state{flex:1;display:flex;flex-direction:column;justify-content:center;gap:.35rem;padding:1rem 0 .75rem}.ds-word{font-size:2.4rem;font-weight:600;letter-spacing:-.02em;line-height:1;color:var(--text-primary,#000)}.ds-word.off{color:var(--text-secondary,#5e626b)}.ds-cap{font-size:.95rem;font-weight:500;color:var(--text-secondary,#5e626b)}.ds-details{display:inline-flex;align-items:center;gap:.3rem;min-height:44px;padding:.45rem .9rem;border-radius:999px;background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);font-size:.95rem;font-weight:600}"
+      "css": ".ds-tiles{display:flex;gap:.9rem;flex-wrap:wrap}.ds-tile{background:var(--card-background,#fff);color:var(--text-primary,#000);border:1px solid var(--border,transparent);border-radius:28px;box-shadow:var(--shadow-panel,0 1px 2px rgba(0,0,0,.04),0 14px 32px -20px rgba(0,0,0,.16));font-family:Urbanist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;width:11rem;min-height:12rem;padding:1rem .9rem 1.1rem 1rem;text-align:left;cursor:pointer;transition:transform .2s ease,border-color .2s ease}.ds-tile>*{position:relative}.ds-tile::before{content:\"\";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(circle at 3.4rem 3.4rem,var(--lamp-glow,rgba(255,176,32,.72)) 0,var(--lamp-glow-mid,rgba(255,176,32,.32)) 38%,transparent 72%);opacity:0;transform:scale(.92);transform-origin:3.4rem 3.4rem;pointer-events:none;transition:opacity 1.8s ease-in,transform 1.8s ease-in}.ds-tile.lit::before{opacity:1;transform:scale(1);transition:opacity 1.2s cubic-bezier(.3,0,.2,1),transform 1.4s cubic-bezier(.3,0,.2,1)}.ds-tile:hover{border-color:var(--text-secondary,#5e626b)}.ds-tile:active{transform:scale(.98)}.ds-tile:focus-visible{outline:2px solid var(--accent,#0066ff);outline-offset:3px}.ds-lamp{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;margin-bottom:.75rem;border-radius:50%;background:var(--surface-2,#f3f3f4);color:var(--text-secondary,#5e626b);transition:background-color 1.6s ease-in,color 1.6s ease-in}.ds-tile.lit .ds-lamp{color:var(--lamp-icon-fg,#c96f00);transition:color 1.2s cubic-bezier(.3,0,.2,1)}.ds-tile.lit .ds-lamp svg{filter:drop-shadow(0 0 6px var(--lamp-glow,rgba(255,176,32,.72)))}.ds-name{display:block;font-size:1rem;font-weight:600;line-height:1.3}.ds-state{flex:1;display:flex;flex-direction:column;justify-content:center;gap:.35rem;padding:1rem 0 .75rem}.ds-word{font-size:2.4rem;font-weight:600;letter-spacing:-.02em;line-height:1;color:var(--text-primary,#000)}.ds-word.off{color:var(--text-secondary,#5e626b)}.ds-cap{font-size:.95rem;font-weight:500;color:var(--text-secondary,#5e626b)}.ds-details{display:inline-flex;align-items:center;gap:.3rem;min-height:44px;padding:.45rem .9rem;border-radius:999px;background:var(--surface-2,#f3f3f4);color:var(--text-primary,#000);font-size:.95rem;font-weight:600}"
     },
     {
       "name": "Thermostat Dial",

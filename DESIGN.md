@@ -14,15 +14,11 @@ colors:
   signal-green-surface-dark: "#122413"
   deep-leaf: "#027a00"
   lamp-warm: "#ffaa3c"
-  lamp-icon-bg: "#ffb020"
-  lamp-icon-fg: "#3b2300"
-  lamp-icon-bg-dark: "#ffae2e"
-  lamp-icon-fg-dark: "#2a1800"
+  lamp-icon: "#c96f00"
+  lamp-icon-dark: "#ffb020"
   power-blue: "#2896ff"
-  power-icon-bg: "#1f86ff"
-  power-icon-fg: "#ffffff"
-  power-icon-bg-dark: "#3aa0ff"
-  power-icon-fg-dark: "#04121f"
+  power-icon: "#0a74f0"
+  power-icon-dark: "#3aa0ff"
   resting-gray: "#8a8f98"
   resting-gray-dark: "#5b6069"
   amber-notice: "#b45309"
@@ -145,8 +141,8 @@ components:
     rounded: "{rounded.pill}"
     size: "72px"
   lamp-visual-lit:
-    backgroundColor: "{colors.lamp-icon-bg}"
-    textColor: "{colors.lamp-icon-fg}"
+    backgroundColor: "{colors.inset-mist}"
+    textColor: "{colors.lamp-icon}"
   climate-mode:
     backgroundColor: "{colors.inset-mist}"
     textColor: "{colors.ink-black}"
@@ -233,8 +229,8 @@ A black-and-mist palette from the brand sheet, with one interactive voice (Elect
 - **Electric Blue** (`electric-blue`): the single interactive voice. It is used for primary buttons, the active thermostat mode, the dial's value arc and knob, focus rings, input focus, the active room pill, the active navigation item, and "Toevoegen". White text on it is 4.8:1. As *text* it stays `electric-blue-text` in the light theme and lightens to `electric-blue-text-dark` on black (5.9:1 on a night panel). Soft focus rings use the per-theme `--accent-ring` token; the dial's glow uses `--glow`. None of them are hard-coded rgba.
 
 ### State colors
-- **Lamp Warm** (`lamp-warm`, as a translucent `--lamp-glow` per theme): the light of a lamp that is on. It glows out from behind the lamp icon with a strong core (`--lamp-glow`) and a softer middle (`--lamp-glow-mid`), and the icon circle fills with solid amber (`lamp-icon-bg`, dark symbol `lamp-icon-fg`, 8.1:1 light, 9.2:1 dark) with a small halo. It only ever means "this lamp gives light", never decoration.
-- **Power Blue** (`power-blue`, as a translucent `--power-glow` per theme): the same glow for a plug that is on, with its icon circle filled solid power blue (`power-icon-bg`, symbol `power-icon-fg`, 3.6:1 light, 6.9:1 dark; icons need 3:1). Lighter and cooler than Electric Blue, so a live plug never reads as a button or as heating.
+- **Lamp Warm** (`lamp-warm`, as a translucent `--lamp-glow` per theme): the light of a lamp that is on. It glows out from behind the lamp icon with a strong core (`--lamp-glow`) and a softer middle (`--lamp-glow-mid`), and the lamp symbol itself turns amber with a small glow of its own (`lamp-icon`, 3.3:1 light, 8.4:1 dark on its circle). The circle stays the neutral inset surface: the symbol is the light, not the circle. It only ever means "this lamp gives light", never decoration.
+- **Power Blue** (`power-blue`, as a translucent `--power-glow` per theme): the same glow for a plug that is on, with the socket symbol turning power blue (`power-icon`, 4.0:1 light, 5.6:1 dark on its circle; icons need 3:1). Lighter and cooler than Electric Blue, so a live plug never reads as a button or as heating.
 - **Signal Green** (`signal-green`): means "this is on" in the house summary: the count and the count badges on the room chips (with a black number, `signal-green-contrast`, 10.8:1). On tiles, "Aan" is plain primary text; the light itself carries the state. It fails as text on white (1.9:1), so as text it is **Deep Leaf** (`deep-leaf`, 5.1:1+) in the light theme and Signal Green itself on black. It is never used for success messages, app settings or decoration: the dark-mode and "Op Home tonen" switches use Electric Blue, because a theme or a favourite is not device state.
 - **Resting Gray** (`resting-gray` / `-dark`): the off track of a switch, and the dial's arc when heating is off.
 - **Amber Notice** (`amber-notice` with `amber-notice-bg`): something needs attention but is not broken, such as the connection notices, recoverable errors in banners and the low-battery badge.
@@ -343,7 +339,7 @@ Round and confident: pills, generous, gently responsive.
 
 ### Device tile (signature component)
 The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem tall. The thermostat's gear floats top-right, and its name wraps around it on its first line and uses the full width after that, so names never break mid-word. The whole tile is one invisible action button (toggle for lights and switches, open details for sensors); "Details" and the gear sit beside it, never inside it.
-- **Light / switch:** a large device icon in a 72px circle at the top (a light bulb for a lamp, a Dutch wall socket for a plug), the name, "Aan" or "Uit" at State size, a caption (the type, or the room on Home), and a **Details** chip at the bottom. The tile is one button carrying `aria-pressed`. A lamp that is on lights up: the warm **tile glow** fills the tile from behind the icon and the icon circle turns warm amber. A plug that is on does the same in power blue. "Aan" stays in the primary text color. Off: no glow, a gray icon, "Uit" in Quiet Slate.
+- **Light / switch:** a large device icon in a 72px circle at the top (a light bulb for a lamp, a Dutch wall socket for a plug), the name, "Aan" or "Uit" at State size, a caption (the type, or the room on Home), and a **Details** chip at the bottom. The tile is one button carrying `aria-pressed`. A lamp that is on lights up: the warm **tile glow** fills the tile from behind the icon and the bulb symbol turns amber (the circle stays neutral). A plug that is on does the same in power blue. "Aan" stays in the primary text color. Off: no glow, a gray icon, "Uit" in Quiet Slate.
 - **Thermostat** (spans two columns, and two rows on wide grids): a 270° **dial** (open at the bottom) with the target as the value arc and a knob, a dot on the arc for the current temperature, and min/max at the arc ends. Inside it are "Doel" and the target at Dial size, with "Nu 21,0°" below. Under the dial are two 52px round −/+ steps (0.5°) with the status between them ("Verwarmt" in blue, "Op temperatuur", "Verwarming uit"), then two 72px mode tiles, **Verwarmen** / **Uit**, as a radiogroup, the active one Electric Blue. Taps on −/+ are batched: one `set_temperature` command 800ms after the last tap, flushed if the tile unmounts. A tap on the panel itself does nothing. With heating off, the arc turns Resting Gray and the glow goes out.
 - **Sensor:** the name, the temperature at 2.75rem in the temperature scale, motion as a plain sentence ("Er is nu beweging" / "Geen beweging", never amber), the caption, and a low-battery badge only at ≤20%. A tap opens the details.
 - **Details:** "Details", the thermostat's gear, a tap on a sensor or a 500ms long-press opens one **detail sheet**: a sensor's readings (with "Laatst bijgewerkt"), the **Op Home tonen** switch (favourite, Electric Blue, saved immediately), name and room with "Opslaan", and delete with an inline confirmation.
