@@ -88,7 +88,7 @@ cd frontend && npx next build                     # moet slagen vóór commit
 3. **Schema's/tijdsturing** (bv. verwarming van–tot) — pas na scènes; waarschijnlijk via HA-automations.
 4. **Claim-flow** voor een nieuwe box: serienummer bij productie, koppelen aan een account via `houses.claimed_at`/`user`. Vervangt later het ID-bestand in `registerGateway()` (zie memory `box-house-identity`).
 5. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports.
-6. Kleiner/los: `commands` heeft geen timestamps (debuggen lastig — overweeg `autodate`-velden); `frontend/app/globals.css.bak` is een oude backup die weg kan; `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map).
+6. Kleiner/los: `commands` heeft geen timestamps (debuggen lastig — overweeg `autodate`-velden); `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map).
 
 ## Werkafspraken
 - UI-copy is Nederlands, zinsletters, geen hoofdletter-labels; zie Named Rules in DESIGN.md (o.a. Real Light Rule: alleen live apparaten gloeien).

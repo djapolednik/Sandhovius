@@ -645,8 +645,8 @@ export default function Home() {
 
   const noHouse = loaded && !house && (
     <p className="empty-state">
-      Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box verbonden is, verschijnt je huis hier
-      vanzelf.
+      Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt
+      je huis hier.
     </p>
   )
 

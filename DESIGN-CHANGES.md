@@ -104,12 +104,14 @@ This file summarises what changed in `frontend/` during the Impeccable run (`ini
 
 ## Open points and decisions for you
 
-1. **"No house" copy.** The text says: *"Zodra je Sandhovius-box verbonden is, verschijnt je huis hier vanzelf."* It's based on gateway self-registration (`backend_explained.md`). Check that this is true for real customers.
-2. **Delete device.** It now says *"… uit Sandhovius verwijderen?"*. If deleting also removes something in Home Assistant, say that there too.
-3. **Desktop grid.** The cards are centered across the full width, including empty columns, so they don't start at the left edge of the content. That predates this pass and was left as is.
-4. **`frontend/CLAUDE.md`.** `next dev` adds a Next.js agent-rules block on every start. Commit it, or set `agentRules: false` in `next.config.js`.
-5. **Docker image.** The Docker frontend (:3000) still runs the old build. Rebuild with `docker compose build frontend` to see the changes there.
-6. **Leftover file.** `frontend/app/globals.css.bak` is an old backup and can probably go (untouched).
+Resolved on 2026-09-28:
+
+1. **"No house" copy.** It was not true: a box registers its house without a `user`, so it never appears for a customer by itself. The text now says the house appears once the box *is linked to your account*, which will be true with the claim flow (CLAUDE.md, next steps).
+2. **Delete device.** It only deletes the PocketBase record; the agent leaves the HA helper alone. The copy ("verdwijnt uit de app; je kunt het later opnieuw toevoegen") is correct as is. The HA helper stays behind as an orphan; clean up in the agent when that matters.
+3. **Desktop grid.** Obsolete: the bento uses `auto-fill` with `1fr` columns, so tiles fill the width from the left.
+4. **`frontend/CLAUDE.md`.** Committed.
+5. **Docker image.** The frontend container is rebuilt after every frontend change.
+6. **Leftover file.** `frontend/app/globals.css.bak` deleted.
 
 ## Suggested next steps
 
