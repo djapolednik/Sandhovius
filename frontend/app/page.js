@@ -778,7 +778,7 @@ export default function Home() {
             />
           )}
 
-          <div className="dashboard-devices">
+          <div className="dashboard-devices" style={{ '--favorites': favoriteDevices.length }}>
             {skeleton}
 
             {firstDevice}

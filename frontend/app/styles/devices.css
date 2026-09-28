@@ -144,6 +144,18 @@
   padding: 1rem 0 0.75rem;
 }
 
+/* Lamp en stopcontact: het icoon bovenin, en naam, stand en kamer als één
+   groep onderaan boven "Details". De vrije ruimte valt tussen het licht en
+   de tekst, niet tussen de naam en zijn stand. */
+.lamp-visual + .tile-top {
+  margin-top: auto;
+}
+
+.lamp-visual ~ .tile-state {
+  flex: none;
+  padding-top: 0.35rem;
+}
+
 .tile-caption {
   display: inline-flex;
   align-items: center;

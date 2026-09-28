@@ -175,6 +175,7 @@
      maken dan het scherm. */
   grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
+  container: dashboard / inline-size;
   align-items: start;
 }
 
@@ -192,6 +193,32 @@
 
 .dashboard-devices {
   min-width: 0;
+}
+
+/* Heel breed (in rem, dus niet bij grote tekst): favorieten en
+   temperatuur naast elkaar in plaats van onder elkaar, zodat de rechterkant
+   niet leeg blijft. Favorieten eerst, want die lees je het eerst; hun
+   kolom is zo breed als hun tegels (minstens twee), zodat de thermostaat
+   er direct naast staat en de lege ruimte aan het eind valt. De
+   thermostaat krijgt een vaste kolom van twee tegels breed. */
+@container dashboard (min-width: 68rem) {
+  .dashboard-devices {
+    display: grid;
+    grid-template-columns:
+      minmax(0, calc(max(var(--favorites, 2), 2) * 11.5rem + (max(var(--favorites, 2), 2) - 1) * 0.9rem))
+      minmax(0, 28rem);
+    justify-content: start;
+    column-gap: 1rem;
+    align-items: start;
+  }
+
+  .dashboard-devices > :only-child {
+    grid-column: 1 / -1;
+  }
+
+  .home-section + .home-section {
+    margin-top: 0;
+  }
 }
 
 /* Breed: de apparaten altijd in de rechterkolom, ook zolang het
