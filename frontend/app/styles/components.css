@@ -414,13 +414,14 @@
   left: 50%;
   bottom: max(0.75rem, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: min(26rem, calc(100% - 1.5rem));
+  /* Vijf plekken: zo breed als het scherm toelaat, tot 30rem. */
+  width: min(30rem, calc(100% - 1rem));
   container: nav / inline-size;
 }
 
 .bottom-nav-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.35rem;
   margin: 0;
   padding: 0.4rem;
@@ -445,7 +446,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
-  padding: 0.35rem 0.5rem;
+  padding: 0.35rem 0.2rem;
   border: none;
   border-radius: 999px;
   background: transparent;
@@ -479,41 +480,47 @@
   color: var(--accent-contrast);
 }
 
-/* Met "+": vier plekken — Home, Kamers, +, Instellingen. De plus staat in
-   de DOM achteraan (na de tabbladen voor een schermlezer) maar op het
-   scherm tussen Kamers en Instellingen. */
+/* Met "+": vijf plekken — Home, Kamers, +, Scènes, Instellingen — met de
+   plus precies in het midden. */
 .bottom-nav-list-add {
-  grid-template-columns: 1fr 1fr auto 1fr;
+  grid-template-columns: 1fr 1fr auto 1fr 1fr;
 }
 
 .bottom-nav-add {
-  grid-column: 3;
-  grid-row: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding: 0 0.25rem;
 }
 
-.bottom-nav-after-add {
-  grid-column: 4;
-  grid-row: 1;
-}
-
+/* Een losse, ronde knop die boven de balk uitsteekt. De ring heeft de
+   kleur van de balk: zo loopt de balk om de knop heen. */
 .bottom-nav-add-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--border);
+  width: 60px;
+  height: 60px;
+  margin-top: -1.35rem;
+  border: none;
   border-radius: 50%;
   background: var(--surface-2);
   color: var(--accent-text);
+  box-shadow:
+    0 0 0 6px var(--card-background),
+    0 -6px 18px -8px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color 0.2s ease,
     transform 0.2s ease;
+}
+
+/* Donker: geen schaduw, wel de haarlijn om de ring, zoals om de balk. */
+[data-theme='dark'] .bottom-nav-add-button {
+  box-shadow:
+    0 0 0 6px var(--card-background),
+    0 0 0 7px var(--border);
 }
 
 @media (hover: hover) {
@@ -528,30 +535,33 @@
 
 .bottom-nav-add-button:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 9px;
 }
 
-/* Grote tekst: de woorden passen niet meer naast elkaar. Twee rijen
-   (Home, Kamers / +, Instellingen) in plaats van woorden die afkappen.
-   Rem in de container query: slaat alleen aan bij grote tekst. */
-@container nav (max-width: 16rem) {
+/* Grote tekst: de woorden passen niet meer naast elkaar. Twee kolommen,
+   met de plus als brede knop in het midden (Home, Kamers / + / Scènes,
+   Instellingen), in plaats van woorden die afkappen. Rem in de container
+   query: slaat alleen aan bij grote tekst. */
+@container nav (max-width: 20rem) {
   .bottom-nav-list,
   .bottom-nav-list-add {
     grid-template-columns: 1fr 1fr;
     border-radius: 28px;
   }
 
-  .bottom-nav-add,
-  .bottom-nav-after-add {
-    grid-column: auto;
-    grid-row: 2;
+  .bottom-nav-add {
+    grid-column: 1 / -1;
+    padding: 0;
   }
 
-  .bottom-nav-add-button {
+  .bottom-nav-add-button,
+  [data-theme='dark'] .bottom-nav-add-button {
     width: 100%;
-    height: 100%;
+    height: auto;
     min-height: 56px;
+    margin-top: 0;
     border-radius: 999px;
+    box-shadow: none;
   }
 }
 
@@ -789,12 +799,12 @@
   min-height: 48px;
 }
 
-/* ==================== Eerste apparaat ====================
-   Eerste gebruik: nog geen apparaten. Vier doofde lampjes (de soorten die
-   je kunt toevoegen) en één duidelijke actie. Niets gloeit: er is nog
-   niets dat aan staat. */
+/* ==================== Uitlegpaneel ====================
+   Eerste gebruik (nog geen apparaten: vier doofde lampjes en één
+   duidelijke actie) en "Scènes komen eraan". Niets gloeit: er staat hier
+   nog niets aan. */
 
-.first-device {
+.intro-panel {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -803,13 +813,13 @@
   padding: 1.5rem 1.25rem 1.35rem;
 }
 
-.first-device-icons {
+.intro-panel-icons {
   display: flex;
   gap: 0.6rem;
   margin-bottom: 0.6rem;
 }
 
-.first-device-title {
+.intro-panel-title {
   margin: 0;
   font-size: 1.35rem;
   font-weight: 600;
@@ -817,7 +827,7 @@
   text-wrap: balance;
 }
 
-.first-device-text {
+.intro-panel-text {
   margin: 0 0 0.9rem;
   max-width: 40ch;
   font-size: 1rem;
@@ -825,7 +835,7 @@
   color: var(--text-secondary);
 }
 
-.first-device .btn-primary {
+.intro-panel .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;

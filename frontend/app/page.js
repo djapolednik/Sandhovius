@@ -15,7 +15,7 @@ import SettingsView from '../components/SettingsView'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
-import { PlusIcon, deviceTypeIcon } from '../lib/icons'
+import { PlusIcon, ScenesIcon, deviceTypeIcon } from '../lib/icons'
 
 const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
 
@@ -698,8 +698,8 @@ export default function Home() {
   // doofde lampjes, met de actie binnen bereik van je duim in plaats van
   // alleen "Toevoegen" bovenaan.
   const firstDevice = loaded && house && devicesInHouse.length === 0 && (
-    <section className="panel first-device" aria-labelledby="first-device-title">
-      <div className="first-device-icons" aria-hidden="true">
+    <section className="panel intro-panel" aria-labelledby="first-device-title">
+      <div className="intro-panel-icons" aria-hidden="true">
         {['light', 'switch', 'sensor', 'climate'].map((type) => {
           const Icon = deviceTypeIcon(type)
           return (
@@ -709,10 +709,10 @@ export default function Home() {
           )
         })}
       </div>
-      <h2 id="first-device-title" className="first-device-title">
+      <h2 id="first-device-title" className="intro-panel-title">
         Voeg je eerste apparaat toe
       </h2>
-      <p className="first-device-text">
+      <p className="intro-panel-text">
         Een lamp, stopcontact, sensor of thermostaat. Hij verschijnt meteen op Home, zodat je hem met één tik bedient.
       </p>
       <button type="button" className="btn btn-primary" onClick={() => setAddDeviceOpen(true)}>
@@ -778,6 +778,26 @@ export default function Home() {
         {skeleton}
         {renderDevices(devicesInSelectedRoom)}
       </>
+    )
+  } else if (tab === 'scenes') {
+    // Scènes zijn de volgende functie. Tot die er is: eerlijk zeggen wat
+    // het wordt, zonder knoppen die nog niets doen.
+    header = <Header title="Scènes" />
+    content = (
+      <section className="panel intro-panel" aria-labelledby="scenes-soon-title">
+        <div className="intro-panel-icons" aria-hidden="true">
+          <span className="device-icon">
+            <ScenesIcon width="22" height="22" />
+          </span>
+        </div>
+        <h2 id="scenes-soon-title" className="intro-panel-title">
+          Scènes komen eraan
+        </h2>
+        <p className="intro-panel-text">
+          Met een scène zet je met één tik meerdere apparaten tegelijk goed, bijvoorbeeld "Naar bed": alle lampen uit
+          en de verwarming lager. Zodra het klaar is, vind je het hier.
+        </p>
+      </section>
     )
   } else if (tab === 'instellingen') {
     header = <Header title="Instellingen" />
