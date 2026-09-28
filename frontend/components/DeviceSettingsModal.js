@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { TrashIcon } from '../lib/icons'
@@ -8,34 +8,52 @@ import { relativeTimeNL } from '../lib/relativeTime'
 import { useNow } from '../lib/useNow'
 import { formatTemperature, temperatureColor, readTemperature } from '../lib/temperature'
 import { isBatteryLow } from '../lib/battery'
+import { isDeviceOn } from './DeviceCard'
 
-// Alles over één apparaat in één sheet: wat het meet (sensoren), of het
-// op Home staat, en naam, kamer en verwijderen. Opent via "Details" op een
-// tegel, het tandwiel van de thermostaat, een tik op een sensor of door
-// een tegel ingedrukt te houden. Op een telefoon een sheet onderin,
-// binnen bereik van je duim.
+// Alles over één apparaat in één sheet: hoe het er nu bij staat, wat het
+// meet (sensoren), of het op Home staat, en naam, kamer en verwijderen.
+// Opent via "Details" op een tegel, het tandwiel van de thermostaat, een
+// tik op een sensor of door een tegel ingedrukt te houden. Op een telefoon
+// een sheet onderin, binnen bereik van je duim.
+//
+// Alles slaat zichzelf op, zoals de schakelaar: de kamer zodra je hem
+// kiest, de naam zodra je het veld verlaat of de sheet sluit. Geen
+// "Opslaan"-knop waarvan je je afvraagt of hij ook voor de rest geldt.
 export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFavorite, onDelete, onClose }) {
   const [name, setName] = useState(device.name ?? '')
-  const [roomId, setRoomId] = useState(device.room ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // De laatst opgeslagen naam: verlaten van het veld én sluiten mogen niet
+  // twee keer hetzelfde opslaan.
+  const savedName = useRef(device.name ?? '')
 
-  async function handleSave(e) {
-    e.preventDefault()
-    setSaving(true)
+  async function save(updates, what) {
     setError('')
     try {
-      await onSave(device.id, { name, room: roomId || null })
-      onClose()
+      await onSave(device.id, updates)
     } catch (err) {
-      setError(describeError('Opslaan', err))
-      setSaving(false)
+      setError(describeError(what, err))
     }
   }
 
-  // Direct, zoals een schakelaar hoort te werken — los van "Opslaan", dat
-  // alleen over naam en kamer gaat.
+  // Een lege naam slaan we niet op: dan komt de oude terug.
+  function commitName() {
+    const trimmed = name.trim()
+    if (!trimmed) {
+      setName(device.name ?? '')
+      return
+    }
+    if (trimmed === savedName.current) return
+    savedName.current = trimmed
+    save({ name: trimmed }, 'Naam wijzigen')
+  }
+
+  function close() {
+    commitName()
+    onClose()
+  }
+
   async function handleFavorite() {
     setError('')
     try {
@@ -58,13 +76,9 @@ export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFav
   }
 
   return (
-    <Modal title={device.name} onClose={onClose}>
-      {device.type === 'sensor' && (
-        <>
-          <SensorReadings device={device} />
-          <div className="modal-divider" />
-        </>
-      )}
+    <Modal title={device.name} onClose={close}>
+      {device.type === 'sensor' ? <SensorReadings device={device} /> : <DeviceStatus device={device} />}
+      <div className="modal-divider" />
 
       <div className="settings-row">
         <span id={`favorite-${device.id}`}>Op Home tonen</span>
@@ -82,15 +96,27 @@ export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFav
 
       <div className="modal-divider" />
 
-      <form onSubmit={handleSave} className="form-stack">
+      {/* Enter in het naamveld = klaar: het veld verlaten slaat op. */}
+      <form onSubmit={(e) => (e.preventDefault(), document.activeElement?.blur())} className="form-stack">
         <label className="form-field">
           <span className="form-label">Naam</span>
-          <input className="input" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+          <input
+            className="input"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={commitName}
+            enterKeyHint="done"
+          />
         </label>
 
         <label className="form-field">
           <span className="form-label">Kamer</span>
-          <select className="input" value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+          <select
+            className="input"
+            value={device.room ?? ''}
+            onChange={(e) => save({ room: e.target.value || null }, 'Kamer wijzigen')}
+          >
             <option value="">Geen kamer</option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
@@ -101,10 +127,6 @@ export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFav
         </label>
 
         {error && !confirmingDelete && <p className="error-banner">{error}</p>}
-
-        <button type="submit" className="btn btn-primary" disabled={saving}>
-          Opslaan
-        </button>
       </form>
 
       <div className="modal-divider" />
@@ -132,6 +154,28 @@ export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFav
         </button>
       )}
     </Modal>
+  )
+}
+
+// Hoe een lamp, stopcontact of thermostaat er nu bij staat. De tegel
+// eronder is op een telefoon bedekt door de sheet, dus hier nog een keer,
+// in woorden.
+function DeviceStatus({ device }) {
+  const state = device.expand?.device_state_via_device?.[0]?.state
+  const known = typeof state?.state === 'string'
+  const on = isDeviceOn(device.type, state)
+  const word = device.type === 'climate' ? (on ? 'Verwarming aan' : 'Verwarming uit') : on ? 'Aan' : 'Uit'
+
+  let value
+  if (!known) value = 'Nog onbekend'
+  else if (!device.online) value = `Offline, laatst ${word.toLowerCase()}`
+  else value = word
+
+  return (
+    <div className="sensor-detail-row">
+      <span className="form-label">Stand</span>
+      <span className="reading-value">{value}</span>
+    </div>
   )
 }
 

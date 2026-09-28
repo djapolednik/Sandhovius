@@ -21,6 +21,11 @@ export default function Modal({ title, onClose, children }) {
     // keer, en de tweede keer staat de focus al ín de dialog.
     if (!openerRef.current) openerRef.current = document.activeElement
     if (!dialog.open) dialog.showModal()
+    // Zonder autofocus-veld zou de browser de sluitknop focussen, met een
+    // focusring bovenin die net het eerste is wat je ziet. De sheet zelf
+    // krijgt de focus: een schermlezer leest dan de titel voor, en Tab
+    // gaat daarna gewoon naar de sluitknop.
+    if (document.activeElement?.closest('.modal-header')) dialog.focus()
     return () => {
       // Eerst sluiten: zolang de dialog modaal open staat is de rest van de
       // pagina inert en kan de opener geen focus krijgen.
@@ -45,6 +50,7 @@ export default function Modal({ title, onClose, children }) {
     <dialog
       ref={dialogRef}
       className="modal-dialog"
+      tabIndex={-1}
       aria-labelledby={titleId}
       onCancel={handleCancel}
       onClick={handleClick}
