@@ -14,7 +14,7 @@ export default function HousePanel({ house, realtimeLink, houseLink, now, summar
       </h2>
       <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />
       {summary && (
-        <HouseSummary rooms={summary.rooms} onSelectRoom={summary.onSelectRoom} />
+        <HouseSummary {...summary} />
       )}
     </section>
   )

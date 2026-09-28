@@ -77,6 +77,7 @@ export default function Home() {
   const [houseModalOpen, setHouseModalOpen] = useState(false)
   const [addDeviceOpen, setAddDeviceOpen] = useState(false)
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
+  const [shelfIds, setShelfIds] = useState([])
   // Apparaten die je in deze sessie net toevoegde: hun kaart zegt "Wordt
   // klaargezet" i.p.v. "Offline" tot de box ze gekoppeld heeft.
   const [newDeviceIds, setNewDeviceIds] = useState([])
@@ -329,23 +330,41 @@ export default function Home() {
     ...(unassignedDevices.length > 0 ? [{ id: '__unassigned', label: 'Overig' }] : []),
   ]
 
-  // Per kamer: hoeveel lampen/stopcontacten staan er aan? Voor de
-  // huis-samenvatting boven de kamers. Een apparaat dat offline is telt
-  // niet mee: van "aan" weten we dan niets zeker.
+  // Welke lampen/stopcontacten staan er aan? Voor de huis-samenvatting en
+  // de rij "Staat aan" op Home. Een apparaat dat offline is telt niet mee:
+  // van "aan" weten we dan niets zeker.
   const hasSwitchables = devicesInHouse.some((device) => TOGGLEABLE_TYPES.includes(device.type))
+  const devicesOn = devicesInHouse.filter(
+    (device) =>
+      TOGGLEABLE_TYPES.includes(device.type) &&
+      device.online &&
+      isDeviceOn(device.type, device.expand?.device_state_via_device?.[0]?.state)
+  )
   const roomsWithSomethingOn = roomTabs
-    .map((tab) => {
-      const inTab =
-        tab.id === '__unassigned' ? unassignedDevices : devicesInHouse.filter((device) => device.room === tab.id)
-      const onCount = inTab.filter(
-        (device) =>
-          TOGGLEABLE_TYPES.includes(device.type) &&
-          device.online &&
-          isDeviceOn(device.type, device.expand?.device_state_via_device?.[0]?.state)
-      ).length
-      return { ...tab, onCount }
-    })
+    .map((tab) => ({
+      ...tab,
+      onCount: devicesOn.filter((device) =>
+        tab.id === '__unassigned' ? !roomIds.includes(device.room) : device.room === tab.id
+      ).length,
+    }))
     .filter((tab) => tab.onCount > 0)
+
+  // "Staat aan" op Home: alles wat aan staat, behalve de favorieten (die
+  // staan er al). Zet je er een uit, dan blijft hij (met "Uit") staan tot
+  // je Home verlaat: een tegel die onder je duim verdwijnt, voelt als een
+  // fout, en zo kun je hem ook meteen weer aanzetten.
+  const onIdsKey = devicesOn.map((device) => device.id).join(',')
+  useEffect(() => {
+    if (tab !== 'home') {
+      setShelfIds((prev) => (prev.length ? [] : prev))
+      return
+    }
+    const onIds = onIdsKey ? onIdsKey.split(',') : []
+    setShelfIds((prev) => {
+      const added = onIds.filter((id) => !prev.includes(id))
+      return added.length ? [...prev, ...added] : prev
+    })
+  }, [tab, onIdsKey])
 
   const devicesInSelectedRoom =
     selectedRoomId === '__unassigned'
@@ -624,6 +643,11 @@ export default function Home() {
   const climateDevices = devicesInHouse.filter((device) => device.type === 'climate')
   // De thermostaat staat altijd op Home; de rest alleen als favoriet.
   const favoriteDevices = devicesInHouse.filter((device) => device.favorite && device.type !== 'climate')
+  // Alleen als de box bereikbaar is: anders weten we niet zeker wat er aan
+  // staat (net als de samenvatting).
+  const shelfDevices = houseReachable
+    ? devicesInHouse.filter((device) => shelfIds.includes(device.id) && !device.favorite)
+    : []
   const userEmail = pb.authStore.record?.email
 
   const errorBanner = error && (
@@ -772,7 +796,12 @@ export default function Home() {
               // wat er aan staat, en zegt de verbindingsmelding genoeg.
               summary={
                 loaded && houseReachable && hasSwitchables
-                  ? { rooms: roomsWithSomethingOn, onSelectRoom: openRoom }
+                  ? {
+                      rooms: roomsWithSomethingOn,
+                      lights: devicesOn.filter((device) => device.type === 'light').length,
+                      switches: devicesOn.filter((device) => device.type === 'switch').length,
+                      onSelectRoom: openRoom,
+                    }
                   : null
               }
             />
@@ -784,19 +813,30 @@ export default function Home() {
             {firstDevice}
 
             {loaded && house && devicesInHouse.length > 0 && (
-              <section className="home-section" aria-labelledby="home-favorites">
-                <h2 id="home-favorites" className="section-heading">
-                  Favorieten
-                </h2>
-                {favoriteDevices.length > 0 ? (
-                  renderDevices(favoriteDevices, { showRoom: true })
-                ) : (
-                  <p className="section-hint">
-                    Zet apparaten die je vaak gebruikt hier: open een apparaat via Details en zet "Op Home tonen"
-                    aan.
-                  </p>
+              <div className="home-main">
+                <section className="home-section" aria-labelledby="home-favorites">
+                  <h2 id="home-favorites" className="section-heading">
+                    Favorieten
+                  </h2>
+                  {favoriteDevices.length > 0 ? (
+                    renderDevices(favoriteDevices, { showRoom: true })
+                  ) : (
+                    <p className="section-hint">
+                      Zet apparaten die je vaak gebruikt hier: open een apparaat via Details en zet "Op Home tonen"
+                      aan.
+                    </p>
+                  )}
+                </section>
+
+                {shelfDevices.length > 0 && (
+                  <section className="home-section" aria-labelledby="home-on">
+                    <h2 id="home-on" className="section-heading">
+                      Staat aan
+                    </h2>
+                    {renderDevices(shelfDevices, { showRoom: true })}
+                  </section>
                 )}
-              </section>
+              </div>
             )}
 
             {loaded && house && climateDevices.length > 0 && (

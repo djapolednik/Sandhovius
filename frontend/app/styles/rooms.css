@@ -146,7 +146,8 @@
   font-weight: 600;
 }
 
-.home-section + .home-section {
+.home-section + .home-section,
+.home-main + .home-section {
   margin-top: 1.5rem;
 }
 
@@ -216,7 +217,7 @@
     grid-column: 1 / -1;
   }
 
-  .home-section + .home-section {
+  .home-main + .home-section {
     margin-top: 0;
   }
 }
@@ -363,7 +364,8 @@
   align-items: center;
   gap: 0.45rem;
   min-height: 44px;
-  padding: 0.35rem 0.5rem 0.35rem 0.95rem;
+  /* Het pijltje (net als bij "Details") zegt: dit brengt je ergens heen. */
+  padding: 0.35rem 0.8rem 0.35rem 0.95rem;
   border-radius: 999px;
   border: none;
   background: var(--surface-2);
@@ -374,10 +376,6 @@
   transition: background-color 0.15s ease;
 }
 
-/* Zonder teller: gelijke padding aan beide kanten. */
-.house-summary-room:not(:has(.house-summary-room-count)) {
-  padding-right: 0.95rem;
-}
 
 .house-summary-room-count {
   display: inline-flex;

@@ -287,7 +287,7 @@ The page is centered on `--content-max` (640px on phones, 1000px from 768px, 124
 
 **Page head:** each tab opens with a large title on the page itself (no colored bar) and at most one action on the right: the date above "Welkom thuis" on Home, "+ Toevoegen" on Kamers.
 
-**Home:** the house panel, then **Favorieten** (devices marked "Op Home tonen", with their room as the caption; a short hint when there are none), then **Temperatuur** (every thermostat, always shown). Favourites come first because they are the quick switches; the thermostat panel is tall.
+**Home:** the house panel, then **Favorieten** (devices marked "Op Home tonen", with their room as the caption; a short hint when there are none), then **Staat aan** (every lamp or plug that is on and is not a favourite, so the tile is the state and Home never only shows a count), then **Temperatuur** (every thermostat, always shown). Favourites come first because they are the quick switches; the thermostat panel is tall. A tile you switch off in "Staat aan" stays there, showing "Uit", until you leave Home, so it never vanishes under your thumb. The row is hidden while the box is unreachable.
 
 **First run:** while a house has no devices, Home and Kamers show one panel in place of the sections: the four device types as unlit icon circles, "Voeg je eerste apparaat toe", and a full-width "Apparaat toevoegen" in thumb reach. Nothing glows, because nothing is on yet. As long as Home has no favourites, a new lamp, plug or sensor is added as a favourite, so the first device appears on Home and can be switched with one tap.
 
@@ -295,7 +295,7 @@ The page is centered on `--content-max` (640px on phones, 1000px from 768px, 124
 
 **Instellingen:** stacked panels (max 40rem): Huis (opens house and rooms), Weergave (dark mode), Account (who is logged in, Uitloggen).
 
-**Home on wide screens:** from 900px (iPad landscape and up), a two-column grid with the house panel as a fixed (sticky) column of 15–18rem on the left and the sections beside it; the device area always takes the right column, even while the house panel is still loading. Below 900px they stack, with the house panel first. The house panel stands in for the weather tile in the inspiration, but carries real information: the house name, the connection line or notice, and the house summary ("3 staan aan" with room chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable). When the dashboard is at least 68rem wide (a desktop at normal text size), Favorieten and Temperatuur sit side by side instead of stacked. The favourites column is as wide as its tiles (at least two), and the thermostat gets a fixed 28rem column right next to it, so any empty space falls at the end of the row rather than between the sections.
+**Home on wide screens:** from 900px (iPad landscape and up), a two-column grid with the house panel as a fixed (sticky) column of 15–18rem on the left and the sections beside it; the device area always takes the right column, even while the house panel is still loading. Below 900px they stack, with the house panel first. The house panel stands in for the weather tile in the inspiration, but carries real information: the house name, the connection line or notice, and the house summary ("1 lamp staat aan", "2 lampen en 1 stopcontact staan aan", with room chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable). When the dashboard is at least 68rem wide (a desktop at normal text size), Favorieten (with Staat aan below it) and Temperatuur sit side by side instead of stacked. The favourites column is as wide as its tiles (at least two), and the thermostat gets a fixed 28rem column right next to it, so any empty space falls at the end of the row rather than between the sections.
 
 **Lamp and plug tiles:** the icon sits at the top. Name, state and caption form one tight group at the bottom, just above "Details". The free space falls between the light and the text, never between a name and its state.
 
@@ -361,7 +361,7 @@ The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem
 - Long-press must not trigger text selection or the iOS callout.
 
 ### House panel
-The first panel on Home: the house name (Headline, an h2), the connection line, a divider, then the summary. That is either the count at State size in green ("3 staan aan") with room chips (Inset Mist pills whose count sits in a small Signal Green badge), or the quiet sentence "Alle lampen en stopcontacten zijn uit". A room chip opens that room on the Kamers tab.
+The first panel on Home: the house name (Headline, an h2), the connection line, a divider, then the summary. That is either what is on, with the first count at State size in green ("2 lampen en 1 stopcontact staan aan"), and room chips (Inset Mist pills whose count sits in a small Signal Green badge, with the same ↗ arrow as "Details"), or the quiet sentence "Alle lampen en stopcontacten zijn uit". A room chip opens that room on the Kamers tab.
 
 ### Switch
 A 48×28 pill with a 22px white thumb that slides 20px over 0.2s. The track is Resting Gray when off and Signal Green when on, for device state. App settings use the `switch-accent` variant (Electric Blue when on).
