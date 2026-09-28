@@ -70,7 +70,7 @@ cd frontend && npx next build                     # moet slagen vóór commit
 - Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`) · PWA: http://localhost:3000
 - Visueel testen: Chrome ontbreekt op deze machine; Edge headless via DevTools-protocol werkt (Playwright-plugin niet).
 
-## Huidige Status (2026-09-28, `main` @ 3ae53d3, 12 commits vóór origin — nog niet gepusht)
+## Huidige Status (2026-09-28 — `main` loopt vóór op origin, nog niet gepusht)
 **Fase 1** ✅ — lokale stack, agent ↔ MQTT/HA.
 
 **Fase 2** grotendeels ✅:
