@@ -495,3 +495,13 @@
 .form-inline .input {
   flex: 1;
 }
+
+/* "Alles uit": een gewone tweede-knop, links, onder de kamers. */
+.house-summary-off {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.3rem;
+  padding-inline: 1rem 1.15rem;
+}

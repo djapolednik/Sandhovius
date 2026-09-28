@@ -641,6 +641,29 @@
   padding-right: 0.4rem;
 }
 
+/* Eén actie in een melding ("Ongedaan maken"): tekst in de meldingskleur,
+   onderstreept, met een groot genoeg tikvlak. */
+.toast-action {
+  flex-shrink: 0;
+  min-height: 44px;
+  margin: -0.5rem -0.5rem -0.5rem 0;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.toast-action:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -2px;
+}
+
 .toast-message {
   flex: 1;
   min-width: 0;

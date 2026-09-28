@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRightIcon } from '../lib/icons'
+import { ArrowUpRightIcon, PowerIcon } from '../lib/icons'
 
 // "1 lamp staat aan", "2 lampen en 1 stopcontact staan aan": zeg wat er
 // aan staat, niet alleen hoeveel.
@@ -18,7 +18,8 @@ function describeOn(lights, switches) {
 //
 // rooms: [{ id, label, onCount }] — alleen kamers met iets aan.
 // lights/switches: hoeveel lampen en stopcontacten er aan staan.
-export default function HouseSummary({ rooms, lights, switches, onSelectRoom }) {
+// onAllOff: "Alles uit", voor het slapengaan of de deur uit.
+export default function HouseSummary({ rooms, lights, switches, onSelectRoom, onAllOff }) {
   if (rooms.length === 0) {
     return <p className="house-summary-quiet">Alle lampen en stopcontacten zijn uit.</p>
   }
@@ -42,6 +43,12 @@ export default function HouseSummary({ rooms, lights, switches, onSelectRoom }) 
           </li>
         ))}
       </ul>
+      {onAllOff && (
+        <button type="button" className="btn btn-secondary house-summary-off" onClick={onAllOff}>
+          <PowerIcon width="18" height="18" aria-hidden="true" />
+          Alles uit
+        </button>
+      )}
     </div>
   )
 }

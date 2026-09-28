@@ -47,6 +47,9 @@ const NEW_DEVICE_GRACE_MS = 2 * 60 * 1000
 // echte stand.
 const COMMAND_SLOW_MS = 4000
 const COMMAND_GIVE_UP_MS = 15000
+// Zo lang kun je iets terugdraaien ("Ongedaan maken"): de melding staat er
+// even lang, en een verwijdering gebeurt pas daarna echt.
+const UNDO_MS = 6000
 
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -81,6 +84,10 @@ export default function Home() {
   // Apparaten die je in deze sessie net toevoegde: hun kaart zegt "Wordt
   // klaargezet" i.p.v. "Offline" tot de box ze gekoppeld heeft.
   const [newDeviceIds, setNewDeviceIds] = useState([])
+  // Verwijderd, maar nog even terug te halen ("Ongedaan maken"): apparaten
+  // en kamers die al uit beeld zijn, en pas na UNDO_MS echt weg gaan.
+  const [hiddenIds, setHiddenIds] = useState([])
+  const deleteTimers = useRef({})
 
   useEffect(() => {
     setLoggedIn(pb.authStore.isValid)
@@ -261,8 +268,11 @@ export default function Home() {
   const houseReachable = realtimeLink !== 'lost' && houseLink.reachable
   // Gememoiseerd: roomsInHouse gaat als prop naar elke (gememoiseerde)
   // DeviceCard — een nieuwe array per render zou die memo teniet doen.
-  const roomsInHouse = useMemo(() => rooms.filter((room) => room.house === house?.id), [rooms, house?.id])
-  const devicesInHouse = devices.filter((device) => device.gateway === house?.id)
+  const roomsInHouse = useMemo(
+    () => rooms.filter((room) => room.house === house?.id && !hiddenIds.includes(room.id)),
+    [rooms, house?.id, hiddenIds]
+  )
+  const devicesInHouse = devices.filter((device) => device.gateway === house?.id && !hiddenIds.includes(device.id))
   const roomIds = roomsInHouse.map((room) => room.id)
   const unassignedDevices = devicesInHouse.filter((device) => !roomIds.includes(device.room))
 
@@ -315,10 +325,10 @@ export default function Home() {
   // zodat de DOM-node niet blijft hangen). Fouten blijven langer staan en
   // zijn weg te klikken: een bevestiging mag vluchtig zijn, een fout moet
   // je kunnen lezen.
-  function showToast(message, type = 'info') {
+  function showToast(message, type = 'info', action) {
     const id = crypto.randomUUID()
-    const duration = type === 'error' ? 6000 : 3500
-    setToasts((prev) => [...prev, { id, message, type, duration }])
+    const duration = type === 'error' || action ? UNDO_MS : 3500
+    setToasts((prev) => [...prev, { id, message, type, duration, action }])
     setTimeout(() => dismissToast(id), duration)
   }
 
@@ -420,11 +430,69 @@ export default function Home() {
         status: 'pending',
       })
       watchCommand(command.id, device.name, device.id)
+      // De verwarming uitzetten is het ene schakelen met echte gevolgen
+      // (een koud huis): even terug te draaien.
+      if (device.type === 'climate' && !willBeOn) {
+        showToast('Verwarming uitgezet', 'info', {
+          label: 'Ongedaan maken',
+          onClick: () => setSwitches([device], true),
+        })
+      }
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
       showToast(describeError(`${device.name} ${willBeOn ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
       fetchAll()
     }
+  }
+
+  // Meerdere apparaten tegelijk aan of uit: "Alles uit", en het
+  // terugdraaien daarvan of van "verwarming uit". Expliciet turn_on /
+  // turn_off i.p.v. toggle, zodat twee keer "uit" gewoon uit blijft. Zelfde
+  // voornemen-tot-bevestiging als een tik (_pending).
+  async function setSwitches(list, on) {
+    if (!houseReachable) {
+      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      return false
+    }
+    const ids = list.map((device) => device.id)
+    setDevices((prev) =>
+      prev.map((d) => {
+        if (!ids.includes(d.id)) return d
+        const stateRecord = d.expand?.device_state_via_device?.[0]
+        const value = on ? (d.type === 'climate' ? 'heat' : 'on') : 'off'
+        const optimisticState = { ...stateRecord, state: { ...stateRecord?.state, state: value } }
+        return { ...d, _pending: true, expand: { ...d.expand, device_state_via_device: [optimisticState] } }
+      })
+    )
+    await Promise.all(
+      list.map(async (device) => {
+        try {
+          const command = await pb.collection('commands').create({
+            device: device.id,
+            action: on ? 'turn_on' : 'turn_off',
+            status: 'pending',
+          })
+          watchCommand(command.id, device.name, device.id)
+        } catch (err) {
+          if (isSessionExpired(err)) return endExpiredSession()
+          showToast(describeError(`${device.name} ${on ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
+          fetchAll()
+        }
+      })
+    )
+    return true
+  }
+
+  // "Alles uit" in het huis-paneel: elke lamp en elk stopcontact dat aan
+  // staat. Hier wél een melding, want je ziet niet alle tegels tegelijk, en
+  // met "Ongedaan maken" gaat precies hetzelfde rijtje weer aan.
+  async function turnAllOff() {
+    const list = devicesOn
+    if (list.length === 0 || !(await setSwitches(list, false))) return
+    showToast(list.length === 1 ? `${list[0].name} gaat uit` : `${list.length} apparaten gaan uit`, 'info', {
+      label: 'Ongedaan maken',
+      onClick: () => setSwitches(list, true),
+    })
   }
 
   // Zelfde optimistisch patroon als toggleDevice, maar voor climate-
@@ -534,9 +602,40 @@ export default function Home() {
     setDevices((prev) => prev.map((d) => (d.id === deviceId ? { ...d, ...updated } : d)))
   }
 
+  // Verwijderen met een vangnet: meteen uit beeld, met "Ongedaan maken" in
+  // de melding, en pas na UNDO_MS echt weg. Sluit je de app binnen die
+  // tijd, dan blijft het bestaan: dat is de veilige kant.
+  function deleteLater(id, label, commit, onDone) {
+    setHiddenIds((prev) => [...prev, id])
+    const unhide = () => setHiddenIds((prev) => prev.filter((hidden) => hidden !== id))
+    deleteTimers.current[id] = setTimeout(async () => {
+      delete deleteTimers.current[id]
+      try {
+        await commit()
+        onDone()
+      } catch (err) {
+        showToast(describeError(`${label} verwijderen`, err), 'error')
+      }
+      unhide()
+    }, UNDO_MS)
+    showToast(`${label} verwijderd`, 'info', {
+      label: 'Ongedaan maken',
+      onClick: () => {
+        clearTimeout(deleteTimers.current[id])
+        delete deleteTimers.current[id]
+        unhide()
+      },
+    })
+  }
+
   async function deleteDevice(deviceId) {
-    await pb.collection('devices').delete(deviceId)
-    setDevices((prev) => prev.filter((d) => d.id !== deviceId))
+    const device = devices.find((d) => d.id === deviceId)
+    deleteLater(
+      deviceId,
+      `"${device?.name ?? 'Apparaat'}"`,
+      () => pb.collection('devices').delete(deviceId),
+      () => setDevices((prev) => prev.filter((d) => d.id !== deviceId))
+    )
   }
 
   // Na toevoegen spring je naar de kamer van het nieuwe apparaat, zodat je
@@ -580,8 +679,13 @@ export default function Home() {
   // Base's default gedrag bij een niet-cascade relatie) en vallen na de
   // eerstvolgende fetch onder "Overig" — niets wordt weggegooid.
   async function deleteRoom(roomId) {
-    await pb.collection('rooms').delete(roomId)
-    setRooms((prev) => prev.filter((r) => r.id !== roomId))
+    const room = rooms.find((r) => r.id === roomId)
+    deleteLater(
+      roomId,
+      `Kamer "${room?.name ?? ''}"`,
+      () => pb.collection('rooms').delete(roomId),
+      () => setRooms((prev) => prev.filter((r) => r.id !== roomId))
+    )
   }
 
   // Stabiele handlers voor de (gememoiseerde) DeviceCards: één object dat
@@ -835,6 +939,7 @@ export default function Home() {
                       lights: devicesOn.filter((device) => device.type === 'light').length,
                       switches: devicesOn.filter((device) => device.type === 'switch').length,
                       onSelectRoom: openRoom,
+                      onAllOff: turnAllOff,
                     }
                   : null
               }

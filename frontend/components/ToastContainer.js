@@ -2,7 +2,9 @@
 
 import { CloseIcon } from '../lib/icons'
 
-// toasts: [{ id, message, type, duration }]. Elke toast verwijdert zichzelf
+// toasts: [{ id, message, type, duration, action? }]. action = { label,
+// onClick } geeft de melding één knop, zoals "Ongedaan maken". Elke toast
+// verwijdert zichzelf
 // via een timeout die de aanroeper instelt (zie showToast in page.js) —
 // dit component rendert alleen, het beheert geen levensduur.
 //
@@ -25,7 +27,7 @@ export default function ToastContainer({ toasts, onDismiss }) {
       </div>
       <div className="toast-region" role="status">
         {notices.map((toast) => (
-          <Toast key={toast.id} toast={toast} />
+          <Toast key={toast.id} toast={toast} onDismiss={toast.action ? onDismiss : undefined} />
         ))}
       </div>
     </div>
@@ -36,7 +38,19 @@ function Toast({ toast, onDismiss }) {
   return (
     <div className={`toast toast-${toast.type}`} style={{ '--toast-duration': `${toast.duration}ms` }}>
       <span className="toast-message">{toast.message}</span>
-      {onDismiss && (
+      {toast.action && (
+        <button
+          type="button"
+          className="toast-action"
+          onClick={() => {
+            toast.action.onClick()
+            onDismiss?.(toast.id)
+          }}
+        >
+          {toast.action.label}
+        </button>
+      )}
+      {onDismiss && !toast.action && (
         <button type="button" className="toast-dismiss" aria-label="Melding sluiten" onClick={() => onDismiss(toast.id)}>
           <CloseIcon />
         </button>
