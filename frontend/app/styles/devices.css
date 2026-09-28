@@ -173,6 +173,17 @@
   display: flex;
 }
 
+.tile-bottom-actions {
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* "Opnieuw proberen": dezelfde pil als "Details", met de actie in de
+   accentkleur als tekst. */
+.retry-chip {
+  color: var(--accent-text);
+}
+
 /* "Details": een kleine pil die boven de tegelknop ligt en de sheet met
    alles over het apparaat opent. */
 .details-chip {

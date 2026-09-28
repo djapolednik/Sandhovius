@@ -187,7 +187,9 @@ func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 	device := event.Record
 
 	if event.EventType == "create" && device.EntityID == "" {
-		a.provisionDeviceEntity(device)
+		if err := a.provisionDeviceEntity(device); err != nil {
+			log.Printf("[APP] Kon device %s niet klaarzetten: %v\n", device.ID, err)
+		}
 		return
 	}
 
@@ -220,7 +222,7 @@ func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 // eigen meetwaarden — dat vraagt om een generic_thermostat-platform met
 // een gekoppelde sensor (zie configuration.yaml), wat hier niet
 // automatisch wordt opgezet. sensor krijgt een input_number.
-func (a *Agent) provisionDeviceEntity(device pocketbase.Device) {
+func (a *Agent) provisionDeviceEntity(device pocketbase.Device) error {
 	var entityID string
 	var err error
 
@@ -230,13 +232,11 @@ func (a *Agent) provisionDeviceEntity(device pocketbase.Device) {
 		entityID, err = a.haClient.CreateInputBoolean(device.Name)
 	}
 	if err != nil {
-		log.Printf("[APP] Kon geen HA-entity aanmaken voor device %s: %v\n", device.ID, err)
-		return
+		return fmt.Errorf("HA-entity aanmaken: %w", err)
 	}
 
 	if err := a.pbClient.SetDeviceEntityID(device.ID, entityID); err != nil {
-		log.Printf("[APP] Kon entity_id niet opslaan voor device %s: %v\n", device.ID, err)
-		return
+		return fmt.Errorf("entity_id opslaan: %w", err)
 	}
 
 	a.deviceNamesMu.Lock()
@@ -257,6 +257,7 @@ func (a *Agent) provisionDeviceEntity(device pocketbase.Device) {
 	// de stand verandert: het device zou op "offline" blijven hangen.
 	// Daarom de stand nu zelf ophalen.
 	a.syncEntityState(entityID)
+	return nil
 }
 
 // syncEntityState haalt de actuele stand van één entity op bij Home
@@ -298,6 +299,25 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		a.failCommand(cmd.ID, err)
 		return
 	}
+	// "provision": opnieuw klaarzetten na een mislukte eerste keer (knop
+	// "Opnieuw proberen" in de app). Heeft het device inmiddels al een
+	// entity_id, dan is er niets meer te doen.
+	if cmd.Action == "provision" {
+		if device.EntityID == "" {
+			if err := a.provisionDeviceEntity(*device); err != nil {
+				log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
+				a.failCommand(cmd.ID, err)
+				return
+			}
+		}
+		if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
+			log.Printf("[APP] Kon commando %s niet als 'sent' markeren: %v\n", cmd.ID, err)
+			return
+		}
+		log.Printf("[APP] Device %s opnieuw klaargezet (commando %s)\n", device.ID, cmd.ID)
+		return
+	}
+
 	if device.EntityID == "" {
 		err := fmt.Errorf("device %s heeft geen entity_id", device.ID)
 		log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)

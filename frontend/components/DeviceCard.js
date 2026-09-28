@@ -53,6 +53,7 @@ export default memo(function DeviceCard({
   onToggle,
   onSetTemperature,
   onOpenSettings,
+  onRetrySetup,
 }) {
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
@@ -184,12 +185,24 @@ export default memo(function DeviceCard({
             {isPairing ? 'Wordt klaargezet' : 'Niet klaargezet'}
           </span>
           <span className="device-state-sub">
-            {isPairing
-              ? 'Dit duurt meestal een paar seconden.'
-              : 'Verwijder dit apparaat via Details en voeg het opnieuw toe.'}
+            {isPairing ? 'Dit duurt meestal een paar seconden.' : 'Het klaarzetten is niet gelukt.'}
           </span>
         </div>
-        <div className="tile-bottom">{detailsChip}</div>
+        <div className="tile-bottom tile-bottom-actions">
+          {/* Herstellen i.p.v. "verwijder en voeg opnieuw toe": de box
+              probeert het gewoon nog een keer. */}
+          {setupFailed && (
+            <button
+              type="button"
+              className="details-chip retry-chip"
+              onPointerDown={stop}
+              onClick={() => onRetrySetup(device)}
+            >
+              Opnieuw proberen
+            </button>
+          )}
+          {detailsChip}
+        </div>
       </>
     )
   } else if (device.type === 'light' || device.type === 'switch') {

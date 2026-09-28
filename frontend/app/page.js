@@ -802,13 +802,35 @@ export default function Home() {
   // functies hierboven aanroept via de ref. Zo her-rendert een kaart alleen
   // als zijn eigen device, de kamers of zijn animatie-status verandert —
   // niet bij elke toast, modal of realtime-tik op de pagina.
+  // "Opnieuw proberen" bij een apparaat waarvan het klaarzetten mislukte:
+  // de agent maakt de Home Assistant-helper alsnog aan. De tegel staat
+  // intussen weer op "Wordt klaargezet" (isNew); lukt het niet, dan zegt
+  // watchCommand dat.
+  async function retrySetup(device) {
+    if (!houseReachable) {
+      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      return
+    }
+    setNewDeviceIds((prev) => [...prev, device.id])
+    setTimeout(() => setNewDeviceIds((prev) => prev.filter((id) => id !== device.id)), NEW_DEVICE_GRACE_MS)
+    try {
+      const command = await pb.collection('commands').create({ device: device.id, action: 'provision', status: 'pending' })
+      watchCommand(command.id, device.name, device.id)
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      setNewDeviceIds((prev) => prev.filter((id) => id !== device.id))
+      showToast(describeError(`${device.name} klaarzetten`, err), 'error')
+    }
+  }
+
   const latest = useRef(null)
-  latest.current = { toggleDevice, setDeviceTemperature }
+  latest.current = { toggleDevice, setDeviceTemperature, retrySetup }
   const cardHandlers = useMemo(
     () => ({
       onToggle: (device) => latest.current.toggleDevice(device),
       onSetTemperature: (device, temperature) => latest.current.setDeviceTemperature(device, temperature),
       onOpenSettings: (device) => setSettingsDeviceId(device.id),
+      onRetrySetup: (device) => latest.current.retrySetup(device),
     }),
     []
   )
