@@ -293,6 +293,11 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		return
 	}
 
+	if cmd.Action == "run_scene" {
+		a.runScene(cmd)
+		return
+	}
+
 	device, err := a.pbClient.GetDevice(cmd.Device)
 	if err != nil {
 		log.Printf("[APP] Commando %s mislukt: kon device niet ophalen: %v\n", cmd.ID, err)
@@ -344,6 +349,73 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		return
 	}
 	log.Printf("[APP] Commando uitgevoerd: %s %s (commando %s)\n", cmd.Action, device.EntityID, cmd.ID)
+}
+
+// sceneActions zijn de enige stappen die een scène mag bevatten: dezelfde
+// als losse commando's, zonder toggle (een scène zet een stand, hij draait
+// hem niet om).
+var sceneActions = map[string]bool{"turn_on": true, "turn_off": true, "set_temperature": true}
+
+// runScene voert alle stappen van een scène uit, op de box: één commando
+// uit de app, en het maakt niet uit als de telefoon daarna wegvalt. Een
+// stap die mislukt houdt de rest niet tegen; het commando wordt dan wel
+// als "failed" gemarkeerd, met welke stappen misgingen.
+//
+// Alleen scènes van dit huis, en alleen apparaten van dit huis: ook als
+// er ooit iets verkeerds in de JSON staat, schakelt deze box nooit
+// andermans apparaat.
+func (a *Agent) runScene(cmd pocketbase.Command) {
+	scene, err := a.pbClient.GetScene(cmd.Scene)
+	if err != nil {
+		log.Printf("[APP] Scène-commando %s mislukt: %v\n", cmd.ID, err)
+		a.failCommand(cmd.ID, err)
+		return
+	}
+	if scene.House != a.gatewayID {
+		err := fmt.Errorf("scène %s hoort niet bij dit huis", scene.ID)
+		log.Printf("[APP] Scène-commando %s geweigerd: %v\n", cmd.ID, err)
+		a.failCommand(cmd.ID, err)
+		return
+	}
+
+	var failures []error
+	for _, step := range scene.Actions {
+		if err := a.runSceneStep(scene.House, step); err != nil {
+			log.Printf("[APP] Scène %q: stap %s op %s mislukt: %v\n", scene.Name, step.Action, step.Device, err)
+			failures = append(failures, fmt.Errorf("%s %s: %w", step.Action, step.Device, err))
+		}
+	}
+
+	if len(failures) > 0 {
+		a.failCommand(cmd.ID, errors.Join(failures...))
+		return
+	}
+	if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
+		log.Printf("[APP] Kon scène-commando %s niet als 'sent' markeren: %v\n", cmd.ID, err)
+		return
+	}
+	log.Printf("[APP] Scène %q uitgevoerd: %d stappen (commando %s)\n", scene.Name, len(scene.Actions), cmd.ID)
+}
+
+func (a *Agent) runSceneStep(house string, step pocketbase.SceneAction) error {
+	if !sceneActions[step.Action] {
+		return fmt.Errorf("actie %q hoort niet in een scène", step.Action)
+	}
+	device, err := a.pbClient.GetDevice(step.Device)
+	if err != nil {
+		return err
+	}
+	if device.Gateway != house {
+		return fmt.Errorf("apparaat hoort niet bij dit huis")
+	}
+	if device.EntityID == "" {
+		return fmt.Errorf("apparaat is (nog) niet klaargezet")
+	}
+	domain := "homeassistant"
+	if step.Action == "set_temperature" {
+		domain = "climate"
+	}
+	return a.haClient.CallService(domain, step.Action, device.EntityID, step.Payload)
 }
 
 func (a *Agent) failCommand(commandID string, reason error) {

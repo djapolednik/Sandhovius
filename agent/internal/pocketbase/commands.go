@@ -5,7 +5,8 @@ import "fmt"
 type Command struct {
 	ID      string         `json:"id"`
 	Device  string         `json:"device"`
-	Action  string         `json:"action"` // "turn_on", "turn_off", "toggle"
+	Scene   string         `json:"scene"`
+	Action  string         `json:"action"` // "turn_on", "turn_off", "toggle", "set_temperature", "provision", "run_scene"
 	Payload map[string]any `json:"payload"`
 	Status  string         `json:"status"` // "pending", "sent", "failed"
 }
