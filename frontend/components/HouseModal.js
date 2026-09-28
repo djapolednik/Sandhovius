@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { CheckIcon, CloseIcon, TrashIcon } from '../lib/icons'
+import MoveButtons from './MoveButtons'
 
-function RoomRow({ room, onRename, onDelete }) {
+function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(room.name)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -110,19 +111,31 @@ function RoomRow({ room, onRename, onDelete }) {
         >
           {room.name}
         </button>
-        <button
-          className="btn btn-icon btn-plain"
-          aria-label={`Kamer "${room.name}" verwijderen`}
-          onClick={() => setConfirmingDelete(true)}
-        >
-          <TrashIcon />
-        </button>
+        <div className="room-row-actions">
+          <MoveButtons label={`Kamer "${room.name}"`} index={index} count={count} onMove={(delta) => onMove(room.id, delta)} />
+          <button
+            className="btn btn-icon btn-plain"
+            aria-label={`Kamer "${room.name}" verwijderen`}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            <TrashIcon />
+          </button>
+        </div>
       </div>
     </li>
   )
 }
 
-export default function HouseModal({ house, rooms, onRenameHouse, onAddRoom, onRenameRoom, onDeleteRoom, onClose }) {
+export default function HouseModal({
+  house,
+  rooms,
+  onRenameHouse,
+  onAddRoom,
+  onRenameRoom,
+  onMoveRoom,
+  onDeleteRoom,
+  onClose,
+}) {
   const [houseName, setHouseName] = useState(house?.name ?? '')
   const [savingName, setSavingName] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
@@ -181,8 +194,16 @@ export default function HouseModal({ house, rooms, onRenameHouse, onAddRoom, onR
       <span className="form-label">Kamers</span>
       {rooms.length > 0 && (
         <ul className="house-list" style={{ marginTop: '0.5rem' }}>
-          {rooms.map((room) => (
-            <RoomRow key={room.id} room={room} onRename={onRenameRoom} onDelete={onDeleteRoom} />
+          {rooms.map((room, index) => (
+            <RoomRow
+              key={room.id}
+              room={room}
+              index={index}
+              count={rooms.length}
+              onMove={onMoveRoom}
+              onRename={onRenameRoom}
+              onDelete={onDeleteRoom}
+            />
           ))}
         </ul>
       )}

@@ -12,6 +12,7 @@ import ToastContainer from '../components/ToastContainer'
 import BottomNav, { TABS } from '../components/BottomNav'
 import RoomTabs from '../components/RoomTabs'
 import SettingsView from '../components/SettingsView'
+import FavoritesOrderModal from '../components/FavoritesOrderModal'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -82,6 +83,7 @@ export default function Home() {
   const [addDeviceOpen, setAddDeviceOpen] = useState(false)
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   const [shelfIds, setShelfIds] = useState([])
+  const [orderingFavorites, setOrderingFavorites] = useState(false)
   // Apparaten die je in deze sessie net toevoegde: hun kaart zegt "Wordt
   // klaargezet" i.p.v. "Offline" tot de box ze gekoppeld heeft.
   const [newDeviceIds, setNewDeviceIds] = useState([])
@@ -269,8 +271,12 @@ export default function Home() {
   const houseReachable = realtimeLink !== 'lost' && houseLink.reachable
   // Gememoiseerd: roomsInHouse gaat als prop naar elke (gememoiseerde)
   // DeviceCard — een nieuwe array per render zou die memo teniet doen.
+  // Op volgorde (Opties → Huis → pijltjes), ook na lokale wijzigingen.
   const roomsInHouse = useMemo(
-    () => rooms.filter((room) => room.house === house?.id && !hiddenIds.includes(room.id)),
+    () =>
+      rooms
+        .filter((room) => room.house === house?.id && !hiddenIds.includes(room.id))
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [rooms, house?.id, hiddenIds]
   )
   const devicesInHouse = devices.filter((device) => device.gateway === house?.id && !hiddenIds.includes(device.id))
@@ -609,8 +615,39 @@ export default function Home() {
       })
   }
 
+  // Een nieuwe favoriet komt achteraan.
   async function toggleFavorite(device) {
-    await saveDevice(device.id, { favorite: !device.favorite })
+    const last = Math.max(0, ...devicesInHouse.filter((d) => d.favorite).map((d) => d.favorite_order ?? 0))
+    await saveDevice(device.id, device.favorite ? { favorite: false } : { favorite: true, favorite_order: last + 1 })
+  }
+
+  // Eén plek omhoog of omlaag in een geordende lijst. Daarna krijgt de hele
+  // lijst oplopende nummers (0, 1, 2 …), zodat gelijke of lege nummers van
+  // vroeger vanzelf verdwijnen; alleen wat echt veranderde gaat naar de
+  // server. Mislukt dat, dan de echte volgorde weer ophalen.
+  async function moveInList(list, id, delta, field, collection, setList) {
+    const from = list.findIndex((item) => item.id === id)
+    const to = from + delta
+    if (from === -1 || to < 0 || to >= list.length) return
+    const next = [...list]
+    ;[next[from], next[to]] = [next[to], next[from]]
+    const changed = next.filter((item, index) => (item[field] ?? 0) !== index || item.id === id)
+    const position = Object.fromEntries(next.map((item, index) => [item.id, index]))
+    setList((prev) => prev.map((item) => (item.id in position ? { ...item, [field]: position[item.id] } : item)))
+    try {
+      await Promise.all(changed.map((item) => pb.collection(collection).update(item.id, { [field]: position[item.id] })))
+    } catch (err) {
+      showToast(describeError('Volgorde opslaan', err), 'error')
+      fetchAll()
+    }
+  }
+
+  function moveRoom(roomId, delta) {
+    moveInList(roomsInHouse, roomId, delta, 'order', 'rooms', setRooms)
+  }
+
+  function moveFavorite(deviceId, delta) {
+    moveInList(favoriteDevices, deviceId, delta, 'favorite_order', 'devices', setDevices)
   }
 
   async function saveDevice(deviceId, updates) {
@@ -776,7 +813,10 @@ export default function Home() {
   const roomNameById = Object.fromEntries(roomsInHouse.map((room) => [room.id, room.name]))
   const climateDevices = devicesInHouse.filter((device) => device.type === 'climate')
   // De thermostaat staat altijd op Home; de rest alleen als favoriet.
-  const favoriteDevices = devicesInHouse.filter((device) => device.favorite && device.type !== 'climate')
+  // Op de volgorde die de bewoner koos; zonder keuze op naam.
+  const favoriteDevices = devicesInHouse
+    .filter((device) => device.favorite && device.type !== 'climate')
+    .sort((a, b) => (a.favorite_order ?? 0) - (b.favorite_order ?? 0) || a.name.localeCompare(b.name, 'nl'))
   // Alleen als de box bereikbaar is: anders weten we niet zeker wat er aan
   // staat (net als de samenvatting).
   const shelfDevices = houseReachable
@@ -972,9 +1012,16 @@ export default function Home() {
             {loaded && house && devicesInHouse.length > 0 && (
               <div className="home-main">
                 <section className="home-section" aria-labelledby="home-favorites">
-                  <h2 id="home-favorites" className="section-heading">
-                    Favorieten
-                  </h2>
+                  <div className="section-head">
+                    <h2 id="home-favorites" className="section-heading">
+                      Favorieten
+                    </h2>
+                    {favoriteDevices.length > 1 && (
+                      <button type="button" className="btn btn-plain section-action" onClick={() => setOrderingFavorites(true)}>
+                        Volgorde
+                      </button>
+                    )}
+                  </div>
                   {favoriteDevices.length > 0 ? (
                     renderDevices(favoriteDevices, { showRoom: true })
                   ) : (
@@ -1028,8 +1075,17 @@ export default function Home() {
           onRenameHouse={renameHouse}
           onAddRoom={addRoom}
           onRenameRoom={renameRoom}
+          onMoveRoom={moveRoom}
           onDeleteRoom={deleteRoom}
           onClose={() => setHouseModalOpen(false)}
+        />
+      )}
+
+      {orderingFavorites && (
+        <FavoritesOrderModal
+          favorites={favoriteDevices}
+          onMove={moveFavorite}
+          onClose={() => setOrderingFavorites(false)}
         />
       )}
 

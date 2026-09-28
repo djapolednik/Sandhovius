@@ -559,3 +559,53 @@
   outline-offset: 2px;
   border-radius: var(--radius-control);
 }
+
+/* Een sectiekop met rechts één kleine actie ("Volgorde"). */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.section-head .section-heading {
+  margin: 0;
+}
+
+.section-action {
+  min-height: 44px;
+  padding: 0.35rem 0.75rem;
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* Omhoog/omlaag-knoppen naast elkaar. */
+.move-buttons {
+  display: inline-flex;
+  gap: 0.1rem;
+}
+
+.move-buttons .btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Lijst om te ordenen (favorieten): naam links, pijltjes rechts. */
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 52px;
+  padding: 0.2rem 0.3rem 0.2rem 0.9rem;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+
+.order-item-name {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
