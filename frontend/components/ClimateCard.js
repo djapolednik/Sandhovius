@@ -118,7 +118,9 @@ export default function ClimateCard({
         <div className="reading-empty">Nog geen meetwaarden ontvangen</div>
       ) : (
         <div className="climate-layout">
-          <div className={`dial ${isOn && isOnline ? 'dial-live' : 'dial-idle'}`}>
+          {/* Blauwe boog zolang de verwarming aan staat; de gloed alleen als
+              hij echt verwarmt (Real Light Rule), niet bij "Op temperatuur". */}
+          <div className={`dial ${isOn && isOnline ? '' : 'dial-idle'} ${isHeating ? 'dial-live' : ''}`}>
             <svg className="dial-svg" viewBox={`0 0 ${DIAL_SIZE} ${DIAL_SIZE}`} aria-hidden="true">
               <circle
                 className="dial-track"
