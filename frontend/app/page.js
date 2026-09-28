@@ -15,6 +15,7 @@ import SettingsView from '../components/SettingsView'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
+import { isBatteryLow } from '../lib/battery'
 import { PlusIcon, ScenesIcon, deviceTypeIcon } from '../lib/icons'
 
 const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -353,6 +354,21 @@ export default function Home() {
       device.online &&
       isDeviceOn(device.type, device.expand?.device_state_via_device?.[0]?.state)
   )
+  // "Let op" in het huis-paneel: wat de bewoner zelf moet oplossen, op één
+  // plek i.p.v. verspreid over tegels in verschillende kamers. Alleen als
+  // de box bereikbaar is: anders is álles onbekend en zegt de
+  // verbindingsmelding genoeg. Net toegevoegde apparaten tellen nog niet.
+  const attention = houseReachable
+    ? devicesInHouse.flatMap((device) => {
+        if (newDeviceIds.includes(device.id)) return []
+        if (!device.entity_id) return [{ device, reason: 'klaarzetten is niet gelukt' }]
+        if (!device.online) return [{ device, reason: 'offline' }]
+        const battery = device.expand?.device_state_via_device?.[0]?.state?.battery
+        if (isBatteryLow(battery)) return [{ device, reason: `batterij bijna leeg (${battery}%)` }]
+        return []
+      })
+    : []
+
   const roomsWithSomethingOn = roomTabs
     .map((tab) => ({
       ...tab,
@@ -930,6 +946,8 @@ export default function Home() {
               realtimeLink={realtimeLink}
               houseLink={houseLink}
               now={now}
+              attention={loaded ? attention : []}
+              onOpenDevice={(device) => setSettingsDeviceId(device.id)}
               // Alleen als de box bereikbaar is: anders weten we niet zeker
               // wat er aan staat, en zegt de verbindingsmelding genoeg.
               summary={
