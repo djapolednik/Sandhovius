@@ -1,18 +1,19 @@
 'use client'
 
 import { useTheme } from '../lib/useTheme'
-import { ArrowUpRightIcon, RoomsIcon } from '../lib/icons'
+import { ArrowUpRightIcon, CheckIcon, RoomsIcon } from '../lib/icons'
 
-// Het tabblad Instellingen: je huis en kamers, hoe de app eruitziet, en je
-// account. Geen losse menu's of vensters meer achter een avatar — alles
-// staat hier op één plek, in gewone rijen.
 const THEME_OPTIONS = [
   { value: 'light', label: 'Licht' },
   { value: 'dark', label: 'Donker' },
   { value: 'auto', label: 'Automatisch' },
 ]
 
-export default function SettingsView({ house, roomCount, userEmail, onOpenHouse, onLogout }) {
+// Het tabblad Opties: je huis en kamers, hoe de app eruitziet, en je
+// account. Geen losse menu's of vensters meer achter een avatar — alles
+// staat hier op één plek, in gewone rijen. Met meer dan één huis kies je
+// hier welk huis de app laat zien.
+export default function SettingsView({ house, houses = [], onSelectHouse, roomCount, userEmail, onOpenHouse, onLogout }) {
   const { mode, setMode } = useTheme()
 
   return (
@@ -22,6 +23,24 @@ export default function SettingsView({ house, roomCount, userEmail, onOpenHouse,
           <h2 id="settings-house" className="settings-heading">
             Huis
           </h2>
+          {houses.length > 1 && (
+            <fieldset className="house-choice">
+              <legend className="visually-hidden">Welk huis wil je zien?</legend>
+              {houses.map((h) => (
+                <label key={h.id} className={`house-choice-option ${h.id === house.id ? 'house-choice-selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="house"
+                    className="visually-hidden"
+                    checked={h.id === house.id}
+                    onChange={() => onSelectHouse(h.id)}
+                  />
+                  <span>{h.name}</span>
+                  {h.id === house.id && <CheckIcon width="18" height="18" aria-hidden="true" />}
+                </label>
+              ))}
+            </fieldset>
+          )}
           <button type="button" className="settings-link" onClick={onOpenHouse}>
             <span className="device-icon" aria-hidden="true">
               <RoomsIcon width="20" height="20" />

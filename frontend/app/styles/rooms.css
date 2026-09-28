@@ -609,3 +609,9 @@
   overflow-wrap: break-word;
   hyphens: auto;
 }
+
+/* "Ander huis": klein, links onder de naam, alleen met meer huizen. */
+.house-switch {
+  align-self: flex-start;
+  margin: -0.6rem 0 -0.4rem -0.75rem;
+}

@@ -41,6 +41,7 @@ function tabFromHash() {
 // vanzelf — geen eigen opslag-code nodig.
 const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL, new LocalAuthStore('pocketbase_auth'))
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
+const SELECTED_HOUSE_KEY = 'sandhovius-selected-house'
 // Zo lang mag het klaarzetten van een nieuw apparaat duren voordat de kaart
 // het niet meer "Wordt klaargezet" noemt (normaal: een paar seconden).
 const NEW_DEVICE_GRACE_MS = 2 * 60 * 1000
@@ -84,6 +85,16 @@ export default function Home() {
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   const [shelfIds, setShelfIds] = useState([])
   const [orderingFavorites, setOrderingFavorites] = useState(false)
+  // Meerdere huizen (bv. thuis en een vakantiehuis): welk huis je bekijkt,
+  // onthouden op dit apparaat. Zonder keuze het eerste.
+  const [selectedHouseId, setSelectedHouseId] = useState(null)
+  useEffect(() => {
+    try {
+      setSelectedHouseId(window.localStorage.getItem(SELECTED_HOUSE_KEY))
+    } catch {
+      // Geen opslag: dan het eerste huis.
+    }
+  }, [])
   // Apparaten die je in deze sessie net toevoegde: hun kaart zegt "Wordt
   // klaargezet" i.p.v. "Offline" tot de box ze gekoppeld heeft.
   const [newDeviceIds, setNewDeviceIds] = useState([])
@@ -264,7 +275,17 @@ export default function Home() {
     fetchAll()
   }
 
-  const house = houses[0]
+  const house = houses.find((h) => h.id === selectedHouseId) ?? houses[0]
+
+  function selectHouse(houseId) {
+    setSelectedHouseId(houseId)
+    setShelfIds([])
+    try {
+      window.localStorage.setItem(SELECTED_HOUSE_KEY, houseId)
+    } catch {
+      // Geen opslag: de keuze geldt dan alleen nu.
+    }
+  }
   const houseLink = houseConnection(house, now)
   // Alleen als de box én de verbinding ernaartoe werken, kan een tik iets
   // doen. Anders tonen de kaarten de laatst bekende stand.
@@ -966,6 +987,8 @@ export default function Home() {
         {errorBanner}
         <SettingsView
           house={house}
+          houses={houses}
+          onSelectHouse={selectHouse}
           roomCount={roomsInHouse.length}
           userEmail={userEmail}
           onOpenHouse={() => setHouseModalOpen(true)}
@@ -987,6 +1010,7 @@ export default function Home() {
               houseLink={houseLink}
               now={now}
               attention={loaded ? attention : []}
+              onSwitchHouse={houses.length > 1 ? () => selectTab('instellingen') : undefined}
               onOpenDevice={(device) => setSettingsDeviceId(device.id)}
               // Alleen als de box bereikbaar is: anders weten we niet zeker
               // wat er aan staat, en zegt de verbindingsmelding genoeg.

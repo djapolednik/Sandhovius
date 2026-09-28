@@ -10,12 +10,27 @@ import { ArrowUpRightIcon } from '../lib/icons'
 // attention: [{ device, reason }] — wat aandacht nodig heeft (offline,
 // batterij bijna leeg, klaarzetten mislukt). Elke regel opent de details
 // van dat apparaat.
-export default function HousePanel({ house, realtimeLink, houseLink, now, summary, attention = [], onOpenDevice }) {
+// onSwitchHouse: alleen met meer dan één huis — naar de keuze in Opties.
+export default function HousePanel({
+  house,
+  realtimeLink,
+  houseLink,
+  now,
+  summary,
+  attention = [],
+  onOpenDevice,
+  onSwitchHouse,
+}) {
   return (
     <section className="panel house-panel" aria-labelledby="house-name">
       <h2 id="house-name" className="house-name">
         {house.name}
       </h2>
+      {onSwitchHouse && (
+        <button type="button" className="btn btn-plain section-action house-switch" onClick={onSwitchHouse}>
+          Ander huis
+        </button>
+      )}
       <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />
       {attention.length > 0 && (
         <div className="house-attention">
