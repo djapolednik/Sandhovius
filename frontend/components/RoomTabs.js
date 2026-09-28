@@ -48,7 +48,6 @@ export default function RoomTabs({ tabs, selectedId, onSelect }) {
           type="button"
           className={`room-tab ${selectedId === tab.id ? 'room-tab-active' : ''}`}
           aria-current={selectedId === tab.id ? 'true' : undefined}
-          title={tab.label}
           onClick={() => onSelect(tab.id)}
         >
           {tab.label}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useTheme } from '../lib/useTheme'
-import { RoomsIcon } from '../lib/icons'
+import { ArrowUpRightIcon, RoomsIcon } from '../lib/icons'
 
 // Het tabblad Instellingen: je huis en kamers, hoe de app eruitziet, en je
 // account. Geen losse menu's of vensters meer achter een avatar — alles
@@ -26,6 +26,7 @@ export default function SettingsView({ house, roomCount, userEmail, onOpenHouse,
                 {roomCount === 1 ? '1 kamer' : `${roomCount} kamers`}. Naam en kamers wijzigen
               </span>
             </span>
+            <ArrowUpRightIcon className="settings-link-arrow" width="18" height="18" aria-hidden="true" />
           </button>
         </section>
       )}

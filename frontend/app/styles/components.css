@@ -427,9 +427,11 @@
   box-shadow: 0 12px 36px -14px rgba(0, 0, 0, 0.35);
 }
 
+/* Op zwart geen schaduw (die zie je toch niet): een haarlijn, zoals elk
+   donker paneel. */
 [data-theme='dark'] .bottom-nav-list {
   border: 1px solid var(--border);
-  box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.8);
+  box-shadow: none;
 }
 
 .bottom-nav-item {
@@ -669,6 +671,12 @@
   .settings-link > .device-icon {
     display: none;
   }
+}
+
+.settings-link-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--text-secondary);
 }
 
 .settings-link-title {

@@ -4,6 +4,7 @@ import { memo, useRef } from 'react'
 import LightCard from './LightCard'
 import SensorCard from './SensorCard'
 import ClimateCard from './ClimateCard'
+import { formatTemperature, readTemperature } from '../lib/temperature'
 import { ArrowUpRightIcon, GearIcon, deviceTypeIcon } from '../lib/icons'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
@@ -21,6 +22,16 @@ export const DEVICE_TYPE_LABELS = {
 // Climate-entities rapporteren hun state als hvac_mode ("heat", "off", ...)
 // i.p.v. het simpele "on"/"off" van lampen/stopcontacten — vandaar het
 // aparte geval hier.
+// Wat een sensor nu meet, in woorden, voor de naam van zijn tegelknop.
+function describeReading(state) {
+  const parts = []
+  const temperature = readTemperature(state)
+  if (typeof temperature === 'number') parts.push(formatTemperature(temperature))
+  const occupancy = state?.occupancy ?? state?.motion
+  if (typeof occupancy === 'boolean') parts.push(occupancy ? 'er is nu beweging' : 'geen beweging')
+  return parts.join(', ')
+}
+
 export function isDeviceOn(type, state) {
   if (!state?.state) return false
   if (type === 'climate') return state.state !== 'off'
@@ -109,7 +120,12 @@ export default memo(function DeviceCard({
   // broertjes naast i.p.v. erin genest — een knop-in-een-knop heeft voor
   // schermlezers geen betrouwbare naam of gedrag. De leesbare inhoud
   // (naam, stand, meetwaarden) blijft gewone tekst in de tegel.
-  const actionLabel = canToggle ? device.name : `Details van ${device.name}`
+  // Een sensor opent details, maar zijn knop noemt ook wat hij meet: een
+  // schermlezer hoort dan wat je ziet ("20,5°, geen beweging").
+  const reading = device.type === 'sensor' ? describeReading(state) : ''
+  const actionLabel = canToggle
+    ? device.name
+    : `Details van ${device.name}${reading ? `, ${reading}` : ''}`
 
   // Knoppen in de tegel liggen boven de tegelknop (z-index) en vangen hun
   // eigen pointerdown, zodat een tik erop niet schakelt of de long-press

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { formatTemperature, temperatureColor } from '../lib/temperature'
+import { formatTemperature } from '../lib/temperature'
 import { FlameIcon, MinusIcon, PlusIcon, PowerIcon } from '../lib/icons'
 
 const TEMP_STEP = 0.5
@@ -57,6 +57,9 @@ export default function ClimateCard({
   // De ref spiegelt de state zodat de timer en de unmount-flush altijd de
   // nieuwste waarde versturen.
   const [pendingTarget, setPendingTarget] = useState(null)
+  // Wat een schermlezer hoort: het doel pas als je klaar bent met tikken,
+  // niet elke halve graad onderweg.
+  const [announced, setAnnounced] = useState('')
   const pendingRef = useRef(null)
   const commitTimer = useRef(null)
   const onSetRef = useRef(onSetTemperature)
@@ -68,7 +71,10 @@ export default function ClimateCard({
     const value = pendingRef.current
     pendingRef.current = null
     setPendingTarget(null)
-    if (value !== null) onSetRef.current?.(value)
+    if (value !== null) {
+      setAnnounced(`Doeltemperatuur ${formatTemperature(value)}`)
+      onSetRef.current?.(value)
+    }
   }
 
   // Wie de kaart verlaat (kamer wisselen) midden in het bijstellen,
@@ -85,8 +91,11 @@ export default function ClimateCard({
   const canSwitch = isOnline && typeof onToggleHeating === 'function'
 
   function adjust(delta) {
-    const next = Math.min(maxTemp, Math.max(minTemp, Math.round((shownTarget + delta) * 2) / 2))
-    if (next === shownTarget) return
+    // Vanaf de ref, niet vanaf de render: twee snelle tikken tussen twee
+    // renders mogen niet op dezelfde waarde landen.
+    const base = pendingRef.current ?? shownTarget
+    const next = Math.min(maxTemp, Math.max(minTemp, Math.round((base + delta) * 2) / 2))
+    if (next === base) return
     pendingRef.current = next
     setPendingTarget(next)
     clearTimeout(commitTimer.current)
@@ -95,6 +104,17 @@ export default function ClimateCard({
 
   function chooseMode(heating) {
     if (heating !== isOn) onToggleHeating()
+  }
+
+  // Verwarmen/Uit is een echte radiogroep: één tabstop (de gekozen stand),
+  // pijltjes wisselen van stand, zoals elke radiogroep.
+  function handleModeKey(e) {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return
+    e.preventDefault()
+    if (!canSwitch) return
+    chooseMode(!isOn)
+    const other = e.currentTarget.querySelector(isOn ? '[data-mode="off"]' : '[data-mode="heat"]')
+    other?.focus()
   }
 
   let status
@@ -150,15 +170,18 @@ export default function ClimateCard({
               {hasTarget && (
                 <>
                   <span className="dial-label">Doel</span>
-                  <span className="dial-target" aria-live="polite" aria-atomic="true">
+                  <span className="dial-target">
                     <span className="visually-hidden">Doeltemperatuur </span>
                     {formatTemperature(shownTarget)}
+                  </span>
+                  <span className="visually-hidden" aria-live="polite">
+                    {announced}
                   </span>
                 </>
               )}
               {hasCurrent && (
                 <span className="dial-now">
-                  Nu <span style={{ color: temperatureColor(current) }}>{formatTemperature(current)}</span>
+                  Nu <span>{formatTemperature(current)}</span>
                 </span>
               )}
             </div>
@@ -205,10 +228,13 @@ export default function ClimateCard({
               role="radiogroup"
               aria-label="Verwarming"
               onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={handleModeKey}
             >
               <button
                 type="button"
                 role="radio"
+                data-mode="heat"
+                tabIndex={isOn ? 0 : -1}
                 aria-checked={isOn}
                 className={`climate-mode ${isOn ? 'climate-mode-active' : ''}`}
                 disabled={!canSwitch}
@@ -220,6 +246,8 @@ export default function ClimateCard({
               <button
                 type="button"
                 role="radio"
+                data-mode="off"
+                tabIndex={isOn ? -1 : 0}
                 aria-checked={!isOn}
                 className={`climate-mode ${!isOn ? 'climate-mode-active' : ''}`}
                 disabled={!canSwitch}
