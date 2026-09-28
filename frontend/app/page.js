@@ -18,7 +18,9 @@ import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
 import { isBatteryLow } from '../lib/battery'
-import { PlusIcon, ScenesIcon, deviceTypeIcon } from '../lib/icons'
+import { PlusIcon, deviceTypeIcon } from '../lib/icons'
+import ScenesView from '../components/ScenesView'
+import SceneModal from '../components/SceneModal'
 
 const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
 
@@ -65,6 +67,11 @@ export default function Home() {
   const [houses, setHouses] = useState([])
   const [rooms, setRooms] = useState([])
   const [devices, setDevices] = useState([])
+  const [scenes, setScenes] = useState([])
+  // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
+  const [sceneRunState, setSceneRunState] = useState({})
+  // Open scène-sheet: 'new', een scène-ID, of null.
+  const [editingScene, setEditingScene] = useState(null)
   const [selectedRoomId, setSelectedRoomId] = useState('')
   // Deze telefoon ↔ Sandhovius: 'connecting' tot de eerste realtime-
   // verbinding staat, 'lost' zodra die wegvalt (de SDK herverbindt zelf).
@@ -261,6 +268,7 @@ export default function Home() {
     setHouses([])
     setRooms([])
     setDevices([])
+    setScenes([])
     setSelectedRoomId('')
     setRealtimeLink('connecting')
     setLoaded(false)
@@ -282,14 +290,16 @@ export default function Home() {
   async function fetchAll() {
     setError('')
     try {
-      const [houseRecords, roomRecords, deviceRecords] = await Promise.all([
+      const [houseRecords, roomRecords, deviceRecords, sceneRecords] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
         pb.collection('devices').getFullList({ expand: 'device_state_via_device' }),
+        pb.collection('scenes').getFullList({ sort: 'order,name' }),
       ])
       setHouses(houseRecords)
       setRooms(roomRecords)
       setDevices(deviceRecords)
+      setScenes(sceneRecords)
       setLoaded(true)
     } catch (err) {
       if (isSessionExpired(err)) {
@@ -336,6 +346,7 @@ export default function Home() {
     [rooms, house?.id, hiddenIds]
   )
   const devicesInHouse = devices.filter((device) => device.gateway === house?.id && !hiddenIds.includes(device.id))
+  const scenesInHouse = scenes.filter((scene) => scene.house === house?.id && !hiddenIds.includes(scene.id))
   const roomIds = roomsInHouse.map((room) => room.id)
   const unassignedDevices = devicesInHouse.filter((device) => !roomIds.includes(device.room))
 
@@ -618,7 +629,9 @@ export default function Home() {
   // binnen en bevestigt (of corrigeert) de optimistische kaart. Een
   // melding komt er alleen als het traag gaat of mislukt — en dan halen we
   // de echte stand opnieuw op, zodat de kaart niet blijft doen alsof.
-  function watchCommand(commandId, deviceName, deviceId) {
+  // options.onSettled(status): voor wie wil weten hoe het afliep (een
+  // scène-tegel). options.failMessage: eigen tekst bij mislukken.
+  function watchCommand(commandId, deviceName, deviceId, options = {}) {
     let unsub
     let stopped = false
     const slowTimer = setTimeout(() => {
@@ -627,6 +640,7 @@ export default function Home() {
     const giveUpTimer = setTimeout(() => {
       if (stopped) return
       stop()
+      options.onSettled?.('failed')
       showToast(`${deviceName} heeft niet gereageerd. Je ziet weer de laatst bekende stand.`, 'error')
       fetchAll()
     }, COMMAND_GIVE_UP_MS)
@@ -643,6 +657,7 @@ export default function Home() {
       .subscribe(commandId, (e) => {
         if (e.record.status === 'pending') return
         stop()
+        options.onSettled?.(e.record.status)
         // De box heeft het uitgevoerd: dat is de bevestiging, ook als de
         // nieuwe stand (device_state) nog onderweg is.
         if (e.record.status !== 'failed' && deviceId) {
@@ -653,7 +668,8 @@ export default function Home() {
         if (e.record.status === 'failed') {
           console.error('[command] mislukt:', e.record.error)
           showToast(
-            `${deviceName} reageerde niet. Controleer of het apparaat stroom heeft en probeer het opnieuw.`,
+            options.failMessage ??
+              `${deviceName} reageerde niet. Controleer of het apparaat stroom heeft en probeer het opnieuw.`,
             'error'
           )
           fetchAll()
@@ -826,6 +842,63 @@ export default function Home() {
       setNewDeviceIds((prev) => prev.filter((id) => id !== device.id))
       showToast(describeError(`${device.name} klaarzetten`, err), 'error')
     }
+  }
+
+  // Een scène uitvoeren: één commando, de box doet de rest (zie runScene in
+  // de agent). De tegel zegt "Wordt uitgevoerd" tot de box klaar is, en
+  // dan even "Klaar"; de apparaten zelf veranderen via de realtime stand.
+  async function runScene(scene) {
+    if (!houseReachable) {
+      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      return
+    }
+    const setRun = (value) =>
+      setSceneRunState((prev) => {
+        const next = { ...prev }
+        if (value) next[scene.id] = value
+        else delete next[scene.id]
+        return next
+      })
+    setRun('running')
+    try {
+      const command = await pb
+        .collection('commands')
+        .create({ scene: scene.id, action: 'run_scene', status: 'pending' }, { requestKey: null })
+      watchCommand(command.id, `"${scene.name}"`, null, {
+        failMessage: `"${scene.name}" is niet helemaal gelukt. Kijk bij Let op of al je apparaten bereikbaar zijn.`,
+        onSettled: (status) => {
+          if (status !== 'sent') return setRun(null)
+          setRun('done')
+          setTimeout(() => setRun(null), 2000)
+        },
+      })
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      setRun(null)
+      showToast(describeError(`"${scene.name}" uitvoeren`, err), 'error')
+    }
+  }
+
+  async function saveScene(sceneId, fields) {
+    if (sceneId) {
+      const updated = await pb.collection('scenes').update(sceneId, fields)
+      setScenes((prev) => prev.map((s) => (s.id === sceneId ? updated : s)))
+    } else {
+      const created = await pb
+        .collection('scenes')
+        .create({ ...fields, house: house.id, order: scenesInHouse.length })
+      setScenes((prev) => [...prev, created])
+    }
+  }
+
+  function deleteScene(sceneId) {
+    const scene = scenes.find((s) => s.id === sceneId)
+    deleteLater(
+      sceneId,
+      `Scène "${scene?.name ?? ''}"`,
+      () => pb.collection('scenes').delete(sceneId),
+      () => setScenes((prev) => prev.filter((s) => s.id !== sceneId))
+    )
   }
 
   const latest = useRef(null)
@@ -1088,24 +1161,24 @@ export default function Home() {
       </>
     )
   } else if (tab === 'scenes') {
-    // Scènes zijn de volgende functie. Tot die er is: eerlijk zeggen wat
-    // het wordt, zonder knoppen die nog niets doen.
     header = <Header title="Scènes" />
     content = (
-      <section className="panel intro-panel" aria-labelledby="scenes-soon-title">
-        <div className="intro-panel-icons" aria-hidden="true">
-          <span className="device-icon">
-            <ScenesIcon width="22" height="22" />
-          </span>
-        </div>
-        <h2 id="scenes-soon-title" className="intro-panel-title">
-          Scènes komen eraan
-        </h2>
-        <p className="intro-panel-text">
-          Met een scène zet je met één tik meerdere apparaten tegelijk goed, bijvoorbeeld "Naar bed": alle lampen uit
-          en de verwarming lager. Zodra het klaar is, vind je het hier.
-        </p>
-      </section>
+      <>
+        {errorBanner}
+        {noHouse}
+        {skeleton}
+        {loaded && house && (
+          <ScenesView
+            scenes={scenesInHouse}
+            deviceNameById={Object.fromEntries(devicesInHouse.map((d) => [d.id, d.name]))}
+            runState={sceneRunState}
+            canRun={houseReachable}
+            onRun={runScene}
+            onEdit={(scene) => setEditingScene(scene.id)}
+            onCreate={() => setEditingScene('new')}
+          />
+        )}
+      </>
     )
   } else if (tab === 'instellingen') {
     header = <Header title="Opties" />
@@ -1230,6 +1303,18 @@ export default function Home() {
           onMoveRoom={moveRoom}
           onDeleteRoom={deleteRoom}
           onClose={() => setHouseModalOpen(false)}
+        />
+      )}
+
+      {editingScene && (
+        <SceneModal
+          key={editingScene}
+          scene={editingScene === 'new' ? null : scenesInHouse.find((s) => s.id === editingScene)}
+          devices={devicesInHouse.filter((d) => d.type !== 'sensor')}
+          roomNameById={roomNameById}
+          onSave={(fields) => saveScene(editingScene === 'new' ? null : editingScene, fields)}
+          onDelete={deleteScene}
+          onClose={() => setEditingScene(null)}
         />
       )}
 

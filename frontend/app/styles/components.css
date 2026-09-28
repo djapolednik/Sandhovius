@@ -977,3 +977,119 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* ==================== Scènes ====================
+   Tegels in hetzelfde raster als apparaten. Een tik voert de scène uit;
+   "Wijzigen" opent de sheet. Geen gloed: een scène is geen lamp die aan
+   staat, alleen een opdracht. */
+.scene-tile {
+  min-height: 11rem;
+  gap: 0.35rem;
+}
+
+.scene-icon {
+  margin-bottom: 0.4rem;
+}
+
+.scene-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.scene-summary {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.scene-running .scene-icon,
+.scene-done .scene-icon {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.scene-done .scene-summary {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* "Nieuwe scène": een lege plek in het raster, gestippeld zoals een tegel
+   die nog ingevuld wordt. */
+.scene-new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 11rem;
+  width: 100%;
+  border: 1px dashed var(--text-secondary);
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scene-new:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Scène-sheet: per apparaat een naam en drie standen. */
+.scene-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scene-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.scene-row-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+  font-weight: 600;
+}
+
+.scene-row-room {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.segmented-small .segmented-option {
+  min-height: 44px;
+  font-size: 0.9rem;
+}
+
+.scene-temperature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.scene-temperature-value {
+  min-width: 4.5rem;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

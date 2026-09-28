@@ -81,12 +81,13 @@ cd frontend && npx next build                     # moet slagen vóór commit
 - Liveness: heartbeat elke 30 s; PWA toont "box reageert niet" na 90 s stilte en blokkeert dan schakelen
 - State-reconciliatie: agent haalt bij start, na HA-reconnect en na provisioning de actuele stand op (fix voor nieuwe devices die "offline" bleven)
 - PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/+/Scènes/Opties (rond "+" in het midden om een apparaat toe te voegen), favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
+- **Scènes**: collectie `scenes` (huis, naam, volgorde, `actions` als JSON in command-woorden); uitvoeren op de box via één command `{ scene, action: "run_scene" }` → agent `runScene` (alleen scènes en apparaten van het eigen huis). Command-regel: óf een device-commando óf een scène-commando, nooit een mix. Scènes-tab met tegels (tik = uitvoeren) en een scène-sheet
 - PWA-basis: installeerbaar (manifest, voorlopig icoon), thema Licht/Donker/Automatisch, "Alles uit", "Let op"-overzicht, "Ongedaan maken" (verwijderen gaat pas na 6 s echt), kamers en favorieten ordenen (`rooms.order`, `devices.favorite_order`), meerdere huizen, wachtwoord vergeten/wijzigen, "Opnieuw proberen" bij mislukt klaarzetten (command-actie `provision`)
 
 ## Volgende Stappen
 1. **Pushen** (`git push`) en de frontend-container herbouwen als die nog oud is.
-2. **Scènes/routines** (afgesproken als volgende feature): PocketBase-collectie (`scenes`: naam, huis, acties), agent → HA `scene.turn_on` of een reeks service calls, daarna het **Scènes-tabblad** vullen (bestaat al, toont nu "Scènes komen eraan"). Eerst het datamodel voorstellen, dan bouwen.
-3. **Schema's/tijdsturing** (bv. verwarming van–tot) — pas na scènes; waarschijnlijk via HA-automations.
+2. **Schema's/tijdsturing** (bv. "Naar bed" om 23:00, verwarming van–tot): volgende feature. Bouwt op scènes: de agent voert op tijd een `run_scene` uit, zodat het ook werkt als de app dicht is. Eerst het datamodel voorstellen (waar wordt het schema bewaard, wie klokt: agent of HA-automation).
+3. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) en een scène op Home als snelknop — alleen als er vraag naar is.
 4. **Claim-flow** voor een nieuwe box: serienummer bij productie, koppelen aan een account via `houses.claimed_at`/`user`. Vervangt later het ID-bestand in `registerGateway()` (zie memory `box-house-identity`).
 5. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports.
 6. **SMTP in PocketBase** instellen (nu uit): zonder dat verstuurt "Wachtwoord vergeten?" geen mail. Ook de afzender (`support@example.com`) en `appURL` goed zetten.
