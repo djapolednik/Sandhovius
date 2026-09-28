@@ -20,7 +20,7 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 │ ├─ Zigbee2MQTT (USB coordinator)
 │ └─ Go Local Agent (daemon)
 │
-├─ Cloud Backend (Scaleway VPS, later)
+├─ Backend (nu lokaal in Docker; later Scaleway VPS)
 │ ├─ PocketBase (Go-based, users + relay)
 │ └─ Headscale (Tailscale control server, Zero Trust ACLs)
 │
@@ -36,64 +36,71 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - Watchdog → Network resilience, exponential backoff, state reconciliation
 
 ## Belangrijke Bestanden
-- `/docker-compose.yml` - Gateway stack (Home Assistant, Mosquitto, Zigbee2MQTT, Go Agent)
-- `/internal/app/` - Go agent core logic (SoC: config, transport, coordination)
-- `/internal/mqtt/` - MQTT client & message handling
-- `/internal/websocket/` - Home Assistant WebSocket auth & state listener
-- `/cmd/agent/main.go` - Entry point
+- `docker-compose.yml` — hele lokale stack: homeassistant, mosquitto, zigbee2mqtt, agent, pocketbase, frontend (containers heten `sandhovius-*`)
+- `agent/main/main.go` — entry point van de Go agent
+- `agent/internal/app/agent.go` — kern: gateway-registratie (vast record-ID in `/data/gateway_id`), heartbeat (30 s op `houses.last_seen`), HA-events → PocketBase, commands → HA, provisioning van nieuwe devices, state-reconciliatie bij start/reconnect
+- `agent/internal/homeassistant/` — HA websocket (events), REST (`CallService`, `GetState`), registry (helpers aanmaken)
+- `agent/internal/pocketbase/`, `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
+- `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
+- `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Instellingen), commands
+- `frontend/components/` — tegels (`DeviceCard`, `LightCard`, `ClimateCard`, `SensorCard`), `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
+- `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
+- `PRODUCT.md` (doelgroep, principes) en `DESIGN.md` + `.impeccable/design.json` (design system) — lees DESIGN.md vóór UI-werk
 
 ## Tech Stack
-- **Go 1.21+** - Local agent (statically compiled, <20MB RAM)
-- **Home Assistant Core** - State management, Zigbee coordination
-- **Mosquitto** - MQTT broker (Zigbee2MQTT ↔ Go Agent)
-- **Zigbee2MQTT** - USB coordinator (Sonoff ZBDongle-P / HA Connect ZBT-1)
-- **Docker Compose** - Local dev environment orchestration
-- **PocketBase** - Multi-tenant backend (users, JWT, relay)
-- **Headscale** - Self-hosted Tailscale, Zero Trust networking
-- **Next.js** - PWA frontend (mobile-first, real-time state)
+- **Go** — local agent (Dockerfile build)
+- **Home Assistant Core** — state management; devices uit de UI worden HA-helpers (`input_boolean` / `input_number`)
+- **Mosquitto** + **Zigbee2MQTT** — Zigbee ↔ MQTT ↔ agent
+- **PocketBase 0.40** — users, houses, rooms, devices, device_state, commands; realtime naar de PWA
+- **Next.js 16** (Turbopack, JS, geen TypeScript) — PWA; lees `frontend/node_modules/next/dist/docs/` bij twijfel, API's wijken af
+- **Headscale** — later (remote toegang, zero external ports)
 
 ## Development Setup
 
 ```bash
-# Clone & navigate
-git clone <repo>
-cd sandhovius
+docker compose up -d                              # hele stack
+docker compose up -d --build agent frontend       # na codewijzigingen (beide draaien als gebouwde image, geen hot reload)
+docker compose logs -f agent
 
-# Start local stack
-docker-compose up -d
-
-# Services exposed locally
-# - Home Assistant: http://localhost:8123
-# - MQTT: localhost:1883
-# - PocketBase: http://localhost:8090 (admin: test@example.com/123456)
-# - Go Agent: connects internally to MQTT + HA WebSocket
-
-# Build Go agent
-cd cmd/agent
-go build -o ../../bin/agent
-
-# View logs
-docker-compose logs -f go-agent
+# Lokaal checken zonder container
+cd agent && go vet ./... && go build ./...
+cd frontend && npx next build                     # moet slagen vóór commit
 ```
 
-## Current Phase
-**Fase 1 (PoC lokaal):** ✅ Complete
-- Docker Compose stack stabiel
-- Go Agent MQTT + WebSocket connectivity verified
-- Ready for Fase 2
+- Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`) · PWA: http://localhost:3000
+- Visueel testen: Chrome ontbreekt op deze machine; Edge headless via DevTools-protocol werkt (Playwright-plugin niet).
 
-**Fase 2 (Current Target):** 🚧 In Progress
-1. PocketBase lokaal in Docker (users, gateways, device schema)
-2. Go Agent → PocketBase relay stream (persistent WebSocket)
-3. Next.js PWA frontend + JWT auth flow
-4. Real-time state binding & command pipeline
+## Huidige Status (2026-09-28, `main` @ 3ae53d3, 12 commits vóór origin — nog niet gepusht)
+**Fase 1** ✅ — lokale stack, agent ↔ MQTT/HA.
+
+**Fase 2** grotendeels ✅:
+- PocketBase-schema + JWT-login in de PWA
+- Command-pipeline: PWA → `commands` → agent → HA (toggle, set_temperature), status/fout terug
+- Realtime: device_state, devices en houses live in de PWA
+- Box-identiteit: huis wordt éénmalig aangemaakt, gebonden op record-ID (niet op naam; naam is hernoembaar)
+- Liveness: heartbeat elke 30 s; PWA toont "box reageert niet" na 90 s stilte en blokkeert dan schakelen
+- State-reconciliatie: agent haalt bij start, na HA-reconnect en na provisioning de actuele stand op (fix voor nieuwe devices die "offline" bleven)
+- PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/Instellingen, favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
+
+## Volgende Stappen
+1. **Pushen** (`git push`) en de frontend-container herbouwen als die nog oud is.
+2. **Scènes/routines** (afgesproken als volgende feature): PocketBase-collectie (`scenes`: naam, huis, acties), agent → HA `scene.turn_on` of een reeks service calls, daarna een **Scènes-tab** in `BottomNav` (nu 3 tabs). Eerst het datamodel voorstellen, dan bouwen.
+3. **Schema's/tijdsturing** (bv. verwarming van–tot) — pas na scènes; waarschijnlijk via HA-automations.
+4. **Claim-flow** voor een nieuwe box: serienummer bij productie, koppelen aan een account via `houses.claimed_at`/`user`. Vervangt later het ID-bestand in `registerGateway()` (zie memory `box-house-identity`).
+5. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports.
+6. Kleiner/los: `commands` heeft geen timestamps (debuggen lastig — overweeg `autodate`-velden); `frontend/app/globals.css.bak` is een oude backup die weg kan; `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map).
+
+## Werkafspraken
+- UI-copy is Nederlands, zinsletters, geen hoofdletter-labels; zie Named Rules in DESIGN.md (o.a. Real Light Rule: alleen live apparaten gloeien).
+- Commits: kleine logische commits op een feature-branch, daarna fast-forward naar `main`.
+- Geen echte apparaten schakelen tijdens tests zonder het te zeggen; herstel testdata na afloop.
 
 ## Key Constraints
 - **Time:** 10–15 uur/week, ~500 uur total scope, 4–5 month target
 - **Network:** Zero external ports; all via Headscale mesh tunnel
 - **Resilience:** Watchdog with exponential backoff; state reconciliation on reconnect
 - **Privacy:** No cloud logs; device data stays local
-- **Licensing:** Permissive open-source (BSD-3-Clause, MIT, Apache 2.0) for dependencies; own code stays proprietary
+- **Licensing:** Permissive open-source (BSD-3-Clause, MIT, Apache 2.0) for dependencies; own code stays proprietary (daarom Urbanist/OFL i.p.v. Lufga)
 
 ## Development Mentor Role
 From now on, you are my collaborative senior software engineering mentor. Your primary goal is to guide my technical growth, help me build high-performance systems, and maintain momentum during the development of this project.
