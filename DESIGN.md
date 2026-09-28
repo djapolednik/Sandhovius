@@ -205,14 +205,14 @@ components:
 
 Walk into a dark house in the evening and you know at once what is on: the lamp that glows, the thermostat's small light, everything else resting in the dark. Sandhovius works the same way. The surfaces are calm and quiet: black at night, soft mist by day. Only the things that are on light up: a lamp that is on fills its tile with warm light, a plug that is on with a cool power blue, and the thermostat's dial glows Electric Blue while it heats. You never have to read to know the state of the house; you see it, the way you see a lit window from the street.
 
-The app is still a set of familiar household controls, arranged by room, and the user should never feel they are "using a smart-home system". They are turning on the kitchen light. The app is made for a phone or an iPad in the hand, so its navigation sits at the bottom, within reach of the thumb: **Home** (how the house is doing, favourites and the thermostat), **Kamers** (every device, room by room) and **Instellingen**. The screens are a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with a large lamp icon and one big word ("Aan" or "Uit"). The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, a lamp's warm light swells up over about a second and dies away even more slowly. There is no extra "you tapped this" effect: the light that swells up or dies away is the confirmation, as with a real switch. Everything else about a device sits behind "Details" (or a long-press) in a sheet and never crowds a tile.
+The app is still a set of familiar household controls, arranged by room, and the user should never feel they are "using a smart-home system". They are turning on the kitchen light. The app is made for a phone or an iPad in the hand, so its navigation sits at the bottom, within reach of the thumb: **Home** (how the house is doing, favourites and the thermostat), **Kamers** (every device, room by room), **Scènes** and **Opties**. The screens are a bento of rounded panels: a house panel that says how the home is doing, and one tile per device, sized by how much control it needs. A lamp is a small tile with a large lamp icon and one big word ("Aan" or "Uit"). The thermostat is a large panel with a dial. Motion confirms and never performs: tiles compress slightly under the thumb, a lamp's warm light swells up over about a second and dies away even more slowly. There is no extra "you tapped this" effect: the light that swells up or dies away is the confirmation, as with a real switch. Everything else about a device sits behind "Details" (or a long-press) in a sheet and never crowds a tile.
 
 **The tile is the state.** A lamp that is on is unmistakable from across the room: warm light glows out from behind its icon, the icon itself lights up amber, and "Aan" is the largest word. Off is quiet: no glow, a gray icon, "Uit" in the secondary color.
 
 This is explicitly **not** a Home Assistant dashboard, which is dense, entity-centric and built for power users. It is not a generic SaaS admin (sidebars, data tables, KPI tiles). And although it is dark, it is not a techy neon console: only real light sources glow, glassmorphism is banned, and there are no sci-fi decorations.
 
 **Key Characteristics:**
-- Navigation at the bottom, in thumb reach: Home, Kamers, Instellingen, each with icon and word
+- Navigation at the bottom, in thumb reach: Home, Kamers, +, Scènes, Opties, each tab with icon and word
 - A bento of rounded panels (28px): a house panel plus one tile per device, sized by the control it needs
 - State is readable at a glance: a warmly lit lamp tile with "Aan" for on, a quiet tile with "Uit" for off, text for offline, amber for attention
 - Only live energy glows: warm light from a lamp that is on, power blue from a plug that is on, Electric Blue from the thermostat while it heats
@@ -264,7 +264,7 @@ Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, s
 ### Hierarchy
 - **Display** (600, 2.5rem, −0.03em): the login title only.
 - **Dial** (600, 3.4rem, −0.04em): the thermostat target inside the dial, the largest number in the app.
-- **Page title** (600, 2rem, −0.03em): the h1 of each tab ("Welkom thuis", "Kamers", "Instellingen"). On Home the date sits above it at 1rem/500 in Quiet Slate.
+- **Page title** (600, 2rem, −0.03em): the h1 of each tab ("Welkom thuis", "Kamers", "Scènes", "Opties"). On Home the date sits above it at 1rem/500 in Quiet Slate.
 - **Headline** (600, 1.75rem, −0.02em): the house name in the house panel (an h2).
 - **State** (600, 2.4rem, −0.02em): "Aan"/"Uit" on light tiles, in the primary text color ("Uit" in Quiet Slate). The sensor temperature is 2.75rem, the house-summary count 2rem.
 - **Title** (600, 1.35rem): modal and sheet titles.
@@ -283,7 +283,7 @@ Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, s
 
 The page is centered on `--content-max` (640px on phones, 1000px from 768px, 1240px from 1200px, 1480px from 1600px) with 1rem side padding (1.5rem from 768px), extra room at the bottom for the navigation, and safe-area insets.
 
-**Navigation** sits at the bottom: a floating pill bar (max 30rem wide, centered, above the safe area) with four tabs, **Home**, **Kamers**, **Scènes** and **Instellingen**, each an icon plus a word, and exactly in the middle a standalone round **+** (60px) that adds a device from any tab. The + rises a little above the bar, and a ring in the bar's own color makes the bar run around it (a hairline around the ring in dark). It is an action, not a tab: an Inset Mist circle with an Electric Blue plus, so the active tab stays the only blue fill; its name is "Apparaat toevoegen". A device added from Home that doesn't land on Home (it isn't the first favourite) takes you to its room on Kamers. On a phone "Instel-lingen" breaks over two lines at a soft hyphen. At large text the bar becomes two columns with the + as a wide pill in the middle row (Home, Kamers / + / Scènes, Instellingen). **Scènes** is a "komen eraan" screen for now: one panel that says what a scene will do, with no controls that don't work yet. The tab lives in the URL hash (`#kamers`), so the phone's back button steps between tabs and a reload keeps your place.
+**Navigation** sits at the bottom: a floating pill bar (max 30rem wide, centered, above the safe area) with four tabs, **Home**, **Kamers**, **Scènes** and **Opties**, each an icon plus a word, and exactly in the middle a standalone round **+** (60px) that adds a device from any tab. The + rises a little above the bar, and a ring in the bar's own color makes the bar run around it (a hairline around the ring in dark). It is an action, not a tab: an Inset Mist circle with an Electric Blue plus, so the active tab stays the only blue fill; its name is "Apparaat toevoegen". A device added from Home that doesn't land on Home (it isn't the first favourite) takes you to its room on Kamers. The settings tab is called **Opties** so every label fits on one line in five slots (its hash stays `#instellingen`). At large text the bar becomes two columns with the + as a wide pill in the middle row (Home, Kamers / + / Scènes, Opties). **Scènes** is a "komen eraan" screen for now: one panel that says what a scene will do, with no controls that don't work yet. The tab lives in the URL hash (`#kamers`), so the phone's back button steps between tabs and a reload keeps your place.
 
 **Page head:** each tab opens with a large title on the page itself (no colored bar) and at most one action on the right: the date above "Welkom thuis" on Home, "+ Toevoegen" on Kamers.
 
@@ -293,7 +293,7 @@ The page is centered on `--content-max` (640px on phones, 1000px from 768px, 124
 
 **Kamers:** a horizontally scrolling row of filled room pills (no visible scrollbar; the edge fades where more pills are hidden; the active pill scrolls into view), "N apparaten", then that room's bento.
 
-**Instellingen:** stacked panels (max 40rem): Huis (opens house and rooms), Weergave (dark mode), Account (who is logged in, Uitloggen).
+**Opties:** stacked panels (max 40rem): Huis (opens house and rooms), Weergave (dark mode), Account (who is logged in, Uitloggen).
 
 **Home on wide screens:** from 900px (iPad landscape and up), a two-column grid with the house panel as a fixed (sticky) column of 15–18rem on the left and the sections beside it; the device area always takes the right column, even while the house panel is still loading. Below 900px they stack, with the house panel first. The house panel stands in for the weather tile in the inspiration, but carries real information: the house name, the connection line or notice, and the house summary ("1 lamp staat aan", "2 lampen en 1 stopcontact staan aan", with room chips that jump to the room, or "Alle lampen en stopcontacten zijn uit"; hidden while the box is unreachable). When the dashboard is at least 68rem wide (a desktop at normal text size), Favorieten (with Staat aan below it) and Temperatuur sit side by side instead of stacked. The favourites column is as wide as its tiles (at least two), and the thermostat gets a fixed 28rem column right next to it, so any empty space falls at the end of the row rather than between the sections.
 
@@ -307,7 +307,7 @@ The page is centered on `--content-max` (640px on phones, 1000px from 768px, 124
 - Below 17rem the thermostat puts its status on its own line above − and +, and stacks the modes.
 - The navigation labels are capped at a third of the bar (`min(0.85rem, 4.2cqi)`).
 - The house name is capped at `13cqi` so a street name stays whole.
-- In Instellingen the decorative icon gives way below 18rem.
+- In Opties the decorative icon gives way below 18rem.
 
 Icon circles grow moderately with the text (`clamp(44px, 2.75rem, 64px)`, a lamp `clamp(72px, 4.5rem, 104px)`), and the symbol scales with its circle.
 
@@ -387,7 +387,7 @@ In the house panel, under the name. Healthy: a quiet line with a green check, "V
 ### Toasts
 Fixed dark ink snackbars with white text, 18px radius, above the navigation on phones and at the top right on wide screens. They are **not** confirmations of taps (the tile is the confirmation). They appear only when a command is slow ("… reageert nog niet. Even geduld…" after 4s) or fails. They hold for 3.5s (errors 6s, dismissible, in a separate `role="alert"` region). Errors turn toast-error red.
 
-### Instellingen
+### Opties
 Stacked panels with a quiet heading each. **Huis** is one large row (icon, house name, "3 kamers. Naam en kamers wijzigen") that opens the house-and-rooms sheet; **Weergave** holds the dark-mode switch (it follows the phone's theme until you choose); **Account** says who is logged in and has "Uitloggen" as a secondary pill.
 
 ## Do's and Don'ts

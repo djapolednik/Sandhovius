@@ -800,7 +800,7 @@ export default function Home() {
       </section>
     )
   } else if (tab === 'instellingen') {
-    header = <Header title="Instellingen" />
+    header = <Header title="Opties" />
     content = (
       <>
         {errorBanner}

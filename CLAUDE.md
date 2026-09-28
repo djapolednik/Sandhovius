@@ -42,7 +42,7 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - `agent/internal/homeassistant/` — HA websocket (events), REST (`CallService`, `GetState`), registry (helpers aanmaken)
 - `agent/internal/pocketbase/`, `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
 - `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
-- `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Instellingen), commands
+- `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Scènes/Opties; hash `#instellingen` voor Opties), commands
 - `frontend/components/` — tegels (`DeviceCard`, `LightCard`, `ClimateCard`, `SensorCard`), `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
 - `PRODUCT.md` (doelgroep, principes) en `DESIGN.md` + `.impeccable/design.json` (design system) — lees DESIGN.md vóór UI-werk
@@ -80,11 +80,11 @@ cd frontend && npx next build                     # moet slagen vóór commit
 - Box-identiteit: huis wordt éénmalig aangemaakt, gebonden op record-ID (niet op naam; naam is hernoembaar)
 - Liveness: heartbeat elke 30 s; PWA toont "box reageert niet" na 90 s stilte en blokkeert dan schakelen
 - State-reconciliatie: agent haalt bij start, na HA-reconnect en na provisioning de actuele stand op (fix voor nieuwe devices die "offline" bleven)
-- PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/Instellingen, favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
+- PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/+/Scènes/Opties (rond "+" in het midden om een apparaat toe te voegen), favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
 
 ## Volgende Stappen
 1. **Pushen** (`git push`) en de frontend-container herbouwen als die nog oud is.
-2. **Scènes/routines** (afgesproken als volgende feature): PocketBase-collectie (`scenes`: naam, huis, acties), agent → HA `scene.turn_on` of een reeks service calls, daarna een **Scènes-tab** in `BottomNav` (nu 3 tabs). Eerst het datamodel voorstellen, dan bouwen.
+2. **Scènes/routines** (afgesproken als volgende feature): PocketBase-collectie (`scenes`: naam, huis, acties), agent → HA `scene.turn_on` of een reeks service calls, daarna het **Scènes-tabblad** vullen (bestaat al, toont nu "Scènes komen eraan"). Eerst het datamodel voorstellen, dan bouwen.
 3. **Schema's/tijdsturing** (bv. verwarming van–tot) — pas na scènes; waarschijnlijk via HA-automations.
 4. **Claim-flow** voor een nieuwe box: serienummer bij productie, koppelen aan een account via `houses.claimed_at`/`user`. Vervangt later het ID-bestand in `registerGateway()` (zie memory `box-house-identity`).
 5. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports.

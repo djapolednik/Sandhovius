@@ -451,8 +451,8 @@
   border-radius: 999px;
   background: transparent;
   color: var(--text-secondary);
-  /* Groeit gewoon mee met de tekst; bij grote tekst loopt het woord over
-     twee regels (zie het zachte afbreekstreepje in BottomNav.js). */
+  /* Groeit gewoon mee met de tekst; bij grote tekst gaat de balk naar
+     twee kolommen (zie de container query hieronder). */
   font-size: 0.85rem;
   line-height: 1.15;
   text-align: center;

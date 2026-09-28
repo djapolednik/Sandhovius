@@ -6,9 +6,9 @@ export const TABS = [
   { id: 'home', label: 'Home', Icon: HomeIcon },
   { id: 'kamers', label: 'Kamers', Icon: RoomsIcon },
   { id: 'scenes', label: 'Scènes', Icon: ScenesIcon },
-  // Zacht afbreekstreepje: bij grote tekst breekt het woord netjes af
-  // ("Instel-lingen") in plaats van uit de balk te lopen.
-  { id: 'instellingen', label: 'Instel\u00ADlingen', Icon: GearIcon },
+  // "Opties": past op één regel in de balk met vijf plekken. De hash
+  // blijft #instellingen, zodat bestaande links en de terugknop werken.
+  { id: 'instellingen', label: 'Opties', Icon: GearIcon },
 ]
 
 // De hoofdnavigatie onderin, binnen bereik van je duim — de app wordt
