@@ -299,6 +299,16 @@ The page is centered on `--content-max` (640px on phones, 1000px from 768px, 124
 
 **Device bento:** fluid columns of at least 10.5rem (`repeat(auto-fill, minmax(min(10.5rem, 100%), 1fr))`, `grid-auto-flow: dense`) with 0.9rem gaps, which gives two columns on a phone. Tiles are at least 12rem tall and equally tall within a row. The thermostat spans two columns once there are two (container query at 21.9rem), and also two rows once there are three columns (33.3rem). The container queries mean that at 200% text it falls back to one full-width column instead of forcing a phantom column.
 
+**Large text (up to 200%):** nothing may overlap or spill, and names break at word boundaries (`overflow-wrap: break-word` with `hyphens: auto`; only e-mail addresses may break anywhere). Container queries in rem only fire when the text is large relative to the space:
+- The page head wraps, so the action drops below the title.
+- The dial's text scales with the dial (`cqi`), not only with the font size.
+- Below 17rem the thermostat puts its status on its own line above − and +, and stacks the modes.
+- The navigation labels are capped at a third of the bar (`min(0.85rem, 4.2cqi)`).
+- The house name is capped at `13cqi` so a street name stays whole.
+- In Instellingen the decorative icon gives way below 18rem.
+
+Icon circles grow moderately with the text (`clamp(44px, 2.75rem, 64px)`, a lamp `clamp(72px, 4.5rem, 104px)`), and the symbol scales with its circle.
+
 Overlays are centered modals (max 420px wide) on wide screens and **bottom sheets** on phones (≤480px: full width, 28px top corners, anchored to the bottom, safe-area padding), so forms sit in thumb reach. Toasts stack above the navigation on phones and at the top right from 768px. While loading, four breathing tile-shaped placeholders hold the grid, the first shaped like the thermostat.
 
 Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg 1.25rem, xl 1.5rem.

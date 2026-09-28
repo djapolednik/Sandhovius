@@ -174,7 +174,8 @@
   font-size: 0.95rem;
   line-height: 1.4;
   margin: 0 0 1rem;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .error-banner-action {
@@ -300,7 +301,8 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .modal-divider {
@@ -406,6 +408,7 @@
   bottom: max(0.75rem, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: min(26rem, calc(100% - 1.5rem));
+  container-type: inline-size;
 }
 
 .bottom-nav-list {
@@ -438,7 +441,10 @@
   border-radius: 999px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  /* Groeit mee met de tekstgrootte, maar niet verder dan er in een derde
+     van de balk past: "Instellingen" moet heel blijven. Op normale grootte
+     wint 0.85rem. */
+  font-size: min(0.85rem, 4.2cqi);
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -524,7 +530,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
   /* Duur per toast (zie showToast): fouten blijven langer staan zodat ze
      ook voor tragere lezers te lezen zijn. */
   animation: toast-in-out var(--toast-duration, 2s) ease forwards;
@@ -606,6 +613,7 @@
 
 .settings-section {
   padding: 1.1rem 1.25rem 1.25rem;
+  container-type: inline-size;
 }
 
 .settings-heading {
@@ -651,10 +659,19 @@
   min-width: 0;
 }
 
+/* Grote tekst: het (decoratieve) icoon wijkt, zodat de huisnaam de
+   breedte krijgt en niet midden in een woord afbreekt. */
+@container (max-width: 18rem) {
+  .settings-link > .device-icon {
+    display: none;
+  }
+}
+
 .settings-link-title {
   font-size: 1.1rem;
   font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .settings-link-sub {
