@@ -45,12 +45,13 @@ export const viewport = {
 // active on first paint — without this, the page would briefly render the
 // light theme and then flash to dark once React mounts and reads
 // localStorage.
-// Zonder eigen keuze volgt de app het thema van de telefoon.
+// Zonder eigen keuze (of met "automatisch") volgt de app het thema van de
+// telefoon. Zie ThemeContext.js voor de keuze zelf.
 const themeInitScript = `
 (function() {
   try {
     var stored = localStorage.getItem('sandhovius-theme');
-    var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     if (dark) document.documentElement.setAttribute('data-theme', 'dark');
   } catch (e) {}
 })();

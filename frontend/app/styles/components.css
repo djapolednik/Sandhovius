@@ -848,3 +848,61 @@
   font-weight: 500;
   color: var(--text-secondary);
 }
+
+/* ==================== Keuze uit een paar standen ====================
+   Eén balk op het binnenvlak met de standen als pillen; de gekozen stand
+   is Electric Blue, zoals het actieve tabblad. Onder de balk echte
+   radioknoppen (zie SettingsView). */
+.segmented {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.3rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.segmented-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.segmented-option-selected {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.segmented-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Grote tekst: de drie standen onder elkaar. */
+@container (max-width: 18rem) {
+  .segmented {
+    grid-auto-flow: row;
+    border-radius: var(--radius-tile);
+  }
+}
+
+.settings-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}

@@ -6,8 +6,14 @@ import { ArrowUpRightIcon, RoomsIcon } from '../lib/icons'
 // Het tabblad Instellingen: je huis en kamers, hoe de app eruitziet, en je
 // account. Geen losse menu's of vensters meer achter een avatar — alles
 // staat hier op één plek, in gewone rijen.
+const THEME_OPTIONS = [
+  { value: 'light', label: 'Licht' },
+  { value: 'dark', label: 'Donker' },
+  { value: 'auto', label: 'Automatisch' },
+]
+
 export default function SettingsView({ house, roomCount, userEmail, onOpenHouse, onLogout }) {
-  const { isDarkMode, toggleTheme } = useTheme()
+  const { mode, setMode } = useTheme()
 
   return (
     <div className="settings-view">
@@ -35,19 +41,25 @@ export default function SettingsView({ house, roomCount, userEmail, onOpenHouse,
         <h2 id="settings-look" className="settings-heading">
           Weergave
         </h2>
-        <div className="settings-row">
-          <span id="setting-dark-mode">Donkere modus</span>
-          <button
-            type="button"
-            className={`switch switch-accent ${isDarkMode ? 'switch-on' : ''}`}
-            role="switch"
-            aria-checked={isDarkMode}
-            aria-labelledby="setting-dark-mode"
-            onClick={toggleTheme}
-          >
-            <span className="switch-thumb" />
-          </button>
-        </div>
+        {/* Echte radioknoppen (pijltjes, één tabstop), visueel als één
+            balk met drie standen. */}
+        <fieldset className="segmented">
+          <legend className="visually-hidden">Thema</legend>
+          {THEME_OPTIONS.map(({ value, label }) => (
+            <label key={value} className={`segmented-option ${mode === value ? 'segmented-option-selected' : ''}`}>
+              <input
+                type="radio"
+                name="theme"
+                value={value}
+                className="visually-hidden"
+                checked={mode === value}
+                onChange={() => setMode(value)}
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
+        <p className="settings-hint">Automatisch volgt je telefoon: licht overdag, donker als je telefoon dat is.</p>
       </section>
 
       <section className="panel settings-section" aria-labelledby="settings-account">

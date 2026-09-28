@@ -5,33 +5,56 @@ import { createContext, useEffect, useState } from 'react'
 export const ThemeContext = createContext(undefined)
 
 const STORAGE_KEY = 'sandhovius-theme'
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
+// Drie keuzes: licht, donker, of automatisch (volgt de telefoon, ook als
+// die 's avonds zelf naar donker wisselt). Zonder opgeslagen keuze is het
+// automatisch, net als het script in layout.js aanneemt.
+function readMode() {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY)
+    return stored === 'light' || stored === 'dark' ? stored : 'auto'
+  } catch {
+    return 'auto'
+  }
+}
+
+// Zet het thema direct op <html>, niet via een React-render: zo wisselen
+// alle kleuren (CSS-variabelen op [data-theme]) in één keer, zonder dat
+// onderdelen één voor één omslaan.
+function apply(mode) {
+  const dark = mode === 'dark' || (mode === 'auto' && window.matchMedia(DARK_QUERY).matches)
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+}
 
 export function ThemeProvider({ children }) {
-  // Starts false to match the server render exactly (no window there).
-  // The actual visual theme is never driven by this state — it's set
-  // directly on <html data-theme> by the blocking script in layout.js and
-  // by toggleTheme() below. This state only exists so components (e.g. the
-  // toggle button's label) know which theme is active.
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  // 'auto' tot na de eerste render, gelijk aan de server-HTML. Het echte
+  // thema staat dan al op <html> dankzij het script in layout.js.
+  const [mode, setModeState] = useState('auto')
 
   useEffect(() => {
-    setIsDarkMode(document.documentElement.dataset.theme === 'dark')
+    setModeState(readMode())
   }, [])
 
-  // Sets the DOM attribute synchronously in the click handler itself —
-  // not in a useEffect — so every CSS variable driven off [data-theme]
-  // updates in the same paint the click causes, instead of waiting for a
-  // React re-render to finish first. That's what removes the flicker: the
-  // whole page's colors change atomically, not element-by-element as
-  // components re-render with new inline styles.
-  function toggleTheme() {
-    const next = !isDarkMode
-    document.documentElement.dataset.theme = next ? 'dark' : 'light'
-    window.localStorage.setItem(STORAGE_KEY, next ? 'dark' : 'light')
-    setIsDarkMode(next)
+  // Automatisch: meewisselen als de telefoon wisselt terwijl de app open is.
+  useEffect(() => {
+    if (mode !== 'auto') return
+    const query = window.matchMedia(DARK_QUERY)
+    const onChange = () => apply('auto')
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [mode])
+
+  function setMode(next) {
+    apply(next)
+    try {
+      if (next === 'auto') window.localStorage.removeItem(STORAGE_KEY)
+      else window.localStorage.setItem(STORAGE_KEY, next)
+    } catch {
+      // Geen opslag (privévenster): de keuze geldt dan alleen nu.
+    }
+    setModeState(next)
   }
 
-  return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>{children}</ThemeContext.Provider>
-  )
+  return <ThemeContext.Provider value={{ mode, setMode }}>{children}</ThemeContext.Provider>
 }
