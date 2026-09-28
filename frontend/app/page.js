@@ -13,6 +13,7 @@ import BottomNav, { TABS } from '../components/BottomNav'
 import RoomTabs from '../components/RoomTabs'
 import SettingsView from '../components/SettingsView'
 import FavoritesOrderModal from '../components/FavoritesOrderModal'
+import ChangePasswordModal from '../components/ChangePasswordModal'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -85,6 +86,11 @@ export default function Home() {
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   const [shelfIds, setShelfIds] = useState([])
   const [orderingFavorites, setOrderingFavorites] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  // Inlogscherm: "Wachtwoord vergeten?" wisselt naar een formulier dat een
+  // resetlink laat mailen; resetSent toont daarna de bevestiging.
+  const [resetMode, setResetMode] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   // Meerdere huizen (bv. thuis en een vakantiehuis): welk huis je bekijkt,
   // onthouden op dit apparaat. Zonder keuze het eerste.
   const [selectedHouseId, setSelectedHouseId] = useState(null)
@@ -218,6 +224,35 @@ export default function Home() {
     } finally {
       setLoggingIn(false)
     }
+  }
+
+  // Altijd dezelfde bevestiging, of het adres nu bekend is of niet: zo kan
+  // niemand via dit formulier uitzoeken wie een account heeft.
+  async function requestReset(e) {
+    e.preventDefault()
+    setError('')
+    setLoggingIn(true)
+    try {
+      await pb.collection('users').requestPasswordReset(email)
+      setResetSent(true)
+    } catch (err) {
+      setError(describeError('De resetlink versturen', err))
+    } finally {
+      setLoggingIn(false)
+    }
+  }
+
+  // Na het wijzigen is het oude inlogtoken ongeldig: meteen opnieuw
+  // inloggen met het nieuwe wachtwoord, zodat je ingelogd blijft.
+  async function changePassword(oldPassword, newPassword) {
+    const record = pb.authStore.record
+    await pb.collection('users').update(record.id, {
+      oldPassword,
+      password: newPassword,
+      passwordConfirm: newPassword,
+    })
+    await pb.collection('users').authWithPassword(record.email, newPassword)
+    showToast('Je wachtwoord is gewijzigd')
   }
 
   function logout() {
@@ -786,46 +821,111 @@ export default function Home() {
           {/* Zichtbare labels i.p.v. alleen placeholders: een placeholder
               verdwijnt zodra je begint te typen. autoComplete laat de
               wachtwoordbeheerder van de telefoon het formulier invullen. */}
-          <form onSubmit={login} className="form-stack">
-            <label className="form-field">
-              <span className="form-label">E-mailadres</span>
-              <input
-                className="input"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-label">Wachtwoord</span>
-              <input
-                className="input"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </label>
-            {error && (
-              <p className="login-error" role="alert">
-                {error}
-              </p>
-            )}
-            <button type="submit" className="btn btn-primary" disabled={loggingIn}>
-              {loggingIn ? (
-                <>
-                  <span className="spinner" aria-hidden="true" />
-                  Bezig met inloggen…
-                </>
-              ) : (
-                'Inloggen'
+          {resetMode ? (
+            resetSent ? (
+              <div className="form-stack">
+                <p className="login-note" role="status">
+                  Als er een account bij {email} hoort, krijg je een e-mail met een link om een nieuw wachtwoord te
+                  kiezen. Kijk ook even bij je ongewenste mail.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setResetMode(false)
+                    setResetSent(false)
+                  }}
+                >
+                  Terug naar inloggen
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={requestReset} className="form-stack">
+                <p className="login-note">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+                <label className="form-field">
+                  <span className="form-label">E-mailadres</span>
+                  <input
+                    className="input"
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </label>
+                {error && (
+                  <p className="login-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                <button type="submit" className="btn btn-primary" disabled={loggingIn}>
+                  Stuur resetlink
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-plain login-link"
+                  onClick={() => {
+                    setResetMode(false)
+                    setError('')
+                  }}
+                >
+                  Terug naar inloggen
+                </button>
+              </form>
+            )
+          ) : (
+            <form onSubmit={login} className="form-stack">
+              <label className="form-field">
+                <span className="form-label">E-mailadres</span>
+                <input
+                  className="input"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="form-field">
+                <span className="form-label">Wachtwoord</span>
+                <input
+                  className="input"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </label>
+              {error && (
+                <p className="login-error" role="alert">
+                  {error}
+                </p>
               )}
-            </button>
-          </form>
+              <button type="submit" className="btn btn-primary" disabled={loggingIn}>
+                {loggingIn ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" />
+                    Bezig met inloggen…
+                  </>
+                ) : (
+                  'Inloggen'
+                )}
+              </button>
+              <button
+                type="button"
+                className="btn btn-plain login-link"
+                onClick={() => {
+                  setResetMode(true)
+                  setError('')
+                }}
+              >
+                Wachtwoord vergeten?
+              </button>
+            </form>
+          )}
         </div>
       </main>
     )
@@ -992,6 +1092,7 @@ export default function Home() {
           roomCount={roomsInHouse.length}
           userEmail={userEmail}
           onOpenHouse={() => setHouseModalOpen(true)}
+          onChangePassword={() => setChangingPassword(true)}
           onLogout={logout}
         />
       </>
@@ -1103,6 +1204,10 @@ export default function Home() {
           onDeleteRoom={deleteRoom}
           onClose={() => setHouseModalOpen(false)}
         />
+      )}
+
+      {changingPassword && (
+        <ChangePasswordModal onChange={changePassword} onClose={() => setChangingPassword(false)} />
       )}
 
       {orderingFavorites && (

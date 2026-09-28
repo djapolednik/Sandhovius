@@ -80,3 +80,20 @@
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
+
+/* "Wachtwoord vergeten?" / "Terug naar inloggen": een rustige tekstknop
+   onder de hoofdknop, met een tikvlak van 44px. */
+.login-link {
+  align-self: center;
+  min-height: 44px;
+  padding: 0.4rem 0.75rem;
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.login-note {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}

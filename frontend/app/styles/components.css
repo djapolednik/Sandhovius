@@ -819,6 +819,12 @@
   min-height: 48px;
 }
 
+.settings-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 /* ==================== Uitlegpaneel ====================
    Eerste gebruik (nog geen apparaten: vier doofde lampjes en één
    duidelijke actie) en "Scènes komen eraan". Niets gloeit: er staat hier

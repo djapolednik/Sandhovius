@@ -13,7 +13,16 @@ const THEME_OPTIONS = [
 // account. Geen losse menu's of vensters meer achter een avatar — alles
 // staat hier op één plek, in gewone rijen. Met meer dan één huis kies je
 // hier welk huis de app laat zien.
-export default function SettingsView({ house, houses = [], onSelectHouse, roomCount, userEmail, onOpenHouse, onLogout }) {
+export default function SettingsView({
+  house,
+  houses = [],
+  onSelectHouse,
+  roomCount,
+  userEmail,
+  onOpenHouse,
+  onChangePassword,
+  onLogout,
+}) {
   const { mode, setMode } = useTheme()
 
   return (
@@ -86,9 +95,14 @@ export default function SettingsView({ house, houses = [], onSelectHouse, roomCo
           Account
         </h2>
         {userEmail && <p className="settings-account-email">Ingelogd als {userEmail}</p>}
-        <button type="button" className="btn btn-secondary settings-logout" onClick={onLogout}>
-          Uitloggen
-        </button>
+        <div className="settings-account-actions">
+          <button type="button" className="btn btn-secondary settings-logout" onClick={onChangePassword}>
+            Wachtwoord wijzigen
+          </button>
+          <button type="button" className="btn btn-secondary settings-logout" onClick={onLogout}>
+            Uitloggen
+          </button>
+        </div>
       </section>
     </div>
   )
