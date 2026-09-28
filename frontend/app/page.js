@@ -545,11 +545,12 @@ export default function Home() {
     await Promise.all(
       list.map(async (device) => {
         try {
-          const command = await pb.collection('commands').create({
-            device: device.id,
-            action: on ? 'turn_on' : 'turn_off',
-            status: 'pending',
-          })
+          // requestKey: null — anders annuleert de SDK gelijktijdige
+          // verzoeken naar hetzelfde adres, en gaat maar één lamp uit.
+          const command = await pb.collection('commands').create(
+            { device: device.id, action: on ? 'turn_on' : 'turn_off', status: 'pending' },
+            { requestKey: null }
+          )
           watchCommand(command.id, device.name, device.id)
         } catch (err) {
           if (isSessionExpired(err)) return endExpiredSession()
@@ -691,7 +692,11 @@ export default function Home() {
     const position = Object.fromEntries(next.map((item, index) => [item.id, index]))
     setList((prev) => prev.map((item) => (item.id in position ? { ...item, [field]: position[item.id] } : item)))
     try {
-      await Promise.all(changed.map((item) => pb.collection(collection).update(item.id, { [field]: position[item.id] })))
+      await Promise.all(
+        changed.map((item) =>
+          pb.collection(collection).update(item.id, { [field]: position[item.id] }, { requestKey: null })
+        )
+      )
     } catch (err) {
       showToast(describeError('Volgorde opslaan', err), 'error')
       fetchAll()

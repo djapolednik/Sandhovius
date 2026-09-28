@@ -882,6 +882,13 @@
    Eén balk op het binnenvlak met de standen als pillen; de gekozen stand
    is Electric Blue, zoals het actieve tabblad. Onder de balk echte
    radioknoppen (zie SettingsView). */
+/* Een <fieldset> wordt standaard niet smaller dan zijn inhoud; bij grote
+   tekst liep hij daardoor uit het paneel. */
+.segmented,
+.house-choice {
+  min-width: 0;
+}
+
 .segmented {
   display: grid;
   grid-auto-columns: 1fr;
