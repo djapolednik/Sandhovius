@@ -488,39 +488,34 @@
 
 .bottom-nav-add {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 0 0.25rem;
+  padding: 0 0.35rem;
 }
 
-/* Een losse, ronde knop die boven de balk uitsteekt. De ring heeft de
-   kleur van de balk: zo loopt de balk om de knop heen. */
+/* Een losse, ronde knop in de balk. Om de knop een ring in de kleur van
+   de pagina: een uitsparing, zodat de balk zichtbaar om de knop heen
+   loopt. Knop plus ring passen precies in de hoogte van de balk. */
 .bottom-nav-add-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
-  margin-top: -1.35rem;
+  width: 52px;
+  height: 52px;
   border: none;
   border-radius: 50%;
-  background: var(--surface-2);
+  /* Licht: een witte knop in de mist-uitsparing; donker: het binnenvlak
+     in de zwarte uitsparing. Zo staat hij in beide thema's los. */
+  background: var(--card-background);
   color: var(--accent-text);
   box-shadow:
-    0 0 0 6px var(--card-background),
-    0 -6px 18px -8px rgba(0, 0, 0, 0.25);
+    0 0 0 5px var(--background),
+    inset 0 0 0 1px var(--border);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color 0.2s ease,
     transform 0.2s ease;
-}
-
-/* Donker: geen schaduw, wel de haarlijn om de ring, zoals om de balk. */
-[data-theme='dark'] .bottom-nav-add-button {
-  box-shadow:
-    0 0 0 6px var(--card-background),
-    0 0 0 7px var(--border);
 }
 
 @media (hover: hover) {
@@ -529,13 +524,17 @@
   }
 }
 
+[data-theme='dark'] .bottom-nav-add-button {
+  background: var(--surface-2);
+}
+
 .bottom-nav-add-button:active {
   transform: scale(0.94);
 }
 
 .bottom-nav-add-button:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 9px;
+  outline-offset: 7px;
 }
 
 /* Grote tekst: de woorden passen niet meer naast elkaar. Twee kolommen,
@@ -554,12 +553,10 @@
     padding: 0;
   }
 
-  .bottom-nav-add-button,
-  [data-theme='dark'] .bottom-nav-add-button {
+  .bottom-nav-add-button {
     width: 100%;
     height: auto;
     min-height: 56px;
-    margin-top: 0;
     border-radius: 999px;
     box-shadow: none;
   }

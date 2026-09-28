@@ -16,8 +16,8 @@ export const TABS = [
 // dag met apps werkt hoeft niet te raden wat een icoon betekent.
 //
 // Precies in het midden: een los, rond "+" om een apparaat toe te voegen,
-// vanaf elk tabblad. De balk loopt eromheen (een ring in de kleur van de
-// balk). Het is een actie, geen tabblad: een rustige cirkel met een blauw
+// vanaf elk tabblad. De balk loopt eromheen (een uitsparing in de kleur
+// van de pagina). Het is een actie, geen tabblad: een rustige cirkel met een blauw
 // plusje, zodat het actieve tabblad het enige blauwe vlak blijft. onAdd
 // ontbreekt zolang er geen huis is.
 export default function BottomNav({ activeTab, onSelect, onAdd }) {
