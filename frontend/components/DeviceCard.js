@@ -80,6 +80,9 @@ export default memo(function DeviceCard({
   // (zie .card-lit) — warm voor een lamp, stroomblauw voor een
   // stopcontact. Alleen als we de stand zeker weten (online).
   const isLit = isToggleable && canToggle && isOn
+  // Getikt, maar de box heeft het nog niet bevestigd (zie _pending in
+  // page.js): een voornemen, geen feit. Meestal duurt dat onder de seconde.
+  const isPending = canToggle && !!device._pending
   const opensDetails = device.type === 'sensor' && !isPairing && !setupFailed
   const isClickable = canToggle || opensDetails
 
@@ -194,6 +197,7 @@ export default memo(function DeviceCard({
       <LightCard
         state={state}
         isOnline={isOnline}
+        isPending={isPending}
         offlineText={offlineText}
         header={plainHeader}
         caption={caption}
@@ -231,7 +235,7 @@ export default memo(function DeviceCard({
       <div
         className={`panel tile tile-${device.type} ${
           isClickable ? 'card-clickable' : ''
-        } ${isLit ? 'card-lit' : ''} ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
+        } ${isLit ? 'card-lit' : ''} ${isPending ? 'card-pending' : ''} ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
           isPairing || setupFailed ? 'card-pairing' : ''
         }`}
         onPointerDown={startPress}

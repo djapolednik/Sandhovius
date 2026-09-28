@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { TrashIcon } from '../lib/icons'
@@ -19,7 +19,15 @@ import { isDeviceOn } from './DeviceCard'
 // Alles slaat zichzelf op, zoals de schakelaar: de kamer zodra je hem
 // kiest, de naam zodra je het veld verlaat of de sheet sluit. Geen
 // "Opslaan"-knop waarvan je je afvraagt of hij ook voor de rest geldt.
-export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFavorite, onDelete, onClose }) {
+export default function DeviceSettingsModal({
+  device,
+  rooms,
+  onSave,
+  onSaveError,
+  onToggleFavorite,
+  onDelete,
+  onClose,
+}) {
   const [name, setName] = useState(device.name ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -27,13 +35,35 @@ export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFav
   // De laatst opgeslagen naam: verlaten van het veld én sluiten mogen niet
   // twee keer hetzelfde opslaan.
   const savedName = useRef(device.name ?? '')
+  // "Opgeslagen" staat er even na elke opslag: zonder knop moet je toch
+  // zien dat het gelukt is.
+  const [savedTick, setSavedTick] = useState(0)
+  const [showSaved, setShowSaved] = useState(false)
+  // Is de sheet nog open? Een naam die bij het sluiten wordt opgeslagen kan
+  // pas mislukken als hij al dicht is: die fout gaat dan naar een melding.
+  const mounted = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+  useEffect(() => {
+    if (!savedTick) return
+    setShowSaved(true)
+    const timer = setTimeout(() => setShowSaved(false), 2000)
+    return () => clearTimeout(timer)
+  }, [savedTick])
 
   async function save(updates, what) {
     setError('')
     try {
       await onSave(device.id, updates)
+      if (mounted.current) setSavedTick((n) => n + 1)
     } catch (err) {
-      setError(describeError(what, err))
+      const message = describeError(what, err)
+      if (mounted.current) setError(message)
+      else onSaveError?.(message)
     }
   }
 
@@ -125,6 +155,10 @@ export default function DeviceSettingsModal({ device, rooms, onSave, onToggleFav
             ))}
           </select>
         </label>
+
+        <p className="form-saved" role="status">
+          {showSaved ? 'Opgeslagen' : ''}
+        </p>
 
         {error && !confirmingDelete && <p className="error-banner">{error}</p>}
       </form>

@@ -134,7 +134,8 @@ export default function Home() {
         setDevices((prev) =>
           prev.map((d) =>
             d.id === e.record.device
-              ? { ...d, expand: { ...d.expand, device_state_via_device: [e.record] } }
+              ? // De echte stand is er: niet langer "wacht op de box".
+                { ...d, _pending: false, expand: { ...d.expand, device_state_via_device: [e.record] } }
               : d
           )
         )
@@ -148,7 +149,9 @@ export default function Home() {
         setDevices((prev) => {
           const existing = prev.find((d) => d.id === e.record.id)
           if (!existing) return [...prev, e.record]
-          return prev.map((d) => (d.id === e.record.id ? { ...e.record, expand: d.expand } : d))
+          return prev.map((d) =>
+            d.id === e.record.id ? { ...e.record, expand: d.expand, _pending: d._pending } : d
+          )
         })
       }),
       pb.collection('houses').subscribe('*', (e) => {
@@ -398,7 +401,9 @@ export default function Home() {
     setDevices((prev) =>
       prev.map((d) =>
         d.id === device.id
-          ? { ...d, expand: { ...d.expand, device_state_via_device: [optimisticState] } }
+          ? // _pending: de tik is een voornemen tot de box het bevestigt. De
+            // tegel zegt dan "Aan…" met een zwakke gloed (zie DeviceCard).
+            { ...d, _pending: true, expand: { ...d.expand, device_state_via_device: [optimisticState] } }
           : d
       )
     )
@@ -414,7 +419,7 @@ export default function Home() {
         action: 'toggle',
         status: 'pending',
       })
-      watchCommand(command.id, device.name)
+      watchCommand(command.id, device.name, device.id)
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
       showToast(describeError(`${device.name} ${willBeOn ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
@@ -466,7 +471,7 @@ export default function Home() {
   // binnen en bevestigt (of corrigeert) de optimistische kaart. Een
   // melding komt er alleen als het traag gaat of mislukt — en dan halen we
   // de echte stand opnieuw op, zodat de kaart niet blijft doen alsof.
-  function watchCommand(commandId, deviceName) {
+  function watchCommand(commandId, deviceName, deviceId) {
     let unsub
     let stopped = false
     const slowTimer = setTimeout(() => {
@@ -491,6 +496,11 @@ export default function Home() {
       .subscribe(commandId, (e) => {
         if (e.record.status === 'pending') return
         stop()
+        // De box heeft het uitgevoerd: dat is de bevestiging, ook als de
+        // nieuwe stand (device_state) nog onderweg is.
+        if (e.record.status !== 'failed' && deviceId) {
+          setDevices((prev) => prev.map((d) => (d.id === deviceId && d._pending ? { ...d, _pending: false } : d)))
+        }
         // De agent-foutmelding (e.record.error) is technisch en Engels —
         // die hoort in de console, niet in de melding voor de bewoner.
         if (e.record.status === 'failed') {
@@ -544,6 +554,10 @@ export default function Home() {
     setNewDeviceIds((prev) => [...prev, created.id])
     setTimeout(() => setNewDeviceIds((prev) => prev.filter((id) => id !== created.id)), NEW_DEVICE_GRACE_MS)
     selectRoom(created.room || '__unassigned')
+    // Via "+" onderin kun je vanaf elk tabblad toevoegen. Komt het nieuwe
+    // apparaat niet op Home te staan, spring dan naar zijn kamer, zodat je
+    // het ziet klaargezet worden.
+    if (tab !== 'kamers' && !favorite) selectTab('kamers')
   }
 
   async function renameHouse(name) {
@@ -862,7 +876,7 @@ export default function Home() {
 
       <main className="container">{content}</main>
 
-      <BottomNav activeTab={tab} onSelect={selectTab} />
+      <BottomNav activeTab={tab} onSelect={selectTab} onAdd={house ? () => setAddDeviceOpen(true) : null} />
 
       {houseModalOpen && (
         <HouseModal
@@ -891,6 +905,7 @@ export default function Home() {
           device={settingsDevice}
           rooms={roomsInHouse}
           onSave={saveDevice}
+          onSaveError={(message) => showToast(message, 'error')}
           onToggleFavorite={toggleFavorite}
           onDelete={deleteDevice}
           onClose={() => setSettingsDeviceId(null)}

@@ -332,6 +332,17 @@
     transform 1.4s cubic-bezier(0.3, 0, 0.2, 1);
 }
 
+/* Nog niet bevestigd door de box: het woord in de stille kleur en maar
+   een zweem van het licht. Komt de bevestiging, dan zwelt de gloed vanaf
+   hier gewoon verder op. */
+.card-pending .device-state-word {
+  color: var(--text-secondary);
+}
+
+.card-lit.card-pending::before {
+  opacity: 0.35;
+}
+
 .device-state-word-offline {
   display: inline-flex;
   align-items: center;
@@ -458,6 +469,7 @@
 }
 
 .climate-layout {
+  container: climate / inline-size;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -507,8 +519,10 @@
   stroke-linecap: round;
 }
 
+/* Het niet-gevulde deel van de boog: de haarlijnkleur, want het
+   binnenvlak verdwijnt bijna tegen wit. */
 .dial-track {
-  stroke: var(--surface-2);
+  stroke: var(--border);
 }
 
 .dial-value {
@@ -647,54 +661,61 @@
   transform: scale(0.92);
 }
 
-.climate-step:focus-visible,
-.climate-mode:focus-visible {
+.climate-step:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.climate-step:disabled,
-.climate-mode:disabled {
+.climate-step:disabled {
   opacity: 0.4;
   cursor: default;
 }
 
-/* Verwarmen / Uit: twee modus-tegels, de gekozen in Electric Blue. */
-.climate-modes {
+/* Verwarming aan/uit: één rij op het binnenvlak, woord links, schakelaar
+   rechts. Rustig in beide standen; de boog en de gloed zeggen al of hij
+   verwarmt. */
+.climate-power {
   position: relative;
   z-index: 2;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-}
-
-.climate-mode {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  min-height: 72px;
-  padding: 0.6rem;
-  border: none;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  min-height: 56px;
+  padding: 0.4rem 0.9rem 0.4rem 1.1rem;
   border-radius: var(--radius-tile);
   background: var(--surface-2);
-  color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
 }
 
-.climate-mode-active {
-  background: var(--accent);
-  color: var(--accent-contrast);
+/* "Nu" onder de knop: alleen bij grote tekst, zie hieronder. */
+.climate-now {
+  display: none;
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Grote tekst: de knop kan niet mee groeien met de tekst, dus "Nu" en de
+   schaal (15°/25°) gaan eruit. "Nu" verschijnt onder de knop in gewone
+   tekst die wel meegroeit; de boog laat het bereik al zien. */
+@container climate (max-width: 17rem) {
+  .dial-now,
+  .dial-scale {
+    display: none;
+  }
+
+  .climate-now {
+    display: block;
+  }
 }
 
 /* Smal ten opzichte van de tekst (grote tekst op een telefoon): de status
-   op een eigen regel boven − en +, en de twee standen onder elkaar. Rem in
+   op een eigen regel boven − en +. Rem in
    een container query volgt de lettergrootte, dus dit slaat alleen aan
    als de tekst groot is of de ruimte echt krap. */
 @container (max-width: 17rem) {
@@ -705,10 +726,6 @@
   .climate-status {
     order: -1;
     flex-basis: 100%;
-  }
-
-  .climate-modes {
-    grid-template-columns: 1fr;
   }
 }
 

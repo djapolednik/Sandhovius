@@ -279,6 +279,7 @@
   margin: 0;
   /* Bij grote tekst: klein genoeg dat een straatnaam heel blijft. */
   font-size: min(1.75rem, 13cqi);
+  text-wrap: balance;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -328,6 +329,7 @@
 
 .house-summary-lead {
   margin: 0;
+  text-wrap: balance;
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-secondary);

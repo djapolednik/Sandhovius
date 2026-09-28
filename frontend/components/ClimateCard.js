@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { formatTemperature } from '../lib/temperature'
-import { FlameIcon, MinusIcon, PlusIcon, PowerIcon } from '../lib/icons'
+import { MinusIcon, PlusIcon } from '../lib/icons'
 
 const TEMP_STEP = 0.5
 // Zo lang na de laatste tik op −/+ gaat er pas een commando naar de box:
@@ -30,8 +30,9 @@ function pointOnDial(fraction) {
 
 // Een thermostaat is een thermostaat, geen lichtschakelaar: het paneel
 // toont het doel groot op een draaiknop, hoe warm het nu is, en laat het
-// doel met −/+ bijstellen. Verwarmen of uit is een expliciete keuze onderin
-// — nooit het gevolg van een tik op het paneel zelf.
+// doel met −/+ bijstellen. Aan of uit is één schakelaar onderin
+// ("Verwarming") — nooit het gevolg van een tik op het paneel zelf. Staat
+// hij uit, dan is het paneel rustig: grijze boog, geen blauw vlak.
 export default function ClimateCard({
   state,
   isOn,
@@ -87,7 +88,10 @@ export default function ClimateCard({
   )
 
   const shownTarget = pendingTarget ?? target
-  const canAdjust = isOnline && hasTarget && typeof onSetTemperature === 'function'
+  const powerId = useId()
+  // Een doel instellen voor een verwarming die uit staat doet niets: −/+
+  // pas als hij aan staat ("Verwarming uit" staat er dan tussen).
+  const canAdjust = isOn && isOnline && hasTarget && typeof onSetTemperature === 'function'
   const canSwitch = isOnline && typeof onToggleHeating === 'function'
 
   function adjust(delta) {
@@ -102,20 +106,7 @@ export default function ClimateCard({
     commitTimer.current = setTimeout(commit, COMMIT_DELAY_MS)
   }
 
-  function chooseMode(heating) {
-    if (heating !== isOn) onToggleHeating()
-  }
 
-  // Verwarmen/Uit is een echte radiogroep: één tabstop (de gekozen stand),
-  // pijltjes wisselen van stand, zoals elke radiogroep.
-  function handleModeKey(e) {
-    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return
-    e.preventDefault()
-    if (!canSwitch) return
-    chooseMode(!isOn)
-    const other = e.currentTarget.querySelector(isOn ? '[data-mode="off"]' : '[data-mode="heat"]')
-    other?.focus()
-  }
 
   let status
   if (!isOnline) status = `${offlineText}, laatst bekende stand`
@@ -195,6 +186,9 @@ export default function ClimateCard({
           </div>
 
           <div className="climate-controls">
+            {/* Bij grote tekst verhuist "Nu" uit de knop naar hier, waar hij
+                mee kan groeien (zie de container query in devices.css). */}
+            {hasCurrent && <p className="climate-now">Nu {formatTemperature(current)}</p>}
             {hasTarget && (
               // Eigen pointerdown-stop: ingedrukt houden op −/+ mag niet de
               // instellingen openen (zie de long-press in DeviceCard).
@@ -223,38 +217,21 @@ export default function ClimateCard({
               </div>
             )}
 
-            <div
-              className="climate-modes"
-              role="radiogroup"
-              aria-label="Verwarming"
-              onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={handleModeKey}
-            >
+            {/* Eén schakelaar: aan of uit is apparaatstand, dus het "aan"-groen
+                (zoals elke stand), geen blauw vlak. Offline blijft hij
+                focusbaar (aria-disabled), zodat je de stand kunt horen. */}
+            <div className="climate-power" onPointerDown={(e) => e.stopPropagation()}>
+              <span id={powerId}>Verwarming</span>
               <button
                 type="button"
-                role="radio"
-                data-mode="heat"
-                tabIndex={isOn ? 0 : -1}
+                role="switch"
                 aria-checked={isOn}
-                className={`climate-mode ${isOn ? 'climate-mode-active' : ''}`}
-                disabled={!canSwitch}
-                onClick={() => chooseMode(true)}
+                aria-labelledby={powerId}
+                aria-disabled={canSwitch ? undefined : true}
+                className={`switch ${isOn ? 'switch-on' : ''}`}
+                onClick={() => canSwitch && onToggleHeating()}
               >
-                <FlameIcon />
-                Verwarmen
-              </button>
-              <button
-                type="button"
-                role="radio"
-                data-mode="off"
-                tabIndex={isOn ? -1 : 0}
-                aria-checked={!isOn}
-                className={`climate-mode ${!isOn ? 'climate-mode-active' : ''}`}
-                disabled={!canSwitch}
-                onClick={() => chooseMode(false)}
-              >
-                <PowerIcon />
-                Uit
+                <span className="switch-thumb" />
               </button>
             </div>
           </div>

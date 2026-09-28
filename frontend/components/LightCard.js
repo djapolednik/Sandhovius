@@ -6,7 +6,16 @@
 // Staat hij aan, dan licht de tegel op vanachter het icoon — warm bij een
 // lamp, stroomblauw bij een stopcontact — langzaam aan, langzaam uit,
 // zoals een echte lamp (zie .card-lit).
-export default function LightCard({ state, isOnline, offlineText = 'Offline', header, caption, Icon, footer }) {
+export default function LightCard({
+  state,
+  isOnline,
+  isPending = false,
+  offlineText = 'Offline',
+  header,
+  caption,
+  Icon,
+  footer,
+}) {
   const raw = state?.state
   const isOn = raw === 'on'
   const isKnown = raw === 'on' || raw === 'off'
@@ -22,7 +31,8 @@ export default function LightCard({ state, isOnline, offlineText = 'Offline', he
       <div className="tile-state">
         {isOnline ? (
           <span className={`device-state-word ${isOn ? 'device-state-word-on' : ''}`}>
-            {isKnown ? (isOn ? 'Aan' : 'Uit') : 'Onbekend'}
+            {/* "Aan…" zolang de box het nog niet bevestigd heeft. */}
+            {isKnown ? (isOn ? 'Aan' : 'Uit') + (isPending ? '…' : '') : 'Onbekend'}
           </span>
         ) : (
           <>
