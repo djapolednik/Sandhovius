@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Voorlopig app-icoon (geen logo): een huis in het donker met één
+       verlicht raam, "The Lit Room at Night". Alles binnen de veilige zone
+       van een maskable icoon (middelste 80%). -->
+  <defs>
+    <radialGradient id="glow" cx="256" cy="304" r="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffaa3c" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#ffaa3c" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="#000000" />
+  <circle cx="256" cy="304" r="150" fill="url(#glow)" />
+  <path
+    d="M146 238 L256 150 L366 238 V358 a18 18 0 0 1 -18 18 H164 a18 18 0 0 1 -18 -18 Z"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="22"
+    stroke-linejoin="round"
+  />
+  <rect x="226" y="274" width="60" height="60" rx="10" fill="#ffb020" />
+</svg>

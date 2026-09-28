@@ -20,7 +20,11 @@ const urbanist = Urbanist({
 
 export const metadata = {
   title: 'Sandhovius',
-  description: 'Sandhovius smart home PWA',
+  description: 'Je huis bedienen, lokaal en privé.',
+  // Op een iPhone: "Zet op beginscherm" opent de app zonder Safari-balk,
+  // met dit icoon en deze naam.
+  appleWebApp: { capable: true, title: 'Sandhovius', statusBarStyle: 'black-translucent' },
+  icons: { apple: '/apple-touch-icon.png' },
 }
 
 // viewport-fit=cover laat de app tot in de hoeken van het scherm lopen
@@ -30,6 +34,11 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  // De kleur van de statusbalk volgt het thema van de telefoon.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f0f0f0' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
 }
 
 // Runs before hydration so the correct theme's CSS variables are already
