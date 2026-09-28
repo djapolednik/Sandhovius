@@ -289,6 +289,8 @@ The page is centered on `--content-max` (640px on phones, 1000px from 768px, 124
 
 **Home:** the house panel, then **Favorieten** (devices marked "Op Home tonen", with their room as the caption; a short hint when there are none), then **Temperatuur** (every thermostat, always shown). Favourites come first because they are the quick switches; the thermostat panel is tall.
 
+**First run:** while a house has no devices, Home and Kamers show one panel in place of the sections: the four device types as unlit icon circles, "Voeg je eerste apparaat toe", and a full-width "Apparaat toevoegen" in thumb reach. Nothing glows, because nothing is on yet. As long as Home has no favourites, a new lamp, plug or sensor is added as a favourite, so the first device appears on Home and can be switched with one tap.
+
 **Kamers:** a horizontally scrolling row of filled room pills (no visible scrollbar; the edge fades where more pills are hidden; the active pill scrolls into view), "N apparaten", then that room's bento.
 
 **Instellingen:** stacked panels (max 40rem): Huis (opens house and rooms), Weergave (dark mode), Account (who is logged in, Uitloggen).

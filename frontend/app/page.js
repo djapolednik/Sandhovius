@@ -15,7 +15,7 @@ import SettingsView from '../components/SettingsView'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
-import { PlusIcon } from '../lib/icons'
+import { PlusIcon, deviceTypeIcon } from '../lib/icons'
 
 const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
 
@@ -514,7 +514,13 @@ export default function Home() {
   // zijn kaart ziet klaargezet worden. De realtime devices-subscription
   // kan hem al binnen hebben gebracht: dan niet dubbel toevoegen.
   async function createDevice(fields) {
-    const created = await pb.collection('devices').create({ ...fields, gateway: house.id, online: false })
+    // Zolang Home nog geen favorieten heeft, komt een nieuw apparaat daar
+    // meteen op te staan: je eerste lamp moet je direct kunnen aanzetten,
+    // niet eerst via Kamers opzoeken. De thermostaat staat er altijd al.
+    const favorite = fields.type !== 'climate' && !devicesInHouse.some((d) => d.favorite && d.type !== 'climate')
+    const created = await pb
+      .collection('devices')
+      .create({ ...fields, favorite, gateway: house.id, online: false })
     setDevices((prev) => (prev.some((d) => d.id === created.id) ? prev : [...prev, created]))
     setNewDeviceIds((prev) => [...prev, created.id])
     setTimeout(() => setNewDeviceIds((prev) => prev.filter((id) => id !== created.id)), NEW_DEVICE_GRACE_MS)
@@ -650,6 +656,34 @@ export default function Home() {
     </p>
   )
 
+  // Eerste gebruik: nog geen enkel apparaat. De vier soorten staan er als
+  // doofde lampjes, met de actie binnen bereik van je duim in plaats van
+  // alleen "Toevoegen" bovenaan.
+  const firstDevice = loaded && house && devicesInHouse.length === 0 && (
+    <section className="panel first-device" aria-labelledby="first-device-title">
+      <div className="first-device-icons" aria-hidden="true">
+        {['light', 'switch', 'sensor', 'climate'].map((type) => {
+          const Icon = deviceTypeIcon(type)
+          return (
+            <span key={type} className="device-icon">
+              <Icon width="22" height="22" />
+            </span>
+          )
+        })}
+      </div>
+      <h2 id="first-device-title" className="first-device-title">
+        Voeg je eerste apparaat toe
+      </h2>
+      <p className="first-device-text">
+        Een lamp, stopcontact, sensor of thermostaat. Hij verschijnt meteen op Home, zodat je hem met één tik bedient.
+      </p>
+      <button type="button" className="btn btn-primary" onClick={() => setAddDeviceOpen(true)}>
+        <PlusIcon width="20" height="20" aria-hidden="true" />
+        Apparaat toevoegen
+      </button>
+    </section>
+  )
+
   function renderDevices(list, { showRoom = false } = {}) {
     return (
       <ul className="device-list">
@@ -696,11 +730,11 @@ export default function Home() {
         {loaded && house && count > 0 && (
           <p className="section-count">{count === 1 ? '1 apparaat' : `${count} apparaten`}</p>
         )}
-        {loaded && house && count === 0 && (
+        {firstDevice}
+        {loaded && house && count === 0 && devicesInHouse.length > 0 && (
           <p className="empty-state">
-            {roomsInHouse.length === 0 && unassignedDevices.length === 0
-              ? 'Nog geen apparaten. Voeg je eerste lamp, stopcontact, sensor of thermostaat toe met "Toevoegen" bovenaan.'
-              : 'Nog geen apparaten in deze kamer. Voeg er een toe met "Toevoegen", of verplaats een apparaat hierheen via Details.'}
+            Nog geen apparaten in deze kamer. Voeg er een toe met "Toevoegen", of verplaats een apparaat hierheen via
+            Details.
           </p>
         )}
         {skeleton}
@@ -747,7 +781,9 @@ export default function Home() {
           <div className="dashboard-devices">
             {skeleton}
 
-            {loaded && house && (
+            {firstDevice}
+
+            {loaded && house && devicesInHouse.length > 0 && (
               <section className="home-section" aria-labelledby="home-favorites">
                 <h2 id="home-favorites" className="section-heading">
                   Favorieten

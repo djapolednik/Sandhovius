@@ -671,3 +671,47 @@
 .settings-logout {
   min-height: 48px;
 }
+
+/* ==================== Eerste apparaat ====================
+   Eerste gebruik: nog geen apparaten. Vier doofde lampjes (de soorten die
+   je kunt toevoegen) en één duidelijke actie. Niets gloeit: er is nog
+   niets dat aan staat. */
+
+.first-device {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 36rem;
+  padding: 1.5rem 1.25rem 1.35rem;
+}
+
+.first-device-icons {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.first-device-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.first-device-text {
+  margin: 0 0 0.9rem;
+  max-width: 40ch;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.first-device .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  max-width: 22rem;
+}
