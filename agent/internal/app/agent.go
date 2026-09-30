@@ -98,6 +98,7 @@ func (a *Agent) Start() error {
 	go a.listenForDeviceChanges()
 	go a.runHeartbeat()
 	go a.runScheduler()
+	go a.runWeather()
 
 	return nil
 }
