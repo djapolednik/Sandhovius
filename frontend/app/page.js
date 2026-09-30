@@ -1354,7 +1354,13 @@ export default function Home() {
             {loaded && house && devicesInHouse.length > 0 && (
               <div className="home-grid">
                 {scenesInHouse.length > 0 && (
-                  <HomeScenes scenes={scenesInHouse} runState={sceneRunState} canRun={houseReachable} onRun={runScene} />
+                  <HomeScenes
+                    scenes={scenesInHouse}
+                    runState={sceneRunState}
+                    canRun={houseReachable}
+                    onRun={runScene}
+                    onEdit={(scene) => setEditingScene(scene.id)}
+                  />
                 )}
 
                 {/* Eén rij tegels, met een keuze: je vaste knoppen of alles wat

@@ -623,6 +623,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+  /* Ingedrukt houden opent de scène: geen tekstselectie of iOS-menu. */
+  user-select: none;
+  -webkit-touch-callout: none;
   transition:
     background-color 0.15s ease,
     transform 0.15s var(--ease-out);
@@ -633,16 +636,16 @@
 }
 
 @media (hover: hover) {
-  .scene-pill:hover:not(:disabled) {
+  .scene-pill:hover:not([aria-disabled='true']) {
     background: var(--surface-2);
   }
 
-  [data-theme='dark'] .scene-pill:hover:not(:disabled) {
+  [data-theme='dark'] .scene-pill:hover:not([aria-disabled='true']) {
     background: var(--border);
   }
 }
 
-.scene-pill:active:not(:disabled) {
+.scene-pill:active:not([aria-disabled='true']) {
   transform: scale(0.97);
 }
 
@@ -651,8 +654,9 @@
   outline-offset: 2px;
 }
 
-/* Box onbereikbaar: zichtbaar maar niet te tikken, zoals op Scènes. */
-.scene-pill:disabled:not(.scene-pill-running) {
+/* Box onbereikbaar: zichtbaar maar niet uit te voeren, zoals op Scènes.
+   Ingedrukt houden opent hem wel (aria-disabled, niet disabled). */
+.scene-pill[aria-disabled='true']:not(.scene-pill-running) {
   opacity: 0.5;
   cursor: default;
 }
@@ -693,7 +697,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scene-pill:active:not(:disabled) {
+  .scene-pill:active:not([aria-disabled='true']) {
     transform: none;
   }
 }
