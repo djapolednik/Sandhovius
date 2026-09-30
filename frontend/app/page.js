@@ -8,6 +8,7 @@ import DeviceSettingsModal from '../components/DeviceSettingsModal'
 import HousePanel from '../components/HousePanel'
 import { WeatherCard } from '../components/Weather'
 import HomeScenes from '../components/HomeScenes'
+import PullToRefresh from '../components/PullToRefresh'
 import HouseModal from '../components/HouseModal'
 import AddDeviceModal from '../components/AddDeviceModal'
 import ToastContainer from '../components/ToastContainer'
@@ -1427,6 +1428,7 @@ export default function Home() {
   return (
     <>
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <PullToRefresh onRefresh={fetchAll} />
 
       <div className="tab-view">
         <div ref={tabViewRef}>

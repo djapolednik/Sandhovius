@@ -1192,3 +1192,79 @@
   align-items: center;
   gap: 0.4rem;
 }
+
+/* ==================== Omlaag trekken om te verversen ====================
+   Alleen in de geïnstalleerde app (zie PullToRefresh). Een klein rond
+   paneel dat van boven je vinger volgt (--pull, zonder transitie tijdens
+   het slepen), met een pijl die meedraait tot hij blauw is: nu loslaten.
+   Loslaten: naar zijn plek (250ms), spinner, even een vinkje, weer omhoog. */
+.pull-refresh {
+  --pull: 0px;
+  --progress: 0;
+  position: fixed;
+  z-index: 60;
+  top: env(safe-area-inset-top);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: var(--card-background);
+  color: var(--text-secondary);
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+  opacity: min(1, calc(var(--progress) * 3));
+  transform: translateY(calc(var(--pull) - 48px)) scale(calc(0.7 + 0.3 * var(--progress)));
+  pointer-events: none;
+  transition:
+    transform 250ms var(--ease-out),
+    opacity 200ms var(--ease-out),
+    color 150ms ease;
+}
+
+[data-theme='dark'] .pull-refresh {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.pull-refresh-arrow {
+  transform: rotate(calc(var(--progress) * 180deg));
+}
+
+.pull-refresh-armed,
+.pull-refresh-refreshing,
+.pull-refresh-done {
+  color: var(--accent-text);
+}
+
+.pull-refresh-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* De geïnstalleerde app houdt de pagina zelf vast bij omlaag trekken. */
+@media (display-mode: standalone) {
+  html {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Minder beweging: het rondje verschijnt en verdwijnt met een fade, zonder
+   te schalen; het volgt je vinger nog wel (dat doe je zelf). */
+@media (prefers-reduced-motion: reduce) {
+  .pull-refresh {
+    transform: translateY(calc(var(--pull) - 48px));
+    transition: opacity 200ms ease;
+  }
+
+  .pull-refresh-arrow {
+    transform: none;
+  }
+}
