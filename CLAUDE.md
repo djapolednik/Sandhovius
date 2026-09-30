@@ -43,7 +43,9 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - `agent/internal/pocketbase/`, `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
 - `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
 - `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Scènes/Opties; hash `#instellingen` voor Opties), commands
-- `frontend/components/` — tegels (`DeviceCard`, `LightCard`, `ClimateCard`, `SensorCard`), `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
+- `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
+- `agent/internal/app/weather.go` — weer uit HA (Met.no) elke 30 min op `houses.weather`
+- `scripts/screenshot.py` — ingelogde screenshots (Firefox + Marionette), zie Development Setup
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
 - `PRODUCT.md` (doelgroep, principes) en `DESIGN.md` + `.impeccable/design.json` (design system) — lees DESIGN.md vóór UI-werk
 
@@ -68,9 +70,9 @@ cd frontend && npx next build                     # moet slagen vóór commit
 ```
 
 - Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`) · PWA: http://localhost:3000
-- Visueel testen: Chrome ontbreekt op deze machine; Edge headless via DevTools-protocol werkt (Playwright-plugin niet).
+- Visueel testen: Chrome en Edge ontbreken; de Playwright-plugin werkt niet. `SANDHOVIUS_EMAIL=… SANDHOVIUS_PASSWORD=… scripts/screenshot.py /tmp/home 1440x900 1366x768:dark 390x844` (het lokale testaccount, niet in git) logt in (token in localStorage) en maakt screenshots via Firefox headless + Marionette; het zegt ook of de pagina scrolt (Home hoort op een laptop te passen). Opties: `HASH='#kamers'`, `HOMEVIEW=on`. Firefox kan niet smaller dan ~500px. Marionette kan ook klikken, lang indrukken (`WebDriver:PerformActions`) en met pref `dom.w3c_touch_events.enabled` touch-events sturen.
 
-## Huidige Status (2026-09-28 — `main` loopt vóór op origin, nog niet gepusht)
+## Huidige Status (2026-09-30)
 **Fase 1** ✅ — lokale stack, agent ↔ MQTT/HA.
 
 **Fase 2** grotendeels ✅:
@@ -82,17 +84,22 @@ cd frontend && npx next build                     # moet slagen vóór commit
 - State-reconciliatie: agent haalt bij start, na HA-reconnect en na provisioning de actuele stand op (fix voor nieuwe devices die "offline" bleven)
 - PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/+/Scènes/Opties (rond "+" in het midden om een apparaat toe te voegen), favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
 - **Scènes**: collectie `scenes` (huis, naam, volgorde, `actions` als JSON in command-woorden); uitvoeren op de box via één command `{ scene, action: "run_scene" }` → agent `runScene` (alleen scènes en apparaten van het eigen huis). Command-regel: óf een device-commando óf een scène-commando, nooit een mix. Scènes-tab met tegels (tik = uitvoeren) en een scène-sheet
-- **Schema's**: collectie `schedules` (scène, `time` "HH:MM", `days`, `enabled`, `last_run`/`last_error` van de agent). De agent klokt (`agent/internal/app/scheduler.go`): elke minuut een snapshot van schedules/scenes/devices van het eigen huis, uitvoeren via `executeScene`, ook als PocketBase even weg is (laatste snapshot in geheugen). Bewerken in de scène-sheet ("Vanzelf uitvoeren"), tijden op de scène-tegel. Tests: `cd agent && go test ./...`, `cd frontend && node --test lib/schedules.test.js`
+- **Schema's**: collectie `schedules` (scène, `time` "HH:MM", `days`, `enabled`, `last_run`/`last_error` van de agent). De agent klokt (`agent/internal/app/scheduler.go`): elke minuut een snapshot van schedules/scenes/devices van het eigen huis, uitvoeren via `executeScene`, ook als PocketBase even weg is (laatste snapshot in geheugen). Bewerken in de scène-sheet ("Vanzelf uitvoeren"), tijden op de scène-tegel. Tests: `cd agent && go test ./...`, `cd frontend && node --test lib/*.test.js`
+- **Login-redesign**: de login is de eerste bento, een huispaneel (ramen 's avonds, altijd nachtkleuren, één lamp aan) naast het formulier. Een tweede lamp "loopt" rustig door het huis (CSS, 24 s-ronde). Na bevestigde login gaan alle lampen aan, het formulier vervaagt en Home komt binnen (`ARRIVE_MS` in `page.js` hoort bij de timing in `login.css`; `.arriving` op `<html>` voor de binnenkomst in `base.css`). Na inloggen altijd naar Home (hash gewist). Easing-tokens `--ease-out` en `--ease-lamp` in `theme.css`
+- **Home-redesign**: kleine liggende apparaattegels (icoon, naam, stand; details via lang indrukken, rechtsklik of contextmenutoets; "Opnieuw proberen" bij mislukt klaarzetten zit in de detail-sheet), keuzebalk **Favorieten / Staat aan** (onthouden in localStorage), beide per kamer gegroepeerd (rustig kamerwoord, groepen in CSS-kolommen), compacte thermostaat (−/+ naast de knop, status onder "Verwarming"). Laptop: drie kolommen (huis + weer | apparaten | thermostaat + scènes) en Home past zonder scrollen (gecheckt op 1366×768, 1440×900, 1920×1080)
+- **Scènes op Home**: pillen (tik = uitvoeren, lang indrukken = wijzigen)
+- **Weer**: agent haalt het elk half uur uit HA (`weather.get_forecasts`) naar `houses.weather`/`weather_updated` (alleen de agent mag schrijven). Telefoon: regel in het huispaneel; laptop: kaart met uren en dagen. Na 2 uur zonder update een amber regel (box heeft waarschijnlijk geen internet). De huis-samenvatting ("2 lampen staan aan" + kamerchips) is weg; "Alles uit" bleef
+- **Omlaag trekken om te verversen** in de geïnstalleerde app (in een tab heeft de telefoon het zelf); tabbladen komen binnen met fade + 12 px schuiven; hover alleen met een muis, drukfeedback op elke knop
 - PWA-basis: installeerbaar (manifest, voorlopig icoon), thema Licht/Donker/Automatisch, "Alles uit", "Let op"-overzicht, "Ongedaan maken" (verwijderen gaat pas na 6 s echt), kamers en favorieten ordenen (`rooms.order`, `devices.favorite_order`), meerdere huizen, wachtwoord vergeten/wijzigen, "Opnieuw proberen" bij mislukt klaarzetten (command-actie `provision`)
 
 ## Volgende Stappen
-1. **Pushen** (`git push`) en de frontend-container herbouwen als die nog oud is.
-2. **Agent start zonder PocketBase**: nu zijn inloggen (`main.go`) en `registerGateway()` fataal. Nodig voor fase 3; neem dan ook de schema-snapshot naar `/data/schedules.json` mee (zie spec `docs/superpowers/specs/2026-09-28-schedules-design.md`).
-3. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) en een scène op Home als snelknop — alleen als er vraag naar is.
+1. **Agent start zonder PocketBase**: nu zijn inloggen (`main.go`) en `registerGateway()` fataal. Nodig voor fase 3; neem dan ook de schema-snapshot naar `/data/schedules.json` mee (zie spec `docs/superpowers/specs/2026-09-28-schedules-design.md`).
+2. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
+3. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
 4. **Claim-flow** voor een nieuwe box: serienummer bij productie, koppelen aan een account via `houses.claimed_at`/`user`. Vervangt later het ID-bestand in `registerGateway()` (zie memory `box-house-identity`).
 5. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports.
 6. **SMTP in PocketBase** instellen (nu uit): zonder dat verstuurt "Wachtwoord vergeten?" geen mail. Ook de afzender (`support@example.com`) en `appURL` goed zetten.
-7. Kleiner/los: `commands` heeft geen timestamps (debuggen lastig — overweeg `autodate`-velden); `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map).
+7. Kleiner/los: `commands` heeft geen timestamps (debuggen lastig — overweeg `autodate`-velden); `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
 
 ## Werkafspraken
 - UI-copy is Nederlands, zinsletters, geen hoofdletter-labels; zie Named Rules in DESIGN.md (o.a. Real Light Rule: alleen live apparaten gloeien).
