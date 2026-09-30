@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"time"
 )
 
 // Client is a minimal REST client for the PocketBase API. It knows how to
@@ -15,7 +16,8 @@ import (
 // files in this package.
 type Client struct {
 	baseURL    string
-	httpClient *http.Client
+	httpClient *http.Client // realtime (SSE): lange verbinding, geen timeout
+	restClient *http.Client // gewone REST-calls: nooit eindeloos wachten
 
 	mu       sync.RWMutex
 	token    string
@@ -30,10 +32,16 @@ type Client struct {
 	upsertMu sync.Mutex
 }
 
+// restTimeout begrenst elke REST-call. Zonder timeout blijft een call naar
+// een hangende PocketBase (straks op Scaleway, internet half weg) minutenlang
+// staan, en daarmee de schema-lus en de hartslag.
+const restTimeout = 15 * time.Second
+
 func NewClient(baseURL string) *Client {
 	return &Client{
 		baseURL:    baseURL,
 		httpClient: &http.Client{},
+		restClient: &http.Client{Timeout: restTimeout},
 	}
 }
 
@@ -85,7 +93,7 @@ func (c *Client) do(method, path string, body any, out any) error {
 		req.Header.Set("Authorization", token)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.restClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("pocketbase: %s %s: %w", method, path, err)
 	}

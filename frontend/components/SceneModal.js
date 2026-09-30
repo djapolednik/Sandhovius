@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { formatTemperature } from '../lib/temperature'
+import { DAYS, describeDays } from '../lib/schedules'
 import { MinusIcon, PlusIcon, TrashIcon } from '../lib/icons'
 
 const TEMP_STEP = 0.5
@@ -49,6 +50,30 @@ function currentTarget(device) {
   return typeof target === 'number' ? target : DEFAULT_TEMPERATURE
 }
 
+function rowsFromSchedules(schedules) {
+  return [...schedules]
+    .sort((a, b) => a.time.localeCompare(b.time))
+    .map((s) => ({
+      key: s.id,
+      id: s.id,
+      time: s.time,
+      days: s.days,
+      enabled: s.enabled,
+      lastRun: s.last_run,
+      lastError: s.last_error,
+      dirty: false,
+    }))
+}
+
+function nextWholeHour() {
+  return `${String((new Date().getHours() + 1) % 24).padStart(2, '0')}:00`
+}
+
+// "zondag 23:00": wanneer een schema voor het laatst liep.
+function formatRun(lastRun) {
+  return new Date(lastRun).toLocaleString('nl-NL', { weekday: 'long', hour: '2-digit', minute: '2-digit' })
+}
+
 const MODES = [
   { value: 'skip', label: 'Niet' },
   { value: 'on', label: 'Aan' },
@@ -58,9 +83,24 @@ const MODES = [
 // Een scène maken of wijzigen: een naam, en per lamp, stopcontact en
 // thermostaat wat hij doet. Anders dan de detail-sheet met "Opslaan": je
 // stelt meerdere dingen samen in en slaat ze in één keer op.
-export default function SceneModal({ scene, devices, roomNameById, onSave, onDelete, onClose }) {
+export default function SceneModal({
+  scene,
+  schedules,
+  devices,
+  roomNameById,
+  onSaveScene,
+  onSaveSchedule,
+  onDeleteSchedule,
+  onDelete,
+  onClose,
+}) {
   const [name, setName] = useState(scene?.name ?? '')
   const [choices, setChoices] = useState(() => choicesFromActions(scene?.actions, devices))
+  const [rows, setRows] = useState(() => rowsFromSchedules(schedules))
+  const [removedIds, setRemovedIds] = useState([])
+  // Na een half gelukte eerste keer "Opslaan" bestaat de scène al: een
+  // tweede poging werkt hem dan bij in plaats van er nog een te maken.
+  const [savedSceneId, setSavedSceneId] = useState(scene?.id ?? null)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -74,16 +114,47 @@ export default function SceneModal({ scene, devices, roomNameById, onSave, onDel
     setChoices((prev) => ({ ...prev, [deviceId]: { ...prev[deviceId], ...patch } }))
   }
 
+  function updateRow(key, patch) {
+    setError('')
+    setRows((prev) => prev.map((row) => (row.key === key ? { ...row, dirty: true, ...patch } : row)))
+  }
+
+  function addRow() {
+    setRows((prev) => [
+      ...prev,
+      { key: crypto.randomUUID(), time: nextWholeHour(), days: DAYS.map((d) => d.key), enabled: true, dirty: true },
+    ])
+  }
+
+  function removeRow(row) {
+    setRows((prev) => prev.filter((r) => r.key !== row.key))
+    if (row.id) setRemovedIds((prev) => [...prev, row.id])
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     if (actions.length === 0) {
       setError('Kies bij minstens één apparaat wat de scène doet.')
       return
     }
+    if (rows.some((row) => row.days.length === 0)) {
+      setError('Kies bij elke tijd minstens één dag.')
+      return
+    }
     setSaving(true)
     setError('')
     try {
-      await onSave({ name: name.trim(), actions })
+      const sceneId = await onSaveScene(savedSceneId, { name: name.trim(), actions })
+      setSavedSceneId(sceneId)
+      for (const scheduleId of removedIds) {
+        await onDeleteSchedule(scheduleId)
+        setRemovedIds((prev) => prev.filter((id) => id !== scheduleId))
+      }
+      for (const row of rows) {
+        if (!row.dirty) continue
+        const saved = await onSaveSchedule(sceneId, row)
+        setRows((prev) => prev.map((r) => (r.key === row.key ? { ...r, id: saved.id, dirty: false } : r)))
+      }
       onClose()
     } catch (err) {
       setError(describeError('Scène opslaan', err))
@@ -176,6 +247,81 @@ export default function SceneModal({ scene, devices, roomNameById, onSave, onDel
               als je opslaat.
             </p>
           )}
+        </div>
+
+        <div className="form-field">
+          <span className="form-label">Vanzelf uitvoeren</span>
+          {rows.length > 0 && (
+            <ul className="schedule-rows">
+              {rows.map((row) => (
+                <li key={row.key} className="schedule-row">
+                  <div className="schedule-row-top">
+                    <input
+                      className="input schedule-time"
+                      type="time"
+                      required
+                      aria-label="Tijd"
+                      value={row.time}
+                      onChange={(e) => updateRow(row.key, { time: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={row.enabled}
+                      aria-label={`Om ${row.time} vanzelf uitvoeren`}
+                      className={`switch switch-accent ${row.enabled ? 'switch-on' : ''}`}
+                      onClick={() => updateRow(row.key, { enabled: !row.enabled })}
+                    >
+                      <span className="switch-thumb" />
+                    </button>
+                  </div>
+                  <div className="schedule-days" role="group" aria-label={`Dagen voor ${row.time}`}>
+                    {DAYS.map((day) => {
+                      const on = row.days.includes(day.key)
+                      return (
+                        <button
+                          key={day.key}
+                          type="button"
+                          className={`day-toggle ${on ? 'day-toggle-on' : ''}`}
+                          aria-pressed={on}
+                          aria-label={day.long}
+                          onClick={() =>
+                            updateRow(row.key, {
+                              days: on ? row.days.filter((d) => d !== day.key) : [...row.days, day.key],
+                            })
+                          }
+                        >
+                          {day.short}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="schedule-row-bottom">
+                    <span className="schedule-days-text">
+                      {row.days.length === 0 ? 'Kies minstens één dag' : describeDays(row.days)}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-icon btn-plain"
+                      aria-label={`Tijd ${row.time} verwijderen`}
+                      onClick={() => removeRow(row)}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                  {row.lastError && row.lastRun && !row.dirty && (
+                    <p className="error-banner" style={{ margin: 0 }}>
+                      Niet gelukt op {formatRun(row.lastRun)}. Kijk bij Let op of al je apparaten bereikbaar zijn.
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" className="btn btn-plain schedule-add" onClick={addRow}>
+            <PlusIcon width="18" height="18" aria-hidden="true" />
+            Tijd toevoegen
+          </button>
         </div>
 
         {error && !confirmingDelete && (

@@ -1,6 +1,7 @@
 'use client'
 
 import { ArrowUpRightIcon, CheckIcon, PlusIcon, ScenesIcon } from '../lib/icons'
+import { describeSchedules } from '../lib/schedules'
 
 // "Leeslamp, Staande lamp en Thermostaat": wat een scène raakt, in woorden.
 function describeScene(scene, deviceNameById) {
@@ -15,7 +16,7 @@ function describeScene(scene, deviceNameById) {
 // uitvoeren zegt de tegel dat, en daarna even "Klaar".
 //
 // runState: { [sceneId]: 'running' | 'done' }
-export default function ScenesView({ scenes, deviceNameById, runState, canRun, onRun, onEdit, onCreate }) {
+export default function ScenesView({ scenes, schedules, deviceNameById, runState, canRun, onRun, onEdit, onCreate }) {
   if (scenes.length === 0) {
     return (
       <section className="panel intro-panel" aria-labelledby="scenes-empty-title">
@@ -43,6 +44,7 @@ export default function ScenesView({ scenes, deviceNameById, runState, canRun, o
     <ul className="device-list scene-list">
       {scenes.map((scene) => {
         const state = runState[scene.id]
+        const when = describeSchedules(schedules.filter((s) => s.scene === scene.id))
         return (
           <li key={scene.id} className="device-cell">
             <div className={`panel tile scene-tile ${state ? `scene-${state}` : ''}`}>
@@ -57,6 +59,7 @@ export default function ScenesView({ scenes, deviceNameById, runState, canRun, o
                 <ScenesIcon width="22" height="22" />
               </span>
               <span className="scene-name">{scene.name}</span>
+              {when && <span className="scene-when">{when}</span>}
               <span className="scene-summary" role="status">
                 {state === 'running' ? (
                   <>

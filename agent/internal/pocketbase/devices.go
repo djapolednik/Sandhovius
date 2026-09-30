@@ -1,6 +1,9 @@
 package pocketbase
 
-import "fmt"
+import (
+	"fmt"
+	"net/url"
+)
 
 type Device struct {
 	ID       string `json:"id"`
@@ -22,6 +25,16 @@ func (c *Client) ListDevices() ([]Device, error) {
 	var resp deviceListResponse
 	if err := c.doAuthed("GET", "/api/collections/devices/records?perPage=200", nil, &resp); err != nil {
 		return nil, fmt.Errorf("pocketbase: list devices: %w", err)
+	}
+	return resp.Items, nil
+}
+
+// ListHouseDevices geeft de devices van één huis.
+func (c *Client) ListHouseDevices(houseID string) ([]Device, error) {
+	var resp deviceListResponse
+	path := "/api/collections/devices/records?perPage=500&filter=" + url.QueryEscape("gateway='"+houseID+"'")
+	if err := c.doAuthed("GET", path, nil, &resp); err != nil {
+		return nil, fmt.Errorf("pocketbase: list house devices: %w", err)
 	}
 	return resp.Items, nil
 }

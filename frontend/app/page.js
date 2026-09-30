@@ -68,6 +68,7 @@ export default function Home() {
   const [rooms, setRooms] = useState([])
   const [devices, setDevices] = useState([])
   const [scenes, setScenes] = useState([])
+  const [schedules, setSchedules] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
   const [sceneRunState, setSceneRunState] = useState({})
   // Open scène-sheet: 'new', een scène-ID, of null.
@@ -192,6 +193,14 @@ export default function Home() {
         if (e.action === 'delete') return
         setHouses((prev) => prev.map((h) => (h.id === e.record.id ? e.record : h)))
       }),
+      // De agent schrijft last_run/last_error: zo ziet de scène-sheet dat live.
+      pb.collection('schedules').subscribe('*', (e) => {
+        setSchedules((prev) =>
+          e.action === 'delete'
+            ? prev.filter((s) => s.id !== e.record.id)
+            : [...prev.filter((s) => s.id !== e.record.id), e.record]
+        )
+      }),
     ]
 
     subscriptions.forEach((subscription) =>
@@ -269,6 +278,7 @@ export default function Home() {
     setRooms([])
     setDevices([])
     setScenes([])
+    setSchedules([])
     setSelectedRoomId('')
     setRealtimeLink('connecting')
     setLoaded(false)
@@ -290,16 +300,18 @@ export default function Home() {
   async function fetchAll() {
     setError('')
     try {
-      const [houseRecords, roomRecords, deviceRecords, sceneRecords] = await Promise.all([
+      const [houseRecords, roomRecords, deviceRecords, sceneRecords, scheduleRecords] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
         pb.collection('devices').getFullList({ expand: 'device_state_via_device' }),
         pb.collection('scenes').getFullList({ sort: 'order,name' }),
+        pb.collection('schedules').getFullList({ sort: 'time' }),
       ])
       setHouses(houseRecords)
       setRooms(roomRecords)
       setDevices(deviceRecords)
       setScenes(sceneRecords)
+      setSchedules(scheduleRecords)
       setLoaded(true)
     } catch (err) {
       if (isSessionExpired(err)) {
@@ -883,12 +895,25 @@ export default function Home() {
     if (sceneId) {
       const updated = await pb.collection('scenes').update(sceneId, fields)
       setScenes((prev) => prev.map((s) => (s.id === sceneId ? updated : s)))
-    } else {
-      const created = await pb
-        .collection('scenes')
-        .create({ ...fields, house: house.id, order: scenesInHouse.length })
-      setScenes((prev) => [...prev, created])
+      return sceneId
     }
+    const created = await pb.collection('scenes').create({ ...fields, house: house.id, order: scenesInHouse.length })
+    setScenes((prev) => [...prev, created])
+    return created.id
+  }
+
+  async function saveSchedule(sceneId, row) {
+    const fields = { time: row.time, days: row.days, enabled: row.enabled }
+    const record = row.id
+      ? await pb.collection('schedules').update(row.id, fields)
+      : await pb.collection('schedules').create({ ...fields, house: house.id, scene: sceneId })
+    setSchedules((prev) => [...prev.filter((s) => s.id !== record.id), record])
+    return record
+  }
+
+  async function deleteSchedule(scheduleId) {
+    await pb.collection('schedules').delete(scheduleId)
+    setSchedules((prev) => prev.filter((s) => s.id !== scheduleId))
   }
 
   function deleteScene(sceneId) {
@@ -1170,6 +1195,7 @@ export default function Home() {
         {loaded && house && (
           <ScenesView
             scenes={scenesInHouse}
+            schedules={schedules}
             deviceNameById={Object.fromEntries(devicesInHouse.map((d) => [d.id, d.name]))}
             runState={sceneRunState}
             canRun={houseReachable}
@@ -1310,9 +1336,12 @@ export default function Home() {
         <SceneModal
           key={editingScene}
           scene={editingScene === 'new' ? null : scenesInHouse.find((s) => s.id === editingScene)}
+          schedules={schedules.filter((s) => s.scene === editingScene)}
           devices={devicesInHouse.filter((d) => d.type !== 'sensor')}
           roomNameById={roomNameById}
-          onSave={(fields) => saveScene(editingScene === 'new' ? null : editingScene, fields)}
+          onSaveScene={saveScene}
+          onSaveSchedule={saveSchedule}
+          onDeleteSchedule={deleteSchedule}
           onDelete={deleteScene}
           onClose={() => setEditingScene(null)}
         />

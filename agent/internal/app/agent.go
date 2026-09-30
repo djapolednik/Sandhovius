@@ -78,10 +78,11 @@ func (a *Agent) Start() error {
 		return err
 	}
 
-	if err := a.devices.refresh(); err != nil {
+	devices, err := a.devices.refresh()
+	if err != nil {
 		log.Printf("[APP] Kon device-cache niet opwarmen: %v\n", err)
 	}
-	a.warmDeviceNames()
+	a.warmDeviceNames(devices)
 
 	if err := a.haClient.Connect(); err != nil {
 		return err
@@ -96,6 +97,7 @@ func (a *Agent) Start() error {
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
 	go a.runHeartbeat()
+	go a.runScheduler()
 
 	return nil
 }
@@ -104,13 +106,7 @@ func (a *Agent) Start() error {
 // realtime listener starts, so handleDeviceEvent has a baseline to diff
 // against and doesn't mistake "first time we see this device" for a
 // rename.
-func (a *Agent) warmDeviceNames() {
-	devices, err := a.pbClient.ListDevices()
-	if err != nil {
-		log.Printf("[APP] Kon device-namen niet opwarmen: %v\n", err)
-		return
-	}
-
+func (a *Agent) warmDeviceNames(devices []pocketbase.Device) {
 	a.deviceNamesMu.Lock()
 	for _, device := range devices {
 		a.deviceNames[device.ID] = device.Name
@@ -245,7 +241,7 @@ func (a *Agent) provisionDeviceEntity(device pocketbase.Device) error {
 
 	// Zorgt dat de nieuwe entity_id meteen in de lookup-cache zit, i.p.v.
 	// te wachten op de eerstvolgende lookup-miss-refresh.
-	if err := a.devices.refresh(); err != nil {
+	if _, err := a.devices.refresh(); err != nil {
 		log.Printf("[APP] Kon device-cache niet verversen na provisioning: %v\n", err)
 	}
 
@@ -356,10 +352,8 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 // hem niet om).
 var sceneActions = map[string]bool{"turn_on": true, "turn_off": true, "set_temperature": true}
 
-// runScene voert alle stappen van een scène uit, op de box: één commando
-// uit de app, en het maakt niet uit als de telefoon daarna wegvalt. Een
-// stap die mislukt houdt de rest niet tegen; het commando wordt dan wel
-// als "failed" gemarkeerd, met welke stappen misgingen.
+// runScene voert een scène uit op verzoek van de app (command "run_scene"):
+// één commando, en het maakt niet uit als de telefoon daarna wegvalt.
 //
 // Alleen scènes van dit huis, en alleen apparaten van dit huis: ook als
 // er ooit iets verkeerds in de JSON staat, schakelt deze box nooit
@@ -378,16 +372,8 @@ func (a *Agent) runScene(cmd pocketbase.Command) {
 		return
 	}
 
-	var failures []error
-	for _, step := range scene.Actions {
-		if err := a.runSceneStep(scene.House, step); err != nil {
-			log.Printf("[APP] Scène %q: stap %s op %s mislukt: %v\n", scene.Name, step.Action, step.Device, err)
-			failures = append(failures, fmt.Errorf("%s %s: %w", step.Action, step.Device, err))
-		}
-	}
-
-	if len(failures) > 0 {
-		a.failCommand(cmd.ID, errors.Join(failures...))
+	if err := a.executeScene(*scene, a.pbClient.GetDevice); err != nil {
+		a.failCommand(cmd.ID, err)
 		return
 	}
 	if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
@@ -397,11 +383,26 @@ func (a *Agent) runScene(cmd pocketbase.Command) {
 	log.Printf("[APP] Scène %q uitgevoerd: %d stappen (commando %s)\n", scene.Name, len(scene.Actions), cmd.ID)
 }
 
-func (a *Agent) runSceneStep(house string, step pocketbase.SceneAction) error {
+// executeScene voert alle stappen van een scène uit, op de box. Een stap
+// die mislukt houdt de rest niet tegen; de fout noemt welke stappen
+// misgingen. lookup zoekt een device op: via PocketBase (knop in de app)
+// of in de snapshot (schema), zodat een schema ook zonder internet werkt.
+func (a *Agent) executeScene(scene pocketbase.Scene, lookup func(id string) (*pocketbase.Device, error)) error {
+	var failures []error
+	for _, step := range scene.Actions {
+		if err := a.runSceneStep(scene.House, step, lookup); err != nil {
+			log.Printf("[APP] Scène %q: stap %s op %s mislukt: %v\n", scene.Name, step.Action, step.Device, err)
+			failures = append(failures, fmt.Errorf("%s %s: %w", step.Action, step.Device, err))
+		}
+	}
+	return errors.Join(failures...)
+}
+
+func (a *Agent) runSceneStep(house string, step pocketbase.SceneAction, lookup func(id string) (*pocketbase.Device, error)) error {
 	if !sceneActions[step.Action] {
 		return fmt.Errorf("actie %q hoort niet in een scène", step.Action)
 	}
-	device, err := a.pbClient.GetDevice(step.Device)
+	device, err := lookup(step.Device)
 	if err != nil {
 		return err
 	}

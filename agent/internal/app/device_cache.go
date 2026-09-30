@@ -25,10 +25,12 @@ func newDeviceCache(pb *pocketbase.Client) *deviceCache {
 	}
 }
 
-func (d *deviceCache) refresh() error {
+// refresh herlaadt de cache en geeft de opgehaalde devices terug, zodat de
+// agent bij het opstarten niet nog een keer hoeft te vragen.
+func (d *deviceCache) refresh() ([]pocketbase.Device, error) {
 	devices, err := d.pb.ListDevices()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	byEntity := make(map[string]string, len(devices))
@@ -42,7 +44,7 @@ func (d *deviceCache) refresh() error {
 	d.mu.Lock()
 	d.byEntity = byEntity
 	d.mu.Unlock()
-	return nil
+	return devices, nil
 }
 
 // entityIDs returns every entity_id the cache currently knows, so the
@@ -67,7 +69,7 @@ func (d *deviceCache) lookup(entityID string) (deviceID string, found bool, err 
 		return id, true, nil
 	}
 
-	if err := d.refresh(); err != nil {
+	if _, err := d.refresh(); err != nil {
 		return "", false, err
 	}
 

@@ -397,6 +397,8 @@ The Scènes tab is the same bento as devices. A **scene tile** has the scenes ic
 
 The **scene sheet** has a name and, per lamp, plug and thermostat, a three-way bar **Niet / Aan / Uit**; a thermostat set to Aan gets a −/+ temperature (0.5° steps). It saves with one "Scène maken" / "Opslaan" button, unlike the detail sheet, because you compose several choices at once. Delete sits at the bottom with an inline confirmation and the usual undo toast.
 
+**Vanzelf uitvoeren.** Below the devices, the scene sheet has one row per time on Inset Mist: a time field, a `switch-accent` (on/off), seven round day buttons (ma … zo, 44px, `aria-pressed`, Electric Blue when on), and the days in words ("Werkdagen", "Weekend", "Elke dag", "Maandag, woensdag en vrijdag") with a delete button. "Tijd toevoegen" adds a row at the next whole hour, every day. If a time did not run well last time, an Amber Notice line says when and points to Let op. On the scene tile, under the name, it says when the scene runs by itself ("Werkdagen om 07:00", or with several times "Om 07:00 en 22:00"). A schedule is an instruction, so nothing glows and there is no green.
+
 ### Ordering and recovery
 Order is set with ↑/↓ icon buttons, never by dragging: one thumb, a keyboard and a screen reader all work, and nothing has to be discovered. **Favorieten** has a quiet "Volgorde" text button beside its heading (from two favourites) that opens a sheet with the list; a new favourite goes last. A device whose setup failed says "Het klaarzetten is niet gelukt" with **Opnieuw proberen** in the accent color next to Details; the box retries and the tile shows "Wordt klaargezet" meanwhile.
 

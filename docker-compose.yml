@@ -87,6 +87,8 @@ services:
       - GATEWAY_NAME=Woonkamer
       - HISTORY_DB_PATH=/data/history.db
       - HISTORY_RETENTION_DAYS=30
+      # Schema's ("23:00") zijn lokale tijd.
+      - TZ=Europe/Amsterdam
     volumes:
       - agent_data:/data
     depends_on:
