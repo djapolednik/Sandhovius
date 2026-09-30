@@ -1,60 +1,135 @@
-/* Inloggen: één paneel op de pagina, met de zachte blauwe gloed van het
-   merkblad erachter — dezelfde gloed die later de thermostaat draagt. */
+/* Inloggen: de eerste bento. Links (op de telefoon boven) je huis 's avonds:
+   donkere ramen en één raam waar een lamp brandt, het beeld van het
+   app-icoon. Rechts (onder, binnen duimbereik) de deur: het formulier.
+   Het licht is dezelfde warme lampgloed als op een tegel die aan staat en
+   gaat ook zo aan: langzaam, als een gloeidraad die opwarmt. */
 .login-page {
-  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   background: var(--background);
 }
 
-.login-page::before {
-  content: '';
-  position: absolute;
-  width: min(34rem, 90vw);
-  aspect-ratio: 1;
-  top: 50%;
-  left: 50%;
-  transform: translate(-30%, -62%);
-  border-radius: 50%;
-  background: var(--accent);
-  filter: blur(90px);
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-[data-theme='dark'] .login-page::before {
-  opacity: 0.45;
+/* Telefoon: het huis vult wat er over is, het formulier staat onderaan. */
+.login-layout {
+  width: 100%;
+  max-width: 30rem;
+  min-height: calc(100dvh - 2rem);
+  display: grid;
+  grid-template-rows: minmax(9rem, 1fr) auto;
+  gap: 0.75rem;
 }
 
 .login-card {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
   background: var(--card-background);
   border-radius: var(--radius-panel);
-  padding: 2.5rem 2rem 2rem;
-  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-panel);
 }
 
 [data-theme='dark'] .login-card {
   border: 1px solid var(--border);
 }
 
+/* De gevel: kamers van verschillende grootte, zoals je een huis van de
+   straat ziet. Geen dak, geen tekening: alleen ramen in de vorm van de
+   tegels uit de app. Het huis is altijd 's avonds, ook in het lichte
+   thema: het is een beeld van je huis, geen vlak dat het thema volgt.
+   Daarom vaste nachtkleuren (night-panel en een donkerder glas) in plaats
+   van de thema-tokens, en het warme lamplicht van het donkere thema. */
+.login-house {
+  --night-wall: #17191d;
+  --night-glass: #0c0d10;
+  /* Een kamer waar de lamp aan is: dezelfde radiale gloed als een
+     lamptegel, op een warm verlicht vlak. */
+  --lit-room: radial-gradient(
+      circle at 50% 55%,
+      rgba(255, 178, 70, 0.95) 0,
+      rgba(255, 160, 40, 0.42) 45%,
+      transparent 85%
+    ),
+    #3a2710;
+  background: var(--night-wall);
+  border: 1px solid #2a2d33;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1.25fr;
+  grid-template-areas:
+    'a a b'
+    'c d b'
+    'e f f';
+  gap: 0.6rem;
+  padding: 0.75rem;
+}
+
+.login-window {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-tile);
+  background: var(--night-glass);
+}
+
+.login-window:nth-child(1) { grid-area: a; }
+.login-window:nth-child(2) { grid-area: b; }
+.login-window:nth-child(3) { grid-area: c; }
+.login-window:nth-child(4) { grid-area: d; }
+.login-window:nth-child(5) { grid-area: e; }
+.login-window:nth-child(6) { grid-area: f; }
+
+/* Twee lichtlagen per raam, allebei uit tot iets ze aanzet: ::after is de
+   lamp van het huis zelf (het vaste raam, en iemand die door het huis
+   loopt), ::before het licht dat aangaat als je binnenkomt. Gescheiden,
+   zodat binnenkomen nooit een lamp die al brandt even uit laat flitsen.
+   De lagen zijn groter dan het raam (inset -12%) en het raam knipt ze af
+   op zijn ronde hoeken: zo dekken ze ook op 92% nog het hele raam en zie
+   je alleen de gloed aanzwellen, nooit de hoekige rand van de laag. */
+.login-window::before,
+.login-window::after {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  background: var(--lit-room);
+  opacity: 0;
+  transform-origin: 50% 55%;
+  pointer-events: none;
+}
+
+/* Het ene raam waar altijd licht brandt: het beeld van het app-icoon. */
+.login-window-lit::after {
+  opacity: 1;
+}
+
+/* Na een geslaagde login: het formulier blijft staan, maar de knop is geen
+   halfdoorzichtige "bezig"-knop meer; hij zegt "Welkom thuis". */
+.is-arriving .btn-primary:disabled {
+  opacity: 1;
+}
+
+.login-card {
+  padding: 1.75rem 1.5rem 1.25rem;
+}
+
 .login-title {
   font-size: 2.5rem;
   font-weight: 600;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.05;
   color: var(--text-primary);
-  margin: 0 0 2rem;
+  margin: 0;
 }
 
-/* Staat in het formulier, boven de knop (form-stack regelt de afstand) —
+.login-lede {
+  margin: 0.5rem 0 1.75rem;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* Staat in het formulier, boven de knop (form-stack regelt de afstand):
    zo lees je de fout vóórdat je opnieuw op Inloggen tikt. */
 .login-error {
   color: var(--danger);
@@ -96,4 +171,167 @@
   font-size: 1rem;
   line-height: 1.5;
   color: var(--text-secondary);
+}
+
+/* Tablet en groter: huis en deur naast elkaar. Het formulier zakt naar de
+   onderkant van het huis, zodat de gevel de ruimte krijgt. */
+@media (min-width: 56rem) {
+  .login-page {
+    padding: 2rem;
+  }
+
+  .login-layout {
+    max-width: 62rem;
+    min-height: min(40rem, calc(100dvh - 4rem));
+    grid-template-rows: none;
+    grid-template-columns: 1.15fr minmax(22rem, 25rem);
+    gap: 1rem;
+  }
+
+  .login-house {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .login-card {
+    align-self: end;
+    padding: 2.25rem 2rem 1.5rem;
+  }
+}
+
+/* Binnenkomen: eerst het huis, raam voor raam, dan de deur; daarna gaat
+   de lamp aan zoals op een lamptegel (1.4s, --ease-lamp). Alleen transform
+   en opacity. Dit scherm zie je zelden, dus het mag iets langer duren dan
+   gewone bediening. */
+@media (prefers-reduced-motion: no-preference) {
+  .login-window {
+    animation: login-rise 0.5s var(--ease-out) both;
+    animation-delay: calc(var(--i) * 60ms);
+  }
+
+  .login-card {
+    animation: login-rise 0.55s var(--ease-out) 0.15s both;
+  }
+
+  .login-window-lit::after {
+    animation: login-lamp-on 1.4s var(--ease-lamp) 0.7s both;
+  }
+
+  /* Er woont iemand: een tweede lamp gaat aan, blijft even branden en gaat
+     weer uit, en intussen gaat die in een andere kamer aan, alsof iemand
+     door het huis loopt. Elke 6s een volgende kamer, een ronde van 24s,
+     in een onregelmatige route (linksonder, linksboven, rechts, onder). */
+  .login-window:nth-child(5)::after,
+  .login-window:nth-child(1)::after,
+  .login-window:nth-child(2)::after,
+  .login-window:nth-child(6)::after {
+    animation: login-walk 24s linear infinite both;
+  }
+
+  .login-window:nth-child(5)::after { animation-delay: 3s; }
+  .login-window:nth-child(1)::after { animation-delay: 9s; }
+  .login-window:nth-child(2)::after { animation-delay: 15s; }
+  .login-window:nth-child(6)::after { animation-delay: 21s; }
+
+  /* Na een geslaagde login gaan alle lampen snel aan, raam voor raam
+     (45ms uit elkaar, 350ms elk), en daarna verdwijnt het formulier sneller
+     dan het kwam (200ms). ARRIVE_MS in page.js (650ms) wacht hierop. */
+  .is-arriving .login-window::before {
+    animation: login-arrive-on 550ms var(--ease-out) calc(var(--i) * 45ms) both;
+  }
+
+  .is-arriving .login-layout {
+    animation: login-leave 200ms var(--ease-out) 450ms both;
+  }
+}
+
+/* Minder beweging: geen opkomende ramen, geen wandelende lamp. Het licht
+   gaat alleen aan door te vervagen, en bij binnenkomen gaan alle lampen
+   tegelijk aan en vervaagt het formulier (samen 300ms, ARRIVE_REDUCED_MS). */
+@media (prefers-reduced-motion: reduce) {
+  .login-window-lit::after {
+    animation: login-fade-in 0.3s var(--ease-out) both;
+  }
+
+  .is-arriving .login-window::before {
+    animation: login-arrive-fade 150ms var(--ease-out) both;
+  }
+
+  .is-arriving .login-layout {
+    animation: login-leave-fade 150ms var(--ease-out) 150ms both;
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes login-lamp-on {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes login-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Een lamp die aangaat (1.44s, als op een tegel), ruim 7s brandt en in
+   1.8s uitdooft, net als een lamptegel die uitgaat. */
+@keyframes login-walk {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+    animation-timing-function: var(--ease-lamp);
+  }
+  6% {
+    opacity: 1;
+    transform: none;
+  }
+  31% {
+    opacity: 1;
+    transform: none;
+    animation-timing-function: ease-in;
+  }
+  38.5%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes login-arrive-on {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes login-arrive-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes login-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes login-leave-fade {
+  to {
+    opacity: 0;
+  }
 }

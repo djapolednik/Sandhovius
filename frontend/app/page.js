@@ -56,6 +56,13 @@ const COMMAND_GIVE_UP_MS = 15000
 // Zo lang kun je iets terugdraaien ("Ongedaan maken"): de melding staat er
 // even lang, en een verwijdering gebeurt pas daarna echt.
 const UNDO_MS = 6000
+// Na een geslaagde login: zo lang gaan de lampen in het huis aan en
+// verdwijnt het formulier voordat Home verschijnt (zie login.css). Met
+// minder beweging alleen een korte vervaging.
+const ARRIVE_MS = 650
+const ARRIVE_REDUCED_MS = 300
+// Zo lang heeft Home de klasse .arriving (de binnenkomst in base.css).
+const ARRIVE_IN_MS = 600
 
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -63,6 +70,7 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loggingIn, setLoggingIn] = useState(false)
+  const [arriving, setArriving] = useState(false)
 
   const [houses, setHouses] = useState([])
   const [rooms, setRooms] = useState([])
@@ -228,6 +236,20 @@ export default function Home() {
     setLoggingIn(true)
     try {
       await pb.collection('users').authWithPassword(email, password)
+      // Pas nu het inloggen bevestigd is: de lampen gaan aan, het formulier
+      // verdwijnt, en dan komt Home binnen. Nooit eerder, want dan zou het
+      // huis een geslaagde login beloven die nog niet vaststaat.
+      setArriving(true)
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      await new Promise((resolve) => setTimeout(resolve, reduce ? ARRIVE_REDUCED_MS : ARRIVE_MS))
+      // Na inloggen altijd naar Home, ook als de URL nog op het tabblad van
+      // vóór het uitloggen staat (#instellingen). replaceState, zodat de
+      // terugknop niet naar dat oude tabblad springt.
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      setTab('home')
+      window.scrollTo(0, 0)
+      document.documentElement.classList.add('arriving')
+      setTimeout(() => document.documentElement.classList.remove('arriving'), ARRIVE_IN_MS)
       setLoggedIn(true)
     } catch (err) {
       // 400 is bij inloggen vrijwel altijd een onjuiste combinatie — dat
@@ -239,6 +261,7 @@ export default function Home() {
       )
     } finally {
       setLoggingIn(false)
+      setArriving(false)
     }
   }
 
@@ -940,33 +963,76 @@ export default function Home() {
 
   if (!loggedIn) {
     return (
-      <main className="login-page">
-        <div className="login-card">
-          <h1 className="login-title">Sandhovius</h1>
-          {/* Zichtbare labels i.p.v. alleen placeholders: een placeholder
-              verdwijnt zodra je begint te typen. autoComplete laat de
-              wachtwoordbeheerder van de telefoon het formulier invullen. */}
-          {resetMode ? (
-            resetSent ? (
-              <div className="form-stack">
-                <p className="login-note" role="status">
-                  Als er een account bij {email} hoort, krijg je een e-mail met een link om een nieuw wachtwoord te
-                  kiezen. Kijk ook even bij je ongewenste mail.
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setResetMode(false)
-                    setResetSent(false)
-                  }}
-                >
-                  Terug naar inloggen
-                </button>
-              </div>
+      <main className={arriving ? 'login-page is-arriving' : 'login-page'}>
+        <div className="login-layout">
+          {/* Je huis 's avonds, met één lamp aan: puur beeld, dus verborgen
+              voor schermlezers. */}
+          <div className="login-house" aria-hidden="true">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <span key={i} className={i === 3 ? 'login-window login-window-lit' : 'login-window'} style={{ '--i': i }} />
+            ))}
+          </div>
+          <div className="login-card">
+            <h1 className="login-title">Sandhovius</h1>
+            <p className="login-lede">Log in om je huis te bedienen.</p>
+            {/* Zichtbare labels i.p.v. alleen placeholders: een placeholder
+                verdwijnt zodra je begint te typen. autoComplete laat de
+                wachtwoordbeheerder van de telefoon het formulier invullen. */}
+            {resetMode ? (
+              resetSent ? (
+                <div className="form-stack">
+                  <p className="login-note" role="status">
+                    Als er een account bij {email} hoort, krijg je een e-mail met een link om een nieuw wachtwoord te
+                    kiezen. Kijk ook even bij je ongewenste mail.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setResetMode(false)
+                      setResetSent(false)
+                    }}
+                  >
+                    Terug naar inloggen
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={requestReset} className="form-stack">
+                  <p className="login-note">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+                  <label className="form-field">
+                    <span className="form-label">E-mailadres</span>
+                    <input
+                      className="input"
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </label>
+                  {error && (
+                    <p className="login-error" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <button type="submit" className="btn btn-primary" disabled={loggingIn}>
+                    Stuur resetlink
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-plain login-link"
+                    onClick={() => {
+                      setResetMode(false)
+                      setError('')
+                    }}
+                  >
+                    Terug naar inloggen
+                  </button>
+                </form>
+              )
             ) : (
-              <form onSubmit={requestReset} className="form-stack">
-                <p className="login-note">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+              <form onSubmit={login} className="form-stack">
                 <label className="form-field">
                   <span className="form-label">E-mailadres</span>
                   <input
@@ -979,78 +1045,47 @@ export default function Home() {
                     required
                   />
                 </label>
+                <label className="form-field">
+                  <span className="form-label">Wachtwoord</span>
+                  <input
+                    className="input"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </label>
                 {error && (
                   <p className="login-error" role="alert">
                     {error}
                   </p>
                 )}
                 <button type="submit" className="btn btn-primary" disabled={loggingIn}>
-                  Stuur resetlink
+                  {arriving ? (
+                    'Welkom thuis'
+                  ) : loggingIn ? (
+                    <>
+                      <span className="spinner" aria-hidden="true" />
+                      Bezig met inloggen…
+                    </>
+                  ) : (
+                    'Inloggen'
+                  )}
                 </button>
                 <button
                   type="button"
                   className="btn btn-plain login-link"
                   onClick={() => {
-                    setResetMode(false)
+                    setResetMode(true)
                     setError('')
                   }}
                 >
-                  Terug naar inloggen
+                  Wachtwoord vergeten?
                 </button>
               </form>
-            )
-          ) : (
-            <form onSubmit={login} className="form-stack">
-              <label className="form-field">
-                <span className="form-label">E-mailadres</span>
-                <input
-                  className="input"
-                  type="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </label>
-              <label className="form-field">
-                <span className="form-label">Wachtwoord</span>
-                <input
-                  className="input"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </label>
-              {error && (
-                <p className="login-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <button type="submit" className="btn btn-primary" disabled={loggingIn}>
-                {loggingIn ? (
-                  <>
-                    <span className="spinner" aria-hidden="true" />
-                    Bezig met inloggen…
-                  </>
-                ) : (
-                  'Inloggen'
-                )}
-              </button>
-              <button
-                type="button"
-                className="btn btn-plain login-link"
-                onClick={() => {
-                  setResetMode(true)
-                  setError('')
-                }}
-              >
-                Wachtwoord vergeten?
-              </button>
-            </form>
-          )}
+            )}
+          </div>
         </div>
       </main>
     )

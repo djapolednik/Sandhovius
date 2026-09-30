@@ -326,7 +326,7 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 - **Navigation** (`0 12px 36px -14px rgba(0,0,0,0.35)`; on black a hairline with a deeper shadow): the bottom bar floats above the content.
 - **Toast** (`0 12px 28px -10px rgba(0,0,0,0.45)`).
 - **Modal / sheet** (`0 24px 56px -16px rgba(0,0,0,0.45)`) over a 55% black scrim.
-- **Login** (a large blurred Electric Blue disc behind the login panel, 35% light / 45% dark): the brand sheet's glow as the first thing you see.
+- **Login** (the house panel): a night-colored panel of dark windows in both themes, one of which is lit with warm lamp light (the same radial glow as a lamp tile). It is a picture of your home with one lamp on, the image of the app icon; nothing else on the login glows.
 
 ### Named Rules
 **The Real Light Rule.** Only something that is actually live may glow: a lamp that is on (warm), a plug that is on (power blue) and the thermostat while it heats (Electric Blue). Sensors, buttons and panels never glow. A glow that stands for anything other than live energy turns the room into a neon console.
@@ -403,7 +403,7 @@ The **scene sheet** has a name and, per lamp, plug and thermostat, a three-way b
 Order is set with ↑/↓ icon buttons, never by dragging: one thumb, a keyboard and a screen reader all work, and nothing has to be discovered. **Favorieten** has a quiet "Volgorde" text button beside its heading (from two favourites) that opens a sheet with the list; a new favourite goes last. A device whose setup failed says "Het klaarzetten is niet gelukt" with **Opnieuw proberen** in the accent color next to Details; the box retries and the tile shows "Wordt klaargezet" meanwhile.
 
 ### Login and the installed app
-The login card has a quiet "Wachtwoord vergeten?" under the button. It swaps to one field and "Stuur resetlink"; the confirmation is the same whether or not the address has an account. The app is installable: name Sandhovius, a placeholder icon (a house with one lit window on black, not a logo), standalone display, and a status bar that follows the phone's theme.
+The login is the first bento: a **house panel** (your house at night: six dark windows of different sizes on a night wall, one lit warm; always night-colored, also in the light theme, because it is a picture and not a surface) and the **login panel** ("Sandhovius" at Display size, "Log in om je huis te bedienen.", the form). On a phone the house fills the top and the form sits at the bottom in thumb reach; from 56rem they sit side by side, the form aligned to the bottom of the house. On entry the windows rise in one by one (60ms apart), then the panel, then the lamp comes on over 1.4s like a lamp tile; with reduced motion only the light fades in (0.3s). The login panel has a quiet "Wachtwoord vergeten?" under the button. It swaps to one field and "Stuur resetlink"; the confirmation is the same whether or not the address has an account. The app is installable: name Sandhovius, a placeholder icon (a house with one lit window on black, not a logo), standalone display, and a status bar that follows the phone's theme.
 
 ## Do's and Don'ts
 

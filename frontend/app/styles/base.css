@@ -96,3 +96,44 @@ select {
   white-space: nowrap;
   border: 0;
 }
+
+/* Net ingelogd: Home komt binnen nadat het formulier verdween (page.js zet
+   .arriving op <html> voor ARRIVE_IN_MS). Kop en inhoud komen 8px omhoog,
+   de navigatie iets later. Alleen de binnenste lijst van de navigatie
+   beweegt: .bottom-nav zelf staat fixed en is al verschoven. */
+@media (prefers-reduced-motion: no-preference) {
+  .arriving .topbar,
+  .arriving .container,
+  .arriving .bottom-nav-list {
+    animation: app-arrive 300ms var(--ease-out) both;
+  }
+
+  .arriving .container {
+    animation-delay: 50ms;
+  }
+
+  .arriving .bottom-nav-list {
+    animation-delay: 100ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arriving .topbar,
+  .arriving .container,
+  .arriving .bottom-nav-list {
+    animation: app-fade-in 200ms var(--ease-out) both;
+  }
+}
+
+@keyframes app-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+  }
+}

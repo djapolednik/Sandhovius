@@ -66,6 +66,11 @@
   --radius-control: 14px;
 
   --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.04), 0 14px 32px -20px rgba(0, 0, 0, 0.16);
+
+  /* Beweging. --ease-out voor alles wat binnenkomt of weggaat; --ease-lamp
+     is een lamp die aangaat: langzaam op gang, als een gloeidraad. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-lamp: cubic-bezier(0.3, 0, 0.2, 1);
 }
 
 [data-theme='dark'] {
