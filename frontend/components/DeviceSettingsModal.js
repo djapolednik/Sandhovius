@@ -12,8 +12,9 @@ import { isDeviceOn } from './DeviceCard'
 
 // Alles over één apparaat in één sheet: hoe het er nu bij staat, wat het
 // meet (sensoren), of het op Home staat, en naam, kamer en verwijderen.
-// Opent via "Details" op een tegel, het tandwiel van de thermostaat, een
-// tik op een sensor of door een tegel ingedrukt te houden. Op een telefoon
+// Opent door een tegel ingedrukt te houden (of rechts te klikken), met een
+// tik op een sensor of een apparaat dat niet klaargezet is, en via het
+// tandwiel van de thermostaat. Op een telefoon
 // een sheet onderin, binnen bereik van je duim.
 //
 // Alles slaat zichzelf op, zoals de schakelaar: de kamer zodra je hem
@@ -26,6 +27,7 @@ export default function DeviceSettingsModal({
   onSaveError,
   onToggleFavorite,
   onDelete,
+  onRetrySetup,
   onClose,
 }) {
   const [name, setName] = useState(device.name ?? '')
@@ -107,7 +109,27 @@ export default function DeviceSettingsModal({
 
   return (
     <Modal title={device.name} onClose={close}>
-      {device.type === 'sensor' ? <SensorReadings device={device} /> : <DeviceStatus device={device} />}
+      {onRetrySetup ? (
+        // Herstellen i.p.v. "verwijder en voeg opnieuw toe": de box probeert
+        // het gewoon nog een keer.
+        <div className="setup-failed">
+          <p className="setup-failed-text">Het klaarzetten is niet gelukt.</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              onRetrySetup(device)
+              onClose()
+            }}
+          >
+            Opnieuw proberen
+          </button>
+        </div>
+      ) : device.type === 'sensor' ? (
+        <SensorReadings device={device} />
+      ) : (
+        <DeviceStatus device={device} />
+      )}
       <div className="modal-divider" />
 
       <div className="settings-row">

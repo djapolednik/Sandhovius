@@ -28,17 +28,16 @@ function pointOnDial(fraction) {
   }
 }
 
-// Een thermostaat is een thermostaat, geen lichtschakelaar: het paneel
-// toont het doel groot op een draaiknop, hoe warm het nu is, en laat het
-// doel met −/+ bijstellen. Aan of uit is één schakelaar onderin
-// ("Verwarming") — nooit het gevolg van een tik op het paneel zelf. Staat
-// hij uit, dan is het paneel rustig: grijze boog, geen blauw vlak.
+// Een thermostaat is een thermostaat, geen lichtschakelaar: een compacte
+// draaiknop met het doel groot en hoe warm het nu is, met − en + ernaast.
+// Aan of uit is één schakelaar onderin ("Verwarming", met de status
+// eronder) — nooit het gevolg van een tik op het paneel zelf. Staat hij
+// uit, dan is het paneel rustig: grijze boog, geen blauw vlak.
 export default function ClimateCard({
   state,
   isOn,
   isOnline,
   offlineText = 'Offline',
-  header,
   onSetTemperature,
   onToggleHeating,
 }) {
@@ -121,122 +120,99 @@ export default function ClimateCard({
   const currentMark = hasCurrent ? pointOnDial(clamp(current)) : null
   const isHeating = status === 'Verwarmt'
 
+  const stepButton = (label, delta, disabled, Icon) => (
+    <button
+      type="button"
+      className="climate-step"
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => adjust(delta)}
+    >
+      <Icon width="22" height="22" />
+    </button>
+  )
+
+  if (!hasCurrent && !hasTarget) return <p className="reading-empty">Nog geen meetwaarden ontvangen</p>
+
   return (
-    <>
-      {header}
+    <div className="climate-layout">
+      <div className="climate-dial-row">
+        {hasTarget && stepButton('Kouder', -TEMP_STEP, !canAdjust || shownTarget <= minTemp, MinusIcon)}
 
-      {!hasCurrent && !hasTarget ? (
-        <div className="reading-empty">Nog geen meetwaarden ontvangen</div>
-      ) : (
-        <div className="climate-layout">
-          {/* Blauwe boog zolang de verwarming aan staat; de gloed alleen als
-              hij echt verwarmt (Real Light Rule), niet bij "Op temperatuur". */}
-          <div className={`dial ${isOn && isOnline ? '' : 'dial-idle'} ${isHeating ? 'dial-live' : ''}`}>
-            <svg className="dial-svg" viewBox={`0 0 ${DIAL_SIZE} ${DIAL_SIZE}`} aria-hidden="true">
-              <circle
-                className="dial-track"
-                cx={DIAL_SIZE / 2}
-                cy={DIAL_SIZE / 2}
-                r={DIAL_RADIUS}
-                strokeDasharray={`${ARC_LENGTH} ${CIRCUMFERENCE}`}
-                transform={`rotate(${DIAL_START} ${DIAL_SIZE / 2} ${DIAL_SIZE / 2})`}
-              />
-              {hasTarget && (
-                <>
-                  <circle
-                    className="dial-value"
-                    cx={DIAL_SIZE / 2}
-                    cy={DIAL_SIZE / 2}
-                    r={DIAL_RADIUS}
-                    strokeDasharray={`${ARC_LENGTH * targetFraction} ${CIRCUMFERENCE}`}
-                    transform={`rotate(${DIAL_START} ${DIAL_SIZE / 2} ${DIAL_SIZE / 2})`}
-                  />
-                  <circle className="dial-knob" cx={knob.x} cy={knob.y} r="9" />
-                </>
-              )}
-              {currentMark && <circle className="dial-current" cx={currentMark.x} cy={currentMark.y} r="3.5" />}
-            </svg>
-
-            <div className="dial-center">
-              {hasTarget && (
-                <>
-                  <span className="dial-label">Doel</span>
-                  <span className="dial-target">
-                    <span className="visually-hidden">Doeltemperatuur </span>
-                    {formatTemperature(shownTarget)}
-                  </span>
-                  <span className="visually-hidden" aria-live="polite">
-                    {announced}
-                  </span>
-                </>
-              )}
-              {hasCurrent && (
-                <span className="dial-now">
-                  Nu <span>{formatTemperature(current)}</span>
-                </span>
-              )}
-            </div>
-
-            <span className="dial-scale dial-scale-min" aria-hidden="true">
-              {formatTemperature(minTemp)}
-            </span>
-            <span className="dial-scale dial-scale-max" aria-hidden="true">
-              {formatTemperature(maxTemp)}
-            </span>
-          </div>
-
-          <div className="climate-controls">
-            {/* Bij grote tekst verhuist "Nu" uit de knop naar hier, waar hij
-                mee kan groeien (zie de container query in devices.css). */}
-            {hasCurrent && <p className="climate-now">Nu {formatTemperature(current)}</p>}
+        {/* Blauwe boog zolang de verwarming aan staat; de gloed alleen als
+            hij echt verwarmt (Real Light Rule), niet bij "Op temperatuur". */}
+        <div className={`dial ${isOn && isOnline ? '' : 'dial-idle'} ${isHeating ? 'dial-live' : ''}`}>
+          <svg className="dial-svg" viewBox={`0 0 ${DIAL_SIZE} ${DIAL_SIZE}`} aria-hidden="true">
+            <circle
+              className="dial-track"
+              cx={DIAL_SIZE / 2}
+              cy={DIAL_SIZE / 2}
+              r={DIAL_RADIUS}
+              strokeDasharray={`${ARC_LENGTH} ${CIRCUMFERENCE}`}
+              transform={`rotate(${DIAL_START} ${DIAL_SIZE / 2} ${DIAL_SIZE / 2})`}
+            />
             {hasTarget && (
-              // Eigen pointerdown-stop: ingedrukt houden op −/+ mag niet de
-              // instellingen openen (zie de long-press in DeviceCard).
-              <div className="climate-target" onPointerDown={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="climate-step"
-                  aria-label="Kouder"
-                  disabled={!canAdjust || shownTarget <= minTemp}
-                  onClick={() => adjust(-TEMP_STEP)}
-                >
-                  <MinusIcon width="22" height="22" />
-                </button>
-                {status && (
-                  <span className={`climate-status ${isHeating ? 'climate-status-heating' : ''}`}>{status}</span>
-                )}
-                <button
-                  type="button"
-                  className="climate-step"
-                  aria-label="Warmer"
-                  disabled={!canAdjust || shownTarget >= maxTemp}
-                  onClick={() => adjust(TEMP_STEP)}
-                >
-                  <PlusIcon width="22" height="22" />
-                </button>
-              </div>
+              <>
+                <circle
+                  className="dial-value"
+                  cx={DIAL_SIZE / 2}
+                  cy={DIAL_SIZE / 2}
+                  r={DIAL_RADIUS}
+                  strokeDasharray={`${ARC_LENGTH * targetFraction} ${CIRCUMFERENCE}`}
+                  transform={`rotate(${DIAL_START} ${DIAL_SIZE / 2} ${DIAL_SIZE / 2})`}
+                />
+                <circle className="dial-knob" cx={knob.x} cy={knob.y} r="9" />
+              </>
             )}
+            {currentMark && <circle className="dial-current" cx={currentMark.x} cy={currentMark.y} r="3.5" />}
+          </svg>
 
-            {/* Eén schakelaar: aan of uit is apparaatstand, dus het "aan"-groen
-                (zoals elke stand), geen blauw vlak. Offline blijft hij
-                focusbaar (aria-disabled), zodat je de stand kunt horen. */}
-            <div className="climate-power" onPointerDown={(e) => e.stopPropagation()}>
-              <span id={powerId}>Verwarming</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isOn}
-                aria-labelledby={powerId}
-                aria-disabled={canSwitch ? undefined : true}
-                className={`switch ${isOn ? 'switch-on' : ''}`}
-                onClick={() => canSwitch && onToggleHeating()}
-              >
-                <span className="switch-thumb" />
-              </button>
-            </div>
+          <div className="dial-center">
+            {hasTarget && (
+              <>
+                <span className="dial-target">
+                  <span className="visually-hidden">Doeltemperatuur </span>
+                  {formatTemperature(shownTarget)}
+                </span>
+                <span className="visually-hidden" aria-live="polite">
+                  {announced}
+                </span>
+              </>
+            )}
+            {hasCurrent && (
+              <span className="dial-now">
+                Nu <span>{formatTemperature(current)}</span>
+              </span>
+            )}
           </div>
         </div>
-      )}
-    </>
+
+        {hasTarget && stepButton('Warmer', TEMP_STEP, !canAdjust || shownTarget >= maxTemp, PlusIcon)}
+      </div>
+
+      {/* Eén schakelaar: aan of uit is apparaatstand, dus het "aan"-groen
+          (zoals elke stand), geen blauw vlak. De status staat eronder, zodat
+          het paneel geen aparte regel nodig heeft. Offline blijft hij
+          focusbaar (aria-disabled), zodat je de stand kunt horen. */}
+      <div className="climate-power">
+        <span className="climate-power-text">
+          <span id={powerId}>Verwarming</span>
+          {status && (
+            <span className={`climate-status ${isHeating ? 'climate-status-heating' : ''}`}>{status}</span>
+          )}
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isOn}
+          aria-labelledby={powerId}
+          aria-disabled={canSwitch ? undefined : true}
+          className={`switch ${isOn ? 'switch-on' : ''}`}
+          onClick={() => canSwitch && onToggleHeating()}
+        >
+          <span className="switch-thumb" />
+        </button>
+      </div>
+    </div>
   )
 }

@@ -98,6 +98,14 @@ html {
   padding-bottom: calc(9.5rem + env(safe-area-inset-bottom));
 }
 
+/* Breed: de navigatie is één rij (±5rem), dus minder ruimte eronder, zodat
+   Home op een laptop zonder scrollen past. */
+@media (min-width: 900px) {
+  .container {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+}
+
 @media (min-width: 768px) {
   .container {
     padding-left: max(1.5rem, env(safe-area-inset-left));

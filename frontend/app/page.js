@@ -46,6 +46,8 @@ function tabFromHash() {
 // vanzelf — geen eigen opslag-code nodig.
 const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL, new LocalAuthStore('pocketbase_auth'))
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
+// Wat Home laat zien: je favorieten of alles wat aan staat.
+const HOME_VIEW_KEY = 'sandhovius-home-view'
 const SELECTED_HOUSE_KEY = 'sandhovius-selected-house'
 // Zo lang mag het klaarzetten van een nieuw apparaat duren voordat de kaart
 // het niet meer "Wordt klaargezet" noemt (normaal: een paar seconden).
@@ -104,6 +106,18 @@ export default function Home() {
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   const [shelfIds, setShelfIds] = useState([])
   const [orderingFavorites, setOrderingFavorites] = useState(false)
+  const [homeView, setHomeView] = useState('favorites')
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(HOME_VIEW_KEY) === 'on') setHomeView('on')
+    } catch {}
+  }, [])
+  function chooseHomeView(view) {
+    setHomeView(view)
+    try {
+      window.localStorage.setItem(HOME_VIEW_KEY, view)
+    } catch {}
+  }
   const [changingPassword, setChangingPassword] = useState(false)
   // Inlogscherm: "Wachtwoord vergeten?" wisselt naar een formulier dat een
   // resetlink laat mailen; resetSent toont daarna de bevestiging.
@@ -508,8 +522,7 @@ export default function Home() {
       })
     : []
 
-  // "Staat aan" op Home: alles wat aan staat, behalve de favorieten (die
-  // staan er al). Zet je er een uit, dan blijft hij (met "Uit") staan tot
+  // "Staat aan" op Home: alles wat aan staat, ook favorieten. Zet je er een uit, dan blijft hij (met "Uit") staan tot
   // je Home verlaat: een tegel die onder je duim verdwijnt, voelt als een
   // fout, en zo kun je hem ook meteen weer aanzetten.
   const onIdsKey = devicesOn.map((device) => device.id).join(',')
@@ -978,7 +991,6 @@ export default function Home() {
       onToggle: (device) => latest.current.toggleDevice(device),
       onSetTemperature: (device, temperature) => latest.current.setDeviceTemperature(device, temperature),
       onOpenSettings: (device) => setSettingsDeviceId(device.id),
-      onRetrySetup: (device) => latest.current.retrySetup(device),
     }),
     []
   )
@@ -1121,10 +1133,8 @@ export default function Home() {
     .filter((device) => device.favorite && device.type !== 'climate')
     .sort((a, b) => (a.favorite_order ?? 0) - (b.favorite_order ?? 0) || a.name.localeCompare(b.name, 'nl'))
   // Alleen als de box bereikbaar is: anders weten we niet zeker wat er aan
-  // staat (net als de samenvatting).
-  const shelfDevices = houseReachable
-    ? devicesInHouse.filter((device) => shelfIds.includes(device.id) && !device.favorite)
-    : []
+  // staat.
+  const shelfDevices = houseReachable ? devicesInHouse.filter((device) => shelfIds.includes(device.id)) : []
   const userEmail = pb.authStore.record?.email
 
   const errorBanner = error && (
@@ -1142,9 +1152,9 @@ export default function Home() {
     // Plaatshouders in de vorm van tegels, zodat het scherm niet leeg is en
     // niet verspringt als de apparaten binnenkomen.
     <ul className="device-list" aria-hidden="true">
-      {[0, 1, 2, 3].map((i) => (
-        <li key={i} className={`device-cell ${i === 0 ? 'device-cell-climate' : ''}`}>
-          <div className="panel tile card-skeleton" />
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <li key={i} className="device-cell">
+          <div className="panel card-skeleton" />
         </li>
       ))}
     </ul>
@@ -1185,20 +1195,49 @@ export default function Home() {
     </section>
   )
 
-  function renderDevices(list, { showRoom = false } = {}) {
+  // Thermostaten in een eigen lijst: een paneel naast kleine tegels in één
+  // raster maakt de rijen ongelijk hoog.
+  function renderDevices(list) {
+    const card = (device) => (
+      <DeviceCard
+        key={device.id}
+        device={device}
+        houseReachable={houseReachable}
+        isNew={newDeviceIds.includes(device.id)}
+        {...cardHandlers}
+      />
+    )
+    const climate = list.filter((device) => device.type === 'climate')
+    const others = list.filter((device) => device.type !== 'climate')
     return (
-      <ul className="device-list">
-        {list.map((device) => (
-          <DeviceCard
-            key={device.id}
-            device={device}
-            context={showRoom ? roomNameById[device.room] ?? 'Geen kamer' : undefined}
-            houseReachable={houseReachable}
-            isNew={newDeviceIds.includes(device.id)}
-            {...cardHandlers}
-          />
+      <>
+        {climate.length > 0 && <ul className="climate-list">{climate.map(card)}</ul>}
+        {others.length > 0 && <ul className="device-list">{others.map(card)}</ul>}
+      </>
+    )
+  }
+
+  // Per kamer, heel rustig: een klein kamerwoord boven elke groep, in de
+  // volgorde van de kamers (zonder kamer als laatste). De groepen lopen in
+  // kolommen, zodat kleine kamers naast elkaar staan en Home laag blijft.
+  function renderByRoom(list) {
+    const groups = [...roomsInHouse.map((room) => ({ id: room.id, name: room.name })), { id: null, name: 'Geen kamer' }]
+      .map((group) => ({
+        ...group,
+        devices: list.filter((device) =>
+          group.id ? device.room === group.id : !roomsInHouse.some((room) => room.id === device.room)
+        ),
+      }))
+      .filter((group) => group.devices.length > 0)
+    return (
+      <div className="room-groups">
+        {groups.map((group) => (
+          <div key={group.id ?? 'none'} className="room-group">
+            <p className="room-group-name">{group.name}</p>
+            {renderDevices(group.devices)}
+          </div>
         ))}
-      </ul>
+      </div>
     )
   }
 
@@ -1307,58 +1346,72 @@ export default function Home() {
             </div>
           )}
 
-          <div className="dashboard-devices" style={{ '--favorites': favoriteDevices.length }}>
+          <div className="dashboard-devices">
             {skeleton}
 
             {firstDevice}
 
             {loaded && house && devicesInHouse.length > 0 && (
-              <div className="home-main">
+              <div className="home-grid">
                 {scenesInHouse.length > 0 && (
                   <HomeScenes scenes={scenesInHouse} runState={sceneRunState} canRun={houseReachable} onRun={runScene} />
                 )}
 
-                <section className="home-section" aria-labelledby="home-favorites">
+                {/* Eén rij tegels, met een keuze: je vaste knoppen of alles wat
+                    nu aan staat. */}
+                <section className="home-section home-devices" aria-label="Apparaten">
                   <div className="section-head">
-                    <h2 id="home-favorites" className="section-heading">
-                      Favorieten
-                    </h2>
-                    {favoriteDevices.length > 1 && (
+                    <fieldset className="segmented home-view">
+                      <legend className="visually-hidden">Laat zien</legend>
+                      {[
+                        ['favorites', 'Favorieten'],
+                        ['on', 'Staat aan'],
+                      ].map(([value, label]) => (
+                        <label
+                          key={value}
+                          className={`segmented-option ${homeView === value ? 'segmented-option-selected' : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="home-view"
+                            className="visually-hidden"
+                            checked={homeView === value}
+                            onChange={() => chooseHomeView(value)}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </fieldset>
+                    {homeView === 'favorites' && favoriteDevices.length > 1 && (
                       <button type="button" className="btn btn-plain section-action" onClick={() => setOrderingFavorites(true)}>
                         Volgorde
                       </button>
                     )}
                   </div>
-                  {favoriteDevices.length > 0 ? (
-                    renderDevices(favoriteDevices, { showRoom: true })
+                  {homeView === 'favorites' ? (
+                    favoriteDevices.length > 0 ? (
+                      renderByRoom(favoriteDevices)
+                    ) : (
+                      <p className="section-hint">
+                        Zet apparaten die je vaak gebruikt hier: houd een apparaat ingedrukt en zet "Op Home tonen" aan.
+                      </p>
+                    )
+                  ) : !houseReachable ? (
+                    <p className="section-hint">Je box reageert niet, dus we weten nu niet zeker wat er aan staat.</p>
+                  ) : shelfDevices.length > 0 ? (
+                    renderByRoom(shelfDevices)
                   ) : (
-                    <p className="section-hint">
-                      Zet apparaten die je vaak gebruikt hier: open een apparaat via Details en zet "Op Home tonen"
-                      aan.
-                    </p>
+                    <p className="section-hint">Alle lampen en stopcontacten zijn uit.</p>
                   )}
                 </section>
 
-                {shelfDevices.length > 0 && (
-                  <section className="home-section" aria-labelledby="home-on">
-                    <h2 id="home-on" className="section-heading">
-                      Staat aan
-                    </h2>
-                    {renderDevices(shelfDevices, { showRoom: true })}
+                {climateDevices.length > 0 && (
+                  <section className="home-section home-climate" aria-label="Temperatuur">
+                    {renderDevices(climateDevices)}
                   </section>
                 )}
               </div>
             )}
-
-            {loaded && house && climateDevices.length > 0 && (
-              <section className="home-section" aria-labelledby="home-climate">
-                <h2 id="home-climate" className="section-heading">
-                  Temperatuur
-                </h2>
-                {renderDevices(climateDevices, { showRoom: true })}
-              </section>
-            )}
-
           </div>
         </div>
       </>
@@ -1437,6 +1490,12 @@ export default function Home() {
           onSaveError={(message) => showToast(message, 'error')}
           onToggleFavorite={toggleFavorite}
           onDelete={deleteDevice}
+          // Alleen als het klaarzetten mislukt is (niet: nog bezig).
+          onRetrySetup={
+            houseReachable && !settingsDevice.entity_id && !newDeviceIds.includes(settingsDevice.id)
+              ? retrySetup
+              : undefined
+          }
           onClose={() => setSettingsDeviceId(null)}
         />
       )}

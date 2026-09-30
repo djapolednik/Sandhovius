@@ -1,11 +1,9 @@
 'use client'
 
 import { memo, useRef } from 'react'
-import LightCard from './LightCard'
-import SensorCard from './SensorCard'
 import ClimateCard from './ClimateCard'
-import { formatTemperature, readTemperature } from '../lib/temperature'
-import { ArrowUpRightIcon, GearIcon, deviceTypeIcon } from '../lib/icons'
+import { formatTemperature, readTemperature, temperatureColor } from '../lib/temperature'
+import { GearIcon, deviceTypeIcon } from '../lib/icons'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
@@ -43,22 +41,20 @@ export function isDeviceOn(type, state) {
 // stabiel, zie cardHandlers in page.js). De handlers krijgen het device
 // mee als argument i.p.v. per kaart een nieuwe closure te krijgen.
 //
-// context: een korte regel onder de stand — de kamer als de tegel buiten
-// zijn kamer staat (Favorieten op Home), anders het soort apparaat.
+// Een tegel is klein en zegt drie dingen: wat het is (icoon), welke
+// (naam) en hoe het staat. Alles daarbuiten staat in de detail-sheet:
+// ingedrukt houden, rechts klikken of de contextmenutoets opent die.
 export default memo(function DeviceCard({
   device,
-  context,
   houseReachable = true,
   isNew = false,
   onToggle,
   onSetTemperature,
   onOpenSettings,
-  onRetrySetup,
 }) {
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
   const Icon = deviceTypeIcon(device.type)
-  const caption = context ?? DEVICE_TYPE_LABELS[device.type] ?? ''
 
   // Twee manieren om onbereikbaar te zijn: het apparaat zelf is weg, of de
   // hele box (dan zegt "Offline" per apparaat het verkeerde).
@@ -68,32 +64,29 @@ export default memo(function DeviceCard({
   // Assistant-entity voor aan (entity_id leeg), of die heeft nog geen
   // eerste stand gemeld. Dat is geen storing — "Offline" zou hier ten
   // onrechte alarm slaan. Is hij niet nieuw en nog steeds niet klaargezet,
-  // dan is dat mislukt: dat zeggen we eerlijk, met wat je kunt doen.
+  // dan is dat mislukt; de detail-sheet biedt dan "Opnieuw proberen".
   const isPairing = isNew && houseReachable && !device.online && (!device.entity_id || !stateRecord)
   const setupFailed = !isNew && houseReachable && !device.entity_id
   const isToggleable = TOGGLEABLE_TYPES.includes(device.type)
   const isOn = isDeviceOn(device.type, state)
   // Een offline apparaat kan geen commando ontvangen: niet doen alsof de
-  // tik iets doet. Een sensor opent met een tik zijn details (laatst
-  // bekende waarden blijven daar leesbaar).
+  // tik iets doet. Een sensor opent met een tik zijn details.
   const canToggle = isToggleable && isOnline && !isPairing && !setupFailed
-  // Een lamp of stopcontact dat aan staat licht op: een gloed in de tegel
-  // (zie .card-lit) — warm voor een lamp, stroomblauw voor een
+  // Een lamp of stopcontact dat aan staat licht op: een gloed vanachter
+  // het icoon (zie .card-lit) — warm voor een lamp, stroomblauw voor een
   // stopcontact. Alleen als we de stand zeker weten (online).
-  const isLit = isToggleable && canToggle && isOn
+  const isLit = canToggle && isOn
   // Getikt, maar de box heeft het nog niet bevestigd (zie _pending in
   // page.js): een voornemen, geen feit. Meestal duurt dat onder de seconde.
   const isPending = canToggle && !!device._pending
-  const opensDetails = device.type === 'sensor' && !isPairing && !setupFailed
-  const isClickable = canToggle || opensDetails
+  const opensDetails = setupFailed || (device.type === 'sensor' && !isPairing)
 
-  // Ingedrukt houden opent de details (naam/kamer/favoriet/verwijderen),
-  // los van de korte tik die schakelt — de "Details"-knop of het tandwiel
-  // doet hetzelfde, zichtbaar.
+  // Ingedrukt houden opent de details, los van de korte tik die schakelt.
   const pressTimer = useRef(null)
   const longPressTriggered = useRef(false)
 
-  function startPress() {
+  function startPress(e) {
+    if (e.button > 0) return
     longPressTriggered.current = false
     pressTimer.current = setTimeout(() => {
       longPressTriggered.current = true
@@ -119,154 +112,108 @@ export default memo(function DeviceCard({
     else if (opensDetails) onOpenSettings(device)
   }
 
-  // De hoofdactie is een echte <button>, over de hele tegel uitgerekt
-  // (zie .device-card-action). "Details" en het tandwiel staan er als
-  // broertjes naast i.p.v. erin genest — een knop-in-een-knop heeft voor
-  // schermlezers geen betrouwbare naam of gedrag. De leesbare inhoud
-  // (naam, stand, meetwaarden) blijft gewone tekst in de tegel.
-  // Een sensor opent details, maar zijn knop noemt ook wat hij meet: een
-  // schermlezer hoort dan wat je ziet ("20,5°, geen beweging").
+  // Rechts klikken (muis) of de contextmenutoets (toetsenbord) opent de
+  // details, zoals ingedrukt houden op een telefoon. Op een telefoon komt
+  // er na de long-press ook een contextmenu-event: dan niet nog een keer.
+  function handleContextMenu(e) {
+    e.preventDefault()
+    if (longPressTriggered.current) return
+    cancelPress()
+    onOpenSettings(device)
+  }
+
+  if (device.type === 'climate') {
+    return (
+      <li className="device-cell device-cell-climate">
+        <div
+          className={`panel tile-climate ${!isOnline && !isPairing ? 'card-offline' : ''}`}
+          onContextMenu={handleContextMenu}
+        >
+          <div className="climate-head">
+            <span className="tile-name">{device.name}</span>
+            <button
+              type="button"
+              className="btn btn-icon btn-plain gear-button"
+              aria-label={`Details van ${device.name}`}
+              onClick={() => onOpenSettings(device)}
+            >
+              <GearIcon width="20" height="20" />
+            </button>
+          </div>
+          <ClimateCard
+            state={state}
+            isOn={isOn}
+            isOnline={isOnline}
+            offlineText={offlineText}
+            onSetTemperature={(temperature) => onSetTemperature(device, temperature)}
+            onToggleHeating={() => onToggle(device)}
+          />
+        </div>
+      </li>
+    )
+  }
+
+  // De stand, in één woord of getal: dat is waarvoor je kijkt.
+  let stateText
+  let stateStyle
   const reading = device.type === 'sensor' ? describeReading(state) : ''
+  if (isPairing) stateText = 'Wordt klaargezet'
+  else if (setupFailed) stateText = 'Niet klaargezet'
+  else if (device.type === 'sensor') {
+    const temperature = readTemperature(state)
+    const occupancy = state?.occupancy ?? state?.motion
+    let value = 'Geen metingen'
+    if (typeof temperature === 'number') {
+      value = formatTemperature(temperature)
+      if (isOnline) stateStyle = { color: temperatureColor(temperature) }
+    } else if (typeof occupancy === 'boolean') value = occupancy ? 'Beweging' : 'Geen beweging'
+    // Offline blijft de laatste meting staan (dat is nog informatie), met
+    // erbij dat het niet actueel is.
+    stateText = isOnline ? value : `${value}, ${offlineText.toLowerCase()}`
+  } else if (!isOnline) stateText = offlineText
+  else if (state?.state === 'on' || state?.state === 'off') stateText = (isOn ? 'Aan' : 'Uit') + (isPending ? '…' : '')
+  else stateText = 'Onbekend'
+
+  // De hoofdactie is een echte <button> over de hele tegel (zie
+  // .device-card-action); de naam en stand blijven gewone tekst.
   const actionLabel = canToggle
     ? device.name
     : `Details van ${device.name}${reading ? `, ${reading}` : ''}`
-
-  // Knoppen in de tegel liggen boven de tegelknop (z-index) en vangen hun
-  // eigen pointerdown, zodat een tik erop niet schakelt of de long-press
-  // start.
-  const stop = (e) => e.stopPropagation()
-
-  const detailsChip = (
-    <button
-      type="button"
-      className="details-chip"
-      aria-label={`Details van ${device.name}`}
-      onPointerDown={stop}
-      onClick={() => onOpenSettings(device)}
-    >
-      Details
-      <ArrowUpRightIcon aria-hidden="true" />
-    </button>
-  )
-
-  // De thermostaat houdt zijn tandwiel rechtsboven; de andere tegels hebben
-  // "Details" onderin.
-  const climateHeader = (
-    <div className="tile-top">
-      {/* Vóór de naam in de DOM: het tandwiel zweeft rechts (float) en de
-          naam loopt eromheen, zie .tile-top in devices.css. */}
-      <button
-        type="button"
-        className="btn btn-icon btn-plain gear-button"
-        aria-label={`Details van ${device.name}`}
-        onPointerDown={stop}
-        onClick={() => onOpenSettings(device)}
-      >
-        <GearIcon width="20" height="20" />
-      </button>
-      <span className="tile-name">{device.name}</span>
-    </div>
-  )
-
-  const plainHeader = (
-    <div className="tile-top">
-      <span className="tile-name">{device.name}</span>
-    </div>
-  )
-
-  let body
-  if (isPairing || setupFailed) {
-    body = (
-      <>
-        {plainHeader}
-        <div className="tile-state">
-          <span className="device-state-word device-state-word-offline">
-            {isPairing && <span className="spinner spinner-inline" aria-hidden="true" />}
-            {isPairing ? 'Wordt klaargezet' : 'Niet klaargezet'}
-          </span>
-          <span className="device-state-sub">
-            {isPairing ? 'Dit duurt meestal een paar seconden.' : 'Het klaarzetten is niet gelukt.'}
-          </span>
-        </div>
-        <div className="tile-bottom tile-bottom-actions">
-          {/* Herstellen i.p.v. "verwijder en voeg opnieuw toe": de box
-              probeert het gewoon nog een keer. */}
-          {setupFailed && (
-            <button
-              type="button"
-              className="details-chip retry-chip"
-              onPointerDown={stop}
-              onClick={() => onRetrySetup(device)}
-            >
-              Opnieuw proberen
-            </button>
-          )}
-          {detailsChip}
-        </div>
-      </>
-    )
-  } else if (device.type === 'light' || device.type === 'switch') {
-    body = (
-      <LightCard
-        state={state}
-        isOnline={isOnline}
-        isPending={isPending}
-        offlineText={offlineText}
-        header={plainHeader}
-        caption={caption}
-        Icon={Icon}
-        footer={detailsChip}
-      />
-    )
-  } else if (device.type === 'climate') {
-    body = (
-      <ClimateCard
-        state={state}
-        isOn={isOn}
-        isOnline={isOnline}
-        offlineText={offlineText}
-        header={climateHeader}
-        onSetTemperature={(temperature) => onSetTemperature(device, temperature)}
-        onToggleHeating={() => onToggle(device)}
-      />
-    )
-  } else {
-    body = (
-      <SensorCard
-        state={state}
-        isOnline={isOnline}
-        offlineText={offlineText}
-        header={plainHeader}
-        caption={caption}
-        Icon={Icon}
-      />
-    )
-  }
+  const isClickable = canToggle || opensDetails
 
   return (
     <li className={`device-cell device-cell-${device.type}`}>
       <div
-        className={`panel tile tile-${device.type} ${
-          isClickable ? 'card-clickable' : ''
-        } ${isLit ? 'card-lit' : ''} ${isPending ? 'card-pending' : ''} ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${
-          isPairing || setupFailed ? 'card-pairing' : ''
-        }`}
+        className={`panel device-tile tile-${device.type} ${isClickable ? 'card-clickable' : ''} ${isLit ? 'card-lit' : ''} ${
+          isPending ? 'card-pending' : ''
+        } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${isPairing || setupFailed ? 'card-pairing' : ''}`}
         onPointerDown={startPress}
         onPointerUp={cancelPress}
         onPointerLeave={cancelPress}
         onPointerCancel={cancelPress}
-        onContextMenu={(e) => e.preventDefault()}
+        onContextMenu={handleContextMenu}
       >
-        {isClickable && (
-          <button
-            type="button"
-            className="device-card-action"
-            aria-label={actionLabel}
-            aria-pressed={canToggle ? isOn : undefined}
-            onClick={handleActionClick}
-          />
-        )}
-        {body}
+        <button
+          type="button"
+          className="device-card-action"
+          aria-label={actionLabel}
+          aria-pressed={canToggle ? isOn : undefined}
+          aria-disabled={isClickable ? undefined : true}
+          onClick={handleActionClick}
+        />
+        <span className="tile-icon" aria-hidden="true">
+          <Icon width="24" height="24" />
+        </span>
+        <span className="tile-text">
+          <span className="tile-name">{device.name}</span>
+          <span
+            className={`tile-state ${isOn && canToggle ? 'tile-state-on' : ''} ${isPairing || setupFailed || !isOnline ? 'tile-state-quiet' : ''}`}
+            style={stateStyle}
+          >
+            {isPairing && <span className="spinner spinner-inline" aria-hidden="true" />}
+            {stateText}
+          </span>
+        </span>
       </div>
     </li>
   )
