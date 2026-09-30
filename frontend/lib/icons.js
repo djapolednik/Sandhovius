@@ -210,3 +210,63 @@ export function ArrowUpRightIcon(props) {
     </svg>
   )
 }
+
+// Weer: lijniconen in dezelfde stijl. Ze gloeien nooit, ook de zon niet:
+// het weer is geen licht dat in huis aan staat (Real Light Rule).
+const CLOUD = 'M7 18.5h9.5a3.75 3.75 0 0 0 .6-7.45A5.5 5.5 0 0 0 6.6 10.2 4.15 4.15 0 0 0 7 18.5Z'
+const WEATHER_PATHS = {
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" />
+    </>
+  ),
+  moon: <path d="M19.5 14.6A7.5 7.5 0 0 1 9.4 4.5a7.5 7.5 0 1 0 10.1 10.1Z" />,
+  partly: (
+    <>
+      <path d="M8.5 3.5v1.2M3.8 5.4l.9.9M2.5 10.2h1.2M12.3 6.3l.9-.9" />
+      <path d="M5.3 12.6a3.6 3.6 0 1 1 6.2-3.9" />
+      <path d="M9.5 20h7.25a3.25 3.25 0 0 0 .5-6.45 4.75 4.75 0 0 0-9.05-.75 3.6 3.6 0 0 0 1.3 7.2Z" />
+    </>
+  ),
+  cloud: <path d={CLOUD} />,
+  rain: (
+    <>
+      <path d="M7 15.5h9.5a3.75 3.75 0 0 0 .6-7.45A5.5 5.5 0 0 0 6.6 7.2 4.15 4.15 0 0 0 7 15.5Z" />
+      <path d="M8.5 18.5 7.5 21M12.5 18.5l-1 2.5M16.5 18.5l-1 2.5" />
+    </>
+  ),
+  storm: (
+    <>
+      <path d="M7 15.5h9.5a3.75 3.75 0 0 0 .6-7.45A5.5 5.5 0 0 0 6.6 7.2 4.15 4.15 0 0 0 7 15.5Z" />
+      <path d="m12.5 15.5-2 3.5h3l-2 3" />
+    </>
+  ),
+  snow: (
+    <>
+      <path d="M7 15.5h9.5a3.75 3.75 0 0 0 .6-7.45A5.5 5.5 0 0 0 6.6 7.2 4.15 4.15 0 0 0 7 15.5Z" />
+      <path d="M8.5 19h.01M12 20.5h.01M15.5 19h.01" strokeWidth="2.4" />
+    </>
+  ),
+  fog: <path d="M4 9h16M6 13h12M4 17h16" />,
+  wind: <path d="M3 9h11a2.5 2.5 0 1 0-2.5-2.5M3 13h15a2.5 2.5 0 1 1-2.5 2.5M3 17h7" />,
+}
+
+export function WeatherIcon({ kind, ...props }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      {WEATHER_PATHS[kind] ?? WEATHER_PATHS.cloud}
+    </svg>
+  )
+}

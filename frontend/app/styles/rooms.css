@@ -182,14 +182,19 @@
 
 @media (min-width: 900px) {
   .dashboard {
-    grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
+    grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
     gap: 1rem;
   }
+}
 
-  .house-panel {
-    position: sticky;
-    top: 1rem;
-  }
+/* De linkerkolom: het huis-paneel en (breed) de weerkaart eronder. Niet
+   sticky: samen zijn ze hoger dan een laptopscherm, en een sticky kolom
+   zou dan zijn onderkant nooit laten zien. */
+.dashboard-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
 }
 
 .dashboard-devices {
@@ -317,93 +322,6 @@
   font-weight: 700;
 }
 
-/* ==================== Huis-samenvatting (HouseSummary) ==================== */
-
-.house-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.house-summary-lead {
-  margin: 0;
-  text-wrap: balance;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-.house-summary-count {
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--on-text);
-  vertical-align: -0.12em;
-  margin-right: 0.15rem;
-}
-
-.house-summary-quiet {
-  margin: 0;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-  font-size: 1rem;
-  color: var(--text-secondary);
-}
-
-.house-summary-rooms {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.house-summary-room {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 44px;
-  /* Het pijltje (net als bij "Details") zegt: dit brengt je ergens heen. */
-  padding: 0.35rem 0.8rem 0.35rem 0.95rem;
-  border-radius: 999px;
-  border: none;
-  background: var(--surface-2);
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-
-.house-summary-room-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.75rem;
-  height: 1.75rem;
-  padding: 0 0.4rem;
-  border-radius: 999px;
-  background: var(--on);
-  color: var(--on-contrast);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-@media (hover: hover) {
-  .house-summary-room:hover {
-    background: var(--border);
-  }
-}
-
-.house-summary-room:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 /* ==================== House/room management (HouseModal) ==================== */
 
 .house-list {
@@ -498,13 +416,12 @@
   flex: 1;
 }
 
-/* "Alles uit": een gewone tweede-knop, links, onder de kamers. */
-.house-summary-off {
+/* "Alles uit": een gewone tweede-knop, links, alleen als er iets aan staat. */
+.house-all-off {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  margin-top: 0.3rem;
   padding-inline: 1rem 1.15rem;
 }
 
@@ -735,5 +652,228 @@
 @media (prefers-reduced-motion: reduce) {
   .scene-pill:active:not(:disabled) {
     transform: none;
+  }
+}
+
+/* ==================== Weer ====================
+   Bijzaak: vult Home, maar zegt niets over het huis zelf. Niets gloeit
+   (ook de zon niet) en het zegt altijd hoe oud het is. Telefoon: een
+   regel in het huis-paneel. Breed: een kaart onder het huis-paneel. */
+.weather-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: -0.25rem;
+}
+
+.weather-line-icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.weather-line-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.weather-line-now {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.weather-line-meta,
+.weather-source {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.weather-stale {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--warning);
+}
+
+.weather-card {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .weather-line {
+    display: none;
+  }
+
+  .weather-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem 1.25rem 1.1rem;
+    container-type: inline-size;
+  }
+}
+
+.weather-now {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.weather-now p {
+  margin: 0;
+}
+
+.weather-now-icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  color: var(--text-primary);
+}
+
+.weather-now-temp {
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-now .weather-now-label {
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* De komende uren: een strook op het binnenvlak die scrolt, met dezelfde
+   vervaagde rand als de kamerpillen. */
+.weather-hours {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0.6rem 0.35rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+}
+
+.weather-hours::-webkit-scrollbar {
+  display: none;
+}
+
+.weather-hour {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 3.4rem;
+  color: var(--text-secondary);
+}
+
+.weather-hour-time {
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-hour-temp {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* De komende dagen: naam, icoon, laagste, balk, hoogste. De balk laat
+   zien waar elke dag valt op de schaal van de week. Neutraal gekleurd:
+   kleur is voor de stand van het huis, en het weer is geen stand. De naam
+   krijgt altijd zijn volle breedte; de balk neemt de rest. */
+/* De lijst bepaalt de kolommen, de rijen nemen ze over (subgrid): zo
+   staan iconen en balken onder elkaar, hoe lang de dagnaam ook is. */
+.weather-days {
+  display: grid;
+  grid-template-columns: max-content 1.4rem 2rem minmax(2rem, 1fr) 2rem;
+  column-gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weather-day {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-day + .weather-day {
+  border-top: 1px solid var(--border);
+}
+
+.weather-day-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weather-day svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.weather-day-low,
+.weather-day-high {
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: right;
+}
+
+.weather-day-high {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.weather-day-bar {
+  position: relative;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.weather-day-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 calc(100% - var(--to)) 0 var(--from);
+  min-width: 0.35rem;
+  border-radius: inherit;
+  background: var(--text-secondary);
+}
+
+/* Grote tekst: de balk wijkt, de getallen blijven. In rem, dus alleen
+   als de tekst groot is ten opzichte van de kaart (normaal ~15,5rem). */
+@container (max-width: 13rem) {
+  .weather-days {
+    grid-template-columns: minmax(0, 1fr) 1.4rem auto auto;
+  }
+
+  .weather-day-name {
+    white-space: normal;
+  }
+
+  .weather-day-bar {
+    display: none;
   }
 }

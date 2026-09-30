@@ -1,22 +1,24 @@
 'use client'
 
 import ConnectionStatus from './ConnectionStatus'
-import HouseSummary from './HouseSummary'
-import { ArrowUpRightIcon } from '../lib/icons'
+import { WeatherLine } from './Weather'
+import { ArrowUpRightIcon, PowerIcon } from '../lib/icons'
 
 // Het huis in één paneel, naast de apparaten: hoe het huis heet, of de box
-// bereikbaar is, en wat er nog aan staat. Dit geldt voor het hele huis,
-// dus het blijft staan als je van kamer wisselt.
+// bereikbaar is, het weer (op de telefoon; breed staat het in een eigen
+// kaart) en wat aandacht nodig heeft. Wat er aan staat zie je aan de
+// tegels zelf (Staat aan); hier alleen "Alles uit".
 // attention: [{ device, reason }] — wat aandacht nodig heeft (offline,
 // batterij bijna leeg, klaarzetten mislukt). Elke regel opent de details
 // van dat apparaat.
 // onSwitchHouse: alleen met meer dan één huis — naar de keuze in Opties.
+// onAllOff: alleen als er iets aan staat en de box bereikbaar is.
 export default function HousePanel({
   house,
   realtimeLink,
   houseLink,
   now,
-  summary,
+  onAllOff,
   attention = [],
   onOpenDevice,
   onSwitchHouse,
@@ -32,6 +34,7 @@ export default function HousePanel({
         </button>
       )}
       <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />
+      {house.weather?.condition && <WeatherLine weather={house.weather} updated={house.weather_updated} now={now} />}
       {attention.length > 0 && (
         <div className="house-attention">
           <p className="house-attention-lead">Let op</p>
@@ -49,8 +52,11 @@ export default function HousePanel({
           </ul>
         </div>
       )}
-      {summary && (
-        <HouseSummary {...summary} />
+      {onAllOff && (
+        <button type="button" className="btn btn-secondary house-all-off" onClick={onAllOff}>
+          <PowerIcon width="18" height="18" aria-hidden="true" />
+          Alles uit
+        </button>
       )}
     </section>
   )

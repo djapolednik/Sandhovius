@@ -6,6 +6,7 @@ import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
 import HousePanel from '../components/HousePanel'
+import { WeatherCard } from '../components/Weather'
 import HomeScenes from '../components/HomeScenes'
 import HouseModal from '../components/HouseModal'
 import AddDeviceModal from '../components/AddDeviceModal'
@@ -460,13 +461,6 @@ export default function Home() {
     window.location.hash = id
   }
 
-  // Vanuit de samenvatting op Home ("staat aan in Woonkamer") meteen naar
-  // die kamer.
-  function openRoom(roomId) {
-    selectRoom(roomId)
-    selectTab('kamers')
-  }
-
   // Toont een korte melding rechtsboven die zichzelf weer verwijdert (de
   // fade-out zelf is puur CSS, zie .toast — dit ruimt alleen de state op
   // zodat de DOM-node niet blijft hangen). Fouten blijven langer staan en
@@ -490,10 +484,9 @@ export default function Home() {
     ...(unassignedDevices.length > 0 ? [{ id: '__unassigned', label: 'Overig' }] : []),
   ]
 
-  // Welke lampen/stopcontacten staan er aan? Voor de huis-samenvatting en
-  // de rij "Staat aan" op Home. Een apparaat dat offline is telt niet mee:
-  // van "aan" weten we dan niets zeker.
-  const hasSwitchables = devicesInHouse.some((device) => TOGGLEABLE_TYPES.includes(device.type))
+  // Welke lampen/stopcontacten staan er aan? Voor "Alles uit" en de rij
+  // "Staat aan" op Home. Een apparaat dat offline is telt niet mee: van
+  // "aan" weten we dan niets zeker.
   const devicesOn = devicesInHouse.filter(
     (device) =>
       TOGGLEABLE_TYPES.includes(device.type) &&
@@ -514,15 +507,6 @@ export default function Home() {
         return []
       })
     : []
-
-  const roomsWithSomethingOn = roomTabs
-    .map((tab) => ({
-      ...tab,
-      onCount: devicesOn.filter((device) =>
-        tab.id === '__unassigned' ? !roomIds.includes(device.room) : device.room === tab.id
-      ).length,
-    }))
-    .filter((tab) => tab.onCount > 0)
 
   // "Staat aan" op Home: alles wat aan staat, behalve de favorieten (die
   // staan er al). Zet je er een uit, dan blijft hij (met "Uit") staan tot
@@ -1304,28 +1288,23 @@ export default function Home() {
         {noHouse}
         <div className="dashboard">
           {house && (
-            <HousePanel
-              house={house}
-              realtimeLink={realtimeLink}
-              houseLink={houseLink}
-              now={now}
-              attention={loaded ? attention : []}
-              onSwitchHouse={houses.length > 1 ? () => selectTab('instellingen') : undefined}
-              onOpenDevice={(device) => setSettingsDeviceId(device.id)}
-              // Alleen als de box bereikbaar is: anders weten we niet zeker
-              // wat er aan staat, en zegt de verbindingsmelding genoeg.
-              summary={
-                loaded && houseReachable && hasSwitchables
-                  ? {
-                      rooms: roomsWithSomethingOn,
-                      lights: devicesOn.filter((device) => device.type === 'light').length,
-                      switches: devicesOn.filter((device) => device.type === 'switch').length,
-                      onSelectRoom: openRoom,
-                      onAllOff: turnAllOff,
-                    }
-                  : null
-              }
-            />
+            <div className="dashboard-side">
+              <HousePanel
+                house={house}
+                realtimeLink={realtimeLink}
+                houseLink={houseLink}
+                now={now}
+                attention={loaded ? attention : []}
+                onSwitchHouse={houses.length > 1 ? () => selectTab('instellingen') : undefined}
+                onOpenDevice={(device) => setSettingsDeviceId(device.id)}
+                // Alleen als de box bereikbaar is: anders weten we niet zeker
+                // wat er aan staat, en zegt de verbindingsmelding genoeg.
+                onAllOff={loaded && houseReachable && devicesOn.length > 0 ? turnAllOff : undefined}
+              />
+              {house.weather?.condition && (
+                <WeatherCard weather={house.weather} updated={house.weather_updated} now={now} />
+              )}
+            </div>
           )}
 
           <div className="dashboard-devices" style={{ '--favorites': favoriteDevices.length }}>
