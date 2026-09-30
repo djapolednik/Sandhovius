@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import PocketBase, { LocalAuthStore } from 'pocketbase'
 import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
@@ -416,10 +416,47 @@ export default function Home() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  // Een ander tabblad komt rustig binnen: vervagen en 12px schuiven,
+  // van rechts als het tabblad rechts in de navigatie staat (Home → Kamers),
+  // van links als je teruggaat. Geen uitgang: het nieuwe tabblad staat er
+  // meteen. Met minder beweging alleen de fade. Niet bij het binnenkomen na
+  // inloggen, dat heeft zijn eigen animatie (.arriving).
+  // Naar boven scrollen gebeurt hier, vóór de eerste paint van het nieuwe
+  // tabblad: anders zie je eerst het oude tabblad verspringen. will-change
+  // alleen tijdens de animatie: dan tekent de browser het tabblad één keer
+  // en schuift hij alleen die laag, in plaats van tekst en gloed elk frame
+  // opnieuw te tekenen (dat hapert).
+  const tabViewRef = useRef(null)
+  const previousTabRef = useRef(tab)
+  useLayoutEffect(() => {
+    const previous = previousTabRef.current
+    previousTabRef.current = tab
+    const view = tabViewRef.current
+    if (previous === tab || !view) return
+    window.scrollTo(0, 0)
+    if (document.documentElement.classList.contains('arriving')) return
+    const order = (id) => TABS.findIndex((t) => t.id === id)
+    const direction = order(tab) > order(previous) ? 1 : -1
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    view.getAnimations().forEach((animation) => animation.cancel())
+    view.style.willChange = 'transform, opacity'
+    const animation = view.animate(
+      reduce
+        ? [{ opacity: 0 }, { opacity: 1 }]
+        : [
+            { opacity: 0, transform: `translateX(${direction * 12}px)` },
+            { opacity: 1, transform: 'none' },
+          ],
+      { duration: reduce ? 150 : 300, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' },
+    )
+    animation.onfinish = () => {
+      view.style.willChange = ''
+    }
+  }, [tab])
+
   function selectTab(id) {
     if (id === tab) return
     window.location.hash = id
-    window.scrollTo(0, 0)
   }
 
   // Vanuit de samenvatting op Home ("staat aan in Woonkamer") meteen naar
@@ -1348,9 +1385,13 @@ export default function Home() {
     <>
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      {header}
+      <div className="tab-view">
+        <div ref={tabViewRef}>
+          {header}
 
-      <main className="container">{content}</main>
+          <main className="container">{content}</main>
+        </div>
+      </div>
 
       <BottomNav activeTab={tab} onSelect={selectTab} onAdd={house ? () => setAddDeviceOpen(true) : null} />
 

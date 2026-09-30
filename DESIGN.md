@@ -415,7 +415,7 @@ The login is the first bento: a **house panel** (your house at night: six dark w
 - **Do** keep touch targets at 44px or more (48px for room pills, 52px for primary actions and thermostat steps, 56px for navigation items).
 - **Do** pair every state color with a word or an icon ("Aan", "Uit", "Offline", a battery %).
 - **Do** design every screen in both themes: black with night panels, and mist with white panels. The dark-mode tokens are part of the spec, not an afterthought.
-- **Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 1.2–1.4s for a lamp's or plug's glow swelling up and 1.8s for it dying away, 0.6s for the dial's glow fading in, 0.25s for a sheet sliding up. Exits are faster than entrances.
+- **Do** keep motion confirming and brief: 0.15–0.2s for state, 0.35s for the dial moving to a new target, 1.2–1.4s for a lamp's or plug's glow swelling up and 1.8s for it dying away, 0.6s for the dial's glow fading in, 0.25s for a sheet sliding up, 0.3s for a tab coming in (fade plus 12px from the side it sits on in the navigation; the old tab leaves at once). Exits are faster than entrances.
 - **Do** give every animation a `prefers-reduced-motion` path that removes movement (scaling, sliding, growing rings, the dial sweep, the lamp's swell, the loading breath) but keeps the state change visible.
 - **Do** keep information-bearing text at 4.5:1 or better in both themes, and controls or icons at 3:1. Where a brand color fails as text (Signal Green on white), use its deeper step as text and keep the bright color for fills.
 

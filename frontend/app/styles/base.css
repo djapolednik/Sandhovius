@@ -49,6 +49,21 @@ label {
   font-variant-numeric: tabular-nums;
 }
 
+/* Het tabblad (de binnenste div) schuift 12px opzij als het binnenkomt
+   (page.js). Zonder clip steekt het dan even rechts buiten het venster: een
+   horizontale scrollbalk die de hele pagina laat verspringen. De clip zit
+   op de buitenste div, die zelf stil blijft staan. clip, geen hidden: dat
+   maakt er geen scrollcontainer van. */
+.tab-view {
+  overflow-x: clip;
+}
+
+/* Houd ruimte voor de scrollbalk vrij (desktop), zodat de pagina niet
+   opzij springt als een kort tabblad geen scrollbalk nodig heeft. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Eén bron voor de inhoudsbreedte, gedeeld door de topbalk en de inhoud. */
 :root {
   --content-max: 640px;
