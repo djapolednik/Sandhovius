@@ -6,6 +6,7 @@ import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
 import HousePanel from '../components/HousePanel'
+import HomeScenes from '../components/HomeScenes'
 import HouseModal from '../components/HouseModal'
 import AddDeviceModal from '../components/AddDeviceModal'
 import ToastContainer from '../components/ToastContainer'
@@ -1334,6 +1335,10 @@ export default function Home() {
 
             {loaded && house && devicesInHouse.length > 0 && (
               <div className="home-main">
+                {scenesInHouse.length > 0 && (
+                  <HomeScenes scenes={scenesInHouse} runState={sceneRunState} canRun={houseReachable} onRun={runScene} />
+                )}
+
                 <section className="home-section" aria-labelledby="home-favorites">
                   <div className="section-head">
                     <h2 id="home-favorites" className="section-heading">

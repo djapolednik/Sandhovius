@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useScrollEdges } from '../lib/useScrollEdges'
 
 // tabs: [{ id, label }]. Een strook die horizontaal scrolt als er meer
 // kamers zijn dan er passen; een zachte vervaging aan de rand laat zien
@@ -12,24 +13,7 @@ import { useEffect, useRef, useState } from 'react'
 // kamer nu actief is.
 export default function RoomTabs({ tabs, selectedId, onSelect }) {
   const stripRef = useRef(null)
-  const [edges, setEdges] = useState({ start: false, end: false })
-
-  useEffect(() => {
-    const strip = stripRef.current
-    if (!strip) return
-    function update() {
-      const max = strip.scrollWidth - strip.clientWidth
-      setEdges({ start: strip.scrollLeft > 2, end: strip.scrollLeft < max - 2 })
-    }
-    update()
-    strip.addEventListener('scroll', update, { passive: true })
-    const observer = new ResizeObserver(update)
-    observer.observe(strip)
-    return () => {
-      strip.removeEventListener('scroll', update)
-      observer.disconnect()
-    }
-  }, [tabs.length])
+  const edges = useScrollEdges(stripRef, tabs.length)
 
   useEffect(() => {
     const active = stripRef.current?.querySelector('[aria-current="true"]')
@@ -39,7 +23,7 @@ export default function RoomTabs({ tabs, selectedId, onSelect }) {
   return (
     <nav
       ref={stripRef}
-      className={`room-tabs ${edges.start ? 'room-tabs-more-start' : ''} ${edges.end ? 'room-tabs-more-end' : ''}`}
+      className={`room-tabs ${edges}`}
       aria-label="Kamers"
     >
       {tabs.map((tab) => (
