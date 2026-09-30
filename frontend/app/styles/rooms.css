@@ -455,8 +455,10 @@
   border-radius: 6px;
 }
 
-.room-row-name-editable:hover {
-  background: var(--background);
+@media (hover: hover) {
+  .room-row-name-editable:hover {
+    background: var(--background);
+  }
 }
 
 .room-confirm {

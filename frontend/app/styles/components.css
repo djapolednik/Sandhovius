@@ -35,6 +35,10 @@
   outline-offset: 2px;
 }
 
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: default;
@@ -50,21 +54,25 @@
   min-height: 52px;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
+/* Hover alleen met een echte muis: op een telefoon blijft een :hover na
+   een tik hangen, en dan lijkt de knop nog ingedrukt. */
+@media (hover: hover) {
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
 
-.btn-primary:active:not(:disabled) {
-  transform: scale(0.98);
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--border);
+  }
+
+  .btn-plain:hover {
+    color: var(--text-primary);
+  }
 }
 
 .btn-secondary {
   background: var(--surface-2);
   color: var(--text-primary);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--border);
 }
 
 .btn-icon {
@@ -95,9 +103,6 @@
   color: var(--text-secondary);
 }
 
-.btn-plain:hover {
-  color: var(--text-primary);
-}
 
 /* ==================== Fields ==================== */
 
@@ -186,6 +191,7 @@
 /* Lege staten (geen huis, geen apparaten in een kamer): rustige tekst op
    de plek waar anders de tegels staan. */
 .empty-state {
+  text-wrap: pretty;
   max-width: 38ch;
   margin: 2.5rem auto;
   text-align: center;
@@ -684,8 +690,10 @@
   cursor: pointer;
 }
 
-.toast-dismiss:hover {
-  background: rgba(255, 255, 255, 0.14);
+@media (hover: hover) {
+  .toast-dismiss:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
 }
 
 .toast-dismiss:focus-visible {
@@ -719,7 +727,7 @@
     animation-name: fade-in;
   }
 
-  .btn-primary:active:not(:disabled) {
+  .btn:active:not(:disabled) {
     transform: none;
   }
 }
@@ -854,6 +862,7 @@
 }
 
 .intro-panel-text {
+  text-wrap: pretty;
   margin: 0 0 0.9rem;
   max-width: 40ch;
   font-size: 1rem;
@@ -937,6 +946,7 @@
 }
 
 .settings-hint {
+  text-wrap: pretty;
   margin: 0.6rem 0 0;
   font-size: 0.9rem;
   line-height: 1.45;

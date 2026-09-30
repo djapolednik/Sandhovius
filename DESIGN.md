@@ -350,6 +350,7 @@ Round and confident: pills, generous, gently responsive.
 - **Icon:** 44×44. All buttons share one 2px Electric Blue focus ring with a 2px offset.
 - **Plain:** a text-only Quiet Slate button that darkens to Ink on hover.
 - **Disabled:** 50% opacity with no transform.
+- **Touch:** every button compresses slightly on press (`scale(0.98)`, none with reduced motion). Hover styles only apply under `@media (hover: hover)`, so a tapped button never stays "hovered" on a phone, and there is no gray tap flash.
 
 ### Device tile (signature component)
 The heart of the system. A tile is a 28px panel, at least 10.5rem wide and 12rem tall. The thermostat's gear floats top-right, and its name wraps around it on its first line and uses the full width after that, so names never break mid-word. The whole tile is one invisible action button (toggle for lights and switches, open details for sensors); "Details" and the gear sit beside it, never inside it.

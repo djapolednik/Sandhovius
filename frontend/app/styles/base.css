@@ -20,6 +20,13 @@ select {
   font-family: inherit;
 }
 
+/* Geen grijze flits bij een tik op een telefoon: elke knop geeft zijn eigen
+   feedback (indrukken, kleur of de gloed zelf). Focusringen blijven. */
+button,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Browser-onderdelen die niet uit zichzelf bij het ontwerp horen: tekst-
    selectie, de tekstcursor en native checkboxes/radio's nemen de
    accentkleur over i.p.v. het standaardblauw van het OS. */
