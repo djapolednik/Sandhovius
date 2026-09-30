@@ -1,7 +1,7 @@
 // De agent op de box zet elke 30 s last_seen op het huis-record (zie
 // runHeartbeat in de agent). Na drie gemiste slagen noemen we de box
 // onbereikbaar: één gemiste slag is nog gewoon een haperend netwerk.
-export const HEARTBEAT_STALE_MS = 90 * 1000
+const HEARTBEAT_STALE_MS = 90 * 1000
 
 // Is de box in huis bereikbaar? Twee signalen, want ze vallen apart uit:
 // - house.select: "offline" zet de agent zelf bij een nette stop;

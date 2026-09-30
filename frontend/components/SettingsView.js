@@ -1,6 +1,6 @@
 'use client'
 
-import { useTheme } from '../lib/useTheme'
+import { useTheme } from '../app/ThemeContext'
 import { ArrowUpRightIcon, CheckIcon, RoomsIcon } from '../lib/icons'
 
 const THEME_OPTIONS = [

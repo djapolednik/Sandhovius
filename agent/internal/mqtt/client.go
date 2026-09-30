@@ -2,7 +2,6 @@ package mqtt
 
 import (
 	"log"
-	"strings"
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -12,8 +11,6 @@ type MessageHandler func(topic string, payload []byte)
 
 type Client struct {
 	brokerURL  string
-	username   string
-	password   string
 	clientID   string
 	mqttClient mqtt.Client
 
@@ -26,25 +23,10 @@ type Client struct {
 	subscriptions map[string]MessageHandler
 }
 
-func NewClient(brokerURL, username, password, clientID string) *Client {
-	if brokerURL == "" {
-		brokerURL = "tcp://localhost:1883"
-	} else {
-		// Ensure schema is present
-		if !strings.Contains(brokerURL, "://") {
-			brokerURL = "tcp://" + brokerURL
-		}
-		// Ensure port is present (check the part after the schema)
-		parts := strings.SplitN(brokerURL, "://", 2)
-		if len(parts) == 2 && !strings.Contains(parts[1], ":") {
-			brokerURL = brokerURL + ":1883"
-		}
-	}
-
+// NewClient verwacht een volledige broker-URL, bv. "tcp://mosquitto:1883".
+func NewClient(brokerURL, clientID string) *Client {
 	return &Client{
 		brokerURL:     brokerURL,
-		username:      username,
-		password:      password,
 		clientID:      clientID,
 		subscriptions: make(map[string]MessageHandler),
 	}
@@ -53,8 +35,6 @@ func NewClient(brokerURL, username, password, clientID string) *Client {
 func (c *Client) Connect() error {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(c.brokerURL)
-	opts.SetUsername(c.username)
-	opts.SetPassword(c.password)
 	opts.SetClientID(c.clientID)
 	opts.SetAutoReconnect(true)
 	opts.OnConnect = func(client mqtt.Client) {

@@ -1,8 +1,10 @@
 'use client'
 
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
-export const ThemeContext = createContext(undefined)
+const ThemeContext = createContext(undefined)
+
+export const useTheme = () => useContext(ThemeContext)
 
 const STORAGE_KEY = 'sandhovius-theme'
 const DARK_QUERY = '(prefers-color-scheme: dark)'

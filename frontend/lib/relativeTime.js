@@ -1,16 +1,13 @@
-// Simpele NL-relatieve-tijd, alleen voor de "laatste update"-indicator van
-// de realtime-verbinding — geen library nodig voor deze paar grofmazige
-// stappen (seconden/minuten/uren).
+// NL-relatieve tijd voor "Laatst bijgewerkt": grofmazig (seconden, minuten,
+// uren); de woorden en het meervoud komen van Intl.
+const rtf = new Intl.RelativeTimeFormat('nl')
+
 export function relativeTimeNL(pastMs, nowMs = Date.now()) {
   if (!pastMs) return 'nog niet verbonden'
-
-  const diffSeconds = Math.max(0, Math.round((nowMs - pastMs) / 1000))
-  if (diffSeconds < 10) return 'zojuist'
-  if (diffSeconds < 60) return `${diffSeconds} seconden geleden`
-
-  const diffMinutes = Math.round(diffSeconds / 60)
-  if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minuut' : 'minuten'} geleden`
-
-  const diffHours = Math.round(diffMinutes / 60)
-  return `${diffHours} uur geleden`
+  const seconds = Math.max(0, Math.round((nowMs - pastMs) / 1000))
+  if (seconds < 10) return 'zojuist'
+  if (seconds < 60) return rtf.format(-seconds, 'second')
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return rtf.format(-minutes, 'minute')
+  return rtf.format(-Math.round(minutes / 60), 'hour')
 }
