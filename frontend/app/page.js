@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ViewTransition, startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import PocketBase, { LocalAuthStore } from 'pocketbase'
 import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
@@ -157,7 +157,8 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (loggedIn) {
+    // Bij inloggen met de glijdende binnenkomst is alles al geladen.
+    if (loggedIn && !loaded) {
       fetchAll()
     }
   }, [loggedIn])
@@ -278,16 +279,35 @@ export default function Home() {
       // huis een geslaagde login beloven die nog niet vaststaat.
       setArriving(true)
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      await new Promise((resolve) => setTimeout(resolve, reduce ? ARRIVE_REDUCED_MS : ARRIVE_MS))
+      // Het huis glijdt in het huispaneel van Home (ViewTransition "house").
+      // Dat paneel moet er dan al staan, dus de gegevens laden terwijl de
+      // lampen aangaan. Zonder View Transitions of met minder beweging: de
+      // gewone vervaging, en Home laadt na binnenkomst.
+      const glide = !reduce && typeof document.startViewTransition === 'function'
+      await Promise.all([
+        new Promise((resolve) => setTimeout(resolve, reduce ? ARRIVE_REDUCED_MS : ARRIVE_MS)),
+        glide && fetchAll(),
+      ])
       // Na inloggen altijd naar Home, ook als de URL nog op het tabblad van
       // vóór het uitloggen staat (#instellingen). replaceState, zodat de
       // terugknop niet naar dat oude tabblad springt.
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
-      setTab('home')
       window.scrollTo(0, 0)
-      document.documentElement.classList.add('arriving')
-      setTimeout(() => document.documentElement.classList.remove('arriving'), ARRIVE_IN_MS)
-      setLoggedIn(true)
+      const enterHome = () => {
+        setTab('home')
+        setLoggedIn(true)
+        setLoggingIn(false)
+        setArriving(false)
+      }
+      if (glide) {
+        // Alles in één transition: zou het formulier eerst terugspringen
+        // (arriving uit), dan zag je de lampen even uitgaan.
+        startTransition(enterHome)
+      } else {
+        document.documentElement.classList.add('arriving')
+        setTimeout(() => document.documentElement.classList.remove('arriving'), ARRIVE_IN_MS)
+        enterHome()
+      }
     } catch (err) {
       // 400 is bij inloggen vrijwel altijd een onjuiste combinatie — dat
       // verdient een specifiekere melding dan "controleer de gegevens".
@@ -296,7 +316,6 @@ export default function Home() {
           ? 'Dit e-mailadres en wachtwoord horen niet bij elkaar. Controleer ze en probeer het opnieuw.'
           : describeError('Inloggen', err)
       )
-    } finally {
       setLoggingIn(false)
       setArriving(false)
     }
@@ -487,13 +506,20 @@ export default function Home() {
   // opnieuw te tekenen (dat hapert).
   const tabViewRef = useRef(null)
   const previousTabRef = useRef(tab)
+  // Het tabblad-element van de vorige keer: is het nieuw (net ingelogd, je
+  // komt van Opties binnen op Home), dan is dit geen tabwissel maar
+  // binnenkomen. Schuiven zou dan het huis verplaatsen terwijl het in zijn
+  // paneel glijdt, en aan het eind ziet je het verspringen.
+  const shownViewRef = useRef(null)
   useLayoutEffect(() => {
     const previous = previousTabRef.current
     previousTabRef.current = tab
     const view = tabViewRef.current
+    const fresh = view !== shownViewRef.current
+    shownViewRef.current = view
     if (previous === tab || !view) return
     window.scrollTo(0, 0)
-    if (document.documentElement.classList.contains('arriving')) return
+    if (fresh || document.documentElement.classList.contains('arriving')) return
     const order = (id) => TABS.findIndex((t) => t.id === id)
     const direction = order(tab) > order(previous) ? 1 : -1
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -511,7 +537,8 @@ export default function Home() {
     animation.onfinish = () => {
       view.style.willChange = ''
     }
-  }, [tab])
+    // loggedIn: ook bij in- en uitloggen zonder tabwissel het element bijwerken.
+  }, [tab, loggedIn])
 
   function selectTab(id) {
     if (id === tab) return
@@ -1044,11 +1071,13 @@ export default function Home() {
         <div className="login-layout">
           {/* Je huis 's avonds, met één lamp aan: puur beeld, dus verborgen
               voor schermlezers. */}
-          <div className="login-house" aria-hidden="true">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <span key={i} className={i === 3 ? 'login-window login-window-lit' : 'login-window'} style={{ '--i': i }} />
-            ))}
-          </div>
+          <ViewTransition name="house" share="house-glide" default="none">
+            <div className="login-house" aria-hidden="true">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <span key={i} className={i === 3 ? 'login-window login-window-lit' : 'login-window'} style={{ '--i': i }} />
+              ))}
+            </div>
+          </ViewTransition>
           <div className="login-card">
             {/* Losse letters voor de animatie; aria-label zodat een
                 schermlezer één woord leest, geen tien letters. */}
@@ -1405,18 +1434,22 @@ export default function Home() {
         <div className="dashboard">
           {house && (
             <div className="dashboard-side">
-              <HousePanel
-                house={house}
-                realtimeLink={realtimeLink}
-                houseLink={houseLink}
-                now={now}
-                attention={loaded ? attention : []}
-                onSwitchHouse={houses.length > 1 ? () => selectTab('instellingen') : undefined}
-                onOpenDevice={(device) => setSettingsDeviceId(device.id)}
-                // Alleen als de box bereikbaar is: anders weten we niet zeker
-                // wat er aan staat, en zegt de verbindingsmelding genoeg.
-                onAllOff={loaded && houseReachable && devicesOn.length > 0 ? turnAllOff : undefined}
-              />
+              {/* Zelfde naam als het huis op het inlogscherm: daar glijdt het
+                  vandaan bij binnenkomst. */}
+              <ViewTransition name="house" share="house-glide" default="none">
+                <HousePanel
+                  house={house}
+                  realtimeLink={realtimeLink}
+                  houseLink={houseLink}
+                  now={now}
+                  attention={loaded ? attention : []}
+                  onSwitchHouse={houses.length > 1 ? () => selectTab('instellingen') : undefined}
+                  onOpenDevice={(device) => setSettingsDeviceId(device.id)}
+                  // Alleen als de box bereikbaar is: anders weten we niet zeker
+                  // wat er aan staat, en zegt de verbindingsmelding genoeg.
+                  onAllOff={loaded && houseReachable && devicesOn.length > 0 ? turnAllOff : undefined}
+                />
+              </ViewTransition>
               {house.weather?.condition && (
                 <WeatherCard weather={house.weather} updated={house.weather_updated} now={now} />
               )}
