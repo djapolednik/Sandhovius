@@ -233,15 +233,16 @@
   .login-window:nth-child(2)::after { animation-delay: 15s; }
   .login-window:nth-child(6)::after { animation-delay: 21s; }
 
-  /* Na een geslaagde login gaan alle lampen snel aan, raam voor raam
-     (45ms uit elkaar, 350ms elk), en daarna verdwijnt het formulier sneller
-     dan het kwam (200ms). ARRIVE_MS in page.js (650ms) wacht hierop. */
+  /* Na een geslaagde login gaan alle lampen aan, rustig raam voor raam
+     (150ms uit elkaar, 900ms elk), het huis staat even helemaal aan, en
+     daarna verdwijnt het formulier (350ms). ARRIVE_MS in page.js (2100ms)
+     wacht hierop. */
   .is-arriving .login-window::before {
-    animation: login-arrive-on 550ms var(--ease-out) calc(var(--i) * 45ms) both;
+    animation: login-arrive-on 900ms var(--ease-lamp) calc(var(--i) * 150ms) both;
   }
 
   .is-arriving .login-layout {
-    animation: login-leave 200ms var(--ease-out) 450ms both;
+    animation: login-leave 350ms var(--ease-out) 1750ms both;
   }
 }
 
@@ -389,6 +390,18 @@
      opkomen van de ramen, 120ms uit elkaar. */
   :root:not([data-theme='dark']) .login-window::after {
     animation: login-blind-up 0.7s var(--ease-out) calc(0.45s + var(--i) * 120ms) both;
+  }
+}
+
+/* De naam komt letter voor letter omhoog, net als de ramen (zelfde
+   login-rise), 40ms uit elkaar, in beide thema's. */
+.login-title-letter {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-title-letter {
+    animation: login-rise 0.5s var(--ease-out) calc(0.25s + var(--l) * 40ms) both;
   }
 }
 

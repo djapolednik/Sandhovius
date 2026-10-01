@@ -71,7 +71,7 @@ const UNDO_MS = 6000
 // Na een geslaagde login: zo lang gaan de lampen in het huis aan en
 // verdwijnt het formulier voordat Home verschijnt (zie login.css). Met
 // minder beweging alleen een korte vervaging.
-const ARRIVE_MS = 650
+const ARRIVE_MS = 2100
 const ARRIVE_REDUCED_MS = 300
 // Zo lang heeft Home de klasse .arriving (de binnenkomst in base.css).
 const ARRIVE_IN_MS = 600
@@ -1050,7 +1050,15 @@ export default function Home() {
             ))}
           </div>
           <div className="login-card">
-            <h1 className="login-title">Sandhovius</h1>
+            {/* Losse letters voor de animatie; aria-label zodat een
+                schermlezer één woord leest, geen tien letters. */}
+            <h1 className="login-title" aria-label="Sandhovius">
+              {[...'Sandhovius'].map((letter, i) => (
+                <span key={i} className="login-title-letter" aria-hidden="true" style={{ '--l': i }}>
+                  {letter}
+                </span>
+              ))}
+            </h1>
             <p className="login-lede">{signupMode ? 'Maak een account aan.' : 'Log in om je huis te bedienen.'}</p>
             {/* Zichtbare labels i.p.v. alleen placeholders: een placeholder
                 verdwijnt zodra je begint te typen. autoComplete laat de
