@@ -48,7 +48,11 @@ function tabFromHash() {
 // zodat de sessie herkenbaar is in devtools/Application/LocalStorage. De
 // SDK's LocalAuthStore persisteert en herstelt token+record hieruit
 // vanzelf — geen eigen opslag-code nodig.
-const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL, new LocalAuthStore('pocketbase_auth'))
+// Zonder vaste URL: PocketBase op dezelfde host als de pagina, zodat de
+// telefoon op het LAN (http://192.168.x.x:3000) de box vindt i.p.v. zichzelf.
+const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL
+  || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8090` : undefined)
+const pb = new PocketBase(PB_URL, new LocalAuthStore('pocketbase_auth'))
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
 // Wat Home laat zien: je favorieten of alles wat aan staat.
 const HOME_VIEW_KEY = 'sandhovius-home-view'

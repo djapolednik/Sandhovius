@@ -137,12 +137,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        # Reachable from the browser, not from other containers — the
-        # browser runs on the host/LAN, and PocketBase's port is published
-        # to the host, so this stays correct regardless of where the
-        # frontend container itself runs.
-        NEXT_PUBLIC_POCKETBASE_URL: http://localhost:8090
+      # NEXT_PUBLIC_POCKETBASE_URL left unset on purpose: the PWA then uses
+      # the page's own host on :8090, which works from the laptop and the LAN.
     container_name: sandhovius-frontend
     restart: unless-stopped
     ports:
