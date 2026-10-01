@@ -328,7 +328,7 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 - **Navigation** (`0 12px 36px -14px rgba(0,0,0,0.35)`; on black a hairline with a deeper shadow): the bottom bar floats above the content.
 - **Toast** (`0 12px 28px -10px rgba(0,0,0,0.45)`).
 - **Modal / sheet** (`0 24px 56px -16px rgba(0,0,0,0.45)`) over a 55% black scrim.
-- **Login** (the house panel): a night-colored panel of dark windows in both themes, one of which is lit with warm lamp light (the same radial glow as a lamp tile). It is a picture of your home with one lamp on, the image of the app icon; nothing else on the login glows.
+- **Login** (the house panel): in the dark theme, a night-colored panel of dark windows, one of which is lit with warm lamp light (the same radial glow as a lamp tile), while a second lamp walks through the house. It is a picture of your home with one lamp on, the image of the app icon; nothing else on the login glows. In the light theme it is the same house by day: a white panel with sky-blue glass and no lamps (lamps don't read in daylight). On load the blinds go all the way up, window by window, once. Logging in floods the windows with pale sunlight instead of lamp light.
 
 ### Named Rules
 **The Real Light Rule.** Only something that is actually live may glow: a lamp that is on (warm), a plug that is on (power blue) and the thermostat while it heats (Electric Blue). Sensors, buttons and panels never glow. A glow that stands for anything other than live energy turns the room into a neon console.
