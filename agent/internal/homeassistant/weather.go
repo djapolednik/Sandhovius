@@ -53,6 +53,69 @@ func (c *Client) FindWeatherEntity() (string, error) {
 	return "", nil
 }
 
+// WeatherEntryName is the title of the Met.no entry the agent creates, so
+// HA's integration list says what it is for ("Met.no" alone does not).
+const WeatherEntryName = "Weerbericht"
+
+// AddWeather sets up the Met.no integration through HA's config flow, at
+// HA's own home location (the defaults the flow's form offers). Same steps
+// as Instellingen → Integraties → Met.no in the HA UI.
+func (c *Client) AddWeather() error {
+	var form struct {
+		FlowID     string `json:"flow_id"`
+		DataSchema []struct {
+			Name    string `json:"name"`
+			Default any    `json:"default"`
+		} `json:"data_schema"`
+	}
+	if err := c.postJSON("/api/config/config_entries/flow", map[string]any{"handler": "met"}, &form); err != nil {
+		return fmt.Errorf("ha: start met flow: %w", err)
+	}
+
+	input := map[string]any{}
+	for _, field := range form.DataSchema {
+		input[field.Name] = field.Default
+	}
+	input["name"] = WeatherEntryName
+
+	var result struct {
+		Type   string         `json:"type"`
+		Reason string         `json:"reason"`
+		Errors map[string]any `json:"errors"`
+	}
+	if err := c.postJSON("/api/config/config_entries/flow/"+form.FlowID, input, &result); err != nil {
+		return fmt.Errorf("ha: finish met flow: %w", err)
+	}
+	if result.Type != "create_entry" {
+		return fmt.Errorf("ha: met flow ended in %q (%s %v)", result.Type, result.Reason, result.Errors)
+	}
+	return nil
+}
+
+func (c *Client) postJSON(path string, body, out any) error {
+	encoded, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", c.restURL+path, bytes.NewReader(encoded))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		raw, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("%s returned %d: %s", path, resp.StatusCode, raw)
+	}
+	return json.NewDecoder(resp.Body).Decode(out)
+}
+
 // GetForecasts calls weather.get_forecasts for one entity. kind is
 // "hourly" or "daily". The forecast is not a state attribute (anymore);
 // HA only returns it as a service response.

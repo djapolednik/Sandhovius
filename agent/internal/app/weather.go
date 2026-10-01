@@ -102,7 +102,17 @@ func (a *Agent) updateWeather() {
 		return
 	}
 	if entityID == "" {
-		return
+		// Hoort standaard op elke box: ontbreekt het (nieuwe box, of
+		// iemand verwijderde het in HA), dan zet de agent het zelf terug.
+		log.Println("[WEER] Geen weer-entiteit in HA; Met.no wordt toegevoegd")
+		if err := a.haClient.AddWeather(); err != nil {
+			log.Printf("[WEER] Met.no toevoegen mislukt: %v\n", err)
+			return
+		}
+		if entityID, err = a.haClient.FindWeatherEntity(); err != nil || entityID == "" {
+			log.Printf("[WEER] Met.no toegevoegd, maar nog geen weer-entiteit (%v); volgende ronde opnieuw\n", err)
+			return
+		}
 	}
 	state, err := a.haClient.GetState(entityID)
 	if err != nil {
