@@ -124,11 +124,10 @@ func (a *Agent) updateWeather() {
 		log.Printf("[WEER] %s is %q; laatst bekende weer blijft staan\n", entityID, state.State)
 		return
 	}
-	house := a.house()
-	if house == "" {
-		return // nog geen huis: het volgende halfuur opnieuw
+	if !a.registered.Load() {
+		return // geen huis: het volgende halfuur opnieuw
 	}
-	if err := a.pbClient.SetHouseWeather(house, payload, now); err != nil {
+	if err := a.pbClient.SetHouseWeather(a.house(), payload, now); err != nil {
 		log.Printf("[WEER] %v\n", err)
 	}
 }

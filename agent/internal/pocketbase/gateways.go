@@ -1,67 +1,6 @@
 package pocketbase
 
-import (
-	"errors"
-	"fmt"
-	"net/url"
-)
-
-type Gateway struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type gatewayListResponse struct {
-	Items []Gateway `json:"items"`
-}
-
-// GetGateway fetches a gateway record by ID. It returns nil, nil when the
-// record does not exist (anymore), so the caller can tell "gone" apart
-// from "PocketBase unreachable".
-func (c *Client) GetGateway(id string) (*Gateway, error) {
-	var gateway Gateway
-	err := c.doAuthed("GET", "/api/collections/houses/records/"+url.PathEscape(id), nil, &gateway)
-	var statusErr *StatusError
-	if errors.As(err, &statusErr) && statusErr.StatusCode == 404 {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("pocketbase: get gateway %s: %w", id, err)
-	}
-	return &gateway, nil
-}
-
-// FindGatewayByName looks up a gateway record by its name. It returns
-// nil, nil when no gateway with that name exists yet.
-func (c *Client) FindGatewayByName(name string) (*Gateway, error) {
-	filter := url.QueryEscape(fmt.Sprintf("name='%s'", name))
-	path := fmt.Sprintf("/api/collections/houses/records?filter=%s&perPage=1", filter)
-
-	var resp gatewayListResponse
-	if err := c.doAuthed("GET", path, nil, &resp); err != nil {
-		return nil, fmt.Errorf("pocketbase: find gateway %q: %w", name, err)
-	}
-	if len(resp.Items) == 0 {
-		return nil, nil
-	}
-	return &resp.Items[0], nil
-}
-
-// CreateGateway registers a new gateway record with the given name and an
-// initial "online" status.
-func (c *Client) CreateGateway(name string) (*Gateway, error) {
-	var created Gateway
-	err := c.doAuthed(
-		"POST",
-		"/api/collections/houses/records",
-		map[string]any{"name": name, "select": "online"},
-		&created,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("pocketbase: create gateway %q: %w", name, err)
-	}
-	return &created, nil
-}
+import "fmt"
 
 // SetGatewayStatus updates a gateway's status ("online", "offline" or
 // "error"). PocketBase automatically refreshes last_seen on every update.

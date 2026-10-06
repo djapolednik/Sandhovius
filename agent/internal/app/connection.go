@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"time"
+
+	"sandhovius/local-agent/internal/pocketbase"
 )
 
 // onPocketBaseConnected brengt PocketBase weer bij na een (her)verbinding:
@@ -54,21 +56,21 @@ func retryWithBackoff(ctx context.Context, minWait, maxWait time.Duration, attem
 	}
 }
 
-// runPocketBase verbindt met PocketBase zodra het kan: inloggen, gateway
-// registreren of verifiëren, en dan de herstelstap. De agent draait
+// runPocketBase verbindt met PocketBase zodra het kan: inloggen, het huis
+// uit het box-record nemen, en dan de herstelstap. De agent draait
 // intussen gewoon lokaal door. Na de eerste keer neemt de command-stroom
 // het herverbinden over (onCommandStreamSubscribed).
 func (a *Agent) runPocketBase() {
+	var record *pocketbase.BoxRecord
 	ok := retryWithBackoff(a.ctx, time.Second, 30*time.Second, func() error {
-		if _, err := a.pbClient.Login(); err != nil {
-			return err
-		}
-		return a.registerGateway()
+		var err error
+		record, err = a.pbClient.Login()
+		return err
 	})
 	if !ok {
 		return // Stop() is aangeroepen
 	}
-	a.registered.Store(true)
 	log.Println("[APP] Verbonden met PocketBase")
-	a.onPocketBaseConnected()
+	a.applyHouse(record.House)
+	a.runHouseCheck()
 }

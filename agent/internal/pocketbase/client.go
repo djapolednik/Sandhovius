@@ -19,10 +19,10 @@ type Client struct {
 	httpClient *http.Client // realtime (SSE): lange verbinding, geen timeout
 	restClient *http.Client // gewone REST-calls: nooit eindeloos wachten
 
-	mu       sync.RWMutex
-	token    string
-	serial   string
-	secret   string
+	mu     sync.RWMutex
+	token  string
+	serial string
+	secret string
 
 	// upsertMu serializes UpsertDeviceState calls. Without it, two
 	// concurrent upserts for a device with no existing row yet could both

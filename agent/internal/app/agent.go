@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"sandhovius/local-agent/internal/box"
 	"sandhovius/local-agent/internal/history"
 	"sandhovius/local-agent/internal/homeassistant"
 	"sandhovius/local-agent/internal/mqtt"
@@ -23,11 +22,10 @@ type Agent struct {
 	pbClient      *pocketbase.Client
 	history       *history.Store
 	devices       *deviceCache
-	gatewayName   string
-	gatewayIDFile string
+	boxFile       string // identiteitsbestand (serial, secret, house)
 	schedulesFile string // schema-snapshot, zodat schema's zonder PocketBase lopen
 
-	// gatewayID is het houses-record van deze box. Alleen via house() en
+	// gatewayID is het houses-record waaraan deze box gekoppeld is (leeg: geen huis). Alleen via house() en
 	// setHouse(): scheduler, hartslag en weer lezen het al terwijl de
 	// verbindingslus het nog verifieert.
 	houseMu   sync.RWMutex
@@ -42,10 +40,15 @@ type Agent struct {
 	deviceNamesMu sync.Mutex
 	deviceNames   map[string]string
 
-	// registered wordt true zodra de gateway bij PocketBase is
-	// geverifieerd; pas daarna mag een herverbinding de herstelstap starten.
+	// registered wordt true zodra de box bij PocketBase een huis heeft
+	// gekregen; pas daarna mag een herverbinding de herstelstap starten, en
+	// alleen dan schrijven hartslag, weer en Stop() naar het huis.
 	registered atomic.Bool
 	recoverMu  sync.Mutex
+
+	// onConnected is de herstelstap na (her)koppeling aan een huis; tests
+	// vervangen hem.
+	onConnected func()
 
 	// handledCommands: commando-ID's die al opgepakt zijn (zie claimCommand).
 	handledCommands sync.Map
@@ -54,21 +57,22 @@ type Agent struct {
 	cancel context.CancelFunc
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName, gatewayIDFile string, historyRetentionDays int, schedulesFile string) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile string) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &Agent{
 		mqttClient:       mqttClient,
 		haClient:         haClient,
 		pbClient:         pbClient,
 		history:          historyStore,
-		gatewayName:      gatewayName,
-		gatewayIDFile:    gatewayIDFile,
+		boxFile:          boxFile,
 		schedulesFile:    schedulesFile,
 		deviceNames:      make(map[string]string),
 		historyRetention: time.Duration(historyRetentionDays) * 24 * time.Hour,
 		ctx:              ctx,
 		cancel:           cancel,
 	}
+	a.setHouse(identity.House)
+	a.onConnected = a.onPocketBaseConnected
 	a.devices = newDeviceCache(pbClient, a.house)
 	return a
 }
@@ -91,14 +95,9 @@ func (a *Agent) Start() error {
 
 	go a.runHistoryCleanup()
 
-	// Eerst alles wat lokaal kan: het huis uit het ID-bestand (geverifieerd
-	// wordt het zodra PocketBase er is), de schema's uit de snapshot en
-	// Home Assistant. Zo draait de box ook zonder internet.
-	storedID, err := readGatewayID(a.gatewayIDFile)
-	if err != nil {
-		return err
-	}
-	a.setHouse(storedID)
+	// Eerst alles wat lokaal kan: het huis uit box.json (bevestigd wordt het
+	// zodra PocketBase er is; zonder huis blijft het leeg), de schema's uit
+	// de snapshot en Home Assistant. Zo draait de box ook zonder internet.
 	go a.runScheduler()
 
 	if err := a.haClient.Connect(); err != nil {
@@ -165,7 +164,7 @@ func (a *Agent) listenForCommands() {
 // goroutine: de stroom-lezer mag niet wachten op Home Assistant.
 func (a *Agent) onCommandStreamSubscribed() {
 	if a.registered.Load() {
-		go a.onPocketBaseConnected()
+		go a.onConnected()
 	}
 }
 
@@ -459,65 +458,6 @@ func (a *Agent) failCommand(commandID string, reason error) {
 	}
 }
 
-// registerGateway koppelt deze agent aan zijn houses-record (online zetten
-// doet de herstelstap daarna). De box herkent zijn record aan het ID dat
-// hij bij de eerste registratie lokaal opslaat (gatewayIDFile), niet aan
-// de naam: de
-// bewoner kan het huis in de app hernoemen zonder dat de box zijn huis
-// kwijtraakt. Volgorde:
-//  1. ID-bestand aanwezig en het record bestaat → dat record.
-//  2. Geen ID-bestand → eenmalige migratie van de oude werkwijze: zoek op
-//     GATEWAY_NAME, en sla het gevonden ID op.
-//  3. Anders (niets gevonden, of het opgeslagen record is verwijderd) →
-//     nieuw record aanmaken en het ID opslaan.
-//
-// Een PocketBase-fout breekt de registratie af i.p.v. een nieuw record aan
-// te maken: "even onbereikbaar" mag nooit een dubbel huis opleveren.
-func (a *Agent) registerGateway() error {
-	storedID, err := readGatewayID(a.gatewayIDFile)
-	if err != nil {
-		return err
-	}
-
-	var gateway *pocketbase.Gateway
-	if storedID != "" {
-		gateway, err = a.pbClient.GetGateway(storedID)
-		if err != nil {
-			return err
-		}
-		if gateway == nil {
-			log.Printf("[APP] Opgeslagen gateway %s bestaat niet meer; er wordt een nieuwe aangemaakt\n", storedID)
-		}
-	} else {
-		gateway, err = a.pbClient.FindGatewayByName(a.gatewayName)
-		if err != nil {
-			return err
-		}
-		if gateway != nil {
-			log.Printf("[APP] Gateway op naam gevonden (eenmalige migratie): %s (%s)\n", gateway.Name, gateway.ID)
-		}
-	}
-
-	if gateway == nil {
-		gateway, err = a.pbClient.CreateGateway(a.gatewayName)
-		if err != nil {
-			return err
-		}
-		log.Printf("[APP] Nieuwe gateway geregistreerd: %s (%s)\n", gateway.Name, gateway.ID)
-	} else {
-		log.Printf("[APP] Gateway herkend: %s (%s)\n", gateway.Name, gateway.ID)
-	}
-
-	if gateway.ID != storedID {
-		if err := writeGatewayID(a.gatewayIDFile, gateway.ID); err != nil {
-			return err
-		}
-	}
-
-	a.setHouse(gateway.ID)
-	return nil
-}
-
 func (a *Agent) house() string {
 	a.houseMu.RLock()
 	defer a.houseMu.RUnlock()
@@ -528,32 +468,6 @@ func (a *Agent) setHouse(id string) {
 	a.houseMu.Lock()
 	a.gatewayID = id
 	a.houseMu.Unlock()
-}
-
-// readGatewayID leest het opgeslagen gateway-ID. Een ontbrekend bestand is
-// geen fout (eerste start); een onleesbaar bestand wel.
-func readGatewayID(path string) (string, error) {
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return "", nil
-	}
-	if err != nil {
-		return "", fmt.Errorf("gateway-ID lezen uit %s: %w", path, err)
-	}
-	return strings.TrimSpace(string(data)), nil
-}
-
-// writeGatewayID schrijft atomisch (tijdelijk bestand + rename), zodat een
-// stroomstoring tijdens het schrijven nooit een half ID achterlaat.
-func writeGatewayID(path, id string) error {
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(id+"\n"), 0o644); err != nil {
-		return fmt.Errorf("gateway-ID opslaan in %s: %w", tmp, err)
-	}
-	if err := os.Rename(tmp, path); err != nil {
-		return fmt.Errorf("gateway-ID opslaan in %s: %w", path, err)
-	}
-	return nil
 }
 
 // heartbeatInterval is hoe vaak de agent laat weten dat de box leeft. De
@@ -575,11 +489,10 @@ func (a *Agent) runHeartbeat() {
 		case <-a.ctx.Done():
 			return
 		case <-ticker.C:
-			house := a.house()
-			if house == "" {
-				continue // nog geen huis: niets om te melden
+			if !a.registered.Load() {
+				continue // geen huis (of nog niet bevestigd): niets om te melden
 			}
-			if err := a.pbClient.SetGatewayStatus(house, "online"); err != nil {
+			if err := a.pbClient.SetGatewayStatus(a.house(), "online"); err != nil {
 				log.Printf("[APP] Hartslag naar PocketBase mislukt: %v\n", err)
 			}
 		}
@@ -764,8 +677,8 @@ func (a *Agent) Stop() {
 
 	a.cancel()
 
-	if house := a.house(); house != "" {
-		if err := a.pbClient.SetGatewayStatus(house, "offline"); err != nil {
+	if a.registered.Load() {
+		if err := a.pbClient.SetGatewayStatus(a.house(), "offline"); err != nil {
 			log.Printf("[APP] Kon gateway-status niet op offline zetten: %v\n", err)
 		}
 	}
