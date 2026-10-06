@@ -1,0 +1,42 @@
+# Status en volgende stappen
+
+Stand: 2026-10-06, claim-flow af. Ontwerpen per onderdeel:
+`docs/superpowers/specs/`.
+
+## Gebouwd
+
+**Fase 1** ✅ — lokale stack, agent ↔ MQTT/HA.
+
+**Fase 2** ✅:
+- PocketBase-schema + JWT-login in de PWA
+- Command-pipeline: PWA → `commands` → agent → HA (toggle, set_temperature), status/fout terug
+- Realtime: device_state, devices en houses live in de PWA
+- Liveness: heartbeat elke 30 s; PWA toont "box reageert niet" na 90 s stilte en blokkeert dan schakelen
+- State-reconciliatie: agent haalt bij start, na HA-reconnect en na provisioning de actuele stand op (fix voor nieuwe devices die "offline" bleven)
+- PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/+/Scènes/Opties (rond "+" in het midden om een apparaat toe te voegen), favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
+- **Scènes**: collectie `scenes` (huis, naam, volgorde, `actions` als JSON in command-woorden); uitvoeren op de box via één command `{ scene, action: "run_scene" }` → agent `runScene` (alleen scènes en apparaten van het eigen huis). Command-regel: óf een device-commando óf een scène-commando, nooit een mix. Scènes-tab met tegels (tik = uitvoeren) en een scène-sheet
+- **Schema's**: collectie `schedules` (scène, `time` "HH:MM", `days`, `enabled`, `last_run`/`last_error` van de agent). De agent klokt (`agent/internal/app/scheduler.go`): elke minuut een snapshot van schedules/scenes/devices van het eigen huis, uitvoeren via `executeScene`, ook als PocketBase even weg is. Bewerken in de scène-sheet ("Vanzelf uitvoeren"), tijden op de scène-tegel
+- **Login-redesign**: de login is de eerste bento, een huispaneel (ramen 's avonds, altijd nachtkleuren, één lamp aan) naast het formulier. Een tweede lamp "loopt" rustig door het huis (CSS, 24 s-ronde). Na bevestigde login gaan alle lampen aan, het formulier vervaagt en Home komt binnen (`ARRIVE_MS` in `page.js` hoort bij de timing in `login.css`; `.arriving` op `<html>` voor de binnenkomst in `base.css`). Na inloggen altijd naar Home (hash gewist). Easing-tokens `--ease-out` en `--ease-lamp` in `theme.css`
+- **Home-redesign**: kleine liggende apparaattegels (icoon, naam, stand; details via lang indrukken, rechtsklik of contextmenutoets; "Opnieuw proberen" bij mislukt klaarzetten zit in de detail-sheet), keuzebalk **Favorieten / Staat aan** (onthouden in localStorage), beide per kamer gegroepeerd, compacte thermostaat. Laptop: drie kolommen (huis + weer | apparaten | thermostaat + scènes) en Home past zonder scrollen (gecheckt op 1366×768, 1440×900, 1920×1080)
+- **Scènes op Home**: pillen (tik = uitvoeren, lang indrukken = wijzigen)
+- **Weer**: agent haalt het elk half uur uit HA (`weather.get_forecasts`) naar `houses.weather`/`weather_updated` (alleen de agent mag schrijven). Telefoon: regel in het huispaneel; laptop: kaart met uren en dagen. Na 2 uur zonder update een amber regel (box heeft waarschijnlijk geen internet). "Alles uit" bleef
+- **Omlaag trekken om te verversen** in de geïnstalleerde app; tabbladen komen binnen met fade + 12 px schuiven; hover alleen met een muis, drukfeedback op elke knop
+- **Agent zonder PocketBase**: lokaal (MQTT, HA, geschiedenis, schema's) start altijd; `runPocketBase` logt in met backoff (1–30 s). Na de eerste verbinding en na elke herverbinding van de command-stroom draait `onPocketBaseConnected` (online, device-cache, stand afstemmen, openstaande commando's inhalen). Schema-snapshot in `/data/schedules.json` (`SCHEDULES_FILE`). Commando's ouder dan 2 min (`commands.created`) worden `failed` "verlopen" — ook realtime, want bij een korte uitval overleeft de TCP-verbinding soms. De agent pakt alleen commando's en devices van zijn eigen huis op. Scheduler tikt de bedoelde minuut (de timer ging soms ms te vroeg af → schema's liepen een minuut te laat)
+- PWA-basis: installeerbaar (manifest, voorlopig icoon), thema Licht/Donker/Automatisch, "Alles uit", "Let op"-overzicht, "Ongedaan maken" (verwijderen gaat pas na 6 s echt), kamers en favorieten ordenen (`rooms.order`, `devices.favorite_order`), meerdere huizen, wachtwoord vergeten/wijzigen, "Opnieuw proberen" bij mislukt klaarzetten (command-actie `provision`)
+- **Box-identiteit** (spec A, `docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, relatie `house`), regels laten een box alleen zijn eigen huis bereiken; bewonerstakken gelden alleen voor `users` (anders matchte een gast een huis zonder eigenaar) en een bewoner mag `claimed_at` niet zetten, rate limits aan (incl. `boxes:auth`); de agent logt in als box (`/data/box.json`, vervangt `gateway_id`/superuser en `GATEWAY_NAME`), neemt het huis uit de box over, volgt koppelen/loskoppelen en stopt dan schrijven naar het oude huis. Dev-box `SH-DEV-0001` hoort bij het dev-huis
+- **Claim-flow** (spec B, `docs/superpowers/specs/2026-10-06-claim-flow-design.md`; flow: `docs/box-aanmelden.md`): bewoner maakt zelf een account (bevestigingsmail, wachtwoord vergeten via `/bevestig` en `/wachtwoord`; taal van mails kiesbaar in Opties) en koppelt een box met de QR/code van het blad (`/koppel`, camera of intikken): nieuw huis of vervanging van een bestaand huis; "Box ontkoppelen" laat het huis staan. Server: `/api/sandhovius/claim` en `/release` (volgorde: bevestigd → code → `replace_house`-eigenaar (404) → al gekoppeld (409, behalve aan een eigen huis: 200 met dat huis)); serienummers in hoofdletters; de box bewaart alleen `claim_code_hash`. QR: `<APP_URL>/koppel#s=…&c=…` (code in het fragment, nooit in een serverlog; de oude `?s=…&c=…` werkt nog). Inlogmelding en andere account-mails in de taal van het account. De dev-box is via de PWA als vervanging aan het dev-huis gekoppeld
+
+## Volgende stappen
+
+1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang, en de claim-flow zelf doorlopen met een tweede account (Mailpit). QR scannen met de telefooncamera kan pas via HTTPS (fase 3) of op `localhost`; via `http://192.168…` alleen overtikken. Vóór die test de scanner afknijpen: hij decodeert nu elk camerabeeld (~60× per seconde, ~10 is genoeg). Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
+2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
+3. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. Ook nodig: een echte SMTP-provider (nu Mailpit; `SMTP_*` + afzender in env), een echte `APP_URL` (links in mails en QR), en trusted-proxy-instellingen in PocketBase achter de proxy, anders delen alle klanten één rate-limit-bucket (limieten gaan per IP).
+4. **Claim-flow, klein en bewust uitgesteld:**
+   - Box zit al in je eigen huis A en je kiest "Vervangt de box van B" → de app meldt succes zonder dat er iets vervangen wordt (geen schade, wel verwarrend; beter: 409 of "hoort al bij A, ontkoppel eerst").
+   - `/bevestig` zegt "Deze link werkt niet meer" ook bij een netwerkfout of 429; een mislukte bevestigingsmail na aanmelden wordt niet gemeld (wel "Stuur de mail opnieuw").
+   - Mail-instellingen blijven in PocketBase staan als `SMTP_HOST` later uit env verdwijnt; `APP_URL` met een slash aan het eind geeft `//bevestig`.
+   - Wachten na koppelen duurt tot ~5 min (de box controleert zijn record elke 5 min); kan sneller via realtime op het eigen box-record.
+   - Mailtalen: alleen Nederlands en Engels (aanname); een taal erbij = teksten in `backend/pb_hooks/mail_texts.js` + waarde in `users.language`.
+   - Vóór fase 3 ook: rate limits op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).
+   - `sheets/SH-DEV-0001.svg` (niet in git) bevat de claimcode van de dev-box, nog in de oude link-vorm met `?` (de app accepteert die ook).
+5. Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.

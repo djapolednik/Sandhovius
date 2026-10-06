@@ -26,8 +26,10 @@ en een Progressive Web App bedient het huis van overal.
 
 Meer uitleg: [`backend_explained.md`](backend_explained.md) (backend en agent),
 [`PRODUCT.md`](PRODUCT.md) (doelgroep en principes),
-[`DESIGN.md`](DESIGN.md) (design system), [`CLAUDE.md`](CLAUDE.md)
-(werkafspraken en actuele status).
+[`DESIGN.md`](DESIGN.md) (design system), [`docs/codebase.md`](docs/codebase.md)
+(bestandskaart), [`docs/development.md`](docs/development.md) (lokaal draaien en
+testen), [`docs/status.md`](docs/status.md) (wat er gebouwd is en wat er komt) en
+[`CLAUDE.md`](CLAUDE.md) (context en werkafspraken voor Claude Code).
 
 ## Lokaal draaien
 
@@ -49,7 +51,7 @@ docker compose logs -f agent
 | MQTT | localhost:1883 |
 
 Een box voor de lokale agent maken: zie `docs/box-aanmelden.md` en
-`CLAUDE.md` (Development Setup).
+`docs/development.md`.
 
 ## Testen
 
@@ -66,7 +68,7 @@ python -m unittest discover -s scripts -p "test_*.py"
 - Testen op een echte telefoon (geïnstalleerde app, scannen, lang indrukken).
 - Fase 3: remote toegang via Headscale, PocketBase op Scaleway, HTTPS, een echte
   mailprovider, zero external ports.
-- Zie `CLAUDE.md` → Volgende Stappen voor de actuele lijst.
+- Zie `docs/status.md` → Volgende stappen voor de actuele lijst.
 
 ## Auteurs
 
