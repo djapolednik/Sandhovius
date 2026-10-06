@@ -15,3 +15,6 @@ agent/bin/
 
 # Ontwerp-inspiratie (beelden van anderen): alleen lokaal, niet in de repo.
 frontend/dashboard-inspo/
+
+# Integratietests: gedownloade PocketBase-binary
+backend/tests/.cache/
