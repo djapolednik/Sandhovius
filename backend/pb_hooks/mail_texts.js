@@ -17,6 +17,12 @@ const TEXTS = {
       button: "Nieuw wachtwoord kiezen",
       ignore: "Heb je dit niet aangevraagd? Dan kun je deze mail negeren; je wachtwoord blijft zoals het was.",
     },
+    authAlert: {
+      subject: "Nieuwe inlog bij Sandhovius",
+      intro: "Er is ingelogd op je Sandhovius-account vanaf een nieuw apparaat of een nieuwe plek:",
+      warning: "Was jij dit niet? Kies dan meteen een nieuw wachtwoord; daarmee log je overal anders uit.",
+      ignore: "Was jij het wel? Dan hoef je niets te doen.",
+    },
   },
   en: {
     verification: {
@@ -31,6 +37,12 @@ const TEXTS = {
       button: "Choose a new password",
       ignore: "Didn't ask for this? You can ignore this email; your password stays as it was.",
     },
+    authAlert: {
+      subject: "New sign-in to Sandhovius",
+      intro: "Someone signed in to your Sandhovius account from a new device or location:",
+      warning: "If this wasn't you, choose a new password right away; that signs you out everywhere else.",
+      ignore: "If this was you, you don't need to do anything.",
+    },
   },
 }
 
@@ -43,7 +55,28 @@ function render(kind, language, link) {
   return { subject: t.subject, html: html }
 }
 
+// De inlogmelding heeft geen link maar wel de gegevens van het toestel
+// (tijd, IP-adres, user-agent); die komen van buiten, dus escapen.
+function escapeHTML(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}
+
+function renderAuthAlert(language, info) {
+  const t = (TEXTS[language] || TEXTS.nl).authAlert
+  const html =
+    "<p>" + t.intro + "</p>\n" +
+    "<p><em>" + escapeHTML(info || "") + "</em></p>\n" +
+    "<p><strong>" + t.warning + "</strong></p>\n" +
+    "<p>" + t.ignore + "</p>"
+  return { subject: t.subject, html: html }
+}
+
 module.exports = {
   verification: (language, link) => render("verification", language, link),
   reset: (language, link) => render("reset", language, link),
+  authAlert: renderAuthAlert,
 }

@@ -4,8 +4,11 @@ package tests
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"testing"
@@ -135,8 +138,85 @@ func TestSMTPFromEnv(t *testing.T) {
 
 func TestNoSMTPWithoutEnv(t *testing.T) {
 	p := startPB(t)
-	if settingsOf(t, p)["smtp"].(map[string]any)["enabled"] != false {
+	s := settingsOf(t, p)
+	if s["smtp"].(map[string]any)["enabled"] != false {
 		t.Error("smtp.enabled hoort uit te staan zonder SMTP_HOST")
+	}
+	// De appnaam staat altijd goed, ook zonder SMTP: anders zegt PocketBase "Acme".
+	if name := s["meta"].(map[string]any)["appName"]; name != "Sandhovius" {
+		t.Errorf("meta.appName = %v, verwacht Sandhovius", name)
+	}
+}
+
+// tokenAfter geeft de tekst direct na link, tot een aanhalingsteken, spatie
+// of "<": het token in de mail.
+func tokenAfter(m, link string) string {
+	i := strings.Index(m, link)
+	if i < 0 {
+		return ""
+	}
+	rest := m[i+len(link):]
+	if j := strings.IndexAny(rest, "\"' <\r\n"); j >= 0 {
+		rest = rest[:j]
+	}
+	return rest
+}
+
+// loginFrom logt in met een eigen User-Agent (een "ander toestel"); bij 429
+// kort wachten en opnieuw, zoals login().
+func (p *pb) loginFrom(t *testing.T, email, password, userAgent string) {
+	t.Helper()
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		b, _ := json.Marshal(map[string]any{"identity": email, "password": password})
+		req, err := http.NewRequest("POST", p.URL+"/api/collections/users/auth-with-password", bytes.NewReader(b))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("User-Agent", userAgent)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode == 200 {
+			return
+		}
+		if resp.StatusCode == 429 && time.Now().Before(deadline) {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		t.Fatalf("login %s (%s): status %d", email, userAgent, resp.StatusCode)
+	}
+}
+
+// Inloggen vanaf een tweede toestel geeft een waarschuwingsmail; die hoort in
+// de taal van het account en zegt nergens "Acme".
+func TestAuthAlertLanguage(t *testing.T) {
+	c := newSMTPCatcher(t)
+	p := startPBEnv(t, mailEnv(c.Port))
+	const pw = "mail-wachtwoord-123"
+	cases := []struct{ email, language, subject, text string }{
+		{"en@sandhovius.test", "en", "New sign-in to Sandhovius", "If this wasn't you"},
+		{"nl@sandhovius.test", "nl", "Nieuwe inlog bij Sandhovius", "Was jij dit niet?"},
+		{"leeg@sandhovius.test", "", "Nieuwe inlog bij Sandhovius", "Was jij dit niet?"},
+	}
+	for i, tc := range cases {
+		p.create(t, "users", map[string]any{"email": tc.email, "password": pw, "passwordConfirm": pw,
+			"verified": true, "language": tc.language})
+		p.loginFrom(t, tc.email, pw, "toestel-een")
+		p.loginFrom(t, tc.email, pw, "toestel-twee")
+		m := decodeMail(c.wait(t, i+1)[i])
+		if !strings.Contains(m, tc.subject) || !strings.Contains(m, tc.text) {
+			t.Errorf("%s: verwacht %q en %q in:\n%s", tc.email, tc.subject, tc.text, m)
+		}
+		if strings.Contains(m, "Acme") || strings.Contains(m, "/_/") {
+			t.Errorf("%s: Acme of admin-link in de mail:\n%s", tc.email, m)
+		}
+		if !strings.Contains(m, "toestel-twee") {
+			t.Errorf("%s: toestel ontbreekt in de mail:\n%s", tc.email, m)
+		}
 	}
 }
 
@@ -185,6 +265,8 @@ func TestMailLanguage(t *testing.T) {
 		}
 		if !strings.Contains(m, tc.link) {
 			t.Errorf("%s %s: link %q ontbreekt in:\n%s", tc.endpoint, tc.email, tc.link, m)
+		} else if tokenAfter(m, tc.link) == "" {
+			t.Errorf("%s %s: geen token na %q in:\n%s", tc.endpoint, tc.email, tc.link, m)
 		}
 	}
 }
