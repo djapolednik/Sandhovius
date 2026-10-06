@@ -85,12 +85,12 @@ Beide alleen voor een ingelogde `users`-gebruiker (`@request.auth.collectionName
 2. Box op serial zoeken; hash van de genormaliseerde code vergelijken met
    `$security.equal`. Box onbekend of code fout → 400 `Deze code klopt niet`
    (zelfde melding, zodat niemand serienummers kan aftasten).
-3. Box heeft al een huis → 409 `Deze box is al gekoppeld`, behalve als het
+3. `replace_house` (als meegegeven): moet van deze gebruiker zijn, anders 404.
+4. Box heeft al een huis → 409 `Deze box is al gekoppeld`, behalve als het
    huis van deze gebruiker is en hetzelfde als `replace_house` (dubbele tik:
-   200 met hetzelfde antwoord).
-4. `replace_house`: moet van deze gebruiker zijn (anders 404). De huidige box
-   van dat huis krijgt `house = ""`. Anders: nieuw huis `{name: house_name ||
-   "Thuis", user}`.
+   200 met hetzelfde antwoord). Daarna: de huidige box van het
+   `replace_house`-huis krijgt `house = ""`; zonder `replace_house` een nieuw
+   huis `{name: house_name || "Thuis", user}`.
 5. `box.house = huis`, `house.claimed_at = nu`. Antwoord `{house: <id>}`.
 
 **`POST /api/sandhovius/release`** — `{house}`. Alleen de eigenaar (anders
@@ -98,8 +98,11 @@ Beide alleen voor een ingelogde `users`-gebruiker (`@request.auth.collectionName
 huis met kamers, apparaten, scènes en schema's blijft. Geen box gekoppeld →
 200 (niets te doen).
 
-**Rate limit:** regel `/api/sandhovius/` 10 per 60 s (`@auth`), in een
-migratie zoals in spec A.
+**Rate limit:** per endpoint een eigen regel, `/api/sandhovius/claim` en
+`/api/sandhovius/release`, elk 10 per 60 s, in een migratie zoals in spec A.
+PocketBase matcht een pad-label alleen exact (een voorvoegsel als
+`/api/sandhovius/` valt terug op de ruime regel `/api/`). De teller loopt per
+IP-adres, niet per gebruiker (ook de `@auth`-groep telt per IP).
 
 ## E-mail (`backend/pb_hooks/mail.pb.js` + migratie)
 

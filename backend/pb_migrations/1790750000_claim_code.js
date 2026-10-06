@@ -7,7 +7,7 @@
 // lezen en schrijven het. Een box zonder hash (oudere boxen) is niet te claimen.
 //
 // Daarnaast een eigen rate limit op claim en release: 10 per minuut per
-// ingelogde gebruiker, tegen het raden van codes. Let op: PocketBase matcht een
+// IP-adres (niet per gebruiker), tegen het raden van codes. Let op: PocketBase matcht een
 // pad-label alleen exact (een voorvoegsel als "/api/sandhovius/" werkt niet en
 // valt terug op de ruime regel "/api/"), dus elk endpoint krijgt een eigen regel.
 const RULES = [
