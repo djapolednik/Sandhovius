@@ -102,6 +102,11 @@ def main():
     args = ap.parse_args()
     if not args.reissue and not args.serial:
         ap.error('--serial of --reissue is verplicht')
+    # Serienummers staan in hoofdletters (de claim zoekt zo ook).
+    if args.serial:
+        args.serial = args.serial.strip().upper()
+    if args.reissue:
+        args.reissue = args.reissue.strip().upper()
 
     env = load_env()
     url = env.get('POCKETBASE_URL') or env.get('SANDHOVIUS_PB') or 'http://localhost:8090'
@@ -132,10 +137,10 @@ def main():
         body = {'serial': args.serial, 'password': secret, 'passwordConfirm': secret}
         if args.house:
             body['house'] = args.house
+        # Hash in dezelfde POST (een superuser mag het hidden veld zetten):
+        # er bestaat nooit een box zonder hash.
+        body['claim_code_hash'] = claimcode.code_hash(code)
         record = request(url, 'POST', '/api/collections/boxes/records', body, token)
-        # Hidden velden worden bij aanmaken genegeerd; de hash gaat dus via een PATCH.
-        request(url, 'PATCH', f'/api/collections/boxes/records/{record["id"]}',
-                {'claim_code_hash': claimcode.code_hash(code)}, token)
     except RuntimeError as e:
         sys.exit(f'mislukt: {e}')
 
