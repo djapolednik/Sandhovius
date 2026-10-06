@@ -21,3 +21,6 @@ backend/tests/.cache/
 
 # Box-identiteit (serienummer + geheim), bv. van scripts/provision-box.py: nooit in git.
 box.json
+
+# Printbladen met claimcodes: nooit in git.
+sheets/
