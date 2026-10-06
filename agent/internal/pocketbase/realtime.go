@@ -19,11 +19,13 @@ type CommandEvent struct {
 }
 
 // SubscribeCommands opens a PocketBase realtime (SSE) connection and calls
-// handler for every change on the "commands" collection. It blocks until
-// ctx is canceled or the connection drops, returning an error in the
-// latter case so the caller can decide whether to reconnect.
-func (c *Client) SubscribeCommands(ctx context.Context, handler func(CommandEvent)) error {
-	return c.subscribeCollection(ctx, "commands", func(data []byte) {
+// handler for every change on the "commands" collection. onSubscribed (may
+// be nil) runs once the subscription is in place — the moment to catch up
+// on whatever was missed while the stream was down. It blocks until ctx is
+// canceled or the connection drops, returning an error in the latter case
+// so the caller can decide whether to reconnect.
+func (c *Client) SubscribeCommands(ctx context.Context, onSubscribed func(), handler func(CommandEvent)) error {
+	return c.subscribeCollection(ctx, "commands", onSubscribed, func(data []byte) {
 		var event CommandEvent
 		if err := json.Unmarshal(data, &event); err == nil {
 			handler(event)
@@ -44,7 +46,7 @@ type DeviceEvent struct {
 // when a user renames a device so the change can be mirrored into Home
 // Assistant. Blocks until ctx is canceled or the connection drops.
 func (c *Client) SubscribeDevices(ctx context.Context, handler func(DeviceEvent)) error {
-	return c.subscribeCollection(ctx, "devices", func(data []byte) {
+	return c.subscribeCollection(ctx, "devices", nil, func(data []byte) {
 		var event DeviceEvent
 		if err := json.Unmarshal(data, &event); err == nil {
 			handler(event)
@@ -54,10 +56,11 @@ func (c *Client) SubscribeDevices(ctx context.Context, handler func(DeviceEvent)
 
 // subscribeCollection opens a PocketBase realtime (SSE) connection
 // subscribed to a single collection and calls handler with the raw JSON of
-// every matching event's "data" line. Blocks until ctx is canceled or the
+// every matching event's "data" line. onSubscribed (may be nil) is called
+// right after the subscription succeeds. Blocks until ctx is canceled or the
 // connection drops, returning an error in the latter case so the caller can
 // decide whether to reconnect.
-func (c *Client) subscribeCollection(ctx context.Context, collectionName string, handler func(data []byte)) error {
+func (c *Client) subscribeCollection(ctx context.Context, collectionName string, onSubscribed func(), handler func(data []byte)) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/realtime", nil)
 	if err != nil {
 		return fmt.Errorf("pocketbase: build realtime request: %w", err)
@@ -91,6 +94,9 @@ func (c *Client) subscribeCollection(ctx context.Context, collectionName string,
 					return fmt.Errorf("pocketbase: subscribe to %s: %w", collectionName, err)
 				}
 				subscribed = true
+				if onSubscribed != nil {
+					onSubscribed()
+				}
 			}
 
 		case strings.HasPrefix(line, "event:"):

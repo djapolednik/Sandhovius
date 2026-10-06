@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"sandhovius/local-agent/internal/history"
@@ -40,6 +41,11 @@ type Agent struct {
 	// "devices" collection — see handleDeviceEvent.
 	deviceNamesMu sync.Mutex
 	deviceNames   map[string]string
+
+	// registered wordt true zodra de gateway bij PocketBase is
+	// geverifieerd; pas daarna mag een herverbinding de herstelstap starten.
+	registered atomic.Bool
+	recoverMu  sync.Mutex
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -84,23 +90,14 @@ func (a *Agent) Start() error {
 	if err := a.registerGateway(); err != nil {
 		return err
 	}
-
-	devices, err := a.devices.refresh()
-	if err != nil {
-		log.Printf("[APP] Kon device-cache niet opwarmen: %v\n", err)
-	}
-	a.warmDeviceNames(devices)
+	a.registered.Store(true)
 
 	if err := a.haClient.Connect(); err != nil {
 		return err
-	} else {
-		go a.listenToHAEvents()
 	}
-	// Wat er veranderde terwijl de agent niet draaide, zit niet in de
-	// event-stroom: één keer de actuele stand van elk device ophalen.
-	a.reconcileDeviceStates()
+	go a.listenToHAEvents()
 
-	a.catchUpPendingCommands()
+	a.onPocketBaseConnected()
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
 	go a.runHeartbeat()
@@ -148,7 +145,7 @@ func (a *Agent) catchUpPendingCommands() {
 // via realtime (SSE) en blijft herverbinden totdat de agent stopt.
 func (a *Agent) listenForCommands() {
 	for {
-		err := a.pbClient.SubscribeCommands(a.ctx, a.handleCommandEvent)
+		err := a.pbClient.SubscribeCommands(a.ctx, a.onCommandStreamSubscribed, a.handleCommandEvent)
 		if a.ctx.Err() != nil {
 			return // Stop() is aangeroepen
 		}
@@ -158,6 +155,15 @@ func (a *Agent) listenForCommands() {
 			return
 		case <-time.After(5 * time.Second):
 		}
+	}
+}
+
+// onCommandStreamSubscribed start de herstelstap na een herverbinding.
+// Vóór de eerste registratie doet de verbindingslus dat zelf. In een eigen
+// goroutine: de stroom-lezer mag niet wachten op Home Assistant.
+func (a *Agent) onCommandStreamSubscribed() {
+	if a.registered.Load() {
+		go a.onPocketBaseConnected()
 	}
 }
 
