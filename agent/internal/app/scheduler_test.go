@@ -158,3 +158,26 @@ func TestTickUsesSnapshotFromFile(t *testing.T) {
 		t.Errorf("runs = %d, want 1", runs)
 	}
 }
+
+// De timer kan een paar milliseconden vóór de minuutgrens afgaan (wandklok
+// en monotone klok lopen in de Docker-VM iets uit elkaar). De volgende tick
+// is dan toch de minuut ná de vorige, niet dezelfde nog een keer.
+func TestNextTick(t *testing.T) {
+	loc := amsterdam(t)
+	at := func(h, m, s, ms int) time.Time { return time.Date(2027, 10, 4, h, m, s, ms*1e6, loc) }
+	cases := []struct {
+		name      string
+		now, prev time.Time
+		want      time.Time
+	}{
+		{"timer een paar ms te vroeg", at(16, 19, 59, 997), at(16, 20, 0, 0), at(16, 21, 0, 0)},
+		{"timer op tijd", at(16, 20, 0, 4), at(16, 20, 0, 0), at(16, 21, 0, 0)},
+		{"tick duurde langer dan een minuut", at(16, 21, 10, 0), at(16, 20, 0, 0), at(16, 22, 0, 0)},
+		{"eerste tick na opstarten", at(16, 19, 9, 0), time.Time{}, at(16, 20, 0, 0)},
+	}
+	for _, c := range cases {
+		if got := nextTick(c.now, c.prev); !got.Equal(c.want) {
+			t.Errorf("%s: nextTick = %s, want %s", c.name, got.Format("15:04:05.000"), c.want.Format("15:04:05.000"))
+		}
+	}
+}

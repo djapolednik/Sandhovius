@@ -103,15 +103,30 @@ func (a *Agent) runScheduler() {
 			return saveSnapshot(a.schedulesFile, a.house(), snap, time.Now())
 		},
 	}
+	var next time.Time
 	for {
-		next := time.Now().Truncate(time.Minute).Add(time.Minute)
+		next = nextTick(time.Now(), next)
 		select {
 		case <-a.ctx.Done():
 			return
 		case <-time.After(time.Until(next)):
 		}
-		s.tick(time.Now())
+		// De bedoelde minuut, niet time.Now(): de timer gaat soms een paar
+		// ms vóór de grens af, en dan zou het schema pas een minuut later
+		// lopen.
+		s.tick(next)
 	}
+}
+
+// nextTick is de eerstvolgende minuutgrens na now, maar altijd later dan
+// prev (de vorige tick): wordt de timer een paar ms te vroeg wakker, dan
+// komt dezelfde minuut niet nog een keer aan de beurt.
+func nextTick(now, prev time.Time) time.Time {
+	next := now.Truncate(time.Minute).Add(time.Minute)
+	if !next.After(prev) {
+		next = prev.Add(time.Minute)
+	}
+	return next
 }
 
 func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
