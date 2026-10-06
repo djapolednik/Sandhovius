@@ -1,0 +1,37 @@
+[
+  {
+    "input": "k7qm-2xrp-9dtw",
+    "normalized": "K7QM2XRP9DTW",
+    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+  },
+  {
+    "input": "K7QM 2XRP 9DTW",
+    "normalized": "K7QM2XRP9DTW",
+    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+  },
+  {
+    "input": "K7QM2XRP9DTW",
+    "normalized": "K7QM2XRP9DTW",
+    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+  },
+  {
+    "input": "kOqm-2xrP-9dTl",
+    "normalized": "K0QM2XRP9DT1",
+    "sha256": "5e006ba7cb2fa2be8711a2d3c8cabdbdab0798b44ac5c30d7d4c237fa75449a1"
+  },
+  {
+    "input": "K7QM-2XRP-9DIL",
+    "normalized": "K7QM2XRP9D11",
+    "sha256": "59538ebc71426513ca71d4a2123a1509cb6b3131edecb91571b4abe2312cb40c"
+  },
+  {
+    "input": "  k7qm  2xrp   9dtw  ",
+    "normalized": "K7QM2XRP9DTW",
+    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+  },
+  {
+    "input": "k7qm - 2xrp-9dtw",
+    "normalized": "K7QM2XRP9DTW",
+    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+  }
+]
