@@ -39,6 +39,7 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - `docker-compose.yml` — hele lokale stack: homeassistant, mosquitto, zigbee2mqtt, agent, pocketbase, frontend (containers heten `sandhovius-*`)
 - `agent/main/main.go` — entry point van de Go agent
 - `agent/internal/app/agent.go` — kern: gateway-registratie (vast record-ID in `/data/gateway_id`), heartbeat (30 s op `houses.last_seen`), HA-events → PocketBase, commands → HA, provisioning van nieuwe devices, state-reconciliatie bij start/reconnect
+- `agent/internal/app/connection.go` (verbindingslus met backoff + herstelstap `onPocketBaseConnected`), `scheduler.go` + `schedule_store.go` (schema-klok, snapshot in `/data/schedules.json`), `commands.go` (verlopen en claimen van commando's)
 - `agent/internal/homeassistant/` — HA websocket (events), REST (`CallService`, `GetState`), registry (helpers aanmaken)
 - `agent/internal/pocketbase/`, `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
 - `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
@@ -53,7 +54,7 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - **Go** — local agent (Dockerfile build)
 - **Home Assistant Core** — state management; devices uit de UI worden HA-helpers (`input_boolean` / `input_number`)
 - **Mosquitto** + **Zigbee2MQTT** — Zigbee ↔ MQTT ↔ agent
-- **PocketBase 0.40** — users, houses, rooms, devices, device_state, commands; realtime naar de PWA
+- **PocketBase 0.40** (image `ghcr.io/muchobien/pocketbase:latest`, dus niet vastgepind; draait nu 0.40.4) — users, houses, rooms, devices, device_state, commands; realtime naar de PWA
 - **Next.js 16** (Turbopack, JS, geen TypeScript) — PWA; lees `frontend/node_modules/next/dist/docs/` bij twijfel, API's wijken af
 - **Headscale** — later (remote toegang, zero external ports)
 
@@ -67,8 +68,15 @@ docker compose logs -f agent
 # Lokaal checken zonder container
 cd agent && go vet ./... && go build ./...
 cd frontend && npx next build                     # moet slagen vóór commit
+
+# Tests
+cd agent && go vet ./... && go test ./...
+cd frontend && node --test lib/*.test.js
 ```
 
+- Windows + Git Bash: `gofmt -l` noemt elk bestand (CRLF in de werkmap; git normaliseert bij commit, dus negeren). Geen gcc → geen `go test -race`. Docker Desktop staat in `%LOCALAPPDATA%\Programs\DockerDesktop`. Bij `docker exec … /pad` in Git Bash `MSYS_NO_PATHCONV=1` ervoor, anders wordt het pad een Windows-pad.
+- PocketBase geeft datums als `2006-01-02 15:04:05.000Z` (spatie, geen `T`): `time.RFC3339` parse faalt daarop. Migratie-historie opschonen na weggegooide migratiebestanden: `docker exec sandhovius-pocketbase /usr/local/bin/pocketbase migrate history-sync --dir=/pb_data --migrationsDir=/pb_migrations`.
+- `scripts/seed.py` (testaccount + huis vullen) staat bewust alleen lokaal (`.git/info/exclude`); het wacht op het huis dat `registerGateway()` aanmaakt en moet mee zodra de box-identiteit dat vervangt.
 - Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`) · PWA: http://localhost:3000
 - Visueel testen: Chrome en Edge ontbreken; de Playwright-plugin werkt niet. `SANDHOVIUS_EMAIL=… SANDHOVIUS_PASSWORD=… scripts/screenshot.py /tmp/home 1440x900 1366x768:dark 390x844` (het lokale testaccount, niet in git) logt in (token in localStorage) en maakt screenshots via Firefox headless + Marionette; het zegt ook of de pagina scrolt (Home hoort op een laptop te passen). Opties: `HASH='#kamers'`, `HOMEVIEW=on`. Firefox kan niet smaller dan ~500px. Marionette kan ook klikken, lang indrukken (`WebDriver:PerformActions`) en met pref `dom.w3c_touch_events.enabled` touch-events sturen.
 
@@ -96,8 +104,8 @@ cd frontend && npx next build                     # moet slagen vóór commit
 ## Volgende Stappen
 1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
-3. **Claim-flow** voor een nieuwe box: serienummer bij productie, koppelen aan een account via `houses.claimed_at`/`user`. Vervangt later het ID-bestand in `registerGateway()` (zie memory `box-house-identity`).
-4. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports.
+3. **Box-identiteit en claim-flow** (branch `box-identity`). Spec A (`docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, `house`-relatie), regels per huis, agent logt in als box i.p.v. superuser, `/data/box.json` vervangt `gateway_id`, `scripts/provision-box.py`. Daarna spec B: claimcode op de box (sticker/QR), bij koppelen nieuw of bestaand account en nieuw huis of vervanging; één account kan meerdere huizen/boxen hebben. Besloten: de box hoort bij een huis, het huis is van de bewoner.
+4. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. PocketBase-image vastpinnen.
 5. **SMTP in PocketBase** instellen (nu uit): zonder dat verstuurt "Wachtwoord vergeten?" geen mail. Ook de afzender (`support@example.com`) en `appURL` goed zetten.
 6. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
 
