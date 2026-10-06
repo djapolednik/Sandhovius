@@ -37,11 +37,10 @@ func main() {
 	// 4. Home Assistant WebSocket + REST
 	haClient := homeassistant.NewClient(cfg.HomeAssistant.URL, cfg.HomeAssistant.RestURL, cfg.HomeAssistant.Token)
 
-	// 5. PocketBase Client
+	// 5. PocketBase Client — inloggen gebeurt in de agent zelf, met
+	// herhaalpogingen: de box moet ook zonder PocketBase kunnen starten.
 	pbClient := pocketbase.NewClient(cfg.PocketBase.URL)
-	if err := pbClient.Authenticate(cfg.PocketBase.AdminEmail, cfg.PocketBase.AdminPassword); err != nil {
-		log.Fatalf("[FATAL] Fout bij het inloggen bij PocketBase: %v", err)
-	}
+	pbClient.SetCredentials(cfg.PocketBase.AdminEmail, cfg.PocketBase.AdminPassword)
 
 	// 6. De Agent aanmaken
 	agent := app.New(mqttClient, haClient, pbClient, historyStore, cfg.Gateway.Name, cfg.Gateway.IDFile, cfg.History.RetentionDays, cfg.Schedules.File)

@@ -11,17 +11,23 @@ type authResponse struct {
 
 // Authenticate logs in as the PocketBase superuser and stores the resulting
 // token on the client. It also remembers the credentials so the client can
-// silently re-authenticate later if the token expires (see do401Retry).
+// silently re-authenticate later if the token expires (see doAuthed).
 func (c *Client) Authenticate(email, password string) error {
+	c.SetCredentials(email, password)
+	return c.Login()
+}
+
+// SetCredentials remembers the superuser credentials without logging in,
+// so the agent can start while PocketBase is unreachable and log in later.
+func (c *Client) SetCredentials(email, password string) {
 	c.mu.Lock()
 	c.email = email
 	c.password = password
 	c.mu.Unlock()
-
-	return c.login()
 }
 
-func (c *Client) login() error {
+// Login logs in with the stored credentials and keeps the token.
+func (c *Client) Login() error {
 	c.mu.RLock()
 	email, password := c.email, c.password
 	c.mu.RUnlock()
@@ -50,7 +56,7 @@ func (c *Client) doAuthed(method, path string, body any, out any) error {
 
 	var statusErr *StatusError
 	if errors.As(err, &statusErr) && statusErr.StatusCode == 401 {
-		if loginErr := c.login(); loginErr != nil {
+		if loginErr := c.Login(); loginErr != nil {
 			return fmt.Errorf("pocketbase: re-authenticate after 401: %w", loginErr)
 		}
 		return c.do(method, path, body, out)

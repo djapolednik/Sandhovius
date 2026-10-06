@@ -1,6 +1,10 @@
 package app
 
-import "log"
+import (
+	"context"
+	"log"
+	"time"
+)
 
 // onPocketBaseConnected brengt PocketBase weer bij na een (her)verbinding:
 // bij het opstarten en na elke uitval van de command-stroom. Wat er in de
@@ -29,4 +33,42 @@ func (a *Agent) onPocketBaseConnected() {
 	a.reconcileDeviceStates()
 
 	a.catchUpPendingCommands()
+}
+
+// retryWithBackoff probeert attempt tot het lukt, met een wachttijd die
+// van minWait verdubbelt tot maxWait. Geeft false als ctx eerder klaar is.
+func retryWithBackoff(ctx context.Context, minWait, maxWait time.Duration, attempt func() error) bool {
+	wait := minWait
+	for {
+		err := attempt()
+		if err == nil {
+			return true
+		}
+		log.Printf("[APP] PocketBase niet bereikbaar: %v — opnieuw over %s\n", err, wait)
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(wait):
+		}
+		wait = min(wait*2, maxWait)
+	}
+}
+
+// runPocketBase verbindt met PocketBase zodra het kan: inloggen, gateway
+// registreren of verifiëren, en dan de herstelstap. De agent draait
+// intussen gewoon lokaal door. Na de eerste keer neemt de command-stroom
+// het herverbinden over (onCommandStreamSubscribed).
+func (a *Agent) runPocketBase() {
+	ok := retryWithBackoff(a.ctx, time.Second, 30*time.Second, func() error {
+		if err := a.pbClient.Login(); err != nil {
+			return err
+		}
+		return a.registerGateway()
+	})
+	if !ok {
+		return // Stop() is aangeroepen
+	}
+	a.registered.Store(true)
+	log.Println("[APP] Verbonden met PocketBase")
+	a.onPocketBaseConnected()
 }

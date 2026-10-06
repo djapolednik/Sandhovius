@@ -87,21 +87,25 @@ func (a *Agent) Start() error {
 
 	go a.runHistoryCleanup()
 
-	if err := a.registerGateway(); err != nil {
+	// Eerst alles wat lokaal kan: het huis uit het ID-bestand (geverifieerd
+	// wordt het zodra PocketBase er is), de schema's uit de snapshot en
+	// Home Assistant. Zo draait de box ook zonder internet.
+	storedID, err := readGatewayID(a.gatewayIDFile)
+	if err != nil {
 		return err
 	}
-	a.registered.Store(true)
+	a.setHouse(storedID)
+	go a.runScheduler()
 
 	if err := a.haClient.Connect(); err != nil {
 		return err
 	}
 	go a.listenToHAEvents()
 
-	a.onPocketBaseConnected()
+	go a.runPocketBase()
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
 	go a.runHeartbeat()
-	go a.runScheduler()
 	go a.runWeather()
 
 	return nil
@@ -445,9 +449,10 @@ func (a *Agent) failCommand(commandID string, reason error) {
 	}
 }
 
-// registerGateway koppelt deze agent aan zijn houses-record en zet de
-// status op "online". De box herkent zijn record aan het ID dat hij bij de
-// eerste registratie lokaal opslaat (gatewayIDFile), niet aan de naam: de
+// registerGateway koppelt deze agent aan zijn houses-record (online zetten
+// doet de herstelstap daarna). De box herkent zijn record aan het ID dat
+// hij bij de eerste registratie lokaal opslaat (gatewayIDFile), niet aan
+// de naam: de
 // bewoner kan het huis in de app hernoemen zonder dat de box zijn huis
 // kwijtraakt. Volgorde:
 //  1. ID-bestand aanwezig en het record bestaat → dat record.
@@ -500,7 +505,7 @@ func (a *Agent) registerGateway() error {
 	}
 
 	a.setHouse(gateway.ID)
-	return a.pbClient.SetGatewayStatus(gateway.ID, "online")
+	return nil
 }
 
 func (a *Agent) house() string {
