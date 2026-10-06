@@ -53,3 +53,11 @@ func TestRetryWithBackoffCapsWait(t *testing.T) {
 		t.Errorf("vijf pogingen duurden %s, want ~70ms", elapsed)
 	}
 }
+
+// Een box die net is losgekoppeld (huis leeg) mag bij de herstelstap niets
+// naar PocketBase sturen, ook geen PATCH op houses/records/ zonder id. De nil
+// pbClient laat de test paniekeren als het toch gebeurt.
+func TestOnPocketBaseConnectedWithoutHouseDoesNothing(t *testing.T) {
+	a := &Agent{}
+	a.onPocketBaseConnected()
+}

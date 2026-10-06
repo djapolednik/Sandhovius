@@ -20,6 +20,13 @@ func (a *Agent) onPocketBaseConnected() {
 	a.recoverMu.Lock()
 	defer a.recoverMu.Unlock()
 
+	// Net losgekoppeld (tussen het laden van "registered" en hier): geen
+	// huis meer, dus niets bij te werken. Anders een PATCH op
+	// houses/records/ zonder id.
+	if a.house() == "" {
+		return
+	}
+
 	if err := a.pbClient.SetGatewayStatus(a.house(), "online"); err != nil {
 		log.Printf("[APP] Gateway online zetten mislukt: %v\n", err)
 	}
