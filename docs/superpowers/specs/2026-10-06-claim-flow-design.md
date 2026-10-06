@@ -15,7 +15,7 @@ niet claimen. Eén account kan meerdere huizen hebben, elk met een eigen box
 
 | Vraag | Keuze | Waarom |
 |---|---|---|
-| Waar begint de koper? | In de PWA (adres staat in de handleiding): account, dan in de app de QR-code uit de handleiding scannen | Eén duidelijke plek. De QR-code bevat toch een link (`…/koppel?s=…&c=…`), zodat scannen met de gewone camera ook werkt — kost niets en wat gedrukt is, is niet meer te veranderen. |
+| Waar begint de koper? | In de PWA (adres staat in de handleiding): account, dan in de app de QR-code uit de handleiding scannen | Eén duidelijke plek. De QR-code bevat toch een link (`…/koppel#s=…&c=…`), zodat scannen met de gewone camera ook werkt — kost niets en wat gedrukt is, is niet meer te veranderen. |
 | E-mail bevestigen | Verplicht vóór het koppelen | Netjes accountherstel; daarom komt SMTP in deze spec. |
 | SMTP in dev | Mailpit in `docker-compose.yml` | Mails zichtbaar op `localhost:8025`, niets verlaat het netwerk, geen wachtwoorden. Fase 3: andere env-waarden. |
 | Server-logica | Eigen endpoint als PocketBase-hook (`backend/pb_hooks/`) | Hash controleren en huis + box + eigenaar in één transactie kan niet met regels; een aparte service is te zwaar. |
@@ -62,7 +62,11 @@ ongeluk de box van een bewoner losmaakt.
   en `I`/`L`→`1` (Crockford), zodat overtikfouten met die letters niets uitmaken.
 - In de database alleen `sha256(genormaliseerde code)` in
   `boxes.claim_code_hash`.
-- QR-inhoud: `<APP_URL>/koppel?s=<serial>&c=<code met streepjes>`.
+- QR-inhoud: `<APP_URL>/koppel#s=<serial>&c=<code met streepjes>`. Serial en
+  code staan in het fragment (na `#`): de browser stuurt dat nooit naar een
+  server, dus de code komt in geen enkel server- of proxylog ("no cloud
+  logs"). De PWA leest ook nog de oude vorm `/koppel?s=…&c=…` (eerder
+  geprinte dev-bladen).
 
 ## Datamodel
 
@@ -145,7 +149,7 @@ login-bento en de bestaande sheets.
 - **`/bevestig?token=…`**: bevestigt via PocketBase, toont resultaat, door naar de app.
 - **`/wachtwoord?token=…`**: nieuw wachtwoord + herhaal, via
   `confirmPasswordReset`; daarna door naar de login.
-- **`/koppel?s=…&c=…`**: bewaart serial en code in `sessionStorage`, door naar
+- **`/koppel#s=…&c=…`** (of de oude `?s=…&c=…`): bewaart serial en code in `sessionStorage`, door naar
   de app; na (eventueel) inloggen opent het koppelscherm ingevuld.
 - **"Box toevoegen"** (lege-huisscherm en Opties): niet bevestigd → uitleg +
   "Opnieuw sturen". Anders een sheet: camera (jsQR) of "Code overtikken"

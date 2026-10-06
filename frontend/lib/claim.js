@@ -14,14 +14,23 @@ export function normalize(code) {
     .replace(/[IL]/g, '1')
 }
 
+// Serienummers staan in hoofdletters opgeslagen; "sh-dev-0001" mag ook.
+export function normalizeSerial(serial) {
+  return String(serial ?? '')
+    .trim()
+    .toUpperCase()
+}
+
 // "K7QM2XRP9DTW" → "K7QM-2XRP-9DTW", om te tonen.
 export function formatCode(code) {
   return (normalize(code).match(/.{1,4}/g) || []).join('-')
 }
 
-// De QR-inhoud is <app-url>/koppel?s=<serienummer>&c=<code>. De host mag
-// anders zijn (QR van een andere omgeving); alleen het pad en de
-// parameters tellen. Andere tekst geeft null.
+// De QR-inhoud is <app-url>/koppel#s=<serienummer>&c=<code>. De code staat
+// in het fragment (na #): dat stuurt de browser nooit naar een server, dus
+// komt het in geen enkel log. Oudere bladen hebben ?s=…&c=…; die blijven
+// werken. De host mag anders zijn (QR van een andere omgeving); alleen het
+// pad en de parameters tellen. Andere tekst geeft null.
 export function parseClaimLink(text) {
   let url
   try {
@@ -30,8 +39,10 @@ export function parseClaimLink(text) {
     return null
   }
   if (url.pathname.replace(/\/+$/, '') !== '/koppel') return null
-  const serial = (url.searchParams.get('s') || '').trim()
-  const code = (url.searchParams.get('c') || '').trim()
+  const fragment = new URLSearchParams(url.hash.replace(/^#/, ''))
+  const params = fragment.has('s') || fragment.has('c') ? fragment : url.searchParams
+  const serial = normalizeSerial(params.get('s'))
+  const code = (params.get('c') || '').trim()
   if (!serial || !code) return null
   return { serial, code }
 }

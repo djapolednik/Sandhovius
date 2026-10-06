@@ -6,7 +6,9 @@ import { parseClaimLink, pendingKey } from '../../lib/claim'
 // De QR-code op het blad bij de box opent deze pagina. We bewaren de code
 // (sessionStorage, alleen dit tabblad) en gaan naar de app; die opent de
 // koppelsheet zodra je ingelogd en bevestigd bent. De code staat zo niet
-// langer dan nodig in de adresbalk.
+// langer dan nodig in de adresbalk. Nieuwe bladen zetten serienummer en
+// code in het fragment (/koppel#s=…&c=…), dat nooit naar een server gaat;
+// oudere bladen met ?s=…&c=… werken ook (parseClaimLink leest beide).
 export default function Page() {
   useEffect(() => {
     const found = parseClaimLink(window.location.href)

@@ -27,7 +27,8 @@ class ClaimCodeTest(unittest.TestCase):
             self.assertRegex(claimcode.new_code(), pattern)
 
     def test_claim_url(self):
-        want = 'https://a.b/koppel?s=SH-1&c=K7QM-2XRP-9DTW'
+        # Fragment (na #): de code gaat nooit naar een server of in een log.
+        want = 'https://a.b/koppel#s=SH-1&c=K7QM-2XRP-9DTW'
         self.assertEqual(claimcode.claim_url('https://a.b', 'SH-1', 'K7QM-2XRP-9DTW'), want)
         self.assertEqual(claimcode.claim_url('https://a.b/', 'SH-1', 'K7QM-2XRP-9DTW'), want)
 

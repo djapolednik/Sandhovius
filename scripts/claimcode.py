@@ -30,7 +30,9 @@ def code_hash(code):
 
 
 def claim_url(app_url, serial, code):
-    return f'{app_url.rstrip("/")}/koppel?s={quote(serial, safe="")}&c={quote(code, safe="-")}'
+    """<app>/koppel#s=...&c=...: de code staat in het fragment, dat de browser
+    nooit naar een server stuurt (dus in geen enkel log)."""
+    return f'{app_url.rstrip("/")}/koppel#s={quote(serial, safe="")}&c={quote(code, safe="-")}'
 
 
 def sheet_svg(app_url, serial, code):

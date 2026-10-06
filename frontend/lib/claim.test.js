@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { normalize, parseClaimLink, pendingKey, claimErrorMessage, isBoxOnline, formatCode } from './claim.js'
+import { normalize, normalizeSerial, parseClaimLink, pendingKey, claimErrorMessage, isBoxOnline, formatCode } from './claim.js'
 
 const vectors = JSON.parse(
   readFileSync(new URL('../../backend/tests/testdata/claim_codes.json', import.meta.url), 'utf8')
@@ -31,12 +31,32 @@ test('pendingKey', () => {
   assert.equal(pendingKey, 'sandhovius.claim')
 })
 
-test('parseClaimLink', () => {
+test('normalizeSerial trims and uppercases', () => {
+  assert.equal(normalizeSerial('  sh-dev-0001 '), 'SH-DEV-0001')
+  assert.equal(normalizeSerial('SH-1'), 'SH-1')
+  assert.equal(normalizeSerial(undefined), '')
+})
+
+test('parseClaimLink reads the fragment', () => {
+  assert.deepEqual(parseClaimLink('http://localhost:3000/koppel#s=SH-TEST-0002&c=K7QM-2XRP-9DTW'), {
+    serial: 'SH-TEST-0002',
+    code: 'K7QM-2XRP-9DTW',
+  })
+  assert.deepEqual(parseClaimLink('https://app.sandhovius.nl/koppel/#s=sh-1&c=abcd-efgh-jkmn'), {
+    serial: 'SH-1',
+    code: 'abcd-efgh-jkmn',
+  })
+  assert.equal(parseClaimLink('http://localhost:3000/koppel#s=SH-1'), null)
+  assert.equal(parseClaimLink('http://localhost:3000/koppel#c=ABCD'), null)
+  assert.equal(parseClaimLink('http://localhost:3000/andere#s=SH-1&c=ABCD'), null)
+})
+
+test('parseClaimLink still reads the old query form', () => {
   assert.deepEqual(parseClaimLink('http://localhost:3000/koppel?s=SH-TEST-0002&c=K7QM-2XRP-9DTW'), {
     serial: 'SH-TEST-0002',
     code: 'K7QM-2XRP-9DTW',
   })
-  assert.deepEqual(parseClaimLink('  https://app.sandhovius.nl/koppel?s=SH-1&c=abcd-efgh-jkmn \n'), {
+  assert.deepEqual(parseClaimLink('  https://app.sandhovius.nl/koppel?s=sh-1&c=abcd-efgh-jkmn \n'), {
     serial: 'SH-1',
     code: 'abcd-efgh-jkmn',
   })
