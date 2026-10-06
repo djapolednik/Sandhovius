@@ -18,6 +18,8 @@ import SettingsView from '../components/SettingsView'
 import FavoritesOrderModal from '../components/FavoritesOrderModal'
 import ChangePasswordModal from '../components/ChangePasswordModal'
 import SignupForm from '../components/SignupForm'
+import ClaimSheet from '../components/ClaimSheet'
+import { pendingKey } from '../lib/claim'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -104,6 +106,8 @@ export default function Home() {
 
   const [tab, setTab] = useState('home')
   const [houseModalOpen, setHouseModalOpen] = useState(false)
+  // Koppelsheet: null (dicht) of { initial } met de code uit een link/QR.
+  const [claim, setClaim] = useState(null)
   const [addDeviceOpen, setAddDeviceOpen] = useState(false)
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   const [shelfIds, setShelfIds] = useState([])
@@ -152,6 +156,16 @@ export default function Home() {
     if (loggedIn) {
       fetchAll()
     }
+  }, [loggedIn])
+
+  // Een koppelcode uit de QR-link (/koppel) wacht in sessionStorage: zodra
+  // je ingelogd bent opent de koppelsheet daarmee.
+  useEffect(() => {
+    if (!loggedIn) return
+    try {
+      const pending = window.sessionStorage.getItem(pendingKey)
+      if (pending) setClaim({ initial: JSON.parse(pending) })
+    } catch {}
   }, [loggedIn])
 
   // Realtime: elke wijziging (van eender welk device, ook eentje die niet
@@ -315,6 +329,19 @@ export default function Home() {
 
   async function changeLanguage(language) {
     await pb.collection('users').update(pb.authStore.record.id, { language })
+  }
+
+  // Na het koppelen: huizen opnieuw ophalen en het nieuwe huis tonen.
+  async function boxClaimed(houseId) {
+    await fetchAll()
+    selectHouse(houseId)
+  }
+
+  // Box loskoppelen: het huis en alles erin blijft.
+  async function releaseBox(houseId) {
+    await pb.send('/api/sandhovius/release', { method: 'POST', body: { house: houseId } })
+    await fetchAll()
+    showToast('Je box is ontkoppeld')
   }
 
   function logout() {
@@ -1191,6 +1218,9 @@ export default function Home() {
     <p className="empty-state">
       Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt
       je huis hier.
+      <button type="button" className="btn btn-primary empty-state-action" onClick={() => setClaim({ initial: null })}>
+        Box toevoegen
+      </button>
     </p>
   )
 
@@ -1343,6 +1373,7 @@ export default function Home() {
           language={pb.authStore.record?.language || 'nl'}
           onChangeLanguage={changeLanguage}
           onOpenHouse={() => setHouseModalOpen(true)}
+          onAddBox={() => setClaim({ initial: null })}
           onChangePassword={() => setChangingPassword(true)}
           onLogout={logout}
         />
@@ -1477,7 +1508,19 @@ export default function Home() {
           onRenameRoom={renameRoom}
           onMoveRoom={moveRoom}
           onDeleteRoom={deleteRoom}
+          onReleaseBox={releaseBox}
           onClose={() => setHouseModalOpen(false)}
+        />
+      )}
+
+      {claim && (
+        <ClaimSheet
+          pb={pb}
+          user={pb.authStore.record}
+          houses={houses}
+          initial={claim.initial}
+          onClaimed={boxClaimed}
+          onClose={() => setClaim(null)}
         />
       )}
 

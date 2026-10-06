@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
+import { claimErrorMessage } from '../lib/claim'
 import { CheckIcon, CloseIcon, TrashIcon } from '../lib/icons'
 import MoveButtons from './MoveButtons'
 
@@ -134,6 +135,7 @@ export default function HouseModal({
   onRenameRoom,
   onMoveRoom,
   onDeleteRoom,
+  onReleaseBox,
   onClose,
 }) {
   const [houseName, setHouseName] = useState(house?.name ?? '')
@@ -141,6 +143,22 @@ export default function HouseModal({
   const [newRoomName, setNewRoomName] = useState('')
   const [addingRoom, setAddingRoom] = useState(false)
   const [error, setError] = useState('')
+  const [confirmingRelease, setConfirmingRelease] = useState(false)
+  const [releasing, setReleasing] = useState(false)
+
+  async function handleRelease() {
+    setReleasing(true)
+    setError('')
+    try {
+      await onReleaseBox(house.id)
+      setConfirmingRelease(false)
+    } catch (err) {
+      console.error('[ontkoppelen]', err?.status)
+      setError(claimErrorMessage(err?.status ?? 0, err?.message))
+    } finally {
+      setReleasing(false)
+    }
+  }
 
   async function handleRenameHouse(e) {
     e.preventDefault()
@@ -222,6 +240,34 @@ export default function HouseModal({
           Toevoegen
         </button>
       </form>
+
+      {house?.claimed_at && (
+        <>
+          <div className="modal-divider" />
+          <span className="form-label">Box</span>
+          {confirmingRelease ? (
+            <div className="room-confirm">
+              <p className="room-confirm-text">
+                Box ontkoppelen? Je huis en instellingen blijven bewaard. Je kunt later een box koppelen.
+              </p>
+              <div className="room-row-actions">
+                <button className="btn btn-plain" onClick={() => setConfirmingRelease(false)} disabled={releasing}>
+                  Annuleren
+                </button>
+                <button className="btn btn-danger-text" onClick={handleRelease} disabled={releasing}>
+                  Box ontkoppelen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <button className="btn btn-danger-text" onClick={() => setConfirmingRelease(true)}>
+                Box ontkoppelen
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {error && <p className="error-banner">{error}</p>}
     </Modal>

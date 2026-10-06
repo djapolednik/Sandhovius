@@ -24,6 +24,7 @@ export default function SettingsView({
   language,
   onChangeLanguage,
   onOpenHouse,
+  onAddBox,
   onChangePassword,
   onLogout,
 }) {
@@ -80,6 +81,9 @@ export default function SettingsView({
               </span>
             </span>
             <ArrowUpRightIcon className="settings-link-arrow" width="18" height="18" aria-hidden="true" />
+          </button>
+          <button type="button" className="btn btn-secondary settings-add-box" onClick={onAddBox}>
+            Box toevoegen
           </button>
         </section>
       )}
