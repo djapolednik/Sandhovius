@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -100,6 +99,9 @@ func (a *Agent) runScheduler() {
 		fetch: a.fetchScheduleSnapshot,
 		run:   a.runSchedule,
 		save: func(snap *scheduleSnapshot) error {
+			if a.house() == "" {
+				return nil // niets om te bewaren zonder huis
+			}
 			return saveSnapshot(a.schedulesFile, a.house(), snap, time.Now())
 		},
 	}
@@ -132,7 +134,9 @@ func nextTick(now, prev time.Time) time.Time {
 func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	house := a.house()
 	if house == "" {
-		return nil, errors.New("nog geen huis bekend")
+		// Geen huis (losgekoppeld): een lege snapshot, zodat schema's van
+		// het vorige huis niet blijven lopen. Een fout zou de oude houden.
+		return &scheduleSnapshot{}, nil
 	}
 	schedules, err := a.pbClient.ListSchedules(house)
 	if err != nil {

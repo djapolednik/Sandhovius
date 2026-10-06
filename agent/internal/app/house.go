@@ -21,12 +21,19 @@ func (a *Agent) applyHouse(house string) {
 	if house == a.house() && (house == "" || a.registered.Load()) {
 		return
 	}
+	// Loskoppelen: eerst registered uit, dan het huis leeg, zodat hartslag en
+	// herstelstap nooit met een leeg huis-ID aan het werk gaan. Claimen of
+	// wisselen: eerst het huis, dan registered.
+	if house == "" {
+		a.registered.Store(false)
+	}
 	a.setHouse(house)
+	// De cache hoort bij het vorige huis; de herstelstap vult hem opnieuw.
+	a.devices.clear()
 	if err := box.SaveHouse(a.boxFile, house); err != nil {
 		log.Printf("[APP] Kon huis niet opslaan in %s: %v\n", a.boxFile, err)
 	}
 	if house == "" {
-		a.registered.Store(false)
 		log.Println("[APP] Box heeft geen huis: alleen lokaal")
 		return
 	}

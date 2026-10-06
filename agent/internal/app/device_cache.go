@@ -56,6 +56,17 @@ func (d *deviceCache) refresh() ([]pocketbase.Device, error) {
 	return devices, nil
 }
 
+// clear leegt de cache (huis losgekoppeld of gewisseld). Nil-veilig voor
+// tests zonder cache.
+func (d *deviceCache) clear() {
+	if d == nil {
+		return
+	}
+	d.mu.Lock()
+	d.byEntity = make(map[string]string)
+	d.mu.Unlock()
+}
+
 // entityIDs returns every entity_id the cache currently knows, so the
 // agent can reconcile their state with Home Assistant.
 func (d *deviceCache) entityIDs() []string {

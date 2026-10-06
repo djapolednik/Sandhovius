@@ -4,8 +4,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"sandhovius/local-agent/internal/box"
+	"sandhovius/local-agent/internal/history"
+	"sandhovius/local-agent/internal/homeassistant"
+	"sandhovius/local-agent/internal/pocketbase"
 )
 
 // newHouseTestAgent maakt een Agent met een geldige box.json en een teller
@@ -112,5 +116,76 @@ func TestStartWithoutHouseOffline(t *testing.T) {
 	}
 	if a.registered.Load() {
 		t.Error("registered hoort false te zijn zonder huis")
+	}
+}
+
+// Review Focus 3: na loskoppelen draait de scheduler niets meer van het
+// oude huis, ook niet uit de snapshot in het geheugen.
+func TestDetachStopsScheduler(t *testing.T) {
+	a, _ := newHouseTestAgent(t, "")
+	a.applyHouse("h1")
+	now := time.Date(2026, 10, 5, 7, 30, 0, 0, time.Local) // maandag
+	old := &scheduleSnapshot{schedules: []pocketbase.Schedule{
+		{ID: "s1", Scene: "sc1", Time: "07:30", Days: []string{"mon"}, Enabled: true},
+	}}
+	runs := 0
+	s := &scheduler{
+		snap:  old,
+		fetch: a.fetchScheduleSnapshot,
+		run:   func(*scheduleSnapshot, pocketbase.Schedule, time.Time) { runs++ },
+	}
+	a.applyHouse("")
+	s.tick(now)
+	if runs != 0 {
+		t.Errorf("schema van het oude huis liep %d keer na loskoppelen, verwacht 0", runs)
+	}
+}
+
+func TestDetachDoesNotSaveEmptySnapshot(t *testing.T) {
+	a, _ := newHouseTestAgent(t, "")
+	a.schedulesFile = filepath.Join(t.TempDir(), "schedules.json")
+	a.applyHouse("")
+	snap, err := a.fetchScheduleSnapshot()
+	if err != nil || snap == nil || len(snap.schedules) != 0 {
+		t.Fatalf("fetch zonder huis = %v, %v; verwacht lege snapshot zonder fout", snap, err)
+	}
+}
+
+// Na loskoppelen of wisselen hoort de device-cache niets van het oude huis
+// meer te hebben.
+func TestApplyHouseClearsDeviceCache(t *testing.T) {
+	for _, next := range []string{"", "h2"} {
+		a, _ := newHouseTestAgent(t, "")
+		a.devices = newDeviceCache(nil, a.house)
+		a.applyHouse("h1")
+		a.devices.byEntity["light.a"] = "d1"
+		a.applyHouse(next)
+		if ids := a.devices.entityIDs(); len(ids) != 0 {
+			t.Errorf("na %q: cache bevat nog %v", next, ids)
+		}
+	}
+}
+
+// Zonder huis gaat een HA-event alleen naar de lokale geschiedenis; de
+// nil pbClient laat het test paniekeren als het toch PocketBase raakt.
+func TestForwardHAEventWithoutHouseStaysLocal(t *testing.T) {
+	a, _ := newHouseTestAgent(t, "")
+	store, err := history.NewStore(filepath.Join(t.TempDir(), "h.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	a.history = store
+	a.devices = newDeviceCache(nil, a.house)
+	a.devices.byEntity["light.a"] = "d1" // oude rest: mag niet meer doorgestuurd worden
+	a.forwardHAEvent(homeassistant.HAEvent{EntityID: "light.a", State: "on"})
+}
+
+func TestDetachClearsRegisteredBeforeHouse(t *testing.T) {
+	a, _ := newHouseTestAgent(t, "")
+	a.applyHouse("h1")
+	a.applyHouse("")
+	if a.registered.Load() || a.house() != "" {
+		t.Error("na loskoppelen: registered en house moeten allebei leeg zijn")
 	}
 }

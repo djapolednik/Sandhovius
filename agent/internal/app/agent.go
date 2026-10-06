@@ -489,7 +489,7 @@ func (a *Agent) runHeartbeat() {
 		case <-a.ctx.Done():
 			return
 		case <-ticker.C:
-			if !a.registered.Load() {
+			if !a.registered.Load() || a.house() == "" {
 				continue // geen huis (of nog niet bevestigd): niets om te melden
 			}
 			if err := a.pbClient.SetGatewayStatus(a.house(), "online"); err != nil {
@@ -542,6 +542,10 @@ func (a *Agent) handleMQTTMessage(topic string, payload []byte) {
 func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
 	if err := a.history.Record(event.FriendlyName, event.State); err != nil {
 		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.FriendlyName, err)
+	}
+
+	if !a.registered.Load() {
+		return // geen huis: alleen de lokale geschiedenis
 	}
 
 	deviceID, found, err := a.devices.lookup(event.FriendlyName)
@@ -648,6 +652,10 @@ func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
 		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.EntityID, err)
 	}
 
+	if !a.registered.Load() {
+		return // geen huis: alleen de lokale geschiedenis
+	}
+
 	deviceID, found, err := a.devices.lookup(event.EntityID)
 	if err != nil {
 		log.Printf("[APP] Device-lookup mislukt voor %s: %v\n", event.EntityID, err)
@@ -677,7 +685,7 @@ func (a *Agent) Stop() {
 
 	a.cancel()
 
-	if a.registered.Load() {
+	if a.registered.Load() && a.house() != "" {
 		if err := a.pbClient.SetGatewayStatus(a.house(), "offline"); err != nil {
 			log.Printf("[APP] Kon gateway-status niet op offline zetten: %v\n", err)
 		}
