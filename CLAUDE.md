@@ -119,10 +119,18 @@ docker compose restart agent
 - **Box-identiteit** (spec A, `docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, relatie `house`), regels laten een box alleen zijn eigen huis bereiken; bewonerstakken gelden alleen voor `users` (anders matchte een gast een huis zonder eigenaar) en een bewoner mag `claimed_at` niet zetten, rate limits aan (incl. `boxes:auth`); de agent logt in als box (`/data/box.json`, vervangt `gateway_id`/superuser en `GATEWAY_NAME`), neemt het huis uit de box over, volgt koppelen/loskoppelen en stopt dan schrijven naar het oude huis. Dev-box `SH-DEV-0001` hoort bij het dev-huis.
 
 ## Volgende Stappen
-1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
+1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang, en de claim-flow zelf doorlopen met een tweede account (Mailpit). QR scannen met de telefooncamera kan pas via HTTPS (fase 3) of op `localhost`; via `http://192.168…` alleen overtikken. Vóór die test de scanner afknijpen: hij decodeert nu elk camerabeeld (~60× per seconde, ~10 is genoeg). Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
 3. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. Ook nodig: een echte SMTP-provider (nu Mailpit; `SMTP_*` + afzender in env), een echte `APP_URL` (links in mails en QR), en trusted-proxy-instellingen in PocketBase achter de proxy, anders delen alle klanten één rate-limit-bucket (limieten gaan per IP).
-4. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
+4. **Claim-flow, klein en bewust uitgesteld:**
+   - Box zit al in je eigen huis A en je kiest "Vervangt de box van B" → de app meldt succes zonder dat er iets vervangen wordt (geen schade, wel verwarrend; beter: 409 of "hoort al bij A, ontkoppel eerst").
+   - `/bevestig` zegt "Deze link werkt niet meer" ook bij een netwerkfout of 429; een mislukte bevestigingsmail na aanmelden wordt niet gemeld (wel "Stuur de mail opnieuw").
+   - Mail-instellingen blijven in PocketBase staan als `SMTP_HOST` later uit env verdwijnt; `APP_URL` met een slash aan het eind geeft `//bevestig`.
+   - Wachten na koppelen duurt tot ~5 min (de box controleert zijn record elke 5 min); kan sneller via realtime op het eigen box-record.
+   - Mailtalen: alleen Nederlands en Engels (aanname); een taal erbij = teksten in `backend/pb_hooks/mail_texts.js` + waarde in `users.language`.
+   - Vóór fase 3 ook: rate limits op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).
+   - `sheets/SH-DEV-0001.svg` (niet in git) bevat de claimcode van de dev-box, nog in de oude link-vorm met `?` (de app accepteert die ook).
+5. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
 
 ## Werkafspraken
 - UI-copy is Nederlands, zinsletters, geen hoofdletter-labels; zie Named Rules in DESIGN.md (o.a. Real Light Rule: alleen live apparaten gloeien).
