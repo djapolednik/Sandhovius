@@ -128,11 +128,18 @@ die wordt aangeroepen direct na een geslaagde subscribe-POST.
 - Pure functie `commandExpired(cmd, now) bool`: `false` voor `provision`;
   anders `true` als `created` leeg/onleesbaar is of ouder dan
   `commandMaxAge` (2 min).
-- `catchUpPendingCommands`: verlopen → `failCommand(id, "verlopen: de box
-  was te lang niet bereikbaar")`, anders `handleCommand`. Realtime
-  "create"-events zijn per definitie vers en gaan niet door de check.
+- De check zit in `handleCommand`/`runScene`, ná de huis-check (anders keurt
+  deze box andermans commando's af), voor inhalen én realtime: bij een korte
+  uitval blijft de TCP-verbinding van de realtime-stroom soms leven en komt
+  een "create"-event minuten te laat binnen (gezien bij het handmatig
+  testen). Verlopen → `failed` met `verlopen: de box was te lang niet
+  bereikbaar`.
+- Realtime en inhalen kunnen hetzelfde commando tegelijk zien; een claim per
+  commando-ID (`claimCommand`) zorgt dat het één keer draait.
 - Klokverschil box ↔ server: beide gebruiken NTP; 2 minuten is ruim
-  genoeg om kleine afwijkingen op te vangen.
+  genoeg om kleine afwijkingen op te vangen. Voor fase 3 (PocketBase op
+  Scaleway) beter: de serverklok afleiden uit de `Date`-header, zodat een
+  box met een verkeerde klok niet elke tik als verlopen afkeurt.
 
 ### Schema-snapshot op schijf (`schedule_store.go`)
 
