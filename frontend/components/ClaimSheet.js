@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import QrScanner from './QrScanner'
 import VerifyNotice from './VerifyNotice'
-import { claimErrorMessage, formatCode, isBoxOnline, pendingKey } from '../lib/claim'
+import { claimErrorMessage, formatCode, isBoxOnline, normalizeSerial, pendingKey } from '../lib/claim'
 
 const CAMERA_REASON = {
   insecure: 'De camera werkt alleen op een beveiligde verbinding. Tik de code over van het blad bij je box.',
@@ -80,21 +80,35 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
     e.preventDefault()
     setBusy(true)
     setError('')
-    const body = { serial: serial.trim(), code }
+    const body = { serial: normalizeSerial(serial), code }
     if (target === 'new') body.house_name = houseName.trim() || 'Thuis'
     else body.replace_house = target
+    let res
     try {
-      const res = await pb.send('/api/sandhovius/claim', { method: 'POST', body })
-      clearPending()
-      const house = await pb.collection('houses').getOne(res.house)
-      setClaimed({ houseId: res.house, claimedAt: house.claimed_at })
-      await onClaimed(res.house)
+      res = await pb.send('/api/sandhovius/claim', { method: 'POST', body })
     } catch (err) {
       console.error('[koppelen]', err?.status)
       if (err?.status === 403) setVerified(false)
       setError(claimErrorMessage(err?.status ?? 0, err?.message))
-    } finally {
       setBusy(false)
+      return
+    }
+    // Gekoppeld. Wat hierna misgaat is geen fout voor de bewoner: zonder
+    // claimed_at van de server rekenen we vanaf nu.
+    clearPending()
+    let claimedAt = new Date().toISOString()
+    try {
+      const house = await pb.collection('houses').getOne(res.house)
+      if (house.claimed_at) claimedAt = house.claimed_at
+    } catch (err) {
+      console.error('[koppelen: huis ophalen]', err?.status)
+    }
+    setClaimed({ houseId: res.house, claimedAt })
+    setBusy(false)
+    try {
+      await onClaimed(res.house)
+    } catch (err) {
+      console.error('[koppelen: huizen verversen]', err?.status)
     }
   }
 
@@ -111,7 +125,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
           Wachten tot je box zich meldt…
         </p>
         <p className="login-note">
-          Zet je box aan en sluit hem aan op internet. Dit duurt meestal een minuut. Je kunt dit venster sluiten; je
+          Zet je box aan en sluit hem aan op internet. Dit kan tot vijf minuten duren. Je kunt dit venster sluiten; je
           huis is al gekoppeld.
         </p>
         <button type="button" className="btn btn-secondary" onClick={close}>
@@ -232,9 +246,12 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
           </p>
         )}
         <div className="form-actions">
-          <button type="button" className="btn btn-plain" onClick={() => setMode('scan')}>
-            Scan de QR-code
-          </button>
+          {/* Zonder camera (cameraNote gezet) heeft scannen geen zin. */}
+          {!cameraNote && (
+            <button type="button" className="btn btn-plain" onClick={() => setMode('scan')}>
+              Scan de QR-code
+            </button>
+          )}
           <button type="submit" className="btn btn-primary" disabled={busy}>
             Box koppelen
           </button>

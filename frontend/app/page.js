@@ -346,6 +346,11 @@ export default function Home() {
 
   function logout() {
     pb.authStore.clear()
+    // Een koppelcode uit een QR-link hoort niet bij de volgende die inlogt.
+    try {
+      window.sessionStorage.removeItem(pendingKey)
+    } catch {}
+    setClaim(null)
     setLoggedIn(false)
     setHouses([])
     setRooms([])
