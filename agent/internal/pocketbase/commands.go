@@ -1,6 +1,10 @@
 package pocketbase
 
-import "fmt"
+import (
+	"fmt"
+	"net/url"
+	"regexp"
+)
 
 type Command struct {
 	ID      string         `json:"id"`
@@ -16,13 +20,33 @@ type commandListResponse struct {
 	Items []Command `json:"items"`
 }
 
-// ListPendingCommands returns commands still awaiting execution. Used at
-// startup to catch up on commands created while the agent wasn't running —
-// the realtime subscription only delivers changes from the moment it
-// connects onward, it doesn't replay history.
-func (c *Client) ListPendingCommands() ([]Command, error) {
+// recordID is the shape of a PocketBase record id. House ids go into a
+// filter string, so anything else is refused rather than escaped.
+var recordID = regexp.MustCompile(`^[a-z0-9]+$`)
+
+// pendingCommandsFilter selects the pending commands for one house: device
+// commands via the device's gateway, scene commands via the scene's house.
+// As superuser the agent sees every house's commands; without this filter
+// one box would run another box's commands.
+func pendingCommandsFilter(house string) (string, error) {
+	if !recordID.MatchString(house) {
+		return "", fmt.Errorf("pocketbase: invalid house id %q", house)
+	}
+	return fmt.Sprintf("status='pending' && (device.gateway='%s' || scene.house='%s')", house, house), nil
+}
+
+// ListPendingCommands returns this house's commands still awaiting
+// execution. Used to catch up on commands created while the agent or its
+// realtime stream was down — the subscription only delivers changes from
+// the moment it connects onward, it doesn't replay history.
+func (c *Client) ListPendingCommands(house string) ([]Command, error) {
+	filter, err := pendingCommandsFilter(house)
+	if err != nil {
+		return nil, err
+	}
 	var resp commandListResponse
-	if err := c.doAuthed("GET", "/api/collections/commands/records?filter=status%3D%27pending%27&perPage=200", nil, &resp); err != nil {
+	path := "/api/collections/commands/records?perPage=200&filter=" + url.QueryEscape(filter)
+	if err := c.doAuthed("GET", path, nil, &resp); err != nil {
 		return nil, fmt.Errorf("pocketbase: list pending commands: %w", err)
 	}
 	return resp.Items, nil

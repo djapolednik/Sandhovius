@@ -128,7 +128,7 @@ func (a *Agent) warmDeviceNames(devices []pocketbase.Device) {
 // alleen wijzigingen vanaf het moment van verbinden — geen geschiedenis —
 // dus zonder deze stap zou zo'n commando nooit uitgevoerd worden.
 func (a *Agent) catchUpPendingCommands() {
-	pending, err := a.pbClient.ListPendingCommands()
+	pending, err := a.pbClient.ListPendingCommands(a.house())
 	if err != nil {
 		log.Printf("[APP] Kon openstaande commando's niet ophalen: %v\n", err)
 		return
@@ -205,6 +205,9 @@ func (a *Agent) listenForDeviceChanges() {
 // te vergelijken.
 func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 	device := event.Record
+	if device.Gateway != a.house() {
+		return // device van een andere box
+	}
 
 	if event.EventType == "create" && device.EntityID == "" {
 		if err := a.provisionDeviceEntity(device); err != nil {
@@ -324,6 +327,12 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		a.failCommand(cmd.ID, err)
 		return
 	}
+	// Als superuser ziet de agent de commando's van álle huizen. Dit is er
+	// een voor een andere box: niet uitvoeren en ook niet als mislukt
+	// markeren, die box handelt het zelf af.
+	if device.Gateway != a.house() {
+		return
+	}
 	// "provision": opnieuw klaarzetten na een mislukte eerste keer (knop
 	// "Opnieuw proberen" in de app). Heeft het device inmiddels al een
 	// entity_id, dan is er niets meer te doen.
@@ -390,10 +399,7 @@ func (a *Agent) runScene(cmd pocketbase.Command) {
 		return
 	}
 	if scene.House != a.house() {
-		err := fmt.Errorf("scène %s hoort niet bij dit huis", scene.ID)
-		log.Printf("[APP] Scène-commando %s geweigerd: %v\n", cmd.ID, err)
-		a.failCommand(cmd.ID, err)
-		return
+		return // scène van een andere box: die handelt het zelf af
 	}
 
 	if err := a.executeScene(*scene, a.pbClient.GetDevice); err != nil {
