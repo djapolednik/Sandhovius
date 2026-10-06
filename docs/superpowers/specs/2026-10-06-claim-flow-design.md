@@ -82,13 +82,15 @@ Beide alleen voor een ingelogde `users`-gebruiker (`@request.auth.collectionName
 `{serial, code, replace_house}`. In één transactie:
 
 1. Niet bevestigd → 403 `Bevestig eerst je e-mailadres`.
-2. Box op serial zoeken; hash van de genormaliseerde code vergelijken met
+2. Box op serial zoeken (getrimd, in hoofdletters: serienummers staan zo
+   opgeslagen); hash van de genormaliseerde code vergelijken met
    `$security.equal`. Box onbekend of code fout → 400 `Deze code klopt niet`
    (zelfde melding, zodat niemand serienummers kan aftasten).
 3. `replace_house` (als meegegeven): moet van deze gebruiker zijn, anders 404.
-4. Box heeft al een huis → 409 `Deze box is al gekoppeld`, behalve als het
-   huis van deze gebruiker is en hetzelfde als `replace_house` (dubbele tik:
-   200 met hetzelfde antwoord). Daarna: de huidige box van het
+4. Box heeft al een huis → 409 `Deze box is al gekoppeld`, behalve als dat
+   huis van deze gebruiker is (dubbele tik of nog een keer na een gelukte
+   claim, met of zonder `replace_house`): 200 met `{house: <dat huis>}`, niets
+   gewijzigd. Daarna: de huidige box van het
    `replace_house`-huis krijgt `house = ""`; zonder `replace_house` een nieuw
    huis `{name: house_name || "Thuis", user}`.
 5. `box.house = huis`, `house.claimed_at = nu`. Antwoord `{house: <id>}`.
@@ -174,7 +176,8 @@ login-bento en de bestaande sheets.
   `claimed_at` gezet; de box logt daarna in en ziet het huis.
 - Foute code en onbekend serienummer → dezelfde 400 en dezelfde tekst.
 - Onbevestigd adres → 403. Gast → 401/403.
-- Al gekoppeld → 409; zelfde gebruiker, zelfde huis → 200.
+- Al gekoppeld → 409; aan een huis van dezelfde gebruiker → 200 met dat huis.
+- Serienummer in kleine letters → gewoon 200.
 - Vervangen: oude box van dat huis heeft daarna geen huis.
 - `replace_house` van een ander → 404, niets veranderd.
 - Release door eigenaar → box vrij, code werkt weer; door een ander → 404.

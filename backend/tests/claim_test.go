@@ -201,6 +201,57 @@ func TestClaimAlreadyClaimed(t *testing.T) {
 	}
 }
 
+// Serienummers staan in hoofdletters; wie ze klein overtikt moet ook kunnen koppelen.
+func TestClaimLowercaseSerial(t *testing.T) {
+	p := startPB(t)
+	id := newCodedBox(t, p, "SH-C-1", "K7QM-2XRP-9DTW")
+	_, tok := verifiedUser(t, p, "claim@sandhovius.test")
+	st, out := p.claim(t, tok, map[string]any{"serial": "  sh-c-1 ", "code": "K7QM-2XRP-9DTW"})
+	if st != 200 {
+		t.Fatalf("claim met kleine letters: %d %v", st, out)
+	}
+	if p.boxRecord(t, id)["house"] != out["house"] {
+		t.Fatal("box hoort bij het nieuwe huis")
+	}
+}
+
+// Nog een keer op "Box koppelen" (time-out, dubbel tikken) na een gelukte
+// claim: dezelfde gebruiker krijgt zijn huis terug, een ander blijft 409.
+func TestClaimRetryAfterSuccess(t *testing.T) {
+	p := startPB(t)
+	id := newCodedBox(t, p, "SH-C-1", "K7QM-2XRP-9DTW")
+	uid, tokA := verifiedUser(t, p, "a@sandhovius.test")
+	_, tokB := verifiedUser(t, p, "b@sandhovius.test")
+	body := map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW", "house_name": "Villa"}
+	st, out := p.claim(t, tokA, body)
+	if st != 200 {
+		t.Fatalf("claim: %d %v", st, out)
+	}
+	h := out["house"].(string)
+
+	st, out = p.claim(t, tokA, body)
+	if st != 200 || out["house"] != h {
+		t.Fatalf("opnieuw met house_name: %d %v, verwacht 200 %s", st, out, h)
+	}
+	// Ook met een ander eigen huis als replace_house: de box blijft waar hij is.
+	other := p.create(t, "houses", map[string]any{"user": uid, "name": "Zomerhuis"})
+	st, out = p.claim(t, tokA, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW", "replace_house": other})
+	if st != 200 || out["house"] != h {
+		t.Fatalf("opnieuw met ander eigen huis: %d %v, verwacht 200 %s", st, out, h)
+	}
+	st, out = p.claim(t, tokB, body)
+	if st != 409 || out["message"] != "Deze box is al gekoppeld" {
+		t.Fatalf("andere gebruiker: %d %v", st, out)
+	}
+	if p.boxRecord(t, id)["house"] != h {
+		t.Fatal("box hoort bij het eerste huis te blijven")
+	}
+	_, list := p.do(t, p.AdminToken, "GET", "/api/collections/houses/records", nil)
+	if items, _ := list["items"].([]any); len(items) != 2 {
+		t.Fatalf("verwacht 2 huizen (Villa en Zomerhuis), kreeg %d", len(items))
+	}
+}
+
 func TestClaimReplace(t *testing.T) {
 	p := startPB(t)
 	b1 := newCodedBox(t, p, "SH-C-1", "K7QM-2XRP-9DTW")

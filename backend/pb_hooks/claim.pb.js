@@ -25,7 +25,8 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
   if (!user.verified()) return fail(403, "Bevestig eerst je e-mailadres")
 
   const body = e.requestInfo().body || {}
-  const serial = str(body.serial).trim()
+  // Serienummers staan in hoofdletters; "sh-dev-0001" overtikken moet ook werken.
+  const serial = str(body.serial).trim().toUpperCase()
   const code = normalize(str(body.code))
   const replaceHouse = str(body.replace_house).trim()
   const houseName = str(body.house_name).trim().slice(0, 100) || "Thuis"
@@ -64,9 +65,15 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
 
     const current = box.getString("house")
     if (current) {
-      // Al gekoppeld: alleen opnieuw koppelen aan het eigen huis is oké.
-      if (house && current === house.id) {
-        result = { status: 200, house: house.id }
+      // Al gekoppeld aan een huis van deze gebruiker (bv. nog een keer
+      // tikken na een gelukte claim): dat huis teruggeven en niets wijzigen.
+      // Lekt niets, want de juiste code en het eigenaarschap zijn nodig.
+      let linked = null
+      try {
+        linked = txApp.findRecordById("houses", current)
+      } catch (_) {}
+      if (linked && linked.getString("user") === user.id) {
+        result = { status: 200, house: linked.id }
         return
       }
       result = { status: 409, message: "Deze box is al gekoppeld" }
