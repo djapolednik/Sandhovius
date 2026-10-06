@@ -22,7 +22,7 @@ Sandhovius is a plug-and-play smart-home appliance: an Intel N100 mini PC runnin
 
 - **Local-first:** automations and control run on the box in the home and keep working without internet. The cloud is only there for convenient remote access.
 - **Privacy:** sensor and device data stay in the home. There are no cloud logs.
-- **Zero setup:** you plug in the box and it works. There is no Home Assistant configuration to do.
+- **Zero setup:** you plug in the box, create an account in the app and scan the QR code from the manual to link the box to your home. There is no Home Assistant configuration to do.
 - **Calm, simple control:** Sandhovius deliberately offers fewer options than Home Assistant and is built for a household, not for power users.
 
 ## Operating Context
@@ -33,10 +33,10 @@ Sandhovius is a plug-and-play smart-home appliance: an Intel N100 mini PC runnin
 
 ## Capabilities and Constraints
 
-- Current features: email/password login (PocketBase JWT), multiple houses, rooms, per-type device cards (light, climate, sensor) with a flip-side for settings, a sensor detail view, an add-device flow, toasts, and a settings screen with a dark-mode toggle.
+- Current features: create an account (with e-mail confirmation) and log in, password reset, linking a box by QR code or typed code (new house or replacing the box of an existing one), unlinking a box, multiple houses per account, rooms, favourites, small device tiles (lamp, plug, thermostat, sensor) with a detail sheet, adding devices, scenes and schedules, weather, "Alles uit", pull to refresh, toasts, and Opties with theme (Licht / Donker / Automatisch) and the language of account e-mails.
 - Light and dark themes are both product requirements.
-- The UI copy is currently Dutch (`lang="nl"`). Whether to support other languages is **undecided**.
-- The product is in development (Fase 2): the PocketBase relay, the PWA, JWT auth and the realtime command pipeline. There is no webshop or marketing surface in this repo.
+- The UI copy is Dutch (`lang="nl"`). Account e-mails go out in Dutch or English, chosen per account. Whether to translate the app itself is **undecided**.
+- The product is in development: Fase 2 (local stack, PWA, realtime commands, per-box identity, self-service linking) is done; Fase 3 (remote access via Headscale, PocketBase on a server, HTTPS, a real mail provider) is next. Until then everything runs locally. There is no webshop or marketing surface in this repo.
 
 ## Brand Commitments
 

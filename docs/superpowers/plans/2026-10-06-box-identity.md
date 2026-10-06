@@ -1,5 +1,7 @@
 # Box-identiteit — implementatieplan
 
+> **Status:** uitgevoerd en in `main`. Dit plan is een historisch werkdocument; waar de uitvoering afweek, staat dat in de spec en in de git-geschiedenis.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** De agent logt in als zijn eigen `boxes`-record in plaats van als PocketBase-superuser, en mag via de regels alleen bij zijn eigen huis.

@@ -1,252 +1,373 @@
 # Sandhovius Backend — Uitleg per onderdeel
 
-Dit document legt uit hoe de Sandhovius-backend in elkaar zit: de Docker-stack, het PocketBase-schema, en de Go Local Agent. Het is geschreven zodat je het geheel kan navertellen — elk onderdeel bevat niet alleen *wat* het doet, maar ook *waarom* het zo gebouwd is.
+Dit document legt uit hoe de Sandhovius-backend in elkaar zit: de Docker-stack,
+het PocketBase-schema met zijn regels en hooks, en de Go Local Agent. Elk
+onderdeel beschrijft niet alleen *wat* het doet, maar ook *waarom* het zo
+gebouwd is. Bijgewerkt tot en met de claim-flow (2026-10-06).
+
+Voor de stap-voor-stap flow van een nieuwe box: `docs/box-aanmelden.md`.
+Ontwerpkeuzes in detail: `docs/superpowers/specs/`.
 
 ## Inhoudsopgave
 
 1. [Architectuur op hoofdlijnen](#1-architectuur-op-hoofdlijnen)
 2. [De Docker-stack](#2-de-docker-stack)
-3. [PocketBase: schema en rechten](#3-pocketbase-schema-en-rechten)
-4. [De Go Agent: opbouw](#4-de-go-agent-opbouw)
-5. [Datastroom: device → PocketBase](#5-datastroom-device--pocketbase)
-6. [Online/offline-tracking](#6-onlineoffline-tracking)
-7. [Gateway-zelfregistratie](#7-gateway-zelfregistratie)
-8. [Lokale geschiedenis (SQLite)](#8-lokale-geschiedenis-sqlite)
-9. [Het commandopad: PocketBase → device](#9-het-commandopad-pocketbase--device)
-10. [Resilience: reconnects en race conditions](#10-resilience-reconnects-en-race-conditions)
-11. [Bekende gaten / nog te bouwen](#11-bekende-gaten--nog-te-bouwen)
+3. [PocketBase: schema](#3-pocketbase-schema)
+4. [PocketBase: regels, hooks en rate limits](#4-pocketbase-regels-hooks-en-rate-limits)
+5. [De Go Agent: opbouw](#5-de-go-agent-opbouw)
+6. [Box-identiteit en het huis van de box](#6-box-identiteit-en-het-huis-van-de-box)
+7. [Starten en herstellen zonder PocketBase](#7-starten-en-herstellen-zonder-pocketbase)
+8. [Datastroom: device → PocketBase](#8-datastroom-device--pocketbase)
+9. [Online/offline en de hartslag](#9-onlineoffline-en-de-hartslag)
+10. [Lokale geschiedenis (SQLite)](#10-lokale-geschiedenis-sqlite)
+11. [Het commandopad: PocketBase → device](#11-het-commandopad-pocketbase--device)
+12. [Scènes, schema's en weer](#12-scènes-schemas-en-weer)
+13. [Resilience: reconnects en race conditions](#13-resilience-reconnects-en-race-conditions)
+14. [Testen](#14-testen)
+15. [Bekende gaten / nog te bouwen](#15-bekende-gaten--nog-te-bouwen)
 
 ---
 
 ## 1. Architectuur op hoofdlijnen
 
 ```
-┌─────────────┐      ┌──────────────┐      ┌───────────────┐
-│ Zigbee2MQTT │──┐   │Home Assistant│──┐   │                │
-└─────────────┘  │   └──────────────┘  │   │                │
-                  ▼                     ▼   │                │
-              ┌────────┐          ┌─────────┴──┐             │
-              │Mosquitto│◄────────┤  Go Agent   │             │
-              └────────┘  MQTT    │  (dit doc)  │             │
-                                   └──────┬─────┘             │
-                                          │ REST + SSE         │
-                                          ▼                    │
-                                   ┌─────────────┐             │
-                                   │ PocketBase  │◄────────────┘
-                                   └─────────────┘   (later: PWA)
+┌─────────────┐   ┌──────────────┐
+│ Zigbee2MQTT │   │Home Assistant│
+└──────┬──────┘   └──────┬───────┘
+       │ MQTT            │ websocket + REST
+       ▼                 ▼
+  ┌──────────┐     ┌────────────┐   lokale SQLite-geschiedenis,
+  │Mosquitto │◄───►│  Go Agent  │── /data/box.json, /data/schedules.json
+  └──────────┘     └─────┬──────┘
+                         │ REST + SSE, ingelogd als box
+                         ▼
+                   ┌────────────┐   hooks: claim/release, mail
+                   │ PocketBase │── Mailpit (dev) / SMTP (later)
+                   └─────┬──────┘
+                         │ REST + realtime, ingelogd als bewoner
+                         ▼
+                   ┌────────────┐
+                   │  PWA (Next)│
+                   └────────────┘
 ```
 
-De Go Agent is het middelpunt: hij **leest** state van Home Assistant (via websocket) en Zigbee2MQTT (via MQTT), schrijft dat naar **PocketBase** (de cloud/database-laag) én naar een **lokale SQLite-database** (onafhankelijke geschiedenis), en **luistert** op PocketBase voor commando's die hij vervolgens bij Home Assistant uitvoert.
+De Go Agent draait op de box (N100) en is het middelpunt: hij **leest** state
+van Home Assistant en Zigbee2MQTT, schrijft die naar **PocketBase** (de
+cloudlaag waar de app mee praat) én naar een **lokale SQLite-database**, en
+**voert commando's uit** die bewoners in de app geven. PocketBase draait nu
+lokaal in Docker; in fase 3 komt het op Scaleway en verandert alleen het adres.
 
-Twee dingen zijn bewust dubbel opgezet, niet uit slordigheid maar voor betrouwbaarheid:
-- **HA + Zigbee2MQTT als aparte inputs**: zelfde soort data (state changes), twee onafhankelijke bronnen. Als Home Assistant herstart, blijft Zigbee-data via MQTT gewoon binnenkomen.
-- **PocketBase + lokale SQLite als aparte outputs**: PocketBase geeft één "huidige status" per device (voor de cloud/PWA), lokaal wordt *alles* bijgehouden, ook als PocketBase onbereikbaar is.
+Twee dingen zijn bewust dubbel, voor betrouwbaarheid:
+- **HA + Zigbee2MQTT als aparte inputs**: als Home Assistant herstart, blijft
+  Zigbee-data via MQTT binnenkomen.
+- **PocketBase + lokale SQLite als aparte outputs**: PocketBase houdt één
+  "huidige stand" per device bij voor de app; lokaal wordt *alles* bewaard, ook
+  zonder internet.
 
 ---
 
 ## 2. De Docker-stack
 
-Gedefinieerd in `docker-compose.yml`, vijf services op één Docker-netwerk (`sandhovius-net`):
+`docker-compose.yml`, één netwerk (`sandhovius-net`), containers `sandhovius-*`:
 
 | Service | Image | Rol |
 |---|---|---|
-| `mosquitto` | `eclipse-mosquitto:2` | MQTT-broker — centrale berichtenbus tussen Zigbee2MQTT en de agent |
-| `homeassistant` | `ghcr.io/home-assistant/home-assistant:stable` | State management, Zigbee-coördinatie, entity's |
-| `zigbee2mqtt` | `koenkk/zigbee2mqtt:latest` | Vertaalt Zigbee-radioverkeer naar MQTT-berichten (vereist een echte USB Zigbee-coordinator; in deze dev-omgeving niet aanwezig) |
-| `pocketbase` | `ghcr.io/muchobien/pocketbase:latest` | De backend-database + auth + realtime API |
-| `agent` | eigen build (`agent/Dockerfile`) | De Go Local Agent — dit hele document |
+| `mosquitto` | `eclipse-mosquitto:2` | MQTT-broker tussen Zigbee2MQTT en de agent |
+| `homeassistant` | `ghcr.io/home-assistant/home-assistant:stable` | State management; apparaten uit de app worden HA-helpers (`input_boolean`/`input_number`) |
+| `zigbee2mqtt` | `koenkk/zigbee2mqtt:latest` | Zigbee-radio ↔ MQTT (vereist een echte USB-coordinator; in dev afwezig) |
+| `agent` | eigen build (`agent/Dockerfile`) | De Go Local Agent |
+| `pocketbase` | `ghcr.io/muchobien/pocketbase:0.40.4` | Database, auth, realtime API, hooks. **Vastgepind**: de beveiliging leunt op gedrag dat tests op 0.40.4 vastleggen |
+| `mailpit` | `axllent/mailpit:v1.21.8` | Vangt alle mail in dev op; zichtbaar op http://localhost:8025 |
+| `frontend` | eigen build (`frontend/`) | De PWA (Next.js 16), http://localhost:3000 |
 
-Elke service met blijvende state heeft een eigen named volume (`mosquitto_data`, `ha_config`, `z2m_data`, `pocketbase_data`, `agent_data`), zodat een `docker compose up` een container mag vervangen zonder data te verliezen.
+Elke service met blijvende state heeft een named volume (`pocketbase_data`,
+`agent_data`, `ha_config`, …), zodat een container vervangen mag worden zonder
+dataverlies. `docker compose down -v` wist ze wél.
 
-**Secrets** (`HA_TOKEN`, `POCKETBASE_ADMIN_EMAIL`, `POCKETBASE_ADMIN_PASSWORD`) staan niet in `docker-compose.yml` zelf, maar worden via `${VAR}`-substitutie uit een lokaal, niet-gecommit `.env`-bestand gehaald (`.env.example` documenteert welke variabelen nodig zijn).
+`backend/pb_migrations/` en `backend/pb_hooks/` zijn als volume in de
+PocketBase-container gekoppeld: migraties draaien bij het starten; nieuwe of
+gewijzigde hooks vragen op Windows soms een `docker compose restart pocketbase`.
 
----
-
-## 3. PocketBase: schema en rechten
-
-### Schema als code: `backend/pb_migrations/`
-
-Het schema hierbeneden werd oorspronkelijk live opgebouwd via de Admin-API — nergens in bestandsvorm vastgelegd. PocketBase bleek automigraties al standaard aan te hebben staan, maar schreef die naar een map in de container die niet aan een volume gekoppeld was: bij elke `docker compose up` die de PocketBase-container herschiep, ging die geschiedenis verloren (de database zelf bleef intact, alleen het migratie-*bestand* niet). Inmiddels staat `backend/pb_migrations/` als volume gekoppeld aan de container, met een snapshot-migratie van het volledige huidige schema als startpunt. Vanaf nu wordt elke schemawijziging via de Admin-UI/API automatisch als migratiebestand weggeschreven op een plek die wél in git zit — kloon je de repo vers, dan bouwt PocketBase het schema zelf op bij het opstarten.
-
-### Collecties
-
-| Collectie | Doel | Belangrijkste velden |
-|---|---|---|
-| `users` | PocketBase's ingebouwde auth-collectie | `email`, `password` |
-| `gateways` | Eén rij per fysieke gateway (N100) | `user` (eigenaar), `name`, `select` (online/offline/error status), `claimed_at`, `last_seen` |
-| `devices` | Eén rij per fysiek device | `gateway` (relatie), `entity_id` (HA entity_id of Zigbee friendly_name), `name`, `type`, `online` |
-| `device_state` | **Huidige** state per device — één rij, overschreven | `device` (relatie), `state` (JSON), `updated_at` |
-| `commands` | Instructies van de PWA richting een device | `device` (relatie), `action` (turn_on/turn_off/toggle), `payload` (JSON), `status` (pending/sent/failed), `error` |
-
-De relatie-keten is: `gateways` ← `devices` ← `device_state` / `commands`. Elk device hoort bij precies één gateway; elke gateway bij precies één gebruiker.
-
-### Waarom `device_state` maar één rij per device heeft
-
-Bewuste ontwerpkeuze: PocketBase houdt alleen de **laatste** bekende state per device bij (upsert, geen geschiedenis-log). De volledige geschiedenis van elke state-change zit lokaal op de gateway (zie [§8](#8-lokale-geschiedenis-sqlite)) — dat past bij het uitgangspunt "sensordata blijft lokaal, cloud is voor gemak, niet voor opslag".
-
-### API-rules: wie mag wat
-
-```
-users:         list/view/update/delete → alleen jezelf (id = @request.auth.id)
-gateways:      list/view                → user = @request.auth.id
-devices:       list/view                → gateway.user = @request.auth.id
-device_state:  list/view                → device.gateway.user = @request.auth.id
-commands:      list/view/create         → device.gateway.user = @request.auth.id
-               create ook alleen als    → status = "pending"
-```
-
-Alles wat hier **niet** genoemd staat (create/update/delete op gateways/devices/device_state, en update/delete op commands) staat op `null` — PocketBase's manier van zeggen "alleen superusers". De Go Agent authenticeert altijd als superuser (met een los admin-account, niet via de `users`-collectie), dus die rules raken de agent nooit. Een ingelogde PWA-gebruiker kan **wel** zijn eigen data lezen en commando's aanmaken, maar kan nergens rechtstreeks in schrijven wat normaal alleen de agent zou moeten doen (device_state, gateway-status, device.online).
-
-Dit is bewust minimaal: precies genoeg opengezet om een read-only dashboard + commando's te laten werken, niets meer. Zie [§11](#11-bekende-gaten--nog-te-bouwen) voor wat er nog ontbreekt richting een volwaardige PWA.
+**Secrets** staan niet in `docker-compose.yml` maar in een lokaal `.env`
+(`HA_TOKEN`, `POCKETBASE_ADMIN_EMAIL`/`_PASSWORD` voor PocketBase zelf en de
+scripts). De agent heeft **geen** superuser-gegevens meer: hij logt in met zijn
+eigen identiteit uit `/data/box.json` (§6). Mail komt uit env-variabelen op de
+`pocketbase`-service (`SMTP_HOST`, `SMTP_PORT`, `APP_URL`, `MAIL_FROM`, …).
 
 ---
 
-## 4. De Go Agent: opbouw
+## 3. PocketBase: schema
 
-De agent is één Go-module (`agent/`, module `sandhovius/local-agent`) opgedeeld in packages, elk met een duidelijke verantwoordelijkheid:
+Het schema staat als code in `backend/pb_migrations/`: een snapshot als
+startpunt plus kleine migraties per wijziging. Een verse database bouwt zich bij
+het starten helemaal op.
+
+| Collectie | Soort | Doel | Belangrijkste velden |
+|---|---|---|---|
+| `users` | auth | Bewoners | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
+| `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen) |
+| `houses` | base | Eén per huis, van een bewoner | `user`, `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
+| `rooms` | base | Kamers | `house`, `name`, `order` |
+| `devices` | base | Apparaten | `gateway` (= huis), `entity_id`, `name`, `type`, `online`, `room`, `favorite`, `favorite_order` |
+| `device_state` | base | **Huidige** stand per device (één rij, overschreven) | `device`, `state` (JSON), `updated_at` |
+| `commands` | base | Opdrachten van de app | `device` óf `scene`, `action`, `payload`, `status` (pending/sent/failed), `error`, `created`, `updated` |
+| `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
+| `schedules` | base | Schema's voor scènes | `house`, `scene`, `time` ("HH:MM"), `days`, `enabled`, `last_run`, `last_error` |
+
+Relaties: `users` ← `houses` ← `rooms`/`devices`/`scenes`/`schedules`;
+`devices` ← `device_state`/`commands`. Een box hoort bij hooguit één huis
+(`boxes.house`), een bewoner kan meerdere huizen hebben.
+
+**Waarom `device_state` maar één rij per device heeft**: PocketBase houdt
+alleen de laatste stand bij; de volledige geschiedenis blijft lokaal op de box
+(§10) — "sensordata blijft lokaal, de cloud is voor gemak".
+
+---
+
+## 4. PocketBase: regels, hooks en rate limits
+
+### Regels: twee soorten ingelogden
+
+Elke regel heeft een **bewonerstak** en een **box-tak**:
+
+```
+bewoner: @request.auth.collectionName = "users" && (… = @request.auth.id)
+box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
+         && (… = @request.auth.house)
+```
+
+- De bewonerstak eist expliciet `users`; zonder die check matchte een gast
+  (lege `auth.id`) huizen zonder eigenaar.
+- De box-tak eist een huis; zonder huis ziet en schrijft een box niets (hij
+  draait dan alleen lokaal).
+- Een box mag alleen de velden schrijven die de agent nodig heeft (bijv. bij
+  `devices` alleen `entity_id` en `online`; bij `commands` alleen `status` en
+  `error`). Een integratietest probeert elk ander veld, ook velden die later
+  bijkomen.
+- Realtime volgt dezelfde regels: een box krijgt alleen events van zijn eigen
+  huis, een bewoner alleen van zijn eigen huizen.
+- `boxes` is voor bewoners onzichtbaar; `claim_code_hash` is ook voor de box
+  zelf verborgen. `claimed_at` kan alleen de server zetten.
+
+### Hooks (`backend/pb_hooks/`)
+
+- **`claim.pb.js`** — `POST /api/sandhovius/claim` en `/release`, alleen voor
+  ingelogde bewoners met een bevestigd e-mailadres. Volgorde: bevestigd →
+  code (hash van de genormaliseerde code, constante-tijd vergelijking) →
+  eigenaar van `replace_house` → al gekoppeld. Alles in één transactie, zodat
+  bij twee gelijktijdige claims precies één wint. Onbekend serienummer en foute
+  code geven exact dezelfde 400. Details: `docs/box-aanmelden.md`.
+- **`mail.pb.js` + `mail_texts.js`** — zet bij het starten de app-naam
+  ("Sandhovius") en, als `SMTP_HOST` gezet is, SMTP, afzender en `appURL` uit
+  env. Bevestigings-, reset- en inlogmeldingsmails gaan in de taal van het
+  account (`users.language`, standaard Nederlands); links wijzen naar de PWA
+  (`/bevestig`, `/wachtwoord`).
+
+### Rate limits
+
+Aan sinds de box-identiteit, per IP: PocketBase-standaarden (`*:auth` 2 per
+3 s, `*:create` 20 per 5 s, `/api/` 300 per 10 s) plus `boxes:auth` 10 per
+minuut, `commands:create`/`device_state:create` 100 per 5 s (anders breekt
+"Alles uit" bij veel apparaten) en `/api/sandhovius/claim` en `/release` elk
+10 per minuut. Padlabels matchen exact. Achter een proxy (fase 3) moet
+PocketBase de echte client-IP kennen, anders delen alle clients één emmer.
+
+---
+
+## 5. De Go Agent: opbouw
+
+Eén Go-module (`agent/`, module `sandhovius/local-agent`):
 
 ```
 agent/
-├── main/main.go              — entrypoint: config laden, alle clients bouwen, agent starten
+├── main/main.go          — config + box.json laden, clients bouwen, agent starten
 └── internal/
-    ├── config/                — omgevingsvariabelen inlezen, per dependency één bestand
-    │   ├── config.go              (aggregeert alles)
-    │   ├── mqtt.go, homeassistant.go, pocketbase.go, gateway.go, history.go
-    ├── mqtt/                  — generieke MQTT-transport + Zigbee2MQTT-specifieke parsing
-    │   ├── client.go              (paho-wrapper, reconnect-bestendig)
-    │   └── event.go               (topic/payload → ZigbeeEvent / ZigbeeAvailability)
-    ├── homeassistant/         — HA websocket (lezen) + HA REST (commando's uitvoeren)
-    │   ├── client.go, event.go, service.go
-    ├── pocketbase/            — alles wat met PocketBase praat
-    │   ├── client.go               (generieke authenticated HTTP-laag)
-    │   ├── auth.go                 (inloggen, automatisch opnieuw bij 401)
-    │   ├── devices.go, gateways.go, device_state.go, commands.go
-    │   └── realtime.go             (SSE-subscription voor commando's)
-    ├── history/               — lokale SQLite, onafhankelijk van PocketBase
-    │   └── store.go
-    └── app/                   — de orkestratie: verbindt alle bovenstaande packages
-        ├── agent.go
-        └── device_cache.go
+    ├── box/              — /data/box.json lezen en het huis bijwerken (atomisch, 0600)
+    ├── config/           — omgevingsvariabelen (BOX_FILE, SCHEDULES_FILE, …)
+    ├── mqtt/             — MQTT-transport + Zigbee2MQTT-parsing
+    ├── homeassistant/    — websocket (events), REST (services, state), registry (helpers), weer
+    ├── pocketbase/       — REST-client, inloggen als box, realtime (SSE), per collectie een bestand
+    ├── history/          — lokale SQLite-geschiedenis
+    └── app/              — de orkestratie
+        ├── agent.go          start/stop, HA- en MQTT-events, commando's, hartslag
+        ├── connection.go     verbindingslus met backoff + herstelstap
+        ├── house.go          huis uit het box-record, controle elke 5 minuten
+        ├── device_cache.go   entity_id → device-id, alleen van het eigen huis
+        ├── commands.go       verlopen en claimen van commando's
+        ├── scheduler.go + schedule_store.go   schema-klok en snapshot op schijf
+        └── weather.go        weer uit HA naar houses.weather
 ```
 
-**Waarom deze opdeling?** Elk package kent alleen zijn eigen protocol (MQTT, HA-websocket, HA-REST, PocketBase-REST, SQLite) en weet niets van de andere. `app/agent.go` is de enige plek die ze allemaal samenbrengt — een event van de ene kant vertalen naar een actie aan de andere kant. Dat maakt elk stuk apart te begrijpen en te testen.
+Elk package kent alleen zijn eigen protocol; `app/` is de enige plek die ze
+samenbrengt.
 
 ---
 
-## 5. Datastroom: device → PocketBase
+## 6. Box-identiteit en het huis van de box
 
-Twee onafhankelijke paden komen op hetzelfde punt samen.
-
-### Pad A: Home Assistant
-
-1. `homeassistant/client.go` opent een websocket naar HA, authenticeert, en abonneert op `state_changed`-events
-2. `homeassistant/event.go` parseert elk ruw bericht **type-veilig** (geneste Go-structs die de JSON-vorm volgen, i.p.v. handmatig door een `map[string]interface{}` graven) naar een `HAEvent{EntityID, State, Attributes, Timestamp}`. Berichten die geen relevante state_changed-event zijn (bv. de subscribe-bevestiging) worden er hier al uitgefilterd
-3. `app/agent.go`'s `forwardHAEvent()` ontvangt dit event
-
-### Pad B: Zigbee2MQTT
-
-1. `mqtt/client.go` verbindt met Mosquitto en abonneert op `zigbee2mqtt/#`
-2. `mqtt/event.go` parseert het topic: `zigbee2mqtt/<naam>` → een state-update (`ZigbeeEvent`), `zigbee2mqtt/<naam>/availability` → een online/offline-signaal (`ZigbeeAvailability`), en alles anders (bridge-status, etc.) wordt genegeerd
-3. `app/agent.go`'s `forwardZigbeeEvent()` ontvangt dit event
-
-### Waarom dit geen overbodige verdubbeling is
-
-In een echte deployment loopt Zigbee-data normaal óók via Home Assistant (via HA's eigen MQTT-discovery), dus het is een terechte vraag waarom Pad B naast Pad A bestaat in plaats van alles gewoon via Home Assistant te laten lopen. De reden: **Home Assistant is de instabielste schakel in de stack** — hij herstart vaker dan Mosquitto/Zigbee2MQTT (updates, add-on-wijzigingen, HACS). Met alleen Pad A zou Zigbee-tracking stilvallen zodra HA herstart, ook al draaien Mosquitto en Zigbee2MQTT prima door. Met Pad B ernaast blijft Zigbee-data binnenkomen ongeacht de staat van HA specifiek.
-
-De prijs daarvoor is bewust geaccepteerd: in een deployment waar een Zigbee-device via beide paden binnenkomt, wordt dezelfde state-change twee keer naar PocketBase geschreven (onschadelijk dankzij de upsert-logica in stap 4 hieronder, maar wel dubbel verkeer), en `devices.entity_id` moet dan met twee verschillende naamconventies kunnen matchen (HA-stijl, bv. `light.woonkamer_lamp`, vs. Zigbee `friendly_name`) — precies het type mismatch dat eerder al voor verwarring zorgde toen een testdevice de verkeerde entity_id had. Dit is een expliciete, heroverwogen keuze, geen toevalligheid.
-
-### Wat beide forward-functies vervolgens doen
-
-1. **Eerst, altijd**: de ruwe state wordt naar lokale SQLite geschreven (`history.Record`) — dit gebeurt vóórdat er iets met PocketBase geprobeerd wordt, en ongeacht of dat lukt (zie [§8](#8-lokale-geschiedenis-sqlite))
-2. **Device-lookup**: de `entity_id`/`friendly_name` wordt via de `deviceCache` (`app/device_cache.go`) vertaald naar een PocketBase `device.id`. Deze cache wordt bij opstarten opgewarmd en ververst zichzelf automatisch bij een cache-miss ("misschien is dit device net toegevoegd") — één keer, niet in een loop
-3. Als het device **onbekend** is: loggen en stoppen, geen fout. Zoveel entity's in een huis (bv. `sun.sun`, systeeminterne sensoren) horen niet bij een fysiek device en worden bewust genegeerd voor PocketBase — maar staan wél al in de lokale geschiedenis van stap 1
-4. Als het device **bekend** is: `pocketbase.UpsertDeviceState(deviceID, state)` — kijkt of er al een rij bestaat voor dit device, en doet een PATCH (bestaand) of POST (nieuw), zodat er precies één rij per device blijft staan
+- Elke box heeft een eigen record in `boxes`. Bij het klaarmaken schrijft
+  `scripts/provision-box.py` `/data/box.json` (`serial`, `secret`). Zonder
+  geldig `box.json` stopt de agent met een duidelijke fout: een box zonder
+  identiteit is een productiefout.
+- De agent logt in via `boxes/auth-with-password` en haalt zijn huis uit het
+  antwoord. Het laatst bekende huis bewaart hij in `box.json`, zodat hij ook
+  zonder internet weet bij welk huis zijn schema's horen.
+- Elke 5 minuten (`houseCheckInterval`) ververst hij zijn record
+  (`auth-refresh`) en volgt een verandering:
+  - **claim** (geen huis → huis): herstelstap, PocketBase-werk begint;
+  - **loskoppelen** (huis → geen): eerst `registered` uit, dan huis leeg;
+    hartslag, weer, schrijfacties, device-cache en schema's van het oude huis
+    stoppen meteen;
+  - **wissel** (ander huis): cache leeg, herstelstap voor het nieuwe huis.
+- Een box hoort bij een huis, niet andersom: een kapotte box vervangen houdt
+  kamers, apparaten, scènes en schema's. Het huis is van de bewoner.
 
 ---
 
-## 6. Online/offline-tracking
+## 7. Starten en herstellen zonder PocketBase
 
-Elk device heeft een `online`-veld in PocketBase. De regel (bewust gekozen, geen timeout-mechanisme):
+`Start()` begint met alles wat lokaal kan: MQTT, opruimen van de geschiedenis,
+het huis uit `box.json`, de schema-snapshot uit `/data/schedules.json` en Home
+Assistant. Daarna logt `runPocketBase` in met exponentiële backoff (1 s → 30 s).
+Zonder internet blijft de box dus automatiseren.
 
-- **`online = true`** bij *elk* event van dat device — het sturen van data is op zich al bewijs van leven
-- **`online = false`** *alleen* bij een expliciet offline-signaal:
-  - Home Assistant: state `"unavailable"`
-  - Zigbee2MQTT: een bericht op `zigbee2mqtt/<naam>/availability` met `{"state":"offline"}`
-
-Een device dat gewoon stil is (geen data, maar ook geen expliciet offline-signaal) blijft dus "online" staan totdat zo'n signaal komt. Dat is een bewuste, eenvoudige eerste versie — een timeout-gebaseerde aanvulling ("geen bericht in X minuten = offline") is een mogelijke vervolgstap, nog niet gebouwd.
-
----
-
-## 7. Gateway-zelfregistratie
-
-Bij het opstarten (`Agent.Start()` → `registerGateway()`) zoekt de agent zijn eigen `gateways`-record op naam (`GATEWAY_NAME`-omgevingsvariabele). Bestaat het nog niet, dan maakt de agent het zelf aan — geen handmatige provisioning-stap nodig, wat aansluit bij het "zero-setup"-uitgangspunt. Daarna wordt de status meteen op `"online"` gezet.
-
-Bij een nette shutdown (`Stop()`) wordt de status teruggezet naar `"offline"`. `last_seen` wordt door PocketBase zelf bijgewerkt (het `autodate`-veld staat op `onUpdate: true`) — de agent hoeft dat nooit zelf te zetten.
+Na de eerste verbinding en na elke herverbinding van de command-stroom draait
+de **herstelstap** (`onPocketBaseConnected`, één tegelijk): huis online zetten,
+device-cache verversen, de stand van elk device met HA afstemmen en
+openstaande commando's inhalen. Realtime-stromen abonneren pas als de box
+ingelogd is, zodat er nooit een anoniem abonnement ontstaat.
 
 ---
 
-## 8. Lokale geschiedenis (SQLite)
+## 8. Datastroom: device → PocketBase
 
-`internal/history/store.go` is een kleine, op zichzelf staande SQLite-database (`modernc.org/sqlite`, een pure-Go implementatie — geen CGO nodig, dus geen extra complexiteit in de Docker-build).
+**Pad A — Home Assistant**: websocket, `state_changed`-events, type-veilig
+geparsed (`homeassistant/event.go`), naar `forwardHAEvent`.
 
-**De kern van het ontwerp: onafhankelijkheid.** De write naar lokale geschiedenis gebeurt in `forwardHAEvent`/`forwardZigbeeEvent` *voordat* er iets met PocketBase geprobeerd wordt, en gebruikt de rauwe `entity_id`/`friendly_name` als sleutel — niet het PocketBase `device.id`. Dat betekent:
-- Lokale geschiedenis blijft werken als PocketBase onbereikbaar is (geen internet)
-- Lokale geschiedenis bevat óók events van devices die nog niet als "device" in PocketBase geregistreerd staan
+**Pad B — Zigbee2MQTT**: `zigbee2mqtt/<naam>` (stand) en
+`…/availability` (online/offline), naar `forwardZigbeeEvent`.
 
-Dit is precies de kernbelofte uit het project: 100% lokale betrouwbaarheid, ongeacht de cloud-verbinding.
+Waarom beide: HA is de instabielste schakel; zonder Pad B zou Zigbee-tracking
+stilvallen als HA herstart. De prijs (soms dubbel schrijven, twee
+naamconventies) is bewust geaccepteerd.
 
-Eén tabel, `device_state_history` (`entity_id`, `state` als JSON-tekst, `recorded_at`), met een index op beide kolommen. Een achtergrondtaak (`runHistoryCleanup`, elk uur) ruimt rijen ouder dan `HISTORY_RETENTION_DAYS` (standaard 30) op, zodat de database op de N100 niet onbeperkt blijft groeien.
+Beide doen daarna:
+1. **Eerst, altijd**: lokaal naar SQLite (§10), vóór en los van PocketBase.
+2. Alleen als de box bij een huis hoort: device opzoeken in de cache (alleen
+   devices van het eigen huis; entity-ID's komen uit de naam en kunnen tussen
+   huizen botsen), onbekende entity's negeren, `device_state` upserten en
+   `online` bijwerken.
 
 ---
 
-## 9. Het commandopad: PocketBase → device
+## 9. Online/offline en de hartslag
 
-Dit is de omgekeerde richting: een gebruiker doet iets in de (toekomstige) PWA, en dat moet uiteindelijk een echt device aansturen.
+- **Device**: `online = true` bij elk event; `false` alleen bij een expliciet
+  signaal (HA `unavailable`, Zigbee `offline`). Een stil device blijft dus
+  "online"; een timeout ontbreekt nog.
+- **Box/huis**: elke 30 s zet de agent `houses.select = online`; PocketBase
+  werkt daarbij `last_seen` bij. De app noemt de box onbereikbaar na 90 s
+  stilte en blokkeert dan schakelen. Bij een nette stop gaat de status naar
+  `offline`.
+
+---
+
+## 10. Lokale geschiedenis (SQLite)
+
+`internal/history/store.go` (`modernc.org/sqlite`, pure Go): één tabel
+`device_state_history` (`entity_id`, `state` als JSON, `recorded_at`). De write
+gebeurt vóór alles wat met PocketBase te maken heeft en met de rauwe
+`entity_id` als sleutel — dus ook zonder internet en ook voor entity's die geen
+device in de app zijn. Elk uur worden rijen ouder dan `HISTORY_RETENTION_DAYS`
+(standaard 30) opgeruimd.
+
+---
+
+## 11. Het commandopad: PocketBase → device
 
 ```
-PWA schrijft record  →  PocketBase "commands"  →  agent (realtime SSE)  →  HA service-call  →  echt device
-                                                                                                      │
-                                                                          state_changed-event ◄───────┘
+app maakt record  →  commands (pending)  →  agent (realtime SSE)  →  HA-service  →  device
                                                                                    │
-                                                                          (Pad A hierboven, opnieuw)
+                                                  state_changed-event ◄────────────┘ → Pad A
 ```
 
-1. Een ingelogde gebruiker maakt een `commands`-record aan (`status: "pending"`) voor een device dat hij zelf bezit (afgedwongen door de `createRule`)
-2. De agent luistert **realtime** mee via PocketBase's SSE-endpoint (`pocketbase/realtime.go`) — geen polling. Zodra een nieuw commando verschijnt, komt dat binnen ~1 seconde binnen
-3. `app/agent.go`'s `handleCommand()` haalt het device op (voor de `entity_id`), en roept Home Assistant's **domein-agnostische** services aan: `homeassistant.turn_on` / `turn_off` / `toggle`. Deze meta-services werken voor licht, switches, climate, input_booleans etc. zonder dat de agent per device-type andere logica nodig heeft
-4. Het commando wordt gemarkeerd als `"sent"` of `"failed"` (met foutmelding), zodat de PWA feedback kan tonen
-5. De service-call verandert de échte state in Home Assistant → HA stuurt daarover een `state_changed`-event → dat komt via **Pad A** uit §5 gewoon weer bij PocketBase terecht. De cirkel is rond: het "nieuwe" device_state-record ontstaat niet apart, maar via hetzelfde pad als elke andere state-update
+1. Een bewoner maakt een command aan: óf voor één device, óf `run_scene` voor
+   één scène (nooit een mix). De regels dwingen af dat het zijn eigen huis is.
+2. De agent hoort het realtime, of bij het inhalen na een (her)start.
+3. Controles, in volgorde: is het device/de scène van **dit** huis (anders
+   negeren — dat is een commando voor een andere box); is het **verlopen**
+   (ouder dan 2 minuten, behalve `provision`; dan `failed` "verlopen")? Elk
+   commando wordt maar één keer opgepakt, ook als realtime en inhalen hetzelfde
+   zien.
+4. Uitvoeren via HA's domein-agnostische `homeassistant.turn_on/turn_off/toggle`
+   (of `climate.set_temperature`), daarna `sent` of `failed` met reden.
+5. De nieuwe stand komt via Pad A terug: geen apart schrijfpad.
 
-**Waarom ook een catch-up-stap nodig is:** de realtime-subscription levert alleen wijzigingen vanaf het moment van verbinden — geen geschiedenis. Als de agent een tijdje offline was terwijl er al een commando klaarstond, zou dat commando anders nooit uitgevoerd worden. Daarom doet `catchUpPendingCommands()` bij elke start eerst een eenmalige query naar alle nog openstaande (`status: pending`) commando's.
-
-**Bewuste scope-keuze:** commando's gaan nu alleen via Home Assistant, niet rechtstreeks via een Zigbee2MQTT `.../set`-topic. Reden: er is in deze omgeving geen echte Zigbee-hardware om dat tegen te verifiëren, en in de praktijk lopen Zigbee2MQTT-devices meestal toch via Home Assistant's eigen MQTT-integratie.
-
----
-
-## 10. Resilience: reconnects en race conditions
-
-Drie concrete problemen zijn tijdens de bouw gevonden (niet in theorie, maar door daadwerkelijk verbindingen te verbreken en te kijken wat er gebeurde) en opgelost:
-
-### Race condition in `UpsertDeviceState`
-De "kijk of het al bestaat, dan PATCH, anders POST"-logica was niet atomisch. Twee events voor hetzelfde (nog onbekende) device die snel na elkaar binnenkwamen, konden allebei "bestaat nog niet" zien en allebei een eigen rij aanmaken. **Fix**: een `sync.Mutex` (`upsertMu`) op de PocketBase-client die de hele check-en-schrijf-sequentie serialiseert. Omdat de agent de enige schrijver naar `device_state` is, sluit dit de race volledig af.
-
-### HA-websocket: geen reconnect
-Bij een verbroken verbinding bleef de agent in een tight loop lezen van een dode socket — geen backoff, tientallen foutregels per seconde, en de container crashte uiteindelijk (bewezen: `RestartCount` liep op tot 4). **Fix**: een expliciete reconnect-loop met exponentiële backoff (1s tot 30s), die bij elke poging `Connect()` opnieuw aanroept — dat doet meteen ook de volledige HA-handshake + het opnieuw abonneren op events.
-
-### MQTT: stille dataverlies na broker-herstart
-Paho's standaard sessiegedrag (`CleanSession: true`) vergeet topic-subscriptions bij een reconnect. Na een herstart van Mosquitto bleef de agent gewoon "gezond" draaien — geen enkele foutmelding — maar ontving stilzwijgend niets meer. **Fix**: de MQTT-client onthoudt zelf alle `Subscribe()`-aanroepen en abonneert opnieuw op alles via een `OnConnect`-handler, die paho aanroept bij zowel de eerste verbinding als elke automatische reconnect.
-
-Alle drie zijn na de fix opnieuw getest door de betreffende container daadwerkelijk te herstarten en te bevestigen dat de agent zonder crash of dataverlies herstelt.
+Waarom verlopen: bij een korte uitval kan de realtime-verbinding blijven
+leven en een commando minuten te laat afleveren; een tik van lang geleden mag
+geen lamp meer aanzetten.
 
 ---
 
-## 11. Bekende gaten / nog te bouwen
+## 12. Scènes, schema's en weer
 
-Voor de volledigheid — dit document beschrijft wat er ís, niet wat er *nog niet* is, maar deze lijst hoort erbij voor een eerlijk beeld:
+- **Scènes**: `run_scene` voert alle stappen op de box uit; een mislukte stap
+  houdt de rest niet tegen. Alleen apparaten van het eigen huis.
+- **Schema's**: de agent klokt zelf. Elke minuut haalt hij schema's, scènes en
+  devices van zijn huis op, bewaart dat als snapshot in `/data/schedules.json`
+  en voert uit wat aan de beurt is — zonder PocketBase uit de laatste snapshot.
+  Gemiste runs worden niet ingehaald. Tijden in `Europe/Amsterdam`. Zonder huis
+  is de snapshot leeg, zodat een losgekoppelde box geen schema's van de vorige
+  eigenaar draait.
+- **Weer**: elk half uur uit HA (Met.no) naar `houses.weather`; alleen de box
+  mag dat schrijven.
 
-- **Geen echte Zigbee-hardware getest.** Alle Zigbee2MQTT-paden zijn geverifieerd door berichten te simuleren via `mosquitto_pub`, nooit tegen een echte Zigbee-coordinator/device.
-- **Geen Headscale/mesh-tunnel.** De cloud-backend draait nog niet op een echte VPS; remote toegang buiten het lokale netwerk bestaat nog niet. Het ontwerp hiervoor is uitgedacht maar bewust nog niet geïmplementeerd, in afwachting van een echte Scaleway-VPS.
-- **Geen directe Zigbee2MQTT `.../set`-commandopad** — zie §9.
-- **Geen geautomatiseerde testsuite.** Alles is tot nu toe handmatig/live geverifieerd tegen de draaiende stack; er zijn geen `_test.go`-bestanden in de repository.
-- **PWA-frontend bestaat nog niet.** De backend is er klaar voor (leesrechten + commandopad staan), maar er is nog geen Next.js-project gestart.
-- **Timeout-gebaseerde offline-detectie ontbreekt** — zie §6.
+---
+
+## 13. Resilience: reconnects en race conditions
+
+Gevonden door verbindingen echt te verbreken, niet in theorie:
+- **`UpsertDeviceState`** was check-then-act; een mutex serialiseert het.
+- **HA-websocket**: reconnect-lus met backoff (1–30 s) in plaats van een tight
+  loop die de container liet crashen.
+- **MQTT**: abonnementen worden na elke reconnect opnieuw gezet (anders stil
+  dataverlies).
+- **PocketBase weg**: lokaal blijft alles draaien; herstelstap bij terugkeer
+  (§7).
+- **Schema-klok**: de timer gaat soms enkele ms vóór de minuutgrens af; de
+  klok tikt daarom de bedoelde minuut, niet `time.Now()`.
+
+---
+
+## 14. Testen
+
+- **Agent**: `cd agent && go vet ./... && go test ./...` (unit-tests per
+  package; geen `-race` op Windows zonder gcc).
+- **PocketBase-regels en hooks**: `cd backend/tests && go test -tags integration ./...`
+  start een tijdelijke PocketBase 0.40.4 met de echte migraties en hooks en
+  bewijst o.a. dat box A niets van huis B ziet of wijzigt, dat body-modifiers
+  geen omweg zijn, dat gasten niets zien, de claim-flow (incl. gelijktijdige
+  claims) en de mails per taal.
+- **Scripts**: `python -m unittest discover -s scripts -p "test_*.py"`.
+- **PWA**: `cd frontend && node --test lib/*.test.js && npx next build`.
+- Eén set testvectoren voor de claimcode (`backend/tests/testdata/claim_codes.json`)
+  houdt Python, de hook en de app gelijk.
+
+---
+
+## 15. Bekende gaten / nog te bouwen
+
+- **Fase 3**: PocketBase en Headscale op Scaleway, HTTPS, een echte
+  SMTP-provider en `APP_URL`, `trustedProxy` voor de rate limits, rate limits
+  op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-
+  instellingen (het SMTP-wachtwoord staat daar).
+- **Geen echte Zigbee-hardware getest**; Zigbee-paden zijn gesimuleerd met
+  `mosquitto_pub`.
+- **Geen direct Zigbee2MQTT `…/set`-commandopad**: commando's gaan via HA.
+- **Geen timeout-gebaseerde offline-detectie** voor devices (§9).
+- **Een dode realtime-verbinding** valt pas na ~3 minuten TCP-keepalive op; een
+  idle-timeout hoort bij fase 3.
+- **Commando's verlopen op de klok van de box**; met een server op Scaleway
+  beter de serverklok gebruiken.
+- **Wachttijd na koppelen** tot ~5 minuten door de controle van de box; kan
+  later via realtime op het eigen box-record.

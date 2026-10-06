@@ -1,5 +1,7 @@
 # Agent start en herstelt zonder PocketBase — implementatieplan
 
+> **Status:** uitgevoerd en in `main`. Dit plan is een historisch werkdocument; waar de uitvoering afweek, staat dat in de spec en in de git-geschiedenis.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** De Go-agent start en blijft werken zonder PocketBase, en sluit zichzelf weer aan (gateway, stand, openstaande commando's) zodra PocketBase terug is — bij het opstarten en na een uitval tijdens het draaien.

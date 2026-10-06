@@ -1,6 +1,6 @@
 # Schema's: scènes op tijd, op de box
 
-Datum: 2026-09-28 · Status: goedgekeurd ontwerp, nog niet gebouwd
+Datum: 2026-09-28 · Status: gebouwd (2026-09-30); snapshot op schijf kwam met de agent-offline-start (2026-10-06)
 
 > Bij het plannen bijgesteld: zie "Afwijkingen van de spec" in
 > `docs/superpowers/plans/2026-09-28-schedules.md` (o.a. snapshot-bestand

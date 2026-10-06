@@ -1,6 +1,6 @@
 # Box-identiteit — ontwerp (spec A van de claim-flow)
 
-Datum: 2026-10-06 · Status: ter review · Vervolg: spec B (claimen)
+Datum: 2026-10-06 · Status: gebouwd en in `main` (2026-10-06); later aangevuld met bewonersregels alleen voor `users`, create-rate-limits en een vastgepinde PocketBase · Vervolg: spec B (claimen)
 
 ## Doel
 

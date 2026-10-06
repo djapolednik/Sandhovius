@@ -1,5 +1,7 @@
 # Claim-flow — implementatieplan
 
+> **Status:** uitgevoerd en in `main`. Dit plan is een historisch werkdocument; waar de uitvoering afweek, staat dat in de spec en in de git-geschiedenis. De QR-link werd later `/koppel#s=…&c=…` (niet `?s=`).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Een koper maakt in de PWA een account, bevestigt zijn mail en koppelt een box door de QR-code uit de handleiding te scannen (nieuw huis of vervanging); de eigenaar kan een box ontkoppelen.

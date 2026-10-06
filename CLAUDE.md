@@ -52,6 +52,7 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - `backend/tests/` — eigen Go-module met integratietests op de PocketBase-regels (start PocketBase 0.40 op een tijdelijke `pb_data`)
 - `scripts/screenshot.py` — ingelogde screenshots (Firefox + Marionette), zie Development Setup
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
+- `docs/box-aanmelden.md` — de flow van een nieuwe box: klaarmaken (`provision-box.py`), koppelen in de app, ontkoppelen, nieuwe code; `backend_explained.md` — uitleg van stack, schema, regels, hooks en agent
 - `PRODUCT.md` (doelgroep, principes) en `DESIGN.md` + `.impeccable/design.json` (design system) — lees DESIGN.md vóór UI-werk
 
 ## Tech Stack

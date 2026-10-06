@@ -1,5 +1,7 @@
 # Design and accessibility pass on the PWA (2026-09-26)
 
+> Historical record of one design pass. Much of the UI has changed since (small device tiles instead of flip cards, bottom navigation, scenes, linking a box); the current state is in `DESIGN.md`.
+
 This file summarises what changed in `frontend/` during the Impeccable run (`init` → `document` → `audit` → `harden` → `colorize` → `clarify` → `adapt` → `animate` → `optimize` → `polish`). It was committed on 2026-09-27 together with the dashboard redesign that followed it (commit d20d385).
 
 ## Outcome
@@ -116,4 +118,4 @@ Resolved on 2026-09-28:
 ## Suggested next steps
 
 - `/impeccable critique frontend/app`: a UX review now that the technical basis is solid.
-- `/impeccable onboard`: the first-run flow (no house yet, no devices yet) now only has a plain text line.
+- `/impeccable onboard`: the first-run flow (no house yet, no devices yet) now only has a plain text line. *Update 2026-10-06: an account without a house now gets "Box toevoegen" and the linking sheet (claim flow); a house without devices has the first-run panel. See DESIGN.md.*

@@ -1,6 +1,6 @@
 # Claim-flow — ontwerp (spec B)
 
-Datum: 2026-10-06 · Status: ter review · Bouwt op: spec A
+Datum: 2026-10-06 · Status: gebouwd en in `main` (2026-10-06); de QR-link gebruikt `#` i.p.v. `?` (zie Claimcode). Gebruikersflow: `docs/box-aanmelden.md` · Bouwt op: spec A
 (`2026-10-06-box-identity-design.md`, in `main`)
 
 ## Doel

@@ -1,6 +1,6 @@
 # Agent start en herstelt zonder PocketBase — ontwerp
 
-Datum: 2026-10-06 · Status: ter review
+Datum: 2026-10-06 · Status: gebouwd en in `main` (2026-10-06)
 
 ## Doel
 
