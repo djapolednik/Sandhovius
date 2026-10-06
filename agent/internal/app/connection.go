@@ -60,7 +60,7 @@ func retryWithBackoff(ctx context.Context, minWait, maxWait time.Duration, attem
 // het herverbinden over (onCommandStreamSubscribed).
 func (a *Agent) runPocketBase() {
 	ok := retryWithBackoff(a.ctx, time.Second, 30*time.Second, func() error {
-		if err := a.pbClient.Login(); err != nil {
+		if _, err := a.pbClient.Login(); err != nil {
 			return err
 		}
 		return a.registerGateway()

@@ -5,46 +5,62 @@ import (
 	"fmt"
 )
 
+// BoxRecord is the box's own record in the "boxes" auth collection. House is
+// empty as long as the box is not linked to a house.
+type BoxRecord struct {
+	ID     string `json:"id"`
+	Serial string `json:"serial"`
+	House  string `json:"house"`
+}
+
 type authResponse struct {
-	Token string `json:"token"`
+	Token  string    `json:"token"`
+	Record BoxRecord `json:"record"`
 }
 
-// Authenticate logs in as the PocketBase superuser and stores the resulting
-// token on the client. It also remembers the credentials so the client can
-// silently re-authenticate later if the token expires (see doAuthed).
-func (c *Client) Authenticate(email, password string) error {
-	c.SetCredentials(email, password)
-	return c.Login()
-}
-
-// SetCredentials remembers the superuser credentials without logging in,
+// SetCredentials remembers the box serial and secret without logging in,
 // so the agent can start while PocketBase is unreachable and log in later.
-func (c *Client) SetCredentials(email, password string) {
+// The credentials let the client silently re-authenticate if the token
+// expires (see doAuthed).
+func (c *Client) SetCredentials(serial, secret string) {
 	c.mu.Lock()
-	c.email = email
-	c.password = password
+	c.serial = serial
+	c.secret = secret
 	c.mu.Unlock()
 }
 
-// Login logs in with the stored credentials and keeps the token.
-func (c *Client) Login() error {
+// Login logs in as the box with the stored credentials, keeps the token and
+// returns the box record (including the house it belongs to).
+func (c *Client) Login() (*BoxRecord, error) {
 	c.mu.RLock()
-	email, password := c.email, c.password
+	serial, secret := c.serial, c.secret
 	c.mu.RUnlock()
 
 	var resp authResponse
 	err := c.do(
 		"POST",
-		"/api/collections/_superusers/auth-with-password",
-		map[string]string{"identity": email, "password": password},
+		"/api/collections/boxes/auth-with-password",
+		map[string]string{"identity": serial, "password": secret},
 		&resp,
 	)
 	if err != nil {
-		return fmt.Errorf("pocketbase: login: %w", err)
+		return nil, fmt.Errorf("pocketbase: login: %w", err)
 	}
 
 	c.setToken(resp.Token)
-	return nil
+	return &resp.Record, nil
+}
+
+// RefreshBox renews the token and returns the current box record, so the
+// agent notices when the box is linked to (or removed from) a house. On 401
+// doAuthed logs in again first.
+func (c *Client) RefreshBox() (*BoxRecord, error) {
+	var resp authResponse
+	if err := c.doAuthed("POST", "/api/collections/boxes/auth-refresh", nil, &resp); err != nil {
+		return nil, fmt.Errorf("pocketbase: refresh box: %w", err)
+	}
+	c.setToken(resp.Token)
+	return &resp.Record, nil
 }
 
 // doAuthed is like do, but if the request fails because the token expired
@@ -56,7 +72,7 @@ func (c *Client) doAuthed(method, path string, body any, out any) error {
 
 	var statusErr *StatusError
 	if errors.As(err, &statusErr) && statusErr.StatusCode == 401 {
-		if loginErr := c.Login(); loginErr != nil {
+		if _, loginErr := c.Login(); loginErr != nil {
 			return fmt.Errorf("pocketbase: re-authenticate after 401: %w", loginErr)
 		}
 		return c.do(method, path, body, out)

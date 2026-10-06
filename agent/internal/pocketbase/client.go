@@ -21,8 +21,8 @@ type Client struct {
 
 	mu       sync.RWMutex
 	token    string
-	email    string
-	password string
+	serial   string
+	secret   string
 
 	// upsertMu serializes UpsertDeviceState calls. Without it, two
 	// concurrent upserts for a device with no existing row yet could both
