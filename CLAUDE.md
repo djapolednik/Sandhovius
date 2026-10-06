@@ -38,14 +38,16 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 ## Belangrijke Bestanden
 - `docker-compose.yml` — hele lokale stack: homeassistant, mosquitto, zigbee2mqtt, agent, pocketbase, frontend (containers heten `sandhovius-*`)
 - `agent/main/main.go` — entry point van de Go agent
-- `agent/internal/app/agent.go` — kern: gateway-registratie (vast record-ID in `/data/gateway_id`), heartbeat (30 s op `houses.last_seen`), HA-events → PocketBase, commands → HA, provisioning van nieuwe devices, state-reconciliatie bij start/reconnect
+- `agent/internal/app/agent.go` — kern: huis uit de box-identiteit (`house.go`: huis uit `box.json`, volgt koppelen/loskoppelen), heartbeat (30 s op `houses.last_seen`), HA-events → PocketBase, commands → HA, provisioning van nieuwe devices, state-reconciliatie bij start/reconnect
 - `agent/internal/app/connection.go` (verbindingslus met backoff + herstelstap `onPocketBaseConnected`), `scheduler.go` + `schedule_store.go` (schema-klok, snapshot in `/data/schedules.json`), `commands.go` (verlopen en claimen van commando's)
 - `agent/internal/homeassistant/` — HA websocket (events), REST (`CallService`, `GetState`), registry (helpers aanmaken)
-- `agent/internal/pocketbase/`, `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
+- `agent/internal/box/` (leest/schrijft `/data/box.json`: serial, secret, house), `agent/internal/pocketbase/` (incl. `auth.go`: inloggen als box), `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
 - `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
 - `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Scènes/Opties; hash `#instellingen` voor Opties), commands
 - `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
 - `agent/internal/app/weather.go` — weer uit HA (Met.no) elke 30 min op `houses.weather`
+- `scripts/provision-box.py` — maakt een `boxes`-record + `box.json` (`--serial`, `--house`, `--out`); superuser uit `.env`, print nooit het geheim
+- `backend/tests/` — eigen Go-module met integratietests op de PocketBase-regels (start PocketBase 0.40 op een tijdelijke `pb_data`)
 - `scripts/screenshot.py` — ingelogde screenshots (Firefox + Marionette), zie Development Setup
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
 - `PRODUCT.md` (doelgroep, principes) en `DESIGN.md` + `.impeccable/design.json` (design system) — lees DESIGN.md vóór UI-werk
@@ -72,12 +74,18 @@ cd frontend && npx next build                     # moet slagen vóór commit
 # Tests
 cd agent && go vet ./... && go test ./...
 cd frontend && node --test lib/*.test.js
+cd backend/tests && go test -tags integration ./...   # regels per huis/box
+
+# Dev-box (identiteit) aanmaken en in de agent zetten
+scripts/provision-box.py --serial SH-DEV-0001 --house <huis-id> --out box.json
+docker cp box.json sandhovius-agent:/data/box.json   # in Git Bash: MSYS_NO_PATHCONV=1 ervoor; daarna box.json wissen
+docker compose restart agent
 ```
 
 - Windows + Git Bash: `gofmt -l` noemt elk bestand (CRLF in de werkmap; git normaliseert bij commit, dus negeren). Geen gcc → geen `go test -race`. Docker Desktop staat in `%LOCALAPPDATA%\Programs\DockerDesktop`. Bij `docker exec … /pad` in Git Bash `MSYS_NO_PATHCONV=1` ervoor, anders wordt het pad een Windows-pad.
 - PocketBase geeft datums als `2006-01-02 15:04:05.000Z` (spatie, geen `T`): `time.RFC3339` parse faalt daarop. Migratie-historie opschonen na weggegooide migratiebestanden: `docker exec sandhovius-pocketbase /usr/local/bin/pocketbase migrate history-sync --dir=/pb_data --migrationsDir=/pb_migrations`.
-- `scripts/seed.py` (testaccount + huis vullen) staat bewust alleen lokaal (`.git/info/exclude`); het wacht op het huis dat `registerGateway()` aanmaakt en moet mee zodra de box-identiteit dat vervangt.
-- Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`) · PWA: http://localhost:3000
+- `scripts/seed.py` (testaccount + huis vullen) staat bewust alleen lokaal (`.git/info/exclude`); het maakt zelf het huis (superuser, gekoppeld aan de testgebruiker) en een box-identiteit via `provision-box.py --house` + `docker cp`.
+- Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`: alleen voor PocketBase zelf en de scripts, de agent gebruikt ze niet meer) · PWA: http://localhost:3000
 - Visueel testen: Chrome en Edge ontbreken; de Playwright-plugin werkt niet. `SANDHOVIUS_EMAIL=… SANDHOVIUS_PASSWORD=… scripts/screenshot.py /tmp/home 1440x900 1366x768:dark 390x844` (het lokale testaccount, niet in git) logt in (token in localStorage) en maakt screenshots via Firefox headless + Marionette; het zegt ook of de pagina scrolt (Home hoort op een laptop te passen). Opties: `HASH='#kamers'`, `HOMEVIEW=on`. Firefox kan niet smaller dan ~500px. Marionette kan ook klikken, lang indrukken (`WebDriver:PerformActions`) en met pref `dom.w3c_touch_events.enabled` touch-events sturen.
 
 ## Huidige Status (2026-10-06)
@@ -101,10 +109,12 @@ cd frontend && node --test lib/*.test.js
 - **Agent zonder PocketBase**: lokaal (MQTT, HA, geschiedenis, schema's) start altijd; `runPocketBase` logt in en verifieert de gateway met backoff (1–30 s). Na de eerste verbinding en na elke herverbinding van de command-stroom draait `onPocketBaseConnected` (online, device-cache, stand afstemmen, openstaande commando's inhalen). Schema-snapshot in `/data/schedules.json` (`SCHEDULES_FILE`). Commando's ouder dan 2 min (`commands.created`) worden `failed` "verlopen" — ook realtime, want bij een korte uitval overleeft de TCP-verbinding soms. De agent pakt alleen commando's en devices van zijn eigen huis op (meerdere boxen op één PocketBase). Scheduler tikt de bedoelde minuut (de timer ging soms ms te vroeg af → schema's liepen een minuut te laat)
 - PWA-basis: installeerbaar (manifest, voorlopig icoon), thema Licht/Donker/Automatisch, "Alles uit", "Let op"-overzicht, "Ongedaan maken" (verwijderen gaat pas na 6 s echt), kamers en favorieten ordenen (`rooms.order`, `devices.favorite_order`), meerdere huizen, wachtwoord vergeten/wijzigen, "Opnieuw proberen" bij mislukt klaarzetten (command-actie `provision`)
 
+- **Box-identiteit** (spec A, `docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, relatie `house`), regels laten een box alleen zijn eigen huis bereiken (bewonersregels ongewijzigd), rate limits aan (incl. `boxes:auth`); de agent logt in als box (`/data/box.json`, vervangt `gateway_id`/superuser en `GATEWAY_NAME`), neemt het huis uit de box over, volgt koppelen/loskoppelen en stopt dan schrijven naar het oude huis. Dev-box `SH-DEV-0001` hoort bij het dev-huis.
+
 ## Volgende Stappen
 1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
-3. **Box-identiteit en claim-flow** (branch `box-identity`). Spec A (`docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, `house`-relatie), regels per huis, agent logt in als box i.p.v. superuser, `/data/box.json` vervangt `gateway_id`, `scripts/provision-box.py`. Daarna spec B: claimcode op de box (sticker/QR), bij koppelen nieuw of bestaand account en nieuw huis of vervanging; één account kan meerdere huizen/boxen hebben. Besloten: de box hoort bij een huis, het huis is van de bewoner.
+3. **Claim-flow** (spec B, na box-identiteit): claimcode op de box (sticker/QR), bij koppelen nieuw of bestaand account en nieuw huis of vervanging; één account kan meerdere huizen/boxen hebben. Besloten: de box hoort bij een huis, het huis is van de bewoner. Vervangt het handmatig koppelen via `provision-box.py --house` (nu alleen dev) en vult `houses.claimed_at`/`user`.
 4. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. PocketBase-image vastpinnen.
 5. **SMTP in PocketBase** instellen (nu uit): zonder dat verstuurt "Wachtwoord vergeten?" geen mail. Ook de afzender (`support@example.com`) en `appURL` goed zetten.
 6. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
