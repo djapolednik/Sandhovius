@@ -30,6 +30,10 @@ type Config struct {
 		// koppeling een herstart en een hernoeming overleeft.
 		IDFile string
 	}
+	Box struct {
+		// File bevat de identiteit van deze box (serial, secret, house).
+		File string
+	}
 	History struct {
 		DBPath        string
 		RetentionDays int
@@ -60,6 +64,7 @@ func LoadConfig() (*Config, error) {
 	c.PocketBase.AdminPassword = os.Getenv("POCKETBASE_ADMIN_PASSWORD")
 	c.Gateway.Name = env("GATEWAY_NAME", "Sandhovius Gateway")
 	c.Gateway.IDFile = env("GATEWAY_ID_FILE", "/data/gateway_id")
+	c.Box.File = env("BOX_FILE", "/data/box.json")
 	c.History.DBPath = env("HISTORY_DB_PATH", "/data/history.db")
 	c.Schedules.File = env("SCHEDULES_FILE", "/data/schedules.json")
 	c.History.RetentionDays = 30
