@@ -47,6 +47,9 @@ type Agent struct {
 	registered atomic.Bool
 	recoverMu  sync.Mutex
 
+	// handledCommands: commando-ID's die al opgepakt zijn (zie claimCommand).
+	handledCommands sync.Map
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -306,7 +309,7 @@ func (a *Agent) reconcileDeviceStates() {
 // de agent het specifieke domein van het device hoeft te kennen. set_temperature
 // is de uitzondering — die bestaat alleen binnen het climate-domein.
 func (a *Agent) handleCommand(cmd pocketbase.Command) {
-	if cmd.Status != "pending" {
+	if cmd.Status != "pending" || !a.claimCommand(cmd.ID) {
 		return
 	}
 

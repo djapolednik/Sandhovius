@@ -29,3 +29,27 @@ func TestCommandExpired(t *testing.T) {
 		}
 	}
 }
+
+// Realtime en inhalen kunnen hetzelfde commando tegelijk zien (beide nog
+// "pending"): precies één van de twee mag het uitvoeren, anders schakelt
+// een toggle de lamp twee keer en lijkt de tik niets te doen.
+func TestClaimCommandOnce(t *testing.T) {
+	a := &Agent{}
+	const tries = 20
+	results := make(chan bool, tries)
+	for range tries {
+		go func() { results <- a.claimCommand("cmd1") }()
+	}
+	claimed := 0
+	for range tries {
+		if <-results {
+			claimed++
+		}
+	}
+	if claimed != 1 {
+		t.Errorf("claimed = %d, want 1", claimed)
+	}
+	if !a.claimCommand("cmd2") {
+		t.Error("ander commando niet geclaimd")
+	}
+}

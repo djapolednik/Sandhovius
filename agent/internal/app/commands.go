@@ -47,3 +47,12 @@ func (a *Agent) failIfExpired(cmd pocketbase.Command) bool {
 	a.failCommand(cmd.ID, errors.New("verlopen: de box was te lang niet bereikbaar"))
 	return true
 }
+
+// claimCommand geeft true voor precies één aanroep per commando-ID. Sinds
+// de herstelstap ná het subscriben draait, kunnen realtime en inhalen
+// hetzelfde nog-"pending" commando tegelijk zien. ponytail: de set groeit
+// met één ID per commando; dat is klein, en een herstart leegt hem.
+func (a *Agent) claimCommand(id string) bool {
+	_, dup := a.handledCommands.LoadOrStore(id, struct{}{})
+	return !dup
+}
