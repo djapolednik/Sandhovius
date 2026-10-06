@@ -56,7 +56,7 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - **Go** — local agent (Dockerfile build)
 - **Home Assistant Core** — state management; devices uit de UI worden HA-helpers (`input_boolean` / `input_number`)
 - **Mosquitto** + **Zigbee2MQTT** — Zigbee ↔ MQTT ↔ agent
-- **PocketBase 0.40** (image `ghcr.io/muchobien/pocketbase:latest`, dus niet vastgepind; draait nu 0.40.4) — users, houses, rooms, devices, device_state, commands; realtime naar de PWA
+- **PocketBase 0.40.4** (image vastgepind op `ghcr.io/muchobien/pocketbase:0.40.4`, gelijk aan `pbVersion` in `backend/tests`; upgraden = beide tegelijk en de integratietests draaien, de veldregels leunen op hoe PocketBase body-modifiers normaliseert) — users, houses, rooms, devices, device_state, commands; realtime naar de PWA. Rate limits aan: standaardregels plus `boxes:auth` (10/min, gast) en `commands:create`/`device_state:create` (100 per 5 s, ingelogd) voor "Alles uit" en de eerste start van een box
 - **Next.js 16** (Turbopack, JS, geen TypeScript) — PWA; lees `frontend/node_modules/next/dist/docs/` bij twijfel, API's wijken af
 - **Headscale** — later (remote toegang, zero external ports)
 
@@ -95,7 +95,6 @@ docker compose restart agent
 - PocketBase-schema + JWT-login in de PWA
 - Command-pipeline: PWA → `commands` → agent → HA (toggle, set_temperature), status/fout terug
 - Realtime: device_state, devices en houses live in de PWA
-- Box-identiteit: huis wordt éénmalig aangemaakt, gebonden op record-ID (niet op naam; naam is hernoembaar)
 - Liveness: heartbeat elke 30 s; PWA toont "box reageert niet" na 90 s stilte en blokkeert dan schakelen
 - State-reconciliatie: agent haalt bij start, na HA-reconnect en na provisioning de actuele stand op (fix voor nieuwe devices die "offline" bleven)
 - PWA-redesign "The Lit Room at Night": onder-navigatie Home/Kamers/+/Scènes/Opties (rond "+" in het midden om een apparaat toe te voegen), favorieten (`devices.favorite`), thermostaat-dial, lamp/stopcontact-tegels die oplichten (warm/stroomblauw), licht + donker thema
@@ -109,13 +108,13 @@ docker compose restart agent
 - **Agent zonder PocketBase**: lokaal (MQTT, HA, geschiedenis, schema's) start altijd; `runPocketBase` logt in en verifieert de gateway met backoff (1–30 s). Na de eerste verbinding en na elke herverbinding van de command-stroom draait `onPocketBaseConnected` (online, device-cache, stand afstemmen, openstaande commando's inhalen). Schema-snapshot in `/data/schedules.json` (`SCHEDULES_FILE`). Commando's ouder dan 2 min (`commands.created`) worden `failed` "verlopen" — ook realtime, want bij een korte uitval overleeft de TCP-verbinding soms. De agent pakt alleen commando's en devices van zijn eigen huis op (meerdere boxen op één PocketBase). Scheduler tikt de bedoelde minuut (de timer ging soms ms te vroeg af → schema's liepen een minuut te laat)
 - PWA-basis: installeerbaar (manifest, voorlopig icoon), thema Licht/Donker/Automatisch, "Alles uit", "Let op"-overzicht, "Ongedaan maken" (verwijderen gaat pas na 6 s echt), kamers en favorieten ordenen (`rooms.order`, `devices.favorite_order`), meerdere huizen, wachtwoord vergeten/wijzigen, "Opnieuw proberen" bij mislukt klaarzetten (command-actie `provision`)
 
-- **Box-identiteit** (spec A, `docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, relatie `house`), regels laten een box alleen zijn eigen huis bereiken (bewonersregels ongewijzigd), rate limits aan (incl. `boxes:auth`); de agent logt in als box (`/data/box.json`, vervangt `gateway_id`/superuser en `GATEWAY_NAME`), neemt het huis uit de box over, volgt koppelen/loskoppelen en stopt dan schrijven naar het oude huis. Dev-box `SH-DEV-0001` hoort bij het dev-huis.
+- **Box-identiteit** (spec A, `docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, relatie `house`), regels laten een box alleen zijn eigen huis bereiken; bewonerstakken gelden alleen voor `users` (anders matchte een gast een huis zonder eigenaar) en een bewoner mag `claimed_at` niet zetten, rate limits aan (incl. `boxes:auth`); de agent logt in als box (`/data/box.json`, vervangt `gateway_id`/superuser en `GATEWAY_NAME`), neemt het huis uit de box over, volgt koppelen/loskoppelen en stopt dan schrijven naar het oude huis. Dev-box `SH-DEV-0001` hoort bij het dev-huis.
 
 ## Volgende Stappen
 1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
 3. **Claim-flow** (spec B, na box-identiteit): claimcode op de box (sticker/QR), bij koppelen nieuw of bestaand account en nieuw huis of vervanging; één account kan meerdere huizen/boxen hebben. Besloten: de box hoort bij een huis, het huis is van de bewoner. Vervangt het handmatig koppelen via `provision-box.py --house` (nu alleen dev) en vult `houses.claimed_at`/`user`.
-4. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. PocketBase-image vastpinnen.
+4. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok.
 5. **SMTP in PocketBase** instellen (nu uit): zonder dat verstuurt "Wachtwoord vergeten?" geen mail. Ook de afzender (`support@example.com`) en `appURL` goed zetten.
 6. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
 
