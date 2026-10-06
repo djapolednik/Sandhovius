@@ -8,7 +8,8 @@ type Command struct {
 	Scene   string         `json:"scene"`
 	Action  string         `json:"action"` // "turn_on", "turn_off", "toggle", "set_temperature", "provision", "run_scene"
 	Payload map[string]any `json:"payload"`
-	Status  string         `json:"status"` // "pending", "sent", "failed"
+	Status  string         `json:"status"`  // "pending", "sent", "failed"
+	Created string         `json:"created"` // PocketBase-formaat: "2006-01-02 15:04:05.000Z"
 }
 
 type commandListResponse struct {

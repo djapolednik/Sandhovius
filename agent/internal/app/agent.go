@@ -125,8 +125,14 @@ func (a *Agent) catchUpPendingCommands() {
 		log.Printf("[APP] Kon openstaande commando's niet ophalen: %v\n", err)
 		return
 	}
+	now := time.Now()
 	for _, cmd := range pending {
-		log.Printf("[APP] Openstaand commando gevonden bij opstarten: %s\n", cmd.ID)
+		if commandExpired(cmd, now) {
+			log.Printf("[APP] Openstaand commando %s is verlopen (aangemaakt %q)\n", cmd.ID, cmd.Created)
+			a.failCommand(cmd.ID, errors.New("verlopen: de box was te lang niet bereikbaar"))
+			continue
+		}
+		log.Printf("[APP] Openstaand commando gevonden: %s\n", cmd.ID)
 		a.handleCommand(cmd)
 	}
 }
