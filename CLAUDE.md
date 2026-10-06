@@ -46,7 +46,9 @@ Het combineert 100% lokale betrouwbaarheid (offline automatisering) met naadloos
 - `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Scènes/Opties; hash `#instellingen` voor Opties), commands
 - `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
 - `agent/internal/app/weather.go` — weer uit HA (Met.no) elke 30 min op `houses.weather`
-- `scripts/provision-box.py` — maakt een `boxes`-record + `box.json` (`--serial`, `--house`, `--out`); superuser uit `.env`, print nooit het geheim
+- `scripts/provision-box.py` — maakt een `boxes`-record + `box.json` (`--serial`, `--house`, `--out`) én een claimcode met printbaar SVG-blad in `sheets/` (`--app-url` of env `APP_URL`; `--reissue SERIAL` = nieuwe code voor een box zonder huis); superuser uit `.env`, print nooit geheim of code. `scripts/claimcode.py` (code genereren/normaliseren/hashen, QR via segno), `scripts/requirements.txt`
+- `backend/pb_hooks/` — `claim.pb.js` (`POST /api/sandhovius/claim` en `/release`), `mail.pb.js` + `mail_texts.js` (SMTP uit env, accountmails per `users.language` nl/en); migratie `1790750000_claim_code.js` (verborgen `boxes.claim_code_hash`, rate limits)
+- Claim-UI in `frontend/`: `SignupForm`, `VerifyNotice`, `ClaimSheet` (jsQR-camera + code intikken), `QrScanner`, `LanguageChoice`, `AccountShell`; routes `/bevestig`, `/wachtwoord`, `/koppel` (deep link uit de QR)
 - `backend/tests/` — eigen Go-module met integratietests op de PocketBase-regels (start PocketBase 0.40 op een tijdelijke `pb_data`)
 - `scripts/screenshot.py` — ingelogde screenshots (Firefox + Marionette), zie Development Setup
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
@@ -75,9 +77,12 @@ cd frontend && npx next build                     # moet slagen vóór commit
 cd agent && go vet ./... && go test ./...
 cd frontend && node --test lib/*.test.js
 cd backend/tests && go test -tags integration ./...   # regels per huis/box
+pip install -r scripts/requirements.txt                # segno, voor claimcode/sheet
+python -m unittest discover -s scripts -p "test_*.py"  # Python-tests
 
 # Dev-box (identiteit) aanmaken en in de agent zetten
-scripts/provision-box.py --serial SH-DEV-0001 --house <huis-id> --out box.json
+scripts/provision-box.py --serial SH-DEV-0001 --house <huis-id> --out box.json --app-url http://localhost:3000   # ook claimcode + sheets/<serial>.svg
+scripts/provision-box.py --reissue SH-DEV-0001 --app-url http://localhost:3000       # nieuwe code voor een box zonder huis
 docker cp box.json sandhovius-agent:/data/box.json   # in Git Bash: MSYS_NO_PATHCONV=1 ervoor; daarna box.json wissen
 docker compose restart agent
 ```
@@ -85,10 +90,11 @@ docker compose restart agent
 - Windows + Git Bash: `gofmt -l` noemt elk bestand (CRLF in de werkmap; git normaliseert bij commit, dus negeren). Geen gcc → geen `go test -race`. Docker Desktop staat in `%LOCALAPPDATA%\Programs\DockerDesktop`. Bij `docker exec … /pad` in Git Bash `MSYS_NO_PATHCONV=1` ervoor, anders wordt het pad een Windows-pad.
 - PocketBase geeft datums als `2006-01-02 15:04:05.000Z` (spatie, geen `T`): `time.RFC3339` parse faalt daarop. Migratie-historie opschonen na weggegooide migratiebestanden: `docker exec sandhovius-pocketbase /usr/local/bin/pocketbase migrate history-sync --dir=/pb_data --migrationsDir=/pb_migrations`.
 - `scripts/seed.py` (testaccount + huis vullen) staat bewust alleen lokaal (`.git/info/exclude`); het maakt zelf het huis (superuser, gekoppeld aan de testgebruiker) en een box-identiteit via `provision-box.py --house` + `docker cp`.
+- Claim-flow lokaal: mails (bevestigen, wachtwoord) komen in Mailpit, http://localhost:8025 (SMTP uit env in `docker-compose.yml`, `SMTP_HOST=mailpit`, `APP_URL`). Nieuwe of gewijzigde bestanden in `backend/pb_hooks/` worden op Windows niet altijd opgepikt door de hooks-watcher: `docker compose restart pocketbase`. De camera (QR scannen) werkt alleen op HTTPS of `localhost`; elders typt de bewoner de code in. Rate limit op claim/release is per IP, niet per gebruiker.
 - Home Assistant: http://localhost:8123 · MQTT: localhost:1883 · PocketBase: http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`: alleen voor PocketBase zelf en de scripts, de agent gebruikt ze niet meer) · PWA: http://localhost:3000
-- Visueel testen: Chrome en Edge ontbreken; de Playwright-plugin werkt niet. `SANDHOVIUS_EMAIL=… SANDHOVIUS_PASSWORD=… scripts/screenshot.py /tmp/home 1440x900 1366x768:dark 390x844` (het lokale testaccount, niet in git) logt in (token in localStorage) en maakt screenshots via Firefox headless + Marionette; het zegt ook of de pagina scrolt (Home hoort op een laptop te passen). Opties: `HASH='#kamers'`, `HOMEVIEW=on`. Firefox kan niet smaller dan ~500px. Marionette kan ook klikken, lang indrukken (`WebDriver:PerformActions`) en met pref `dom.w3c_touch_events.enabled` touch-events sturen.
+- Visueel testen: Chrome en Edge ontbreken; de Playwright-plugin werkt niet. `SANDHOVIUS_EMAIL=… SANDHOVIUS_PASSWORD=… scripts/screenshot.py /tmp/home 1440x900 1366x768:dark 390x844` (het lokale testaccount, niet in git) logt in (token in localStorage) en maakt screenshots via Firefox headless + Marionette; het zegt ook of de pagina scrolt (Home hoort op een laptop te passen). Opties: `HASH='#kamers'`, `HOMEVIEW=on`. Firefox kan niet smaller dan ~500px. Firefox Developer Edition staat op `C:/Program Files/Firefox Developer Edition/firefox.exe` (pad voor `screenshot.py`). Marionette kan ook klikken, lang indrukken (`WebDriver:PerformActions`) en met pref `dom.w3c_touch_events.enabled` touch-events sturen.
 
-## Huidige Status (2026-10-06)
+## Huidige Status (2026-10-06, claim-flow af)
 **Fase 1** ✅ — lokale stack, agent ↔ MQTT/HA.
 
 **Fase 2** grotendeels ✅:
@@ -108,15 +114,14 @@ docker compose restart agent
 - **Agent zonder PocketBase**: lokaal (MQTT, HA, geschiedenis, schema's) start altijd; `runPocketBase` logt in en verifieert de gateway met backoff (1–30 s). Na de eerste verbinding en na elke herverbinding van de command-stroom draait `onPocketBaseConnected` (online, device-cache, stand afstemmen, openstaande commando's inhalen). Schema-snapshot in `/data/schedules.json` (`SCHEDULES_FILE`). Commando's ouder dan 2 min (`commands.created`) worden `failed` "verlopen" — ook realtime, want bij een korte uitval overleeft de TCP-verbinding soms. De agent pakt alleen commando's en devices van zijn eigen huis op (meerdere boxen op één PocketBase). Scheduler tikt de bedoelde minuut (de timer ging soms ms te vroeg af → schema's liepen een minuut te laat)
 - PWA-basis: installeerbaar (manifest, voorlopig icoon), thema Licht/Donker/Automatisch, "Alles uit", "Let op"-overzicht, "Ongedaan maken" (verwijderen gaat pas na 6 s echt), kamers en favorieten ordenen (`rooms.order`, `devices.favorite_order`), meerdere huizen, wachtwoord vergeten/wijzigen, "Opnieuw proberen" bij mislukt klaarzetten (command-actie `provision`)
 
+- **Claim-flow** (spec B, `docs/superpowers/specs/2026-10-06-claim-flow-design.md`) ✅: bewoner maakt zelf een account (bevestigingsmail, wachtwoord vergeten via `/bevestig` en `/wachtwoord`; taal van mails kiesbaar in Opties) en koppelt een box met de QR/code van het sticker-blad (`/koppel`, camera of intikken): nieuw huis of vervanging van een bestaand huis; "Box ontkoppelen" laat het huis staan. Server: `/api/sandhovius/claim` en `/release` (volgorde: bevestigd → code → `replace_house`-eigenaar (404) → al gekoppeld (409)); de box bewaart alleen `claim_code_hash`. De dev-box is via de PWA als vervanging aan het dev-huis gekoppeld.
 - **Box-identiteit** (spec A, `docs/superpowers/specs/2026-10-06-box-identity-design.md`): auth-collectie `boxes` (serienummer + eigen geheim, relatie `house`), regels laten een box alleen zijn eigen huis bereiken; bewonerstakken gelden alleen voor `users` (anders matchte een gast een huis zonder eigenaar) en een bewoner mag `claimed_at` niet zetten, rate limits aan (incl. `boxes:auth`); de agent logt in als box (`/data/box.json`, vervangt `gateway_id`/superuser en `GATEWAY_NAME`), neemt het huis uit de box over, volgt koppelen/loskoppelen en stopt dan schrijven naar het oude huis. Dev-box `SH-DEV-0001` hoort bij het dev-huis.
 
 ## Volgende Stappen
 1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
-3. **Claim-flow** (spec B, na box-identiteit): claimcode op de box (sticker/QR), bij koppelen nieuw of bestaand account en nieuw huis of vervanging; één account kan meerdere huizen/boxen hebben. Besloten: de box hoort bij een huis, het huis is van de bewoner. Vervangt het handmatig koppelen via `provision-box.py --house` (nu alleen dev) en vult `houses.claimed_at`/`user`.
-4. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok.
-5. **SMTP in PocketBase** instellen (nu uit): zonder dat verstuurt "Wachtwoord vergeten?" geen mail. Ook de afzender (`support@example.com`) en `appURL` goed zetten.
-6. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
+3. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. Ook nodig: een echte SMTP-provider (nu Mailpit; `SMTP_*` + afzender in env), een echte `APP_URL` (links in mails en QR), en trusted-proxy-instellingen in PocketBase achter de proxy, anders delen alle klanten één rate-limit-bucket (limieten gaan per IP).
+4. Kleiner/los: `.gitignore`-patroon `agent/main/main` is bewust (binary, niet de map). `backend/pb_migrations/1789641627_seed_test_user.js` staat bewust niet in git (testgebruiker). Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
 
 ## Werkafspraken
 - UI-copy is Nederlands, zinsletters, geen hoofdletter-labels; zie Named Rules in DESIGN.md (o.a. Real Light Rule: alleen live apparaten gloeien).
