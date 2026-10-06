@@ -211,7 +211,19 @@ func (p *pb) login(t *testing.T, collection, identity, password string) string {
 // create maakt als superuser een record en geeft het id terug.
 func (p *pb) create(t *testing.T, collection string, body map[string]any) string {
 	t.Helper()
-	status, out := p.do(t, p.AdminToken, "POST", "/api/collections/"+collection+"/records", body)
+	// De standaardregel *:create (20 per 5 s) kan een fixture afremmen: bij 429
+	// kort wachten en opnieuw (max ~10 s); de limiet zelf blijft aan.
+	deadline := time.Now().Add(10 * time.Second)
+	var status int
+	var out map[string]any
+	for {
+		status, out = p.do(t, p.AdminToken, "POST", "/api/collections/"+collection+"/records", body)
+		if status == 429 && time.Now().Before(deadline) {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		break
+	}
 	if status != 200 {
 		t.Fatalf("create in %s mislukt: status %d: %v", collection, status, out)
 	}
