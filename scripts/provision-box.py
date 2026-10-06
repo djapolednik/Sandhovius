@@ -129,11 +129,13 @@ def main():
 
         secret = base64.b64encode(secrets.token_bytes(32)).decode()
         code = claimcode.new_code()
-        body = {'serial': args.serial, 'password': secret, 'passwordConfirm': secret,
-                'claim_code_hash': claimcode.code_hash(code)}
+        body = {'serial': args.serial, 'password': secret, 'passwordConfirm': secret}
         if args.house:
             body['house'] = args.house
         record = request(url, 'POST', '/api/collections/boxes/records', body, token)
+        # Hidden velden worden bij aanmaken genegeerd; de hash gaat dus via een PATCH.
+        request(url, 'PATCH', f'/api/collections/boxes/records/{record["id"]}',
+                {'claim_code_hash': claimcode.code_hash(code)}, token)
     except RuntimeError as e:
         sys.exit(f'mislukt: {e}')
 
