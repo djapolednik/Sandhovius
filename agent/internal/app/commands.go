@@ -1,6 +1,8 @@
 package app
 
 import (
+	"errors"
+	"log"
 	"time"
 
 	"sandhovius/local-agent/internal/pocketbase"
@@ -31,4 +33,17 @@ func commandExpired(cmd pocketbase.Command, now time.Time) bool {
 		}
 	}
 	return now.Sub(created) > commandMaxAge
+}
+
+// failIfExpired markeert een te oud commando als mislukt. Geldt voor
+// inhalen én realtime: bij een korte uitval blijft de TCP-verbinding soms
+// leven en komt een event pas na het herstel binnen. Pas aanroepen na de
+// huis-check, anders markeert deze box andermans commando's.
+func (a *Agent) failIfExpired(cmd pocketbase.Command) bool {
+	if !commandExpired(cmd, time.Now()) {
+		return false
+	}
+	log.Printf("[APP] Commando %s is verlopen (aangemaakt %q)\n", cmd.ID, cmd.Created)
+	a.failCommand(cmd.ID, errors.New("verlopen: de box was te lang niet bereikbaar"))
+	return true
 }

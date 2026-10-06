@@ -133,13 +133,7 @@ func (a *Agent) catchUpPendingCommands() {
 		log.Printf("[APP] Kon openstaande commando's niet ophalen: %v\n", err)
 		return
 	}
-	now := time.Now()
 	for _, cmd := range pending {
-		if commandExpired(cmd, now) {
-			log.Printf("[APP] Openstaand commando %s is verlopen (aangemaakt %q)\n", cmd.ID, cmd.Created)
-			a.failCommand(cmd.ID, errors.New("verlopen: de box was te lang niet bereikbaar"))
-			continue
-		}
 		log.Printf("[APP] Openstaand commando gevonden: %s\n", cmd.ID)
 		a.handleCommand(cmd)
 	}
@@ -333,6 +327,9 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 	if device.Gateway != a.house() {
 		return
 	}
+	if a.failIfExpired(cmd) {
+		return
+	}
 	// "provision": opnieuw klaarzetten na een mislukte eerste keer (knop
 	// "Opnieuw proberen" in de app). Heeft het device inmiddels al een
 	// entity_id, dan is er niets meer te doen.
@@ -400,6 +397,9 @@ func (a *Agent) runScene(cmd pocketbase.Command) {
 	}
 	if scene.House != a.house() {
 		return // scène van een andere box: die handelt het zelf af
+	}
+	if a.failIfExpired(cmd) {
+		return
 	}
 
 	if err := a.executeScene(*scene, a.pbClient.GetDevice); err != nil {
