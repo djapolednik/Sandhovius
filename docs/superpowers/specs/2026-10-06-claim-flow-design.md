@@ -22,6 +22,7 @@ niet claimen. Eén account kan meerdere huizen hebben, elk met een eigen box
 | Claimcode bewaren | Alleen een hash in de database; opnieuw printen = nieuwe code uitgeven (`--reissue`) | Een datalek levert geen claimbare boxen op; geen extra sleutel om te beheren. |
 | Code na koppelen | Gekoppelde box is niet opnieuw te claimen; na ontkoppelen werkt dezelfde code weer | De handleiding gaat bij verkoop mee met de box. |
 | QR in de PWA | Camera + jsQR (Apache-2.0); altijd ook overtikken | `BarcodeDetector` ontbreekt in Safari en Firefox. |
+| Taal van de mails | Per account: `users.language` (`nl`, `en`; standaard `nl`), gekozen bij het aanmaken (voorgevuld uit de browsertaal), te wijzigen in Opties | De bevestigingsmail gaat weg vóór er een box gekoppeld is; een taal per box of huis zou die eerste mail niet dekken. Nederlands en Engels om te beginnen (aanname). |
 
 ## Buiten scope
 
@@ -69,6 +70,7 @@ ongeluk de box van een bewoner losmaakt.
   ook niet voor de box zelf; alleen superuser en hooks).
 - Geen andere schemawijzigingen: `houses.claimed_at` (spec A, alleen via de
   hook te zetten), `boxes.house`, `houses.user` bestaan al.
+- `users.language`: select `nl` | `en`, niet verplicht (leeg = `nl`); de bewoner zet het zelf (bestaande updateRule `id = @request.auth.id`).
 - `users`: inloggen mag met een onbevestigd adres (de app toont dan
   "Bevestig je e-mailadres"); alleen koppelen eist `verified`.
 
@@ -105,6 +107,11 @@ migratie zoals in spec A.
   `SMTP_PORT`, optioneel `SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_TLS`; afzender
   `MAIL_FROM` (standaard `noreply@sandhovius.local`) en naam "Sandhovius";
   `appURL` = `APP_URL`. Niets van dit alles in git of migraties.
+- Taal per mail: hooks `onMailerRecordVerificationSend` en
+  `onMailerRecordPasswordResetSend` zetten onderwerp en tekst uit
+  `backend/pb_hooks/mail_texts.js` (`nl`, `en`) op basis van
+  `e.record.language`; leeg of onbekend → `nl`. De sjablonen in de
+  collectie (migratie) zijn de Nederlandse terugval.
 - Migratie: Nederlandse onderwerpregel en tekst voor de bevestigingsmail van
   `users`, link `{APP_URL}/bevestig?token={TOKEN}`. Wachtwoord-vergeten-mail
   ook in het Nederlands, link `{APP_URL}/wachtwoord?token={TOKEN}`.
@@ -127,7 +134,8 @@ migratie zoals in spec A.
 Lees `DESIGN.md` vóór het UI-werk; Nederlandse copy, zinsletters; past in de
 login-bento en de bestaande sheets.
 
-- **Login**: "Nog geen account? Account aanmaken" → e-mail, wachtwoord, herhaal.
+- **Login**: "Nog geen account? Account aanmaken" → e-mail, wachtwoord, herhaal, taal van e-mails (Nederlands/English, voorgevuld uit de browsertaal).
+- **Opties**: "Taal van e-mails" (Nederlands/English).
   Daarna "We hebben een mail gestuurd naar …" + "Opnieuw sturen".
 - **`/bevestig?token=…`**: bevestigt via PocketBase, toont resultaat, door naar de app.
 - **`/wachtwoord?token=…`**: nieuw wachtwoord + herhaal, via
@@ -170,6 +178,8 @@ login-bento en de bestaande sheets.
 - Rate limit grijpt in na 10 pogingen.
 - `claim_code_hash` komt in geen enkel antwoord voor (bewoner, box).
 - Reissue: oude code werkt niet meer, nieuwe wel.
+
+**Mail-taal** (integratie): bevestigingsmail en resetmail voor een account met `en` hebben het Engelse onderwerp, met `nl` of leeg het Nederlandse (onderschept in de hook of via een SMTP-vanger in de test).
 
 **Frontend** (`node --test`): QR-link uitlezen, code normaliseren
 (streepjes, spaties, kleine letters, O/I/L).

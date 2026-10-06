@@ -19,6 +19,7 @@
 - Statussen en teksten (exact): 403 `Bevestig eerst je e-mailadres` · 400 `Deze code klopt niet` (ook bij onbekend serienummer) · 409 `Deze box is al gekoppeld` · 404 voor een huis dat niet van de gebruiker is. Standaard huisnaam `Thuis`.
 - Rate limit: label `/api/sandhovius/`, `@auth`, 10 per 60 s.
 - `boxes.claim_code_hash`: text, `hidden: true`.
+- Mailtaal: `users.language` select `nl` | `en` (leeg = `nl`); teksten in `backend/pb_hooks/mail_texts.js`; hooks `onMailerRecordVerificationSend` en `onMailerRecordPasswordResetSend` kiezen per mail; collectie-sjablonen = Nederlandse terugval.
 - Mail uit env (in `onBootstrap`): `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_TLS`, `MAIL_FROM` (standaard `noreply@sandhovius.local`), afzendernaam `Sandhovius`, `APP_URL` → `meta.appURL`. Mail-links: `{APP_URL}/bevestig?token={TOKEN}`, `{APP_URL}/wachtwoord?token={TOKEN}`.
 - Dependencies: `jsqr` 1.4.0 (Apache-2.0), `segno` (BSD-3), Mailpit-image op een vaste versie (MIT). Niets anders erbij.
 - UI: lees `DESIGN.md` vóór UI-werk; Nederlandse copy met zinsletters; nieuwe schermen als componenten in `frontend/components/` (niet `page.js` laten groeien).
@@ -39,7 +40,7 @@
 ### Task 1: Mailpit, mail uit env en Nederlandse mails
 
 **Files:**
-- Create: `backend/pb_hooks/mail.pb.js`, `backend/pb_migrations/1790740000_mail_templates.js`, `backend/tests/mail_test.go`
+- Create: `backend/pb_hooks/mail.pb.js`, `backend/pb_hooks/mail_texts.js`, `backend/pb_migrations/1790740000_mail_templates.js` (sjablonen + veld `users.language`), `backend/tests/mail_test.go`
 - Modify: `backend/tests/pbtest_test.go` (`startPB` start met `--hooksDir ../pb_hooks`; optionele env via `startPBEnv(t, env map[string]string) *pb`), `docker-compose.yml` (service `mailpit`; `pocketbase`: env + volume `./backend/pb_hooks:/pb_hooks`)
 
 **Interfaces:**
@@ -48,6 +49,8 @@
 - [ ] **Step 1: Failing tests** in `mail_test.go`:
   - `TestSMTPFromEnv`: `startPBEnv` met `SMTP_HOST=127.0.0.1`, `SMTP_PORT=2525`, `APP_URL=http://pwa.test`, `MAIL_FROM=x@y.z` → superuser `GET /api/settings`: `smtp.enabled == true`, `smtp.host == "127.0.0.1"`, `smtp.port == 2525`, `meta.appURL == "http://pwa.test"`, `meta.senderAddress == "x@y.z"`, `meta.senderName == "Sandhovius"`.
   - `TestNoSMTPWithoutEnv`: zonder env → `smtp.enabled == false`.
+  - `TestMailLanguage`: een kleine SMTP-vanger in de test (`net.Listen` op een vrije poort, minimaal SMTP: 220/250/354/221, berichten bewaren) als `SMTP_HOST`/`SMTP_PORT`; account met `language: "en"` → `request-verification` → onderwerp Engels en link `…/bevestig?token=`; account met `nl` en zonder language → Nederlands; zelfde voor `request-password-reset` met `/wachtwoord?token=`.
+  - `TestUserLanguageField`: bewoner zet eigen `language` op `en` → 200; op `de` → 400.
   - `TestMailTemplatesDutch`: superuser `GET /api/collections/users` → `verificationTemplate.body` bevat `{APP_URL}/bevestig?token={TOKEN}` en geen `/_/#/`; `resetPasswordTemplate.body` bevat `{APP_URL}/wachtwoord?token={TOKEN}`; beide onderwerpen Nederlands (bevatten "Sandhovius").
 - [ ] **Step 2: Draaien, moet falen.**
 - [ ] **Step 3: Implementeren.** Hook (`onBootstrap`, na `e.next()`, settings opslaan alleen als `SMTP_HOST` gezet is); migratie zet onderwerp + body van beide sjablonen (korte Nederlandse tekst, knop/link). Compose: `mailpit` (vaste tag, verifieer met `docker manifest inspect`), poort `8025:8025`; `pocketbase` env `SMTP_HOST=mailpit`, `SMTP_PORT=1025`, `APP_URL=http://localhost:3000`.
@@ -111,11 +114,11 @@
 - Modify: `frontend/app/page.js` (login-kaart: wissel naar account aanmaken), styles in `frontend/app/styles/login.css`
 
 **Interfaces:**
-- Produces: `account.validateSignup({email, password, passwordConfirm}) -> string | null` (Nederlandse foutmelding of null; wachtwoord min. 8 tekens zoals PocketBase), `account.errorMessage(err) -> string` (PocketBase-fouten → Nederlandse tekst). `VerifyNotice` (props: `email`, `onResend`) wordt in Task 5 hergebruikt.
+- Produces: `account.defaultLanguage(navigatorLanguages: string[]) -> "nl" | "en"` (eerste die met `nl` of `en` begint, anders `nl`), `account.validateSignup({email, password, passwordConfirm}) -> string | null` (Nederlandse foutmelding of null; wachtwoord min. 8 tekens zoals PocketBase), `account.errorMessage(err) -> string` (PocketBase-fouten → Nederlandse tekst). `VerifyNotice` (props: `email`, `onResend`) wordt in Task 5 hergebruikt.
 
-- [ ] **Step 1: Failing tests** (`node --test`): `validateSignup` (leeg e-mailadres, ongelijke wachtwoorden, te kort, geldig → null), `errorMessage` (bestaand e-mailadres → "Er bestaat al een account met dit e-mailadres", 429 → "Te veel pogingen, probeer het over een minuut opnieuw", onbekend → algemene tekst).
+- [ ] **Step 1: Failing tests** (`node --test`): `defaultLanguage` (`["en-GB","nl"]` → `en`, `["nl-BE"]` → `nl`, `["de"]` → `nl`, `[]` → `nl`), `validateSignup` (leeg e-mailadres, ongelijke wachtwoorden, te kort, geldig → null), `errorMessage` (bestaand e-mailadres → "Er bestaat al een account met dit e-mailadres", 429 → "Te veel pogingen, probeer het over een minuut opnieuw", onbekend → algemene tekst).
 - [ ] **Step 2: Draaien, moet falen.**
-- [ ] **Step 3: Implementeren** (lees `DESIGN.md`): aanmaken via `pb.collection('users').create` + `requestVerification`, daarna `VerifyNotice`; `/bevestig` → `confirmVerification(token)`; `/wachtwoord` → nieuw wachtwoord + herhaal → `confirmPasswordReset`. Na bevestigen ververst de app de auth (`authRefresh`) zodat `verified` klopt.
+- [ ] **Step 3: Implementeren** (lees `DESIGN.md`): aanmaken via `pb.collection('users').create` (met `language`) + `requestVerification`; taalkeuze in het formulier en "Taal van e-mails" in Opties (`SettingsView`), daarna `VerifyNotice`; `/bevestig` → `confirmVerification(token)`; `/wachtwoord` → nieuw wachtwoord + herhaal → `confirmPasswordReset`. Na bevestigen ververst de app de auth (`authRefresh`) zodat `verified` klopt.
 - [ ] **Step 4: Verifiëren.** Tests + `npx next build` groen; `docker compose up -d --build frontend`; handmatig: account aanmaken met een testadres, mail in Mailpit, link openen → bevestigd; "Wachtwoord vergeten" → mail → `/wachtwoord` → nieuw wachtwoord → inloggen (Review Focus 2); screenshots 1440×900 en 390×844 (`scripts/screenshot.py`).
 - [ ] **Step 5: Commit.** `App: create an account, confirm the email, reset the password`
 
