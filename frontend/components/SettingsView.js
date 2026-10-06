@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import LanguageChoice from './LanguageChoice'
 import { useTheme } from '../app/ThemeContext'
 import { ArrowUpRightIcon, CheckIcon, RoomsIcon } from '../lib/icons'
 
@@ -19,11 +21,28 @@ export default function SettingsView({
   onSelectHouse,
   roomCount,
   userEmail,
+  language,
+  onChangeLanguage,
   onOpenHouse,
   onChangePassword,
   onLogout,
 }) {
   const { mode, setMode } = useTheme()
+  const [mailLanguage, setMailLanguage] = useState(language)
+  const [languageError, setLanguageError] = useState('')
+
+  async function chooseLanguage(value) {
+    const previous = mailLanguage
+    setMailLanguage(value)
+    setLanguageError('')
+    try {
+      await onChangeLanguage(value)
+    } catch (err) {
+      console.error('[taal van e-mails]', err)
+      setMailLanguage(previous)
+      setLanguageError('De taal kon niet worden gewijzigd. Probeer het zo opnieuw.')
+    }
+  }
 
   return (
     <div className="settings-view">
@@ -95,6 +114,13 @@ export default function SettingsView({
           Account
         </h2>
         {userEmail && <p className="settings-account-email">Ingelogd als {userEmail}</p>}
+        <h3 className="settings-subheading">Taal van e-mails</h3>
+        <LanguageChoice value={mailLanguage} onChange={chooseLanguage} legend="Nederlands of English" />
+        {languageError && (
+          <p className="login-error" role="alert">
+            {languageError}
+          </p>
+        )}
         <div className="settings-account-actions">
           <button type="button" className="btn btn-secondary settings-logout" onClick={onChangePassword}>
             Wachtwoord wijzigen

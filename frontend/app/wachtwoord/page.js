@@ -1,0 +1,114 @@
+'use client'
+
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import AccountShell from '../../components/AccountShell'
+import { createPb } from '../../lib/pocketbase'
+import { MIN_PASSWORD_LENGTH } from '../../lib/account'
+
+function Reset() {
+  const token = useSearchParams().get('token')
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [invalid, setInvalid] = useState(!token)
+
+  async function submit(e) {
+    e.preventDefault()
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Kies een wachtwoord van minstens ${MIN_PASSWORD_LENGTH} tekens`)
+      return
+    }
+    if (password !== passwordConfirm) {
+      setError('De twee wachtwoorden zijn niet gelijk')
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      await createPb().collection('users').confirmPasswordReset(token, password, passwordConfirm)
+      setDone(true)
+    } catch (err) {
+      console.error('[wachtwoord resetten]', err)
+      if (err?.status === 400 && err?.response?.data?.token) setInvalid(true)
+      else if (err?.status === 429) setError('Te veel pogingen, probeer het over een minuut opnieuw')
+      else if (err?.status === 0) setError('Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw')
+      else setError('Het wachtwoord kon niet worden gewijzigd. Probeer het zo opnieuw')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (done) {
+    return (
+      <AccountShell title="Je wachtwoord is gewijzigd.">
+        <div className="form-stack">
+          <a className="btn btn-primary" href="/">
+            Naar inloggen
+          </a>
+        </div>
+      </AccountShell>
+    )
+  }
+  if (invalid) {
+    return (
+      <AccountShell title="Deze link werkt niet meer.">
+        <div className="form-stack">
+          <p className="login-note" role="alert">
+            De link is verlopen of al gebruikt. Kies op het inlogscherm &ldquo;Wachtwoord vergeten?&rdquo; voor een
+            nieuwe.
+          </p>
+          <a className="btn btn-primary" href="/">
+            Naar inloggen
+          </a>
+        </div>
+      </AccountShell>
+    )
+  }
+  return (
+    <AccountShell title="Kies een nieuw wachtwoord.">
+      <form onSubmit={submit} className="form-stack">
+        <label className="form-field">
+          <span className="form-label">Nieuw wachtwoord</span>
+          <input
+            className="input"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </label>
+        <label className="form-field">
+          <span className="form-label">Nog een keer</span>
+          <input
+            className="input"
+            type="password"
+            autoComplete="new-password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            required
+          />
+        </label>
+        {error && (
+          <p className="login-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          Wachtwoord opslaan
+        </button>
+      </form>
+    </AccountShell>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <Reset />
+    </Suspense>
+  )
+}

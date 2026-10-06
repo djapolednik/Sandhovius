@@ -1268,3 +1268,15 @@
     transform: none;
   }
 }
+
+.settings-subheading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.settings-account .segmented,
+.settings-section .segmented + .login-error {
+  margin-bottom: 0.85rem;
+}

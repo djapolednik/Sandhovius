@@ -17,6 +17,7 @@ import RoomTabs from '../components/RoomTabs'
 import SettingsView from '../components/SettingsView'
 import FavoritesOrderModal from '../components/FavoritesOrderModal'
 import ChangePasswordModal from '../components/ChangePasswordModal'
+import SignupForm from '../components/SignupForm'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -124,6 +125,7 @@ export default function Home() {
   // resetlink laat mailen; resetSent toont daarna de bevestiging.
   const [resetMode, setResetMode] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [signupMode, setSignupMode] = useState(false)
   // Meerdere huizen (bv. thuis en een vakantiehuis): welk huis je bekijkt,
   // onthouden op dit apparaat. Zonder keuze het eerste.
   const [selectedHouseId, setSelectedHouseId] = useState(null)
@@ -309,6 +311,10 @@ export default function Home() {
     })
     await pb.collection('users').authWithPassword(record.email, newPassword)
     showToast('Je wachtwoord is gewijzigd')
+  }
+
+  async function changeLanguage(language) {
+    await pb.collection('users').update(pb.authStore.record.id, { language })
   }
 
   function logout() {
@@ -1009,11 +1015,21 @@ export default function Home() {
           </div>
           <div className="login-card">
             <h1 className="login-title">Sandhovius</h1>
-            <p className="login-lede">Log in om je huis te bedienen.</p>
+            <p className="login-lede">{signupMode ? 'Maak een account aan.' : 'Log in om je huis te bedienen.'}</p>
             {/* Zichtbare labels i.p.v. alleen placeholders: een placeholder
                 verdwijnt zodra je begint te typen. autoComplete laat de
                 wachtwoordbeheerder van de telefoon het formulier invullen. */}
-            {resetMode ? (
+            {signupMode ? (
+              <SignupForm
+                pb={pb}
+                initialEmail={email}
+                onBack={(address) => {
+                  setEmail(address)
+                  setSignupMode(false)
+                  setError('')
+                }}
+              />
+            ) : resetMode ? (
               resetSent ? (
                 <div className="form-stack">
                   <p className="login-note" role="status">
@@ -1117,6 +1133,16 @@ export default function Home() {
                   }}
                 >
                   Wachtwoord vergeten?
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-plain login-link"
+                  onClick={() => {
+                    setSignupMode(true)
+                    setError('')
+                  }}
+                >
+                  Account aanmaken
                 </button>
               </form>
             )}
@@ -1314,6 +1340,8 @@ export default function Home() {
           onSelectHouse={selectHouse}
           roomCount={roomsInHouse.length}
           userEmail={userEmail}
+          language={pb.authStore.record?.language || 'nl'}
+          onChangeLanguage={changeLanguage}
           onOpenHouse={() => setHouseModalOpen(true)}
           onChangePassword={() => setChangingPassword(true)}
           onLogout={logout}
