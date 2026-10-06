@@ -24,7 +24,12 @@ type Agent struct {
 	devices       *deviceCache
 	gatewayName   string
 	gatewayIDFile string
-	gatewayID     string
+
+	// gatewayID is het houses-record van deze box. Alleen via house() en
+	// setHouse(): scheduler, hartslag en weer lezen het al terwijl de
+	// verbindingslus het nog verifieert.
+	houseMu   sync.RWMutex
+	gatewayID string
 
 	historyRetention time.Duration
 
@@ -372,7 +377,7 @@ func (a *Agent) runScene(cmd pocketbase.Command) {
 		a.failCommand(cmd.ID, err)
 		return
 	}
-	if scene.House != a.gatewayID {
+	if scene.House != a.house() {
 		err := fmt.Errorf("scène %s hoort niet bij dit huis", scene.ID)
 		log.Printf("[APP] Scène-commando %s geweigerd: %v\n", cmd.ID, err)
 		a.failCommand(cmd.ID, err)
@@ -486,8 +491,20 @@ func (a *Agent) registerGateway() error {
 		}
 	}
 
-	a.gatewayID = gateway.ID
-	return a.pbClient.SetGatewayStatus(a.gatewayID, "online")
+	a.setHouse(gateway.ID)
+	return a.pbClient.SetGatewayStatus(gateway.ID, "online")
+}
+
+func (a *Agent) house() string {
+	a.houseMu.RLock()
+	defer a.houseMu.RUnlock()
+	return a.gatewayID
+}
+
+func (a *Agent) setHouse(id string) {
+	a.houseMu.Lock()
+	a.gatewayID = id
+	a.houseMu.Unlock()
 }
 
 // readGatewayID leest het opgeslagen gateway-ID. Een ontbrekend bestand is
@@ -535,7 +552,11 @@ func (a *Agent) runHeartbeat() {
 		case <-a.ctx.Done():
 			return
 		case <-ticker.C:
-			if err := a.pbClient.SetGatewayStatus(a.gatewayID, "online"); err != nil {
+			house := a.house()
+			if house == "" {
+				continue // nog geen huis: niets om te melden
+			}
+			if err := a.pbClient.SetGatewayStatus(house, "online"); err != nil {
 				log.Printf("[APP] Hartslag naar PocketBase mislukt: %v\n", err)
 			}
 		}
@@ -720,8 +741,8 @@ func (a *Agent) Stop() {
 
 	a.cancel()
 
-	if a.gatewayID != "" {
-		if err := a.pbClient.SetGatewayStatus(a.gatewayID, "offline"); err != nil {
+	if house := a.house(); house != "" {
+		if err := a.pbClient.SetGatewayStatus(house, "offline"); err != nil {
 			log.Printf("[APP] Kon gateway-status niet op offline zetten: %v\n", err)
 		}
 	}

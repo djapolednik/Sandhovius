@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -98,15 +99,19 @@ func (a *Agent) runScheduler() {
 }
 
 func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
-	schedules, err := a.pbClient.ListSchedules(a.gatewayID)
+	house := a.house()
+	if house == "" {
+		return nil, errors.New("nog geen huis bekend")
+	}
+	schedules, err := a.pbClient.ListSchedules(house)
 	if err != nil {
 		return nil, err
 	}
-	scenes, err := a.pbClient.ListScenes(a.gatewayID)
+	scenes, err := a.pbClient.ListScenes(house)
 	if err != nil {
 		return nil, err
 	}
-	devices, err := a.pbClient.ListHouseDevices(a.gatewayID)
+	devices, err := a.pbClient.ListHouseDevices(house)
 	if err != nil {
 		return nil, err
 	}
