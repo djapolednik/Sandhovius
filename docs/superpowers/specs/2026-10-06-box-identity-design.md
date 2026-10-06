@@ -132,11 +132,12 @@ Overzetten van de huidige dev-box: `provision-box.py --serial SH-DEV-0001
 daarna uit `docker-compose.yml` voor de agent: `POCKETBASE_ADMIN_*`,
 `GATEWAY_NAME`, `GATEWAY_ID_FILE`. `/data/gateway_id` mag weg.
 
-Voorwaarde: de twee migraties die in de lokale database staan maar niet in
-git (`1790600000_command_lifecycle.js`,
-`1790700000_seed_device_state_updated_at.js`) eerst uitzoeken. De regels
-hier verwijzen alleen naar velden uit git, maar de regeltest draait op een
-verse database en moet hetzelfde schema zien als productie.
+De twee migraties die alleen in de lokale database stonden
+(`1790600000_command_lifecycle.js`, `1790700000_seed_device_state_updated_at.js`)
+zijn uitgezocht: `commands.updated` is vastgelegd in
+`1790650000_command_updated.js`, `sent_at` (nooit gevuld) en de eenmalige
+data-aanvulling zijn weg, en de migratiehistorie is gesynchroniseerd. Een
+verse database en de dev-database hebben hetzelfde schema.
 
 ## Testen
 
@@ -167,9 +168,8 @@ box via de API en probeer het).
 
 ## Volgorde van bouwen
 
-1. Onbekende migraties uitzoeken (met de gebruiker).
-2. Migratie: `boxes`, `claimed_at`, regels, rate limit + regeltest.
-3. `provision-box.py`.
-4. Agent: `box.json`, login als box, huis uit record, claim/wissel-check,
+1. Migratie: `boxes`, `claimed_at`, regels, rate limit + regeltest.
+2. `provision-box.py`.
+3. Agent: `box.json`, login als box, huis uit record, claim/wissel-check,
    oude registratie weg.
-5. Dev-omgeving overzetten, `docker-compose.yml`, CLAUDE.md.
+4. Dev-omgeving overzetten, `docker-compose.yml`, CLAUDE.md.
