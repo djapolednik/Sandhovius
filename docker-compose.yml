@@ -96,7 +96,10 @@ services:
   # 5. Pocketbase (Backend database)
   # ==========================================
   pocketbase:
-    image: ghcr.io/muchobien/pocketbase:latest
+    # Vaste versie, gelijk aan de integratietests (backend/tests, pbVersion):
+    # de toegangsregels leunen op hoe deze versie request-bodies normaliseert.
+    # Upgraden = hier en in pbtest_test.go tegelijk, en de tests draaien.
+    image: ghcr.io/muchobien/pocketbase:0.40.4
     container_name: sandhovius-pocketbase
     restart: unless-stopped
     ports:
