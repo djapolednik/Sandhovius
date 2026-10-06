@@ -24,6 +24,7 @@ type Agent struct {
 	devices       *deviceCache
 	gatewayName   string
 	gatewayIDFile string
+	schedulesFile string // schema-snapshot, zodat schema's zonder PocketBase lopen
 
 	// gatewayID is het houses-record van deze box. Alleen via house() en
 	// setHouse(): scheduler, hartslag en weer lezen het al terwijl de
@@ -44,7 +45,7 @@ type Agent struct {
 	cancel context.CancelFunc
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName, gatewayIDFile string, historyRetentionDays int) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName, gatewayIDFile string, historyRetentionDays int, schedulesFile string) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Agent{
 		mqttClient:       mqttClient,
@@ -54,6 +55,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 		devices:          newDeviceCache(pbClient),
 		gatewayName:      gatewayName,
 		gatewayIDFile:    gatewayIDFile,
+		schedulesFile:    schedulesFile,
 		deviceNames:      make(map[string]string),
 		historyRetention: time.Duration(historyRetentionDays) * 24 * time.Hour,
 		ctx:              ctx,

@@ -106,3 +106,55 @@ func TestTickWithoutAnySnapshotDoesNothing(t *testing.T) {
 	}
 	s.tick(time.Date(2027, 10, 4, 23, 0, 0, 0, loc))
 }
+
+func TestTickSavesOnlyAfterSuccessfulFetch(t *testing.T) {
+	loc := amsterdam(t)
+	snap := &scheduleSnapshot{}
+	fail := false
+	saves := 0
+	s := &scheduler{
+		fetch: func() (*scheduleSnapshot, error) {
+			if fail {
+				return nil, errors.New("pocketbase weg")
+			}
+			return snap, nil
+		},
+		run:  func(*scheduleSnapshot, pocketbase.Schedule, time.Time) {},
+		save: func(*scheduleSnapshot) error { saves++; return nil },
+	}
+	s.tick(time.Date(2027, 10, 4, 22, 59, 0, 0, loc))
+	fail = true
+	s.tick(time.Date(2027, 10, 4, 23, 0, 0, 0, loc))
+	if saves != 1 {
+		t.Errorf("saves = %d, want 1", saves)
+	}
+}
+
+func TestTickRunsWhenSaveFails(t *testing.T) {
+	loc := amsterdam(t)
+	snap := &scheduleSnapshot{schedules: []pocketbase.Schedule{schedule("a", "23:00", "mon")}}
+	runs := 0
+	s := &scheduler{
+		fetch: func() (*scheduleSnapshot, error) { return snap, nil },
+		run:   func(*scheduleSnapshot, pocketbase.Schedule, time.Time) { runs++ },
+		save:  func(*scheduleSnapshot) error { return errors.New("schijf vol") },
+	}
+	s.tick(time.Date(2027, 10, 4, 23, 0, 0, 0, loc))
+	if runs != 1 {
+		t.Errorf("runs = %d, want 1", runs)
+	}
+}
+
+func TestTickUsesSnapshotFromFile(t *testing.T) {
+	loc := amsterdam(t)
+	runs := 0
+	s := &scheduler{
+		snap:  &scheduleSnapshot{schedules: []pocketbase.Schedule{schedule("a", "23:00", "mon")}},
+		fetch: func() (*scheduleSnapshot, error) { return nil, errors.New("pocketbase weg") },
+		run:   func(*scheduleSnapshot, pocketbase.Schedule, time.Time) { runs++ },
+	}
+	s.tick(time.Date(2027, 10, 4, 23, 0, 0, 0, loc))
+	if runs != 1 {
+		t.Errorf("runs = %d, want 1", runs)
+	}
+}

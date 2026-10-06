@@ -34,6 +34,11 @@ type Config struct {
 		DBPath        string
 		RetentionDays int
 	}
+	Schedules struct {
+		// File bewaart de laatste schema-snapshot, zodat schema's ook na
+		// een herstart zonder PocketBase lopen.
+		File string
+	}
 }
 
 func env(key, def string) string {
@@ -56,6 +61,7 @@ func LoadConfig() (*Config, error) {
 	c.Gateway.Name = env("GATEWAY_NAME", "Sandhovius Gateway")
 	c.Gateway.IDFile = env("GATEWAY_ID_FILE", "/data/gateway_id")
 	c.History.DBPath = env("HISTORY_DB_PATH", "/data/history.db")
+	c.Schedules.File = env("SCHEDULES_FILE", "/data/schedules.json")
 	c.History.RetentionDays = 30
 	if n, err := strconv.Atoi(os.Getenv("HISTORY_RETENTION_DAYS")); err == nil && n > 0 {
 		c.History.RetentionDays = n

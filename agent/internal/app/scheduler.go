@@ -49,11 +49,13 @@ func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
 	return &device, nil
 }
 
-// scheduler is de klok: elke minuut één tick. fetch en run zijn functies
-// zodat de tests zonder PocketBase en Home Assistant kunnen.
+// scheduler is de klok: elke minuut één tick. fetch, run en save zijn
+// functies zodat de tests zonder PocketBase, Home Assistant en schijf
+// kunnen. save mag nil zijn.
 type scheduler struct {
 	fetch      func() (*scheduleSnapshot, error)
 	run        func(snap *scheduleSnapshot, s pocketbase.Schedule, now time.Time)
+	save       func(snap *scheduleSnapshot) error
 	snap       *scheduleSnapshot
 	lastMinute string
 }
@@ -71,6 +73,13 @@ func (s *scheduler) tick(now time.Time) {
 		log.Printf("[SCHEMA] Schema's verversen mislukt, laatst bekende worden gebruikt: %v\n", err)
 	} else {
 		s.snap = fresh
+		// Opslaan is bijzaak: een volle schijf mag een schema niet
+		// tegenhouden, dus alleen loggen.
+		if s.save != nil {
+			if err := s.save(fresh); err != nil {
+				log.Printf("[SCHEMA] Schema's opslaan mislukt: %v\n", err)
+			}
+		}
 	}
 	if s.snap == nil {
 		return
@@ -86,7 +95,14 @@ func (s *scheduler) tick(now time.Time) {
 // volgende minuut over; REST-calls naar PocketBase hebben een timeout van
 // 15 s, dus dat gebeurt alleen als Home Assistant zelf hangt.
 func (a *Agent) runScheduler() {
-	s := &scheduler{fetch: a.fetchScheduleSnapshot, run: a.runSchedule}
+	s := &scheduler{
+		snap:  a.loadScheduleSnapshot(),
+		fetch: a.fetchScheduleSnapshot,
+		run:   a.runSchedule,
+		save: func(snap *scheduleSnapshot) error {
+			return saveSnapshot(a.schedulesFile, a.house(), snap, time.Now())
+		},
+	}
 	for {
 		next := time.Now().Truncate(time.Minute).Add(time.Minute)
 		select {
