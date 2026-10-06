@@ -225,3 +225,25 @@ func TestCommandExpired(t *testing.T) {
 - [ ] **Step 3: CLAUDE.md bijwerken.** Statusregel onder Fase 2 (agent start/herstelt zonder PocketBase, `/data/schedules.json`, commando's verlopen na 2 min); Volgende Stappen punt 1 weghalen, punt 7: `commands` heeft nu `created`.
 
 - [ ] **Step 4: Commit.** `Docs: agent runs without PocketBase in CLAUDE.md`
+
+---
+
+### Task 7: Alleen commando's van het eigen huis
+
+Toegevoegd na de plan-review (gebruiker: "het bestaande gat ook oplossen"). De agent ziet als superuser de commando's van álle huizen: `ListPendingCommands` filtert niet op huis, en de realtime-stroom levert alles. Met meerdere boxen op één PocketBase (fase 3) voert box A dan andermans device-commando's uit, en markeert hij andermans scène-commando's als `failed`.
+
+**Files:**
+- Create: `agent/internal/pocketbase/commands_test.go`
+- Modify: `agent/internal/pocketbase/commands.go` (`ListPendingCommands(house string)`, filter-helper)
+- Modify: `agent/internal/app/agent.go` (`handleCommand`, `runScene`, `catchUpPendingCommands`)
+
+**Interfaces:**
+- Consumes: `a.house()` (Task 2).
+- Produces: `func pendingCommandsFilter(house string) string` — PocketBase-filter `status='pending' && (device.gateway='<house>' || scene.house='<house>')`; `ListPendingCommands(house string) ([]Command, error)`.
+
+- [ ] **Step 1: Failing test** `TestPendingCommandsFilter`: filter voor `"abc123"` is precies `status='pending' && (device.gateway='abc123' || scene.house='abc123')`; een huis-ID met een `'` erin wordt geweigerd (lege string + fout, of een escaped quote — kies: PocketBase-record-ID's zijn `[a-z0-9]{15}`, dus alles daarbuiten → fout).
+- [ ] **Step 2: Draaien, moet falen.**
+- [ ] **Step 3: Implementeren** + `catchUpPendingCommands` geeft `a.house()` mee.
+- [ ] **Step 4: Realtime-pad.** `handleCommand`: device-commando waarvan `device.Gateway != a.house()` → stil negeren (geen `failed`: dat commando is van een andere box). `runScene`: scène van een ander huis → ook stil negeren in plaats van `failCommand`.
+- [ ] **Step 5: Verifiëren.** `go vet ./... && go test ./...` PASS; handmatig: `ListPendingCommands` tegen de lokale PocketBase geeft alleen eigen commando's (log bij opstarten).
+- [ ] **Step 6: Commit.** `Agent: only handle commands for this house`
