@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"sync"
 
 	"sandhovius/local-agent/internal/pocketbase"
@@ -13,14 +14,18 @@ import (
 // instantly.
 type deviceCache struct {
 	pb *pocketbase.Client
+	// house geeft het huis van deze box: alleen zijn devices horen in de
+	// cache (entity-ID's komen uit de naam en kunnen tussen huizen botsen).
+	house func() string
 
 	mu       sync.RWMutex
 	byEntity map[string]string
 }
 
-func newDeviceCache(pb *pocketbase.Client) *deviceCache {
+func newDeviceCache(pb *pocketbase.Client, house func() string) *deviceCache {
 	return &deviceCache{
 		pb:       pb,
+		house:    house,
 		byEntity: make(map[string]string),
 	}
 }
@@ -28,7 +33,11 @@ func newDeviceCache(pb *pocketbase.Client) *deviceCache {
 // refresh herlaadt de cache en geeft de opgehaalde devices terug, zodat de
 // agent bij het opstarten niet nog een keer hoeft te vragen.
 func (d *deviceCache) refresh() ([]pocketbase.Device, error) {
-	devices, err := d.pb.ListDevices()
+	house := d.house()
+	if house == "" {
+		return nil, errors.New("nog geen huis bekend")
+	}
+	devices, err := d.pb.ListHouseDevices(house)
 	if err != nil {
 		return nil, err
 	}

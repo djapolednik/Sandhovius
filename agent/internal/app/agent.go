@@ -56,12 +56,11 @@ type Agent struct {
 
 func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, gatewayName, gatewayIDFile string, historyRetentionDays int, schedulesFile string) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Agent{
+	a := &Agent{
 		mqttClient:       mqttClient,
 		haClient:         haClient,
 		pbClient:         pbClient,
 		history:          historyStore,
-		devices:          newDeviceCache(pbClient),
 		gatewayName:      gatewayName,
 		gatewayIDFile:    gatewayIDFile,
 		schedulesFile:    schedulesFile,
@@ -70,6 +69,8 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 		ctx:              ctx,
 		cancel:           cancel,
 	}
+	a.devices = newDeviceCache(pbClient, a.house)
+	return a
 }
 
 func (a *Agent) Start() error {
