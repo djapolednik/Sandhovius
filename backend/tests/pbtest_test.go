@@ -103,11 +103,19 @@ func freePort(t *testing.T) int {
 }
 
 // startPB start een verse PocketBase met een eigen superuser en geeft hem terug.
-func startPB(t *testing.T) *pb {
+func startPB(t *testing.T) *pb { return startPBEnv(t, nil) }
+
+// startPBEnv doet hetzelfde met extra omgevingsvariabelen (bv. SMTP_HOST). De
+// hooks uit ../pb_hooks draaien mee, net als in de dev-stack.
+func startPBEnv(t *testing.T, env map[string]string) *pb {
 	t.Helper()
 	bin := pbBinary(t)
 	dir := t.TempDir()
 	migrations, err := filepath.Abs("../pb_migrations")
+	if err != nil {
+		t.Fatal(err)
+	}
+	hooks, err := filepath.Abs("../pb_hooks")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +127,11 @@ func startPB(t *testing.T) *pb {
 	}
 
 	addr := fmt.Sprintf("127.0.0.1:%d", freePort(t))
-	cmd := exec.Command(bin, "serve", "--http", addr, "--dir", dir, "--migrationsDir", migrations)
+	cmd := exec.Command(bin, "serve", "--http", addr, "--dir", dir, "--migrationsDir", migrations, "--hooksDir", hooks)
+	cmd.Env = os.Environ()
+	for k, v := range env {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
 	var logs bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &logs, &logs
 	if err := cmd.Start(); err != nil {

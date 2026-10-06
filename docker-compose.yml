@@ -107,6 +107,26 @@ services:
     volumes:
       - pocketbase_data:/pb_data
       - ./backend/pb_migrations:/pb_migrations
+      - ./backend/pb_hooks:/pb_hooks
+    environment:
+      # Mail (hook backend/pb_hooks/mail.pb.js): in dev vangt Mailpit alles op.
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - APP_URL=http://localhost:3000
+    depends_on:
+      - mailpit
+    networks:
+      - sandhovius-net
+
+  # ==========================================
+  # 5b. Mailpit (dev: vangt uitgaande mail, geen echte verzending)
+  # ==========================================
+  mailpit:
+    image: axllent/mailpit:v1.21.8
+    container_name: sandhovius-mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
     networks:
       - sandhovius-net
 
