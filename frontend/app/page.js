@@ -1,5 +1,6 @@
 'use client'
 
+import { defaultPocketbaseUrl } from '../lib/pocketbase'
 import { ViewTransition, startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import PocketBase, { LocalAuthStore } from 'pocketbase'
 import Header from '../components/Header'
@@ -50,9 +51,7 @@ function tabFromHash() {
 // vanzelf — geen eigen opslag-code nodig.
 // Zonder vaste URL: PocketBase op dezelfde host als de pagina, zodat de
 // telefoon op het LAN (http://192.168.x.x:3000) de box vindt i.p.v. zichzelf.
-const PB_URL = process.env.NEXT_PUBLIC_POCKETBASE_URL
-  || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8090` : undefined)
-const pb = new PocketBase(PB_URL, new LocalAuthStore('pocketbase_auth'))
+const pb = new PocketBase(defaultPocketbaseUrl(), new LocalAuthStore('pocketbase_auth'))
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
 // Wat Home laat zien: je favorieten of alles wat aan staat.
 const HOME_VIEW_KEY = 'sandhovius-home-view'
