@@ -61,6 +61,13 @@ func (c *Client) SubscribeDevices(ctx context.Context, handler func(DeviceEvent)
 // connection drops, returning an error in the latter case so the caller can
 // decide whether to reconnect.
 func (c *Client) subscribeCollection(ctx context.Context, collectionName string, onSubscribed func(), handler func(data []byte)) error {
+	// Zonder token (nog niet ingelogd, bv. PocketBase was weg bij het
+	// opstarten) accepteert PocketBase een gast-abonnement dat nooit events
+	// krijgt. Dan een fout, zodat de herhaallus het later opnieuw probeert.
+	if c.authToken() == "" {
+		return fmt.Errorf("pocketbase: subscribe to %s: nog niet ingelogd", collectionName)
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/api/realtime", nil)
 	if err != nil {
 		return fmt.Errorf("pocketbase: build realtime request: %w", err)
