@@ -7,7 +7,8 @@ Gebruik (stack draait, testaccount in de lokale PocketBase):
     SANDHOVIUS_EMAIL=... SANDHOVIUS_PASSWORD=... \\
         scripts/screenshot.py /tmp/home 1440x900 1366x768:dark 390x844
 
-Optioneel: HASH='#kamers' (tabblad), HOMEVIEW=on|favorites (Home-keuze).
+Optioneel: HASH='#kamers' (tabblad), HOMEVIEW=on|favorites (Home-keuze),
+FIREFOX=<pad naar firefox(.exe)> als Firefox niet in PATH staat.
 Firefox heeft een minimale vensterbreedte van ~500px; smaller wordt 500.
 """
 import base64
@@ -22,6 +23,8 @@ import urllib.request
 
 APP = os.environ.get('SANDHOVIUS_APP', 'http://localhost:3000/')
 PB = os.environ.get('SANDHOVIUS_PB', 'http://localhost:8090')
+# Pad naar Firefox; standaard "firefox" uit PATH.
+FIREFOX = os.environ.get('FIREFOX', 'firefox')
 
 
 class Marionette:
@@ -81,7 +84,7 @@ def main(prefix, specs):
     with open(os.path.join(profile, 'user.js'), 'w') as f:
         f.write('user_pref("marionette.port", 2828);\n')
     firefox = subprocess.Popen(
-        ['firefox', '--headless', '--marionette', '--no-remote', '--profile', profile],
+        [FIREFOX, '--headless', '--marionette', '--no-remote', '--profile', profile],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
