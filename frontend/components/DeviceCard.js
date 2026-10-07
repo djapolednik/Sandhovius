@@ -3,7 +3,7 @@
 import { memo, useRef } from 'react'
 import ClimateCard from './ClimateCard'
 import { formatTemperature, readTemperature, temperatureColor } from '../lib/temperature'
-import { GearIcon, deviceTypeIcon } from '../lib/icons'
+import { deviceTypeIcon } from '../lib/icons'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
@@ -129,17 +129,16 @@ export default memo(function DeviceCard({
           className={`panel tile-climate ${!isOnline && !isPairing ? 'card-offline' : ''}`}
           onContextMenu={handleContextMenu}
         >
-          <div className="climate-head">
+          {/* De naam is de knop naar de details: geen los tandwiel, wel
+              bereikbaar met toetsenbord en schermlezer. */}
+          <button
+            type="button"
+            className="climate-head"
+            aria-label={`Details van ${device.name}`}
+            onClick={() => onOpenSettings(device)}
+          >
             <span className="tile-name">{device.name}</span>
-            <button
-              type="button"
-              className="btn btn-icon btn-plain gear-button"
-              aria-label={`Details van ${device.name}`}
-              onClick={() => onOpenSettings(device)}
-            >
-              <GearIcon width="20" height="20" />
-            </button>
-          </div>
+          </button>
           <ClimateCard
             state={state}
             isOn={isOn}
