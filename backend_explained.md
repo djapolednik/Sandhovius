@@ -406,8 +406,10 @@ Gevonden door verbindingen echt te verbreken, niet in theorie:
   idle-timeout hoort bij fase 3.
 - **Commando's verlopen op de klok van de box**; met een server op Scaleway
   beter de serverklok gebruiken.
-- **Uit een huis gehaald worden** door een ander: je ziet het huis tot de
-  volgende verversing, want realtime stuurt geen update naar wie de regel niet
-  meer haalt.
+- **Uit een huis gehaald worden** door een ander komt niet live binnen
+  (realtime stuurt niets naar wie de regel niet meer haalt). De PWA haalt
+  alles opnieuw op zodra de server iets op huisdata weigert (`pb.afterSend`)
+  of als je na 30 s terugkomt in de app, en meldt dan "Je hebt geen toegang
+  meer tot …". Tot die tijd zie je de laatst bekende stand.
 - **Wachttijd na koppelen** tot ~5 minuten door de controle van de box; kan
   later via realtime op het eigen box-record.
