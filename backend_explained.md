@@ -104,7 +104,7 @@ het starten helemaal op.
 
 | Collectie | Soort | Doel | Belangrijkste velden |
 |---|---|---|---|
-| `users` | auth | Bewoners | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
+| `users` | auth | Bewoners; token geldt een jaar (de PWA verlengt het dagelijks, dus ingelogd tot je zelf uitlogt; wachtwoord wijzigen maakt alle tokens ongeldig) | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
 | `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen) |
 | `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
