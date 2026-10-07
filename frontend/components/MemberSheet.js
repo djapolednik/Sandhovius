@@ -1,0 +1,87 @@
+'use client'
+
+import { useState } from 'react'
+import Modal from './Modal'
+import RoleChoice from './RoleChoice'
+import { householdError } from '../lib/household'
+
+// Eén lid van het huis, voor een beheerder: rol wijzigen (slaat zichzelf op,
+// zoals de detail-sheet) en uit het huis verwijderen, met bevestiging. De
+// server bewaakt dat er altijd een beheerder overblijft; die melding staat
+// dan hier.
+export default function MemberSheet({ member, houseName, isSelf, onChangeRole, onRemove, onClose }) {
+  const [role, setRole] = useState(member.role)
+  const [busy, setBusy] = useState(false)
+  const [confirmingRemove, setConfirmingRemove] = useState(false)
+  const [error, setError] = useState('')
+  const name = member.name || member.email
+
+  async function chooseRole(value) {
+    const previous = role
+    setRole(value)
+    setBusy(true)
+    setError('')
+    try {
+      await onChangeRole(member.id, value)
+    } catch (err) {
+      setRole(previous)
+      setError(householdError('Rol wijzigen', err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleRemove() {
+    setBusy(true)
+    setError('')
+    try {
+      await onRemove(member.id)
+      onClose()
+    } catch (err) {
+      setError(householdError(isSelf ? 'Huis verlaten' : 'Verwijderen', err))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal title={name} onClose={onClose}>
+      {member.name && <p className="member-sheet-email">{member.email}</p>}
+      <div className="form-field">
+        <span className="form-label">Rol</span>
+        <RoleChoice value={role} onChange={chooseRole} name={`role-${member.id}`} disabled={busy} />
+      </div>
+
+      <div className="modal-divider" />
+
+      {confirmingRemove ? (
+        <div className="room-confirm">
+          <p className="room-confirm-text">
+            {isSelf
+              ? `Huis verlaten? Je verliest de toegang tot ${houseName}.`
+              : `${name} uit ${houseName} verwijderen? Diegene verliest de toegang tot het huis.`}
+          </p>
+          <div className="room-row-actions">
+            <button className="btn btn-plain" onClick={() => setConfirmingRemove(false)} disabled={busy}>
+              Annuleren
+            </button>
+            <button className="btn btn-danger-text" onClick={handleRemove} disabled={busy}>
+              {isSelf ? 'Huis verlaten' : 'Verwijderen'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <button className="btn btn-danger-text" onClick={() => setConfirmingRemove(true)}>
+            {isSelf ? 'Huis verlaten' : 'Uit het huis verwijderen'}
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
+    </Modal>
+  )
+}

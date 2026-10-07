@@ -1449,3 +1449,104 @@
   border-radius: var(--radius-control);
   box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35);
 }
+
+/* ==================== Huisgenoten ====================
+   Opties → Huisgenoten: leden als rijen (een beheerder tikt erop voor de
+   sheet), daaronder de openstaande uitnodigingen. */
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-row-static {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 56px;
+  padding: 0.5rem 0;
+}
+
+.member-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  /* e-mailadressen mogen overal breken */
+  overflow-wrap: anywhere;
+}
+
+.member-revoke {
+  flex-shrink: 0;
+  margin-left: auto;
+  min-height: 44px;
+}
+
+.member-leave {
+  margin-top: 0.75rem;
+}
+
+.member-sheet-email {
+  margin: 0 0 0.9rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* Een uitnodiging voor jou: bovenaan Home en op het lege scherm. Een gewoon
+   paneel; niets gloeit, er staat nog niets aan. */
+.invitation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 36rem;
+  margin-bottom: 0.9rem;
+}
+
+.invitation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+}
+
+.invitation-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.invitation-meta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.invitation-actions .btn-primary {
+  width: auto;
+  flex: 1 1 10rem;
+}
+
+.invitation-actions .btn-secondary {
+  flex: 0 1 auto;
+  min-height: 52px;
+}
+
+.empty-state-invitations {
+  margin: 1.5rem auto;
+  max-width: 36rem;
+}
+
+.empty-state-invitations .invitation-list {
+  margin-bottom: 0;
+}

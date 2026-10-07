@@ -17,6 +17,8 @@ const THEME_OPTIONS = [
 // hier welk huis de app laat zien.
 export default function SettingsView({
   house,
+  isAdmin = false,
+  household,
   houses = [],
   onSelectHouse,
   roomCount,
@@ -77,7 +79,7 @@ export default function SettingsView({
             <span className="settings-link-text">
               <span className="settings-link-title">{house.name}</span>
               <span className="settings-link-sub">
-                {roomCount === 1 ? '1 kamer' : `${roomCount} kamers`}. Naam en kamers wijzigen
+                {roomCount === 1 ? '1 kamer' : `${roomCount} kamers`}. {isAdmin ? 'Naam en kamers wijzigen' : 'Kamers wijzigen'}
               </span>
             </span>
             <ArrowUpRightIcon className="settings-link-arrow" width="18" height="18" aria-hidden="true" />
@@ -87,6 +89,8 @@ export default function SettingsView({
           </button>
         </section>
       )}
+
+      {household}
 
       <section className="panel settings-section" aria-labelledby="settings-look">
         <h2 id="settings-look" className="settings-heading">

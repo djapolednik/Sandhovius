@@ -127,8 +127,11 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
   )
 }
 
+// Huisnaam en box zijn alleen voor beheerders (isAdmin); kamers kan elk lid
+// inrichten.
 export default function HouseModal({
   house,
+  isAdmin = false,
   rooms,
   onRenameHouse,
   onAddRoom,
@@ -188,26 +191,30 @@ export default function HouseModal({
   }
 
   return (
-    <Modal title="Huis wijzigen" onClose={onClose}>
-      <form onSubmit={handleRenameHouse} className="form-stack">
-        <label className="form-field">
-          <span className="form-label">Naam van je huis</span>
-          <input
-            className="input"
-            type="text"
-            value={houseName}
-            onChange={(e) => setHouseName(e.target.value)}
-            required
-          />
-        </label>
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={savingName}>
-            Opslaan
-          </button>
-        </div>
-      </form>
+    <Modal title={isAdmin ? 'Huis wijzigen' : 'Kamers wijzigen'} onClose={onClose}>
+      {isAdmin && (
+        <>
+          <form onSubmit={handleRenameHouse} className="form-stack">
+            <label className="form-field">
+              <span className="form-label">Naam van je huis</span>
+              <input
+                className="input"
+                type="text"
+                value={houseName}
+                onChange={(e) => setHouseName(e.target.value)}
+                required
+              />
+            </label>
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary" disabled={savingName}>
+                Opslaan
+              </button>
+            </div>
+          </form>
 
-      <div className="modal-divider" />
+          <div className="modal-divider" />
+        </>
+      )}
 
       <span className="form-label">Kamers</span>
       {rooms.length > 0 && (
@@ -241,7 +248,7 @@ export default function HouseModal({
         </button>
       </form>
 
-      {house?.claimed_at && (
+      {isAdmin && house?.claimed_at && (
         <>
           <div className="modal-divider" />
           <span className="form-label">Box</span>

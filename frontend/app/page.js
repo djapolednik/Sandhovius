@@ -19,6 +19,9 @@ import RoomsPanel, { RoomSwitch, describeRoom } from '../components/RoomsPanel'
 import SettingsView from '../components/SettingsView'
 import FavoritesOrderModal from '../components/FavoritesOrderModal'
 import { favoriteDevices as favoriteDevicesOf, favoriteFor, nextOrder } from '../lib/favorites'
+import HouseholdSection from '../components/HouseholdSection'
+import InvitationCard from '../components/InvitationCard'
+import { isAdmin, pickHouse } from '../lib/household'
 import ChangePasswordModal from '../components/ChangePasswordModal'
 import SignupForm from '../components/SignupForm'
 import ClaimSheet from '../components/ClaimSheet'
@@ -91,6 +94,9 @@ export default function Home() {
   const [devices, setDevices] = useState([])
   // Eigen favorieten (records { user, device, order }); per persoon.
   const [favorites, setFavorites] = useState([])
+  // Uitnodigingen die je mag zien: voor jou, en (als beheerder) die van je
+  // huizen. Zie myInvitations en houseInvitations.
+  const [invitations, setInvitations] = useState([])
   const [scenes, setScenes] = useState([])
   const [schedules, setSchedules] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
@@ -240,6 +246,13 @@ export default function Home() {
           )
         })
       }),
+      pb.collection('invitations').subscribe('*', (e) => {
+        setInvitations((prev) =>
+          e.action === 'delete'
+            ? prev.filter((i) => i.id !== e.record.id)
+            : [e.record, ...prev.filter((i) => i.id !== e.record.id)]
+        )
+      }),
       pb.collection('favorites').subscribe('*', (e) => {
         setFavorites((prev) =>
           e.action === 'delete'
@@ -372,6 +385,40 @@ export default function Home() {
     selectHouse(houseId)
   }
 
+  // Huisgenoten. Lidmaatschap wijzigt alleen via de endpoints in
+  // household.pb.js; het huis zelf komt daarna via realtime binnen.
+  async function acceptInvitation(invitation) {
+    const res = await pb.send(`/api/sandhovius/invitations/${invitation.id}/accept`, { method: 'POST' })
+    setInvitations((prev) => prev.filter((i) => i.id !== invitation.id))
+    await fetchAll()
+    selectHouse(res.house)
+    selectTab('home')
+  }
+
+  async function deleteInvitation(invitation) {
+    await pb.collection('invitations').delete(invitation.id)
+    setInvitations((prev) => prev.filter((i) => i.id !== invitation.id))
+  }
+
+  async function inviteMember(email, role) {
+    const created = await pb.collection('invitations').create({ house: house.id, email, role, invited_by: userId })
+    setInvitations((prev) => [created, ...prev.filter((i) => i.id !== created.id)])
+    showToast(`Uitnodiging verstuurd naar ${created.email}`)
+  }
+
+  async function changeMemberRole(memberId, role) {
+    await pb.send(`/api/sandhovius/houses/${house.id}/members/${memberId}`, { method: 'PATCH', body: { role } })
+  }
+
+  // Jezelf verwijderen is het huis verlaten: daarna alles opnieuw ophalen
+  // (het huis is weg) en naar Home, met het volgende huis of het lege scherm.
+  async function removeMember(memberId) {
+    await pb.send(`/api/sandhovius/houses/${house.id}/members/${memberId}`, { method: 'DELETE' })
+    if (memberId !== userId) return
+    await fetchAll()
+    selectTab('home')
+  }
+
   // Box loskoppelen: het huis en alles erin blijft.
   async function releaseBox(houseId) {
     await pb.send('/api/sandhovius/release', { method: 'POST', body: { house: houseId } })
@@ -391,6 +438,7 @@ export default function Home() {
     setRooms([])
     setDevices([])
     setFavorites([])
+    setInvitations([])
     setScenes([])
     setSchedules([])
     setSelectedRoomId('')
@@ -414,13 +462,14 @@ export default function Home() {
   async function fetchAll() {
     setError('')
     try {
-      const [houseRecords, roomRecords, deviceRecords, sceneRecords, scheduleRecords, favoriteRecords] = await Promise.all([
+      const [houseRecords, roomRecords, deviceRecords, sceneRecords, scheduleRecords, favoriteRecords, invitationRecords] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
         pb.collection('devices').getFullList({ expand: 'device_state_via_device' }),
         pb.collection('scenes').getFullList({ sort: 'order,name' }),
         pb.collection('schedules').getFullList({ sort: 'time' }),
         pb.collection('favorites').getFullList(),
+        pb.collection('invitations').getFullList({ sort: '-created' }),
       ])
       setHouses(houseRecords)
       setRooms(roomRecords)
@@ -428,6 +477,7 @@ export default function Home() {
       setScenes(sceneRecords)
       setSchedules(scheduleRecords)
       setFavorites(favoriteRecords)
+      setInvitations(invitationRecords)
       setLoaded(true)
     } catch (err) {
       if (isSessionExpired(err)) {
@@ -448,7 +498,13 @@ export default function Home() {
     fetchAll()
   }
 
-  const house = houses.find((h) => h.id === selectedHouseId) ?? houses[0]
+  const house = pickHouse(houses, selectedHouseId)
+  const userId = pb.authStore.record?.id
+  const houseAdmin = isAdmin(house, userId)
+  // E-mailadressen van uitnodigingen staan in kleine letters.
+  const myEmail = (pb.authStore.record?.email || '').toLowerCase()
+  const myInvitations = invitations.filter((i) => i.email === myEmail)
+  const houseInvitations = house ? invitations.filter((i) => i.house === house.id && i.email !== myEmail) : []
 
   function selectHouse(houseId) {
     setSelectedHouseId(houseId)
@@ -1398,7 +1454,29 @@ export default function Home() {
     </ul>
   )
 
-  const noHouse = loaded && !house && (
+  const invitationCards = myInvitations.length > 0 && (
+    <div className="invitation-list">
+      {myInvitations.map((invitation) => (
+        <InvitationCard
+          key={invitation.id}
+          invitation={invitation}
+          onAccept={acceptInvitation}
+          onDecline={deleteInvitation}
+        />
+      ))}
+    </div>
+  )
+
+  // Zonder huis maar met een uitnodiging: de uitnodiging(en) in plaats van de
+  // uitleg; "Box toevoegen" blijft eronder.
+  const noHouse = loaded && !house && (myInvitations.length > 0 ? (
+    <div className="empty-state-invitations">
+      {invitationCards}
+      <button type="button" className="btn btn-secondary empty-state-action" onClick={() => setClaim({ initial: null })}>
+        Box toevoegen
+      </button>
+    </div>
+  ) : (
     <p className="empty-state">
       Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt
       je huis hier.
@@ -1406,7 +1484,7 @@ export default function Home() {
         Box toevoegen
       </button>
     </p>
-  )
+  ))
 
   // Eerste gebruik: nog geen enkel apparaat. De vier soorten staan er als
   // doofde lampjes, met de actie binnen bereik van je duim in plaats van
@@ -1580,6 +1658,22 @@ export default function Home() {
         {errorBanner}
         <SettingsView
           house={house}
+          isAdmin={houseAdmin}
+          household={
+            house && (
+              <HouseholdSection
+                house={house}
+                userId={userId}
+                admin={houseAdmin}
+                invitations={houseInvitations}
+                loadMembers={() => pb.send(`/api/sandhovius/houses/${house.id}/members`, { method: 'GET' })}
+                onInvite={inviteMember}
+                onChangeRole={changeMemberRole}
+                onRemove={removeMember}
+                onRevoke={(id) => deleteInvitation({ id })}
+              />
+            )
+          }
           houses={houses}
           onSelectHouse={selectHouse}
           roomCount={roomsInHouse.length}
@@ -1599,6 +1693,7 @@ export default function Home() {
       <>
         {errorBanner}
         {noHouse}
+        {house && invitationCards}
         <div className="dashboard">
           {house && (
             <div className="dashboard-side">
@@ -1720,6 +1815,7 @@ export default function Home() {
       {houseModalOpen && (
         <HouseModal
           house={house}
+          isAdmin={houseAdmin}
           rooms={roomsInHouse}
           onRenameHouse={renameHouse}
           onAddRoom={addRoom}
@@ -1735,7 +1831,8 @@ export default function Home() {
         <ClaimSheet
           pb={pb}
           user={pb.authStore.record}
-          houses={houses}
+          // Vervangen mag alleen een beheerder van dat huis.
+          houses={houses.filter((h) => isAdmin(h, userId))}
           initial={claim.initial}
           onClaimed={boxClaimed}
           onClose={() => setClaim(null)}
