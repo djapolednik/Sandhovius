@@ -23,6 +23,13 @@ const TEXTS = {
       warning: "Was jij dit niet? Kies dan meteen een nieuw wachtwoord; daarmee log je overal anders uit.",
       ignore: "Was jij het wel? Dan hoef je niets te doen.",
     },
+    invitation: {
+      subject: "{inviter} nodigt je uit voor {house}",
+      intro: "{inviter} nodigt je uit om {house} samen te bedienen met Sandhovius.",
+      how: "Log in of maak een account aan met dit e-mailadres; de uitnodiging staat dan bovenaan je Home. Hij verloopt na 7 dagen.",
+      button: "Uitnodiging bekijken",
+      ignore: "Ken je de afzender niet? Dan kun je deze mail negeren.",
+    },
   },
   en: {
     verification: {
@@ -42,6 +49,13 @@ const TEXTS = {
       intro: "Someone signed in to your Sandhovius account from a new device or location:",
       warning: "If this wasn't you, choose a new password right away; that signs you out everywhere else.",
       ignore: "If this was you, you don't need to do anything.",
+    },
+    invitation: {
+      subject: "{inviter} invited you to {house}",
+      intro: "{inviter} invited you to control {house} together with Sandhovius.",
+      how: "Sign in or create an account with this email address; the invitation then appears at the top of your Home. It expires after 7 days.",
+      button: "View invitation",
+      ignore: "Don't know the sender? You can ignore this email.",
     },
   },
 }
@@ -75,8 +89,25 @@ function renderAuthAlert(language, info) {
   return { subject: t.subject, html: html }
 }
 
+// Uitnodiging: naam van de uitnodiger en huisnaam komen van gebruikers, dus
+// in de HTML escapen; in het onderwerp (een header) alleen regeleinden weg.
+function renderInvitation(language, inviter, houseName, link) {
+  const t = (TEXTS[language] || TEXTS.nl).invitation
+  // met een functie vervangen: anders betekent "$&" in een naam iets
+  const fill = (s, esc) =>
+    s.replace("{inviter}", () => esc(inviter || "")).replace("{house}", () => esc(houseName || ""))
+  const plain = (v) => String(v).replace(/[\r\n]+/g, " ")
+  const html =
+    "<p>" + fill(t.intro, escapeHTML) + "</p>\n" +
+    "<p>" + t.how + "</p>\n" +
+    '<p><a href="' + link + '" target="_blank" rel="noopener">' + t.button + "</a></p>\n" +
+    "<p><i>" + t.ignore + "</i></p>"
+  return { subject: fill(t.subject, plain), html: html }
+}
+
 module.exports = {
   verification: (language, link) => render("verification", language, link),
   reset: (language, link) => render("reset", language, link),
   authAlert: renderAuthAlert,
+  invitation: renderInvitation,
 }
