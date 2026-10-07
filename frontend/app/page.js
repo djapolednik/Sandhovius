@@ -26,7 +26,7 @@ import ChangePasswordModal from '../components/ChangePasswordModal'
 import SignupForm from '../components/SignupForm'
 import ClaimSheet from '../components/ClaimSheet'
 import { pendingKey } from '../lib/claim'
-import { needsRefresh } from '../lib/session'
+import { LAST_REFRESH_KEY, needsRefresh } from '../lib/session'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -168,16 +168,23 @@ export default function Home() {
     setLoggedIn(pb.authStore.isValid)
   }, [])
 
-  // Het inlogtoken verlengen bij het openen en bij terugkeer naar de app
-  // (zie lib/session.js), zodat je ingelogd blijft zolang je de app gebruikt.
-  // Alleen een 401 betekent uitloggen; zonder verbinding blijf je ingelogd en
-  // proberen we het de volgende keer opnieuw.
+  // Ingelogd blijven tot je zelf uitlogt: het inlogtoken verlengen bij het
+  // openen en bij terugkeer naar de app, hooguit eens per dag (zie
+  // lib/session.js). Alleen een 401 betekent uitloggen; zonder verbinding
+  // blijf je ingelogd en proberen we het de volgende keer opnieuw.
   useEffect(() => {
     if (!loggedIn) return
     async function refreshSession() {
-      if (!needsRefresh(pb.authStore.token)) return
+      let last = null
+      try {
+        last = Number(window.localStorage.getItem(LAST_REFRESH_KEY)) || null
+      } catch {}
+      if (!needsRefresh(pb.authStore.token, last)) return
       try {
         await pb.collection('users').authRefresh({ requestKey: 'session-refresh' })
+        try {
+          window.localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()))
+        } catch {}
       } catch (err) {
         if (isSessionExpired(err)) endExpiredSession()
         else console.error('[sessie verlengen]', err)
@@ -452,6 +459,9 @@ export default function Home() {
 
   function logout() {
     pb.authStore.clear()
+    try {
+      window.localStorage.removeItem(LAST_REFRESH_KEY)
+    } catch {}
     // Een koppelcode uit een QR-link hoort niet bij de volgende die inlogt.
     try {
       window.sessionStorage.removeItem(pendingKey)

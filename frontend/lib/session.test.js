@@ -9,19 +9,22 @@ const token = (expMs) => {
   const part = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')
   return `${part({ alg: 'HS256', typ: 'JWT' })}.${part({ exp: Math.floor(expMs / 1000), type: 'auth' })}.sig`
 }
+const valid = token(now + 300 * DAY)
 
-test('needsRefresh: een vers token (5 dagen geldig) niet', () => {
-  assert.equal(needsRefresh(token(now + 5 * DAY), now), false)
-  assert.equal(needsRefresh(token(now + 4.5 * DAY), now), false)
+test('needsRefresh: nooit verlengd op dit toestel → nu (ook een oud token van 5 dagen)', () => {
+  assert.equal(needsRefresh(valid, null, now), true)
+  assert.equal(needsRefresh(token(now + 4 * DAY), undefined, now), true)
 })
 
-test('needsRefresh: na een dag wel, tot het verlopen is', () => {
-  assert.equal(needsRefresh(token(now + 3.9 * DAY), now), true)
-  assert.equal(needsRefresh(token(now + 60 * 1000), now), true)
+test('needsRefresh: hooguit eens per dag', () => {
+  assert.equal(needsRefresh(valid, now - 2 * 60 * 60 * 1000, now), false)
+  assert.equal(needsRefresh(valid, now - DAY + 1000, now), false)
+  assert.equal(needsRefresh(valid, now - DAY, now), true)
+  assert.equal(needsRefresh(valid, now - 40 * DAY, now), true)
 })
 
 test('needsRefresh: verlopen of onleesbaar niet (dan opnieuw inloggen)', () => {
-  assert.equal(needsRefresh(token(now - 1000), now), false)
-  assert.equal(needsRefresh('', now), false)
-  assert.equal(needsRefresh('rommel', now), false)
+  assert.equal(needsRefresh(token(now - 1000), null, now), false)
+  assert.equal(needsRefresh('', null, now), false)
+  assert.equal(needsRefresh('rommel', null, now), false)
 })
