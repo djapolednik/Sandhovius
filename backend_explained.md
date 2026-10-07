@@ -309,7 +309,8 @@ app maakt record  →  commands (pending)  →  agent (realtime SSE)  →  HA-se
    (of `climate.set_temperature`). Een `turn_on` met payload op een lamp
    (`brightness_pct`, `color_temp_kelvin`, `rgb_color`) gaat naar
    `light.turn_on`, na controle van de sleutels en waarden (`serviceCall` in
-   `app/light.go`); anders `failed` met een Nederlandse reden. Daarna `sent` of `failed` met reden.
+   `app/light.go`); een ongeldige payload geeft `failed` met een Nederlandse
+   reden. Daarna wordt het commando `sent`, of `failed` met reden.
 5. De nieuwe stand komt via Pad A terug: geen apart schrijfpad.
 
 Waarom verlopen: bij een korte uitval kan de realtime-verbinding blijven
