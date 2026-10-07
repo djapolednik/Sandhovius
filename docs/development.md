@@ -44,7 +44,7 @@ pip install -r scripts/requirements.txt
 python scripts/fake-lights.py          # laat draaien; --host/--port als de broker elders staat
 ```
 
-Het script meldt drie lampen aan via MQTT-discovery ("Testlamp dimbaar", "Testlamp wit", "Testlamp kleur"). Voeg ze in de app toe als apparaat (of laat ze in PocketBase staan als ze er al zijn). Opruimen: `python scripts/fake-lights.py --remove`, daarna de drie devices in het PocketBase-beheer (http://localhost:8090/_/) verwijderen.
+Het script meldt drie lampen aan via MQTT-discovery ("Testlamp dimbaar", "Testlamp wit", "Testlamp kleur"). Maak de drie devices aan in het PocketBase-beheer (http://localhost:8090/_/, collectie `devices`) met `type=light`, `gateway=<huis-id>`, `entity_id=light.testlamp_dimbaar`, `light.testlamp_wit` en `light.testlamp_kleur`, en een kamer (of laat ze staan als ze er al zijn). Toevoegen via de app werkt hier niet: dat maakt een `input_boolean`-helper aan, geen koppeling met een bestaande `light.*`. Opruimen: `python scripts/fake-lights.py --remove`, daarna de drie devices in het PocketBase-beheer (http://localhost:8090/_/) verwijderen.
 
 De MQTT-integratie van Home Assistant zet de agent zelf op (eenmalig bij de start, als HA hem nog niet heeft); die blijft staan, ook na `--remove`.
 
