@@ -15,7 +15,7 @@ eigen Home. Een beheerder nodigt anderen uit op e-mailadres en bepaalt hun rol.
 | Rollen | **Beheerder** en **huisgenoot**; meerdere beheerders per huis; altijd minstens één | Huishouden richt samen in; onomkeerbare dingen bij beheerders; een huis wordt nooit onbeheerd. Een derde rol "alleen bedienen" kan later. |
 | Uitnodigen | Op e-mailadres; de uitnodiging hoort bij dat adres (geen token in de link) | Je weet wie er binnenkomt; een doorgestuurde mail is waardeloos. Deelbare link en QR afgewezen. |
 | Favorieten | Per persoon (collectie `favorites`) | Ieder een eigen Home; anders verandert één huisgenoot Home voor iedereen. |
-| Lidmaatschap opslaan | Twee lijstvelden op het huis: `members` en `admins` | Regels blijven eenduidig (`members ?= @request.auth.id`). Een collectie `memberships` afgewezen: een regel met twee voorwaarden op "dezelfde" rij kan in PocketBase twee verschillende rijen matchen (huisgenoot hier, beheerder elders). |
+| Lidmaatschap opslaan | Twee lijstvelden op het huis: `members` en `admins` | Regels blijven eenduidig (`members.id ?= @request.auth.id`). Een collectie `memberships` afgewezen: een regel met twee voorwaarden op "dezelfde" rij kan in PocketBase twee verschillende rijen matchen (huisgenoot hier, beheerder elders). |
 
 ## Rechten
 
@@ -42,7 +42,7 @@ eigen Home. Een beheerder nodigt anderen uit op e-mailadres en bepaalt hun rol.
 `(user, device)`.
 - Je ziet, maakt, wijzigt en verwijdert alleen je eigen favorieten, en alleen
   voor een apparaat van een huis waar je lid van bent
-  (`user = @request.auth.id && device.gateway.members ?= @request.auth.id`;
+  (`user = @request.auth.id && device.gateway.members.id ?= @request.auth.id`;
   bij aanmaken `@request.body.user = @request.auth.id`).
 - Migratie: elk device met `favorite = true` wordt een favoriet van de
   (oude) `houses.user` met `order = favorite_order`; daarna verdwijnen
@@ -67,11 +67,11 @@ Uniek op `(house, email)`.
 
 Overal waar nu `…user = @request.auth.id` staat (houses, devices,
 device_state, commands, rooms, scenes, schedules, …) wordt het
-`…members ?= @request.auth.id`. De `USERS`-guard
+`…members.id ?= @request.auth.id`. De `USERS`-guard
 (`@request.auth.collectionName = "users"`) en de box-takken blijven zoals in
 1790730000. `houses`:
-- list/view: `members ?= @request.auth.id`
-- update: `admins ?= @request.auth.id` en geen `members`, `admins`,
+- list/view: `members.id ?= @request.auth.id`
+- update: `admins.id ?= @request.auth.id` en geen `members`, `admins`,
   `claimed_at`, `weather`, `weather_updated` in de body
 - delete: blijft `null` (verwijderen loopt zoals nu)
 

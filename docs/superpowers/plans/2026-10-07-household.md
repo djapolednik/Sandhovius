@@ -4,7 +4,7 @@
 
 **Goal:** Meerdere bewoners per huis (beheerders en huisgenoten), uitnodigen per e-mail, favorieten per persoon.
 
-**Architecture:** `houses.user` wordt `members` + `admins` (meervoudige relaties naar `users`); alle bewonersregels gaan van `user =` naar `members ?=`. Lidmaatschap wijzigen kan alleen via PocketBase-hooks (`backend/pb_hooks/household.pb.js`), die de invariant "admins ⊆ members, admins nooit leeg" bewaken. Nieuwe collecties `favorites` en `invitations`; de PWA leest favorieten per gebruiker en krijgt een sectie Huisgenoten.
+**Architecture:** `houses.user` wordt `members` + `admins` (meervoudige relaties naar `users`); alle bewonersregels gaan van `user =` naar `members.id ?=`. Lidmaatschap wijzigen kan alleen via PocketBase-hooks (`backend/pb_hooks/household.pb.js`), die de invariant "admins ⊆ members, admins nooit leeg" bewaken. Nieuwe collecties `favorites` en `invitations`; de PWA leest favorieten per gebruiker en krijgt een sectie Huisgenoten.
 
 **Tech Stack:** PocketBase 0.40.4 (JS-migraties en -hooks), Go-integratietests (`backend/tests`, `-tags integration`), Next.js 16 PWA, `node --test`.
 
@@ -18,6 +18,7 @@
 - Regelmigraties controleren eerst dat de huidige regel exact de verwachte is en stoppen anders (patroon `1790730000_resident_rules_users_only.js`), en hebben een werkende `down`.
 - Hooks: helpers binnen de handler (PocketBase-VM ziet niets daarbuiten); gedeelde code via `require(`${__hooks}/…`)`; alles wat records wijzigt in `$app.runInTransaction`.
 - Rollen: `admin` / `member`; in de UI "Beheerder" / "Huisgenoot". Uitnodiging verloopt na 7 dagen. Rate limit `invitations:create` 20 per 3600 s (`@auth`).
+- PocketBase 0.40.4 (gebleken in Task 1): een regel op een meervoudige relatie moet `members.id ?= @request.auth.id` zijn (`members ?=` matcht nooit); een meervoudige relatie heeft `maxSelect: 999` (0 = enkelvoudig).
 - E-mailadressen altijd in kleine letters vergelijken en opslaan.
 - Na elke task: `cd backend/tests && go test -tags integration ./...` groen; bij frontendwijzigingen ook `cd frontend && node --test lib/*.test.js && npx next build`.
 - Geen echte apparaten schakelen; geheimen (`.env`, `box.json`, `sheets/`) niet printen of committen. Commits op branch `household`.
@@ -43,8 +44,8 @@
 **Interfaces:**
 - Produces: `houses.members`, `houses.admins` (relation → `users`, `maxSelect` 0 = onbeperkt, niet verplicht in schema). Testhelper `newHouse(t, p, name string, admins []string, members []string) string` in `household_test.go` (zet admins ook in members).
 - Produces regels (bewonerstak, binnen de `USERS && (...)`-wrapper):
-  - houses: list/view `members ?= @request.auth.id`; update `admins ?= @request.auth.id && ` + forbid `members, admins, weather, weather_updated, claimed_at`; create/delete `null`.
-  - devices `gateway.members ?= @request.auth.id` (create: `@request.body.gateway.members ?= @request.auth.id`); device_state `device.gateway.members ?=`; commands `device.gateway.members ?=` / `scene.house.members ?=`; scenes, schedules, rooms `house.members ?=` (create `@request.body.house.members ?=`). Alle overige voorwaarden in die regels blijven letterlijk gelijk.
+  - houses: list/view `members.id ?= @request.auth.id`; update `admins.id ?= @request.auth.id && ` + forbid `members, admins, weather, weather_updated, claimed_at`; create/delete `null`.
+  - devices `gateway.members.id ?= @request.auth.id` (create: `@request.body.gateway.members.id ?= @request.auth.id`); device_state `device.gateway.members.id ?=`; commands `device.gateway.members.id ?=` / `scene.house.members.id ?=`; scenes, schedules, rooms `house.members.id ?=` (create `@request.body.house.members.id ?=`). Alle overige voorwaarden in die regels blijven letterlijk gelijk.
   - houses box-updateRule: forbid `members, admins, name, claimed_at` (i.p.v. `user, name, claimed_at`).
 
 - [ ] **Step 1: Tests aanpassen en toevoegen**
@@ -75,7 +76,7 @@
 
 **Interfaces:**
 - Consumes: `houses.members` (Task 1).
-- Produces: collectie `favorites` {`user` relation users required, `device` relation devices required cascadeDelete, `order` number}, unieke index `(user, device)`. Regels: list/view/delete `USERS && user = @request.auth.id && device.gateway.members ?= @request.auth.id`; create `USERS && @request.body.user = @request.auth.id && @request.body.device.gateway.members ?= @request.auth.id`; update `USERS && user = @request.auth.id && @request.body.user:isset = false && @request.body.device:isset = false`. Geen box-tak.
+- Produces: collectie `favorites` {`user` relation users required, `device` relation devices required cascadeDelete, `order` number}, unieke index `(user, device)`. Regels: list/view/delete `USERS && user = @request.auth.id && device.gateway.members.id ?= @request.auth.id`; create `USERS && @request.body.user = @request.auth.id && @request.body.device.gateway.members.id ?= @request.auth.id`; update `USERS && user = @request.auth.id && @request.body.user:isset = false && @request.body.device:isset = false`. Geen box-tak.
 - Produces `frontend/lib/favorites.js`:
   - `favoriteDevices(devices, favorites) → device[]` (alleen niet-`climate`, gesorteerd op `order`, dan naam `localeCompare(…,'nl')`);
   - `favoriteFor(favorites, deviceId) → record | undefined`;
@@ -102,8 +103,8 @@
 **Interfaces:**
 - Consumes: `houses.members/admins` (Task 1), `favorites` (Task 2).
 - Produces collectie `invitations`: `house` (relation houses, cascadeDelete), `email` (email, required), `role` (select `admin`|`member`, required), `invited_by` (relation users), `house_name` (text), `inviter_name` (text), `expires` (date). Unieke index `(house, email)`. Regels:
-  - list/view: `USERS && (house.admins ?= @request.auth.id || (email = @request.auth.email && @request.auth.verified = true))`
-  - create: `USERS && @request.body.house.admins ?= @request.auth.id && @request.body.invited_by = @request.auth.id`
+  - list/view: `USERS && (house.admins.id ?= @request.auth.id || (email = @request.auth.email && @request.auth.verified = true))`
+  - create: `USERS && @request.body.house.admins.id ?= @request.auth.id && @request.body.invited_by = @request.auth.id`
   - update: `null`; delete: zelfde als view.
   - rate limit `invitations:create` 20/3600 `@auth`.
 - Produces hooks in `household.pb.js`:
