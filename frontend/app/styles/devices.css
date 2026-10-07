@@ -276,8 +276,21 @@
     transform 1.8s ease-in;
 }
 
+/* Een lamp met eigen kleur (--glow-color, door DeviceCard gezet): de gloed
+   en het icoon nemen die over; de sterkte volgt de helderheid. Zonder
+   --glow-color blijft het amber uit het thema. */
+.card-lit[style*='--glow-color'] {
+  --tile-glow: color-mix(in srgb, var(--glow-color) 70%, transparent);
+  --tile-glow-mid: color-mix(in srgb, var(--glow-color) 30%, transparent);
+  --tile-icon-fg: var(--glow-icon-light, var(--lamp-icon-fg));
+}
+
+[data-theme='dark'] .card-lit[style*='--glow-color'] {
+  --tile-icon-fg: var(--glow-icon-dark, var(--lamp-icon-fg));
+}
+
 .card-lit::before {
-  opacity: 1;
+  opacity: var(--glow-strength, 1);
   transform: scale(1);
   transition:
     opacity 1.2s var(--ease-lamp),
@@ -291,7 +304,7 @@
 }
 
 .card-lit.card-pending::before {
-  opacity: 0.35;
+  opacity: calc(var(--glow-strength, 1) * 0.35);
 }
 
 /* Offline: alleen het icoon vervaagt. Laatst bekende waarden blijven op

@@ -4,6 +4,7 @@ import { memo, useRef } from 'react'
 import ClimateCard from './ClimateCard'
 import { formatTemperature, readTemperature, temperatureColor } from '../lib/temperature'
 import { deviceTypeIcon } from '../lib/icons'
+import { glowFor, iconColorFor, lightStateText } from '../lib/light'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
@@ -170,7 +171,10 @@ export default memo(function DeviceCard({
     // erbij dat het niet actueel is.
     stateText = isOnline ? value : `${value}, ${offlineText.toLowerCase()}`
   } else if (!isOnline) stateText = offlineText
-  else if (state?.state === 'on' || state?.state === 'off') stateText = (isOn ? 'Aan' : 'Uit') + (isPending ? '…' : '')
+  else if (state?.state === 'on' || state?.state === 'off') {
+    const base = device.type === 'light' ? lightStateText(state) : isOn ? 'Aan' : 'Uit'
+    stateText = base + (isPending ? '…' : '')
+  }
   else stateText = 'Onbekend'
 
   // De hoofdactie is een echte <button> over de hele tegel (zie
@@ -180,12 +184,29 @@ export default memo(function DeviceCard({
     : `Details van ${device.name}${reading ? `, ${reading}` : ''}`
   const isClickable = canToggle || opensDetails
 
+  // De gloed van een lamp in zijn echte kleur en sterkte (zie .card-lit);
+  // zonder kleur blijft het standaard amber uit het thema. Het icoon krijgt
+  // dezelfde kleur, per thema alleen als die genoeg afsteekt van de cirkel.
+  let glowStyle
+  if (isLit && device.type === 'light') {
+    const glow = glowFor(state?.attributes)
+    glowStyle = { '--glow-strength': glow.strength.toFixed(2) }
+    if (glow.color) {
+      glowStyle['--glow-color'] = glow.color
+      const lightIcon = iconColorFor(glow.rgb, 'light')
+      const darkIcon = iconColorFor(glow.rgb, 'dark')
+      if (lightIcon) glowStyle['--glow-icon-light'] = lightIcon
+      if (darkIcon) glowStyle['--glow-icon-dark'] = darkIcon
+    }
+  }
+
   return (
     <li className={`device-cell device-cell-${device.type}`}>
       <div
         className={`panel device-tile tile-${device.type} ${isClickable ? 'card-clickable' : ''} ${isLit ? 'card-lit' : ''} ${
           isPending ? 'card-pending' : ''
         } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${isPairing || setupFailed ? 'card-pairing' : ''}`}
+        style={glowStyle}
         onPointerDown={startPress}
         onPointerUp={cancelPress}
         onPointerLeave={cancelPress}
