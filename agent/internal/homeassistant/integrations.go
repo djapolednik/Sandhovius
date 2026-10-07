@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -70,10 +71,29 @@ func (c *Client) AddMQTT(broker string, port int) error {
 		Errors map[string]any `json:"errors"`
 	}
 	if err := c.postJSON("/api/config/config_entries/flow/"+form.FlowID, input, &result); err != nil {
+		c.abortFlow(form.FlowID)
 		return fmt.Errorf("ha: finish mqtt flow: %w", err)
 	}
 	if result.Type != "create_entry" {
+		c.abortFlow(form.FlowID)
 		return fmt.Errorf("ha: mqtt flow ended in %q (%s %v)", result.Type, result.Reason, result.Errors)
 	}
 	return nil
+}
+
+// abortFlow removes a config flow that did not finish, so a failed attempt
+// does not leave a half-open flow in HA. Best effort: only logged.
+func (c *Client) abortFlow(flowID string) {
+	req, err := http.NewRequest("DELETE", c.restURL+"/api/config/config_entries/flow/"+flowID, nil)
+	if err != nil {
+		log.Printf("[HA] Flow %s afbreken mislukt: %v\n", flowID, err)
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		log.Printf("[HA] Flow %s afbreken mislukt: %v\n", flowID, err)
+		return
+	}
+	resp.Body.Close()
 }
