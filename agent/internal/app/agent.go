@@ -113,6 +113,7 @@ func (a *Agent) Start() error {
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
 	go a.runHeartbeat()
+	go a.ensureMQTT()
 	go a.runWeather()
 
 	return nil
