@@ -1,7 +1,19 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { capabilities, kelvinToRgb, payloadFor, percentFromBrightness, throttle } from '../lib/light'
+import {
+  brightnessLabel,
+  capabilities,
+  controlsVisible,
+  createHoldOff,
+  currentRgb,
+  initialMode,
+  kelvinToRgb,
+  payloadFor,
+  percentFromBrightness,
+  swatchSelected,
+  throttle,
+} from '../lib/light'
 
 // Dimmen, wit en kleur van één lamp, in de detail-sheet onder "Stand". Alleen
 // wat de lamp kan: een lamp zonder dimmen krijgt niets, een lamp met wit én
@@ -9,6 +21,8 @@ import { capabilities, kelvinToRgb, payloadFor, percentFromBrightness, throttle 
 // per 400 ms tijdens het slepen en het laatste bij loslaten. Op een lamp die
 // uit staat zet elke waarde de lamp aan (turn_on met die waarde).
 const SEND_EVERY_MS = 400
+// Na een eigen wijziging negeren we de lamp-stand even (echo van je commando).
+const HOLD_OFF_MS = 1000
 
 // Zes stalen, geen kleurenwiel: de rest zit achter "Meer kleuren".
 const SWATCHES = [
@@ -31,23 +45,22 @@ export default function LightControls({ device, state, disabled, onChange }) {
 
   const attrPercent = percentFromBrightness(attributes?.brightness)
   const attrKelvin = Number.isFinite(attributes?.color_temp_kelvin) ? attributes.color_temp_kelvin : null
-  const attrRgb = Array.isArray(attributes?.rgb_color) && attributes.rgb_color.length === 3 ? attributes.rgb_color : null
+  const attrRgb = currentRgb(attributes)
 
   const [percent, setPercent] = useState(attrPercent ?? 100)
   const [kelvin, setKelvin] = useState(attrKelvin ?? (hasKelvin ? Math.round((caps.minKelvin + caps.maxKelvin) / 2) : 3000))
-  const [rgb, setRgb] = useState(attrRgb ?? SWATCHES[0].rgb)
-  const [mode, setMode] = useState(attributes?.color_mode === 'color_temp' || !caps.colour ? 'white' : 'colour')
-  const dragging = useRef(false)
+  const [rgb, setRgb] = useState(attrRgb)
+  const [mode, setMode] = useState(initialMode(attributes))
+  const hold = useRef(createHoldOff(HOLD_OFF_MS))
 
-  // De echte stand van de lamp volgt, behalve terwijl je sleept: anders
-  // springt de schuif terug naar de waarde van een commando van daarnet.
+  // De echte stand van de lamp volgt, behalve vlak na een eigen wijziging:
+  // anders springt de schuif terug naar de waarde van een commando van daarnet.
   useEffect(() => {
-    if (dragging.current) return
+    if (hold.current.active()) return
     if (attrPercent !== null) setPercent(attrPercent)
     if (attrKelvin !== null) setKelvin(attrKelvin)
     if (attrRgb) setRgb(attrRgb)
-    if (attributes?.color_mode === 'color_temp') setMode('white')
-    else if (caps.colour && attributes?.color_mode) setMode('colour')
+    if (attributes?.color_mode) setMode(initialMode(attributes))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attrPercent, attrKelvin, attrRgb?.join(','), attributes?.color_mode])
 
@@ -57,14 +70,16 @@ export default function LightControls({ device, state, disabled, onChange }) {
   const limiter = useMemo(() => throttle((payload) => send.current(payload), SEND_EVERY_MS), [])
   useEffect(() => () => limiter.flush(), [limiter])
 
+  // Elke eigen wijziging gaat hier langs: het hold-off loopt vanaf de laatste.
+  function emit(payload) {
+    hold.current.touch()
+    limiter.call(payload)
+  }
   function release() {
-    dragging.current = false
+    hold.current.touch()
     limiter.flush()
   }
   const dragProps = {
-    onPointerDown: () => {
-      dragging.current = true
-    },
     onPointerUp: release,
     onPointerCancel: release,
     onBlur: release,
@@ -74,17 +89,17 @@ export default function LightControls({ device, state, disabled, onChange }) {
   function pickRgb(next, immediate) {
     setRgb(next)
     setMode('colour')
-    limiter.call(payloadFor({ rgb: next }))
+    emit(payloadFor({ rgb: next }))
     if (immediate) limiter.flush()
   }
 
+  // De Wit/Kleur-balk wisselt alleen het beeld; pas een gekozen waarde of een
+  // schuif stuurt een commando (anders zet een tik op "Kleur" de lamp aan).
   function pickMode(next) {
     setMode(next)
-    limiter.call(next === 'white' ? payloadFor({ kelvin }) : payloadFor({ rgb }))
-    limiter.flush()
   }
 
-  if (!caps.dim) return null
+  if (!caps.dim || !controlsVisible(state)) return null
 
   const showBar = hasKelvin && caps.colour
   const showWhite = hasKelvin && (!caps.colour || mode === 'white')
@@ -92,14 +107,14 @@ export default function LightControls({ device, state, disabled, onChange }) {
   const track = hasKelvin
     ? `linear-gradient(90deg, rgb(${kelvinToRgb(caps.minKelvin).join(',')}), rgb(${kelvinToRgb(caps.maxKelvin).join(',')}))`
     : undefined
-  const isCustom = !SWATCHES.some((s) => sameRgb(s.rgb, rgb))
+  const isCustom = !!rgb && state?.state === 'on' && !SWATCHES.some((s) => sameRgb(s.rgb, rgb))
 
   return (
     <div className="light-controls">
       <label className="light-slider">
         <span className="light-slider-head">
           <span className="form-label">Helderheid</span>
-          <span className="reading-value">{percent}%</span>
+          <span className="reading-value">{brightnessLabel(state, percent)}</span>
         </span>
         <input
           type="range"
@@ -109,12 +124,12 @@ export default function LightControls({ device, state, disabled, onChange }) {
           step="1"
           value={percent}
           disabled={disabled}
-          aria-valuetext={`${percent} procent`}
+          aria-valuetext={state?.state === 'on' ? `${percent} procent` : 'uit'}
           style={{ '--fill': `${percent}%` }}
           onChange={(e) => {
             const next = Number(e.target.value)
             setPercent(next)
-            limiter.call(payloadFor({ brightnessPct: next }))
+            emit(payloadFor({ brightnessPct: next }))
           }}
           {...dragProps}
         />
@@ -162,7 +177,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
               const next = Number(e.target.value)
               setKelvin(next)
               setMode('white')
-              limiter.call(payloadFor({ kelvin: next }))
+              emit(payloadFor({ kelvin: next }))
             }}
             {...dragProps}
           />
@@ -172,7 +187,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
       {showColour && (
         <div className="light-swatches" role="group" aria-label="Kleur">
           {SWATCHES.map((swatch) => {
-            const selected = mode === 'colour' && sameRgb(swatch.rgb, rgb)
+            const selected = mode === 'colour' && swatchSelected(state, swatch.rgb)
             return (
               <button
                 key={swatch.name}
@@ -192,7 +207,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
             <input
               type="color"
               className="light-more-input"
-              value={toHex(rgb)}
+              value={toHex(rgb ?? SWATCHES[0].rgb)}
               disabled={disabled}
               aria-label="Meer kleuren"
               onChange={(e) => pickRgb(fromHex(e.target.value), false)}

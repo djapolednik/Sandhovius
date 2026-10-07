@@ -146,3 +146,80 @@ export function throttle(fn, ms, env = REAL_CLOCK) {
     },
   }
 }
+
+// --- Detail-sheet: wat de bediening toont ---------------------------------
+
+// Alleen een lamp die echt aan of uit is krijgt een bediening; bij
+// unavailable/unknown zouden de schuiven verzonnen waarden tonen.
+export function controlsVisible(state) {
+  return state?.state === 'on' || state?.state === 'off'
+}
+
+// Welke kant van de Wit/Kleur-balk eerst getoond wordt: de huidige
+// color_mode van de lamp, anders wit als de lamp dat kan.
+export function initialMode(attributes) {
+  const caps = capabilities(attributes)
+  const mode = attributes?.color_mode
+  if (mode === 'color_temp') return 'white'
+  if (COLOUR_MODES.includes(mode)) return 'colour'
+  return caps.white || !caps.colour ? 'white' : 'colour'
+}
+
+// De kleur van de lamp, of null als de lamp er geen heeft (uit, wit).
+export function currentRgb(attributes) {
+  return isRgb(attributes?.rgb_color) ? attributes.rgb_color : null
+}
+
+// Een staal is alleen gekozen als de lamp aan staat, in een kleurmodus, in
+// die kleur. Een lamp die uit staat heeft geen gekozen kleur.
+export function swatchSelected(state, swatchRgb) {
+  if (state?.state !== 'on') return false
+  const attributes = state.attributes
+  const rgb = currentRgb(attributes)
+  if (!COLOUR_MODES.includes(attributes?.color_mode) || !rgb) return false
+  return rgb.every((c, i) => Math.abs(c - swatchRgb[i]) < 2)
+}
+
+export function brightnessLabel(state, percent) {
+  return state?.state === 'on' ? `${percent}%` : 'Uit'
+}
+
+// Na een eigen wijziging negeert de sheet de lamp-stand even: het echo van
+// je eigen commando laat de schuif anders terugspringen. Een tijdvenster in
+// plaats van een "ik sleep nog"-vlag, want die blijft hangen als je buiten
+// de schuif loslaat. `env` is de klok, voor tests.
+export function createHoldOff(ms, env = { now: () => Date.now() }) {
+  let until = -Infinity
+  return {
+    touch() {
+      until = env.now() + ms
+    },
+    active() {
+      return env.now() < until
+    },
+  }
+}
+
+// Eén wachter per lamp: sleep je een schuif, dan gaat er om de 400 ms een
+// commando de deur uit, maar alleen het nieuwste mag nog melden of de stand
+// opnieuw ophalen. `begin` geeft een volgnummer bij het versturen; `register`
+// bewaart de stop-functie van de wachter, en stopt een oudere stilletjes (ook
+// als een ouder commando pas na een nieuwer terugkomt).
+export function createLatestWatchers() {
+  const latest = new Map() // key -> volgnummer van het nieuwste commando
+  const stops = new Map() // key -> stop van de lopende wachter
+  let seq = 0
+  return {
+    begin(key) {
+      const token = ++seq
+      latest.set(key, token)
+      stops.get(key)?.()
+      stops.delete(key)
+      return token
+    },
+    register(key, token, stop) {
+      if (latest.get(key) !== token) return stop()
+      stops.set(key, stop)
+    },
+  }
+}

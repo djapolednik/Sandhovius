@@ -193,3 +193,81 @@ test('throttle: flush stuurt de laatste waarde meteen en daarna niet nog een kee
   clock.advance(1000)
   assert.deepEqual(sent, [1, 3])
 })
+
+// --- detail-sheet ---
+import { createLatestWatchers, controlsVisible, initialMode, swatchSelected, brightnessLabel, createHoldOff, currentRgb } from './light.js'
+
+const RED = [255, 59, 48]
+const colourAttrs = { supported_color_modes: ['color_temp', 'rgb'], min_color_temp_kelvin: 2000, max_color_temp_kelvin: 6500 }
+
+test('controlsVisible: alleen voor aan of uit', () => {
+  assert.equal(controlsVisible({ state: 'on' }), true)
+  assert.equal(controlsVisible({ state: 'off' }), true)
+  assert.equal(controlsVisible({ state: 'unavailable' }), false)
+  assert.equal(controlsVisible({ state: 'unknown' }), false)
+  assert.equal(controlsVisible(undefined), false)
+})
+
+test('uitstaande kleurlamp: geen staal gekozen, label "Uit", wit eerst', () => {
+  const off = { state: 'off', attributes: colourAttrs }
+  assert.equal(swatchSelected(off, RED), false)
+  assert.equal(brightnessLabel(off, 100), 'Uit')
+  assert.equal(initialMode(off.attributes), 'white')
+  assert.equal(currentRgb(off.attributes), null)
+})
+
+test('aan in rgb-modus: dat staal is gekozen, label met procent', () => {
+  const on = { state: 'on', attributes: { ...colourAttrs, color_mode: 'rgb', rgb_color: RED, brightness: 128 } }
+  assert.equal(swatchSelected(on, RED), true)
+  assert.equal(swatchSelected(on, [10, 132, 255]), false)
+  assert.equal(brightnessLabel(on, 50), '50%')
+  assert.equal(initialMode(on.attributes), 'colour')
+})
+
+test('aan in wit: geen staal gekozen, ook al staat er een oude rgb_color', () => {
+  const on = { state: 'on', attributes: { ...colourAttrs, color_mode: 'color_temp', rgb_color: RED } }
+  assert.equal(swatchSelected(on, RED), false)
+  assert.equal(initialMode(on.attributes), 'white')
+})
+
+test('initialMode: alleen kleur kan, dan kleur', () => {
+  assert.equal(initialMode({ supported_color_modes: ['rgb'] }), 'colour')
+  assert.equal(initialMode({ supported_color_modes: ['brightness'] }), 'white')
+})
+
+test('createHoldOff: actief tot de tijd om is', () => {
+  let now = 1000
+  const hold = createHoldOff(1000, { now: () => now })
+  assert.equal(hold.active(), false)
+  hold.touch()
+  now = 1999
+  assert.equal(hold.active(), true)
+  now = 2000
+  assert.equal(hold.active(), false)
+  hold.touch()
+  now = 2500
+  assert.equal(hold.active(), true)
+})
+
+test('createLatestWatchers: alleen de nieuwste wachter per lamp blijft', () => {
+  const w = createLatestWatchers()
+  const stopped = []
+  const t1 = w.begin('a')
+  w.register('a', t1, () => stopped.push(1))
+  const t2 = w.begin('a')
+  assert.deepEqual(stopped, [1])
+  w.register('a', t2, () => stopped.push(2))
+  const t3 = w.begin('b')
+  w.register('b', t3, () => stopped.push(3))
+  assert.deepEqual(stopped, [1])
+})
+
+test('createLatestWatchers: een oud commando dat te laat terugkomt wordt direct gestopt', () => {
+  const w = createLatestWatchers()
+  const stopped = []
+  const old = w.begin('a')
+  const fresh = w.begin('a')
+  w.register('a', fresh, () => stopped.push('fresh'))
+  w.register('a', old, () => stopped.push('old'))
+  assert.deepEqual(stopped, ['old'])
+})

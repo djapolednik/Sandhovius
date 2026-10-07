@@ -25,6 +25,7 @@ import { pendingKey } from '../lib/claim'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
+import { createLatestWatchers } from '../lib/light'
 import { isBatteryLow } from '../lib/battery'
 import { PlusIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
@@ -151,6 +152,7 @@ export default function Home() {
   // en kamers die al uit beeld zijn, en pas na UNDO_MS echt weg gaan.
   const [hiddenIds, setHiddenIds] = useState([])
   const deleteTimers = useRef({})
+  const lightWatchers = useRef(createLatestWatchers())
 
   useEffect(() => {
     setLoggedIn(pb.authStore.isValid)
@@ -729,13 +731,16 @@ export default function Home() {
         return { ...d, _pending: true, expand: { ...d.expand, device_state_via_device: [optimisticState] } }
       })
     )
+    // Eén wachter per lamp: alleen het nieuwste commando mag nog melden.
+    const token = lightWatchers.current.begin(device.id)
     try {
       const command = await pb
         .collection('commands')
         .create({ device: device.id, action: 'turn_on', payload, status: 'pending' }, { requestKey: null })
-      watchCommand(command.id, device.name, device.id, {
+      const stop = watchCommand(command.id, device.name, device.id, {
         failMessage: `${device.name} kon dit niet instellen. Probeer het opnieuw.`,
       })
+      lightWatchers.current.register(device.id, token, stop)
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
       showToast(describeError(`${device.name} instellen`, err), 'error')
@@ -910,6 +915,8 @@ export default function Home() {
         // Best-effort — als het abonneren zelf al mislukt (bv. even
         // offline) vangt de giveUpTimer het op met een fetchAll.
       })
+
+    return stop
   }
 
   // Een nieuwe favoriet komt achteraan.
