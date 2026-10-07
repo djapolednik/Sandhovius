@@ -49,7 +49,7 @@ het waarom): `backend_explained.md`. Hoe je lokaal draait en test:
 **Agent (`agent/`)**
 - `agent/main/main.go` — entry point van de Go agent
 - `agent/internal/app/agent.go` — kern: huis uit de box-identiteit (`house.go`: huis uit `box.json`, volgt koppelen/loskoppelen), heartbeat (30 s op `houses.last_seen`), HA-events → PocketBase, commands → HA, provisioning van nieuwe devices, state-reconciliatie bij start/reconnect
-- `agent/internal/app/connection.go` (verbindingslus met backoff + herstelstap `onPocketBaseConnected`), `scheduler.go` + `schedule_store.go` (schema-klok, snapshot in `/data/schedules.json`), `commands.go` (verlopen en claimen van commando's), `weather.go` (weer uit HA/Met.no elke 30 min op `houses.weather`)
+- `agent/internal/app/connection.go` (verbindingslus met backoff + herstelstap `onPocketBaseConnected`), `scheduler.go` + `schedule_store.go` (schema-klok, snapshot in `/data/schedules.json`), `commands.go` (verlopen en claimen van commando's), `weather.go` (weer uit HA/Met.no elke 30 min op `houses.weather`; voegt Met.no zelf toe als het ontbreekt)
 - `agent/internal/homeassistant/` — HA websocket (events), REST (`CallService`, `GetState`), registry (helpers aanmaken)
 - `agent/internal/box/` (leest/schrijft `/data/box.json`: serial, secret, house), `agent/internal/pocketbase/` (incl. `auth.go`: inloggen als box), `agent/internal/mqtt/`, `agent/internal/history/` (lokale SQLite-geschiedenis), `agent/internal/config/`
 
@@ -60,7 +60,7 @@ het waarom): `backend_explained.md`. Hoe je lokaal draait en test:
 
 **Frontend (`frontend/`)**
 - `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Scènes/Opties; hash `#instellingen` voor Opties), commands
-- `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet)
+- `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet), `RoomsPanel` (kamerlijst met schakelaars op brede schermen, `RoomSwitch`)
 - Claim-UI: `SignupForm`, `VerifyNotice`, `ClaimSheet` (jsQR-camera + code intikken), `QrScanner`, `LanguageChoice`, `AccountShell`; routes `/bevestig`, `/wachtwoord`, `/koppel` (deep link uit de QR)
 - `frontend/lib/` — pure helpers met `node --test`-tests (`claim.js`, `account.js`, `schedules.js`, `weather.js`, …)
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
