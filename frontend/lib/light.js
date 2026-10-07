@@ -94,3 +94,55 @@ export function lightStateText(state) {
   const percent = caps.dim ? percentFromBrightness(state.attributes?.brightness) : null
   return percent === null ? 'Aan' : `Aan · ${percent}%`
 }
+
+// Het turn_on-payload voor een schuif of staal: alleen de sleutels die
+// gezet zijn, afgerond en binnen wat de agent accepteert. Kelvin en rgb gaan
+// nooit samen mee: `last` zegt welke de laatst gekozen is (anders rgb).
+export function payloadFor({ brightnessPct, kelvin, rgb, last } = {}) {
+  const payload = {}
+  if (Number.isFinite(brightnessPct)) payload.brightness_pct = clamp(Math.round(brightnessPct), 1, 100)
+  const hasKelvin = Number.isFinite(kelvin)
+  const hasRgb = isRgb(rgb)
+  if (hasKelvin && hasRgb) {
+    if (last === 'kelvin') payload.color_temp_kelvin = clamp(Math.round(kelvin), 1500, 9000)
+    else payload.rgb_color = rgb.map((c) => clamp(Math.round(c), 0, 255))
+  } else if (hasKelvin) {
+    payload.color_temp_kelvin = clamp(Math.round(kelvin), 1500, 9000)
+  } else if (hasRgb) {
+    payload.rgb_color = rgb.map((c) => clamp(Math.round(c), 0, 255))
+  }
+  return payload
+}
+
+const REAL_CLOCK = { now: () => Date.now(), setTimeout: (fn, ms) => setTimeout(fn, ms), clearTimeout: (t) => clearTimeout(t) }
+
+// Leading + trailing: de eerste waarde gaat meteen, daarna hooguit één per
+// `ms`, en de laatste waarde komt altijd aan. flush() stuurt een wachtende
+// waarde meteen (bij loslaten van de schuif). `env` is de klok, voor tests.
+export function throttle(fn, ms, env = REAL_CLOCK) {
+  let last = -Infinity
+  let timer = null
+  let pending = false
+  let value
+
+  function fire() {
+    if (timer !== null) env.clearTimeout(timer)
+    timer = null
+    pending = false
+    last = env.now()
+    fn(value)
+  }
+
+  return {
+    call(next) {
+      value = next
+      pending = true
+      const wait = last + ms - env.now()
+      if (wait <= 0) return fire()
+      if (timer === null) timer = env.setTimeout(fire, wait)
+    },
+    flush() {
+      if (pending) fire()
+    },
+  }
+}

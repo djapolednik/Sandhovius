@@ -9,6 +9,7 @@ import { useNow } from '../lib/useNow'
 import { formatTemperature, temperatureColor, readTemperature } from '../lib/temperature'
 import { isBatteryLow } from '../lib/battery'
 import { isDeviceOn } from './DeviceCard'
+import LightControls from './LightControls'
 
 // Alles over één apparaat in één sheet: hoe het er nu bij staat, wat het
 // meet (sensoren), of het op Home staat, en naam, kamer en verwijderen.
@@ -26,6 +27,8 @@ export default function DeviceSettingsModal({
   onSave,
   onSaveError,
   onToggleFavorite,
+  onSetLight,
+  houseReachable = true,
   onDelete,
   onRetrySetup,
   onClose,
@@ -128,7 +131,17 @@ export default function DeviceSettingsModal({
       ) : device.type === 'sensor' ? (
         <SensorReadings device={device} />
       ) : (
-        <DeviceStatus device={device} />
+        <>
+          <DeviceStatus device={device} />
+          {device.type === 'light' && onSetLight && (
+            <LightControls
+              device={device}
+              state={device.expand?.device_state_via_device?.[0]?.state}
+              disabled={!device.online || !houseReachable}
+              onChange={(payload) => onSetLight(device, payload)}
+            />
+          )}
+        </>
       )}
       <div className="modal-divider" />
 

@@ -688,6 +688,61 @@ export default function Home() {
     }
   }
 
+  // Een schuif of staal van de lamp-bediening: turn_on met alleen de
+  // gezette sleutels (helderheid, wit of kleur). Op een lamp die uit staat
+  // zet dat hem aan met die waarde. Zelfde optimistische voornemen als een
+  // tik; geen melding bij succes, de lamp zelf is de bevestiging. De
+  // sheet stuurt hooguit één per 400 ms (lib/light throttle), dus elk
+  // commando krijgt zijn eigen requestKey: de SDK annuleert er anders één.
+  async function setLight(device, payload) {
+    if (!houseReachable) {
+      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      return
+    }
+    if (!device.online) {
+      showToast(`${device.name} is offline`, 'error')
+      return
+    }
+    // De stand die dit commando oplevert, voor een vlotte tegel.
+    const attrs = {}
+    if (payload.brightness_pct !== undefined) attrs.brightness = Math.round((payload.brightness_pct / 100) * 255)
+    if (payload.color_temp_kelvin !== undefined) {
+      attrs.color_mode = 'color_temp'
+      attrs.color_temp_kelvin = payload.color_temp_kelvin
+    }
+    if (payload.rgb_color !== undefined) {
+      attrs.color_mode = 'rgb'
+      attrs.rgb_color = payload.rgb_color
+    }
+    setDevices((prev) =>
+      prev.map((d) => {
+        if (d.id !== device.id) return d
+        const stateRecord = d.expand?.device_state_via_device?.[0]
+        const optimisticState = {
+          ...stateRecord,
+          state: {
+            ...stateRecord?.state,
+            state: 'on',
+            attributes: { ...stateRecord?.state?.attributes, ...attrs },
+          },
+        }
+        return { ...d, _pending: true, expand: { ...d.expand, device_state_via_device: [optimisticState] } }
+      })
+    )
+    try {
+      const command = await pb
+        .collection('commands')
+        .create({ device: device.id, action: 'turn_on', payload, status: 'pending' }, { requestKey: null })
+      watchCommand(command.id, device.name, device.id, {
+        failMessage: `${device.name} kon dit niet instellen. Probeer het opnieuw.`,
+      })
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      showToast(describeError(`${device.name} instellen`, err), 'error')
+      fetchAll()
+    }
+  }
+
   // Meerdere apparaten tegelijk aan of uit: "Alles uit", en het
   // terugdraaien daarvan of van "verwarming uit". Expliciet turn_on /
   // turn_off i.p.v. toggle, zodat twee keer "uit" gewoon uit blijft. Zelfde
@@ -1691,6 +1746,8 @@ export default function Home() {
           onSave={saveDevice}
           onSaveError={(message) => showToast(message, 'error')}
           onToggleFavorite={toggleFavorite}
+          onSetLight={setLight}
+          houseReachable={houseReachable}
           onDelete={deleteDevice}
           // Alleen als het klaarzetten mislukt is (niet: nog bezig).
           onRetrySetup={
