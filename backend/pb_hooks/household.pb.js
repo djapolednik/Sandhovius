@@ -234,3 +234,19 @@ routerAdd("DELETE", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
   if (result.status !== 204) return e.json(result.status, { status: result.status, message: result.message, data: {} })
   return e.noContent(204)
 }, $apis.requireAuth("users"))
+
+// Account verwijderen: niet als je de laatste beheerder van een huis bent.
+// Anders blijft er een huis zonder beheerder over (niemand kan nog uitnodigen
+// of de box ontkoppelen), of, als je ook de enige bewoner was, een box die aan
+// een huis vastzit dat niemand meer ziet. Een superuser mag het wel (herstel).
+onRecordDeleteRequest((e) => {
+  if (e.hasSuperuserAuth()) return e.next()
+  const id = e.record.id
+  const houses = e.app.findRecordsByFilter("houses", "admins.id ?= {:id}", "", 0, 0, { id: id })
+  const sole = houses.find((h) => h.getStringSlice("admins").length === 1)
+  if (sole) {
+    const message = "Je bent de laatste beheerder van " + sole.getString("name") + ". Maak eerst iemand anders beheerder."
+    return e.json(409, { status: 409, message: message, data: {} })
+  }
+  return e.next()
+}, "users")
