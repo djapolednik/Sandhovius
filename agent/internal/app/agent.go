@@ -50,6 +50,10 @@ type Agent struct {
 	// vervangen hem.
 	onConnected func()
 
+	// callService is de Home Assistant-aanroep van commando's en scène-stappen;
+	// nil betekent haClient.CallService, tests zetten een nep.
+	callService func(domain, service, entityID string, data map[string]any) error
+
 	// handledCommands: commando-ID's die al opgepakt zijn (zie claimCommand).
 	handledCommands sync.Map
 
@@ -359,15 +363,14 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		return
 	}
 
-	// set_temperature bestaat niet als domein-agnostische "homeassistant"-
-	// service — dat moet naar climate.set_temperature, specifiek voor
-	// climate-entities.
-	domain := "homeassistant"
-	if cmd.Action == "set_temperature" {
-		domain = "climate"
+	// serviceCall kiest de service: set_temperature naar climate, turn_on met
+	// een payload op een lamp naar light.turn_on (gecontroleerd), de rest via
+	// de domein-agnostische homeassistant-services.
+	domain, service, data, err := serviceCall(cmd.Action, device.EntityID, cmd.Payload)
+	if err == nil {
+		err = a.callHA(domain, service, device.EntityID, data)
 	}
-
-	if err := a.haClient.CallService(domain, cmd.Action, device.EntityID, cmd.Payload); err != nil {
+	if err != nil {
 		log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
 		a.failCommand(cmd.ID, err)
 		return
@@ -445,11 +448,19 @@ func (a *Agent) runSceneStep(house string, step pocketbase.SceneAction, lookup f
 	if device.EntityID == "" {
 		return fmt.Errorf("apparaat is (nog) niet klaargezet")
 	}
-	domain := "homeassistant"
-	if step.Action == "set_temperature" {
-		domain = "climate"
+	domain, service, data, err := serviceCall(step.Action, device.EntityID, step.Payload)
+	if err != nil {
+		return err
 	}
-	return a.haClient.CallService(domain, step.Action, device.EntityID, step.Payload)
+	return a.callHA(domain, service, device.EntityID, data)
+}
+
+// callHA roept een Home Assistant-service aan; tests vervangen callService.
+func (a *Agent) callHA(domain, service, entityID string, data map[string]any) error {
+	if a.callService != nil {
+		return a.callService(domain, service, entityID, data)
+	}
+	return a.haClient.CallService(domain, service, entityID, data)
 }
 
 func (a *Agent) failCommand(commandID string, reason error) {
