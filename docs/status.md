@@ -44,7 +44,8 @@ Stand: 2026-10-06, claim-flow af. Ontwerpen per onderdeel:
    - Vóór fase 3 ook: rate limits op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).
    - `sheets/SH-DEV-0001.svg` (niet in git) bevat de claimcode van de dev-box, nog in de oude link-vorm met `?` (de app accepteert die ook).
 5. **Lampbediening, klein en uitgesteld:**
-   - Een lamp die uit staat toont in de kleurbediening een rood staal geselecteerd op 100%; tik op "Kleur" zet de lamp dan aan in rood.
-   - Laat je een schuif buiten de schuif los (muis), dan volgt hij de box niet meer tot de volgende tik (`dragging` blijft aan).
-   - Elke gedrosselde opdracht heeft een eigen watcher: op een trage box kunnen tijdens één sleepbeweging meerdere "reageert niet"-meldingen komen, en de schuif kan even terugspringen.
+   - Mislukt een opdracht binnen 1 s na het slepen, dan blijft de schuif in de open sheet op de gesleepte waarde staan (de hold-off negeert de terugzetting); de tegel klopt wel.
+   - De Wit-schuif toont bij een lamp die uit staat een verzonnen kelvinwaarde (midden van het bereik).
+   - Tijdens het slepen kan de tegel even een oudere stand tonen: elke `device_state`-echo zet `_pending` uit, ook die van eerdere opdrachten (`page.js`, realtime).
+   - De Wit/Kleur-keuze springt terug naar de modus van de lamp zodra er een nieuwe stand binnenkomt.
 6. Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
