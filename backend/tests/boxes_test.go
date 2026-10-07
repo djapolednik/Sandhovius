@@ -66,7 +66,7 @@ func TestBoxCannotUpdateItself(t *testing.T) {
 	uid := newUser(t, p, "bewoner@sandhovius.test")
 	// Een echt huis, zodat de validatie van de relatie niet al voor een 400 zorgt:
 	// alleen de updateRule mag dit tegenhouden.
-	hid := p.create(t, "houses", map[string]any{"name": "Testhuis", "user": uid})
+	hid := p.create(t, "houses", map[string]any{"name": "Testhuis", "members": []string{uid}, "admins": []string{uid}})
 	tok := p.login(t, "boxes", "SH-T-1", boxPw)
 	status, out := p.do(t, tok, "PATCH", "/api/collections/boxes/records/"+id, map[string]any{"house": hid})
 	if status != 403 && status != 404 {
@@ -81,7 +81,7 @@ func TestBoxCannotUpdateItself(t *testing.T) {
 func TestClaimedAtIsPlainDate(t *testing.T) {
 	p := startPB(t)
 	uid := newUser(t, p, "bewoner@sandhovius.test")
-	hid := p.create(t, "houses", map[string]any{"name": "Testhuis", "user": uid})
+	hid := p.create(t, "houses", map[string]any{"name": "Testhuis", "members": []string{uid}, "admins": []string{uid}})
 	_, house := p.do(t, p.AdminToken, "GET", "/api/collections/houses/records/"+hid, nil)
 	if house["claimed_at"] != "" {
 		t.Fatalf("claimed_at hoort leeg te zijn, kreeg %v", house["claimed_at"])

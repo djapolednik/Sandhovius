@@ -90,7 +90,10 @@ func TestClaimNewHouse(t *testing.T) {
 		t.Fatalf("geen house in antwoord: %v", out)
 	}
 	h := p.houseRecord(t, hid)
-	if h["user"] != uid || h["name"] != "Villa" || h["claimed_at"] == "" {
+	if !sameIDs(h["members"], uid) || !sameIDs(h["admins"], uid) {
+		t.Fatalf("claimer hoort enige lid en beheerder te zijn: %v", h)
+	}
+	if h["name"] != "Villa" || h["claimed_at"] == "" {
 		t.Fatalf("huis klopt niet: %v", h)
 	}
 	if box := p.boxRecord(t, p.boxIDBySerial(t, "SH-C-1")); box["house"] != hid {
@@ -234,7 +237,7 @@ func TestClaimRetryAfterSuccess(t *testing.T) {
 		t.Fatalf("opnieuw met house_name: %d %v, verwacht 200 %s", st, out, h)
 	}
 	// Ook met een ander eigen huis als replace_house: de box blijft waar hij is.
-	other := p.create(t, "houses", map[string]any{"user": uid, "name": "Zomerhuis"})
+	other := p.create(t, "houses", map[string]any{"members": []string{uid}, "admins": []string{uid}, "name": "Zomerhuis"})
 	st, out = p.claim(t, tokA, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW", "replace_house": other})
 	if st != 200 || out["house"] != h {
 		t.Fatalf("opnieuw met ander eigen huis: %d %v, verwacht 200 %s", st, out, h)

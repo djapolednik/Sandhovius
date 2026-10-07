@@ -36,7 +36,7 @@ func TestGuestCannotReachOwnerlessHouse(t *testing.T) {
 
 	before := getRecord(t, p, "houses", house)
 	st, out := p.do(t, "", "PATCH", "/api/collections/houses/records/"+house,
-		map[string]any{"user": w.UserA, "name": "van mij"})
+		map[string]any{"members": []string{w.UserA}, "admins": []string{w.UserA}, "name": "van mij"})
 	if st < 400 {
 		t.Errorf("gast mag huis zonder eigenaar wijzigen: %d %v", st, out)
 	}

@@ -36,8 +36,8 @@ func fixture(t *testing.T, p *pb) world {
 	var w world
 	w.UserA = newUser(t, p, "a@sandhovius.test")
 	userB := newUser(t, p, "b@sandhovius.test")
-	w.HouseA = p.create(t, "houses", map[string]any{"name": "Huis A", "user": w.UserA})
-	w.HouseB = p.create(t, "houses", map[string]any{"name": "Huis B", "user": userB})
+	w.HouseA = p.create(t, "houses", map[string]any{"name": "Huis A", "members": []string{w.UserA}, "admins": []string{w.UserA}})
+	w.HouseB = p.create(t, "houses", map[string]any{"name": "Huis B", "members": []string{userB}, "admins": []string{userB}})
 	w.roomA = p.create(t, "rooms", map[string]any{"house": w.HouseA, "name": "Kamer A", "order": 1})
 	w.roomB = p.create(t, "rooms", map[string]any{"house": w.HouseB, "name": "Kamer B", "order": 1})
 	dev := func(house, name string) string {
@@ -378,7 +378,7 @@ func TestBoxCannotCreateOrDelete(t *testing.T) {
 	p := startPB(t)
 	w := fixture(t, p)
 	bodies := map[string]map[string]any{
-		"houses":   {"name": "Nep", "user": w.UserA},
+		"houses":   {"name": "Nep", "members": []string{w.UserA}, "admins": []string{w.UserA}},
 		"devices":  {"gateway": w.HouseA, "entity_id": "light.nep", "name": "nep", "type": "light"},
 		"commands": {"device": w.DevA, "action": "turn_on", "status": "pending"},
 		"scenes":   {"house": w.HouseA, "name": "Nep", "order": 1, "actions": []any{}},

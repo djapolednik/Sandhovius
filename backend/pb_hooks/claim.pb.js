@@ -51,13 +51,13 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
       return
     }
 
-    // Een bestaand huis om te vervangen moet van deze gebruiker zijn.
+    // Een bestaand huis vervangen mag alleen een beheerder van dat huis.
     let house = null
     if (replaceHouse) {
       try {
         house = txApp.findRecordById("houses", replaceHouse)
       } catch (_) {}
-      if (!house || house.getString("user") !== user.id) {
+      if (!house || !house.getStringSlice("admins").includes(user.id)) {
         result = { status: 404, message: "Huis niet gevonden" }
         return
       }
@@ -65,14 +65,14 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
 
     const current = box.getString("house")
     if (current) {
-      // Al gekoppeld aan een huis van deze gebruiker (bv. nog een keer
-      // tikken na een gelukte claim): dat huis teruggeven en niets wijzigen.
-      // Lekt niets, want de juiste code en het eigenaarschap zijn nodig.
+      // Al gekoppeld aan een huis waar deze gebruiker lid van is (bv. nog een
+      // keer tikken na een gelukte claim): dat huis teruggeven en niets
+      // wijzigen. Lekt niets, want de juiste code en het lidmaatschap zijn nodig.
       let linked = null
       try {
         linked = txApp.findRecordById("houses", current)
       } catch (_) {}
-      if (linked && linked.getString("user") === user.id) {
+      if (linked && linked.getStringSlice("members").includes(user.id)) {
         result = { status: 200, house: linked.id }
         return
       }
@@ -89,7 +89,8 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
       }
     } else {
       house = new Record(txApp.findCollectionByNameOrId("houses"))
-      house.set("user", user.id)
+      house.set("members", [user.id])
+      house.set("admins", [user.id])
       house.set("name", houseName)
     }
     house.set("claimed_at", new DateTime())
@@ -115,7 +116,8 @@ routerAdd("POST", "/api/sandhovius/release", (e) => {
     try {
       house = txApp.findRecordById("houses", houseId)
     } catch (_) {}
-    if (!house || house.getString("user") !== e.auth.id) {
+    // Alleen een beheerder van het huis ontkoppelt.
+    if (!house || !house.getStringSlice("admins").includes(e.auth.id)) {
       result = { status: 404, message: "Huis niet gevonden" }
       return
     }
