@@ -1054,6 +1054,93 @@
   outline-offset: 2px;
 }
 
+/* Scènes: "Vanzelf uitvoeren". Per tijd een liggende kaart: klok, tijd
+   (het grootste woord), scène en dagen, en rechts een schakelaar boven de
+   onzichtbare kaartknop. */
+.schedules-section {
+  margin-top: 1.75rem;
+}
+
+.schedule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.schedule-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 0.9rem 1.1rem 0.9rem 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.schedule-card:has(.device-card-action:active) {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .schedule-card:hover {
+    border-color: var(--text-secondary);
+  }
+}
+
+.schedule-card-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.schedule-card-time {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.schedule-card-days {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.schedule-card-error {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+/* Uit: de tijd zakt terug naar de rustige kleur, de schakelaar zegt de rest. */
+.schedule-card-off .schedule-card-time {
+  color: var(--text-secondary);
+}
+
+.schedule-card-switch {
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-card:has(.device-card-action:active) {
+    transform: none;
+  }
+}
+
 /* Scène-sheet: per apparaat een naam en drie standen. */
 .scene-rows {
   display: flex;

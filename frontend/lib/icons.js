@@ -83,6 +83,14 @@ export function ChevronUpIcon(props) {
   )
 }
 
+export function ChevronRightIcon(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function ChevronDownIcon(props) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -199,6 +207,16 @@ export function ScenesIcon(props) {
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
+    </svg>
+  )
+}
+
+// Vanzelf uitvoeren: een klok, voor de schema's op Scènes.
+export function ClockIcon(props) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

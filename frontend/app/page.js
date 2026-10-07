@@ -15,6 +15,7 @@ import AddDeviceModal from '../components/AddDeviceModal'
 import ToastContainer from '../components/ToastContainer'
 import BottomNav, { TABS } from '../components/BottomNav'
 import RoomTabs from '../components/RoomTabs'
+import RoomsPanel, { RoomSwitch, describeRoom } from '../components/RoomsPanel'
 import SettingsView from '../components/SettingsView'
 import FavoritesOrderModal from '../components/FavoritesOrderModal'
 import ChangePasswordModal from '../components/ChangePasswordModal'
@@ -562,10 +563,24 @@ export default function Home() {
 
   const settingsDevice = devices.find((d) => d.id === settingsDeviceId) ?? null
 
+  // Per kamer ook wat de kamerschakelaar bedient: de lampen en
+  // stopcontacten die de box kan schakelen (online en klaargezet), en welke
+  // daarvan aan staan.
   const roomTabs = [
-    ...roomsInHouse.map((room) => ({ id: room.id, label: room.name })),
-    ...(unassignedDevices.length > 0 ? [{ id: '__unassigned', label: 'Overig' }] : []),
-  ]
+    ...roomsInHouse.map((room) => ({
+      id: room.id,
+      label: room.name,
+      devices: devicesInHouse.filter((device) => device.room === room.id),
+    })),
+    ...(unassignedDevices.length > 0 ? [{ id: '__unassigned', label: 'Overig', devices: unassignedDevices }] : []),
+  ].map((room) => {
+    const switchable = room.devices.filter(
+      (device) => TOGGLEABLE_TYPES.includes(device.type) && device.online && device.entity_id
+    )
+    const on = switchable.filter((device) => isDeviceOn(device.type, device.expand?.device_state_via_device?.[0]?.state))
+    return { ...room, switchable, on }
+  })
+  const selectedRoom = roomTabs.find((room) => room.id === selectedRoomId)
 
   // Welke lampen/stopcontacten staan er aan? Voor "Alles uit" en de rij
   // "Staat aan" op Home. Een apparaat dat offline is telt niet mee: van
@@ -722,6 +737,21 @@ export default function Home() {
       label: 'Ongedaan maken',
       onClick: () => setSwitches(list, true),
     })
+  }
+
+  // De kamerschakelaar: staat er iets aan, dan gaat dat uit; anders gaat
+  // alles aan. Met "Ongedaan maken", zoals Alles uit: in de kamerlijst zie
+  // je de tegels van die kamer niet.
+  async function switchRoom(room) {
+    const turnOn = room.on.length === 0
+    const list = turnOn ? room.switchable : room.on
+    if (list.length === 0 || !(await setSwitches(list, turnOn))) return
+    const verb = turnOn ? 'aan' : 'uit'
+    showToast(
+      list.length === 1 ? `${list[0].name} gaat ${verb}` : `${list.length} apparaten in ${room.label} gaan ${verb}`,
+      'info',
+      { label: 'Ongedaan maken', onClick: () => setSwitches(list, !turnOn) }
+    )
   }
 
   // Zelfde optimistisch patroon als toggleDevice, maar voor climate-
@@ -1036,6 +1066,20 @@ export default function Home() {
       : await pb.collection('schedules').create({ ...fields, house: house.id, scene: sceneId })
     setSchedules((prev) => [...prev.filter((s) => s.id !== record.id), record])
     return record
+  }
+
+  // De schakelaar op een schema-kaart: meteen om, en terug als het opslaan
+  // mislukt.
+  async function setScheduleEnabled(schedule, enabled) {
+    const flip = (value) => setSchedules((prev) => prev.map((s) => (s.id === schedule.id ? { ...s, enabled: value } : s)))
+    flip(enabled)
+    try {
+      await pb.collection('schedules').update(schedule.id, { enabled }, { requestKey: null })
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      flip(!enabled)
+      showToast(describeError(`Het schema van ${schedule.time} ${enabled ? 'aanzetten' : 'uitzetten'}`, err), 'error')
+    }
   }
 
   async function deleteSchedule(scheduleId) {
@@ -1364,23 +1408,52 @@ export default function Home() {
       <>
         {errorBanner}
         {noHouse}
-        {roomTabs.length > 0 && (
-          <div className="rooms-bar">
-            <RoomTabs tabs={roomTabs} selectedId={selectedRoomId} onSelect={selectRoom} />
+        {/* Breed: de kamers als lijst links, elk met een schakelaar, en de
+            gekozen kamer ernaast. Telefoon: de kamerpillen, met de
+            schakelaar van de gekozen kamer naast het aantal. */}
+        <div className="rooms-layout">
+          {roomTabs.length > 0 && (
+            <RoomsPanel
+              rooms={roomTabs}
+              selectedId={selectedRoomId}
+              onSelect={selectRoom}
+              reachable={houseReachable}
+              onSwitch={switchRoom}
+            />
+          )}
+          <div className="rooms-detail">
+            {roomTabs.length > 0 && (
+              <div className="rooms-bar">
+                <RoomTabs tabs={roomTabs} selectedId={selectedRoomId} onSelect={selectRoom} />
+              </div>
+            )}
+            {loaded && house && selectedRoom && (
+              <div className="room-head">
+                <div className="room-head-titles">
+                  <h2 className="room-head-title">{selectedRoom.label}</h2>
+                  {count > 0 && <p className="section-count">{count === 1 ? '1 apparaat' : `${count} apparaten`}</p>}
+                </div>
+                {selectedRoom.switchable.length > 0 && (
+                  <div className="room-head-switch">
+                    <span className="room-head-state" aria-hidden="true">
+                      {describeRoom(selectedRoom, houseReachable)}
+                    </span>
+                    <RoomSwitch room={selectedRoom} canSwitch={houseReachable} onSwitch={switchRoom} />
+                  </div>
+                )}
+              </div>
+            )}
+            {firstDevice}
+            {loaded && house && count === 0 && devicesInHouse.length > 0 && (
+              <p className="empty-state">
+                Nog geen apparaten in deze kamer. Voeg er een toe met "Toevoegen", of verplaats een apparaat hierheen
+                via Details.
+              </p>
+            )}
+            {skeleton}
+            {renderDevices(devicesInSelectedRoom)}
           </div>
-        )}
-        {loaded && house && count > 0 && (
-          <p className="section-count">{count === 1 ? '1 apparaat' : `${count} apparaten`}</p>
-        )}
-        {firstDevice}
-        {loaded && house && count === 0 && devicesInHouse.length > 0 && (
-          <p className="empty-state">
-            Nog geen apparaten in deze kamer. Voeg er een toe met "Toevoegen", of verplaats een apparaat hierheen via
-            Details.
-          </p>
-        )}
-        {skeleton}
-        {renderDevices(devicesInSelectedRoom)}
+        </div>
       </>
     )
   } else if (tab === 'scenes') {
@@ -1400,6 +1473,7 @@ export default function Home() {
             onRun={runScene}
             onEdit={(scene) => setEditingScene(scene.id)}
             onCreate={() => setEditingScene('new')}
+            onToggleSchedule={setScheduleEnabled}
           />
         )}
       </>
