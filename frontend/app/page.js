@@ -26,6 +26,7 @@ import ChangePasswordModal from '../components/ChangePasswordModal'
 import SignupForm from '../components/SignupForm'
 import ClaimSheet from '../components/ClaimSheet'
 import { pendingKey } from '../lib/claim'
+import { needsRefresh } from '../lib/session'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
@@ -166,6 +167,29 @@ export default function Home() {
   useEffect(() => {
     setLoggedIn(pb.authStore.isValid)
   }, [])
+
+  // Het inlogtoken verlengen bij het openen en bij terugkeer naar de app
+  // (zie lib/session.js), zodat je ingelogd blijft zolang je de app gebruikt.
+  // Alleen een 401 betekent uitloggen; zonder verbinding blijf je ingelogd en
+  // proberen we het de volgende keer opnieuw.
+  useEffect(() => {
+    if (!loggedIn) return
+    async function refreshSession() {
+      if (!needsRefresh(pb.authStore.token)) return
+      try {
+        await pb.collection('users').authRefresh({ requestKey: 'session-refresh' })
+      } catch (err) {
+        if (isSessionExpired(err)) endExpiredSession()
+        else console.error('[sessie verlengen]', err)
+      }
+    }
+    refreshSession()
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshSession()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [loggedIn])
 
   useEffect(() => {
     // Bij inloggen met de glijdende binnenkomst is alles al geladen.
