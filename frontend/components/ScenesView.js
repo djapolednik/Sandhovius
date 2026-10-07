@@ -2,10 +2,21 @@
 
 import { ArrowUpRightIcon, CheckIcon, ClockIcon, PlusIcon, ScenesIcon } from '../lib/icons'
 import { describeDays, describeSchedules } from '../lib/schedules'
+import { describeLightStep } from '../lib/sceneChoices'
 
 // "Leeslamp, Staande lamp en Thermostaat": wat een scène raakt, in woorden.
 function describeScene(scene, deviceNameById) {
-  const names = [...new Set((scene.actions ?? []).map((step) => deviceNameById[step.device]).filter(Boolean))]
+  const names = [
+    ...new Set(
+      (scene.actions ?? [])
+        .filter((step) => deviceNameById[step.device])
+        .map((step) => {
+          const name = deviceNameById[step.device]
+          const detail = step.action === 'turn_on' ? describeLightStep(step.payload) : ''
+          return detail ? `${name} (${detail})` : name
+        }),
+    ),
+  ]
   if (names.length === 0) return 'Nog geen apparaten'
   if (names.length <= 3) return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} en ${names.at(-1)}`
   return `${names.slice(0, 2).join(', ')} en nog ${names.length - 2}`

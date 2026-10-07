@@ -5,50 +5,10 @@ import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { formatTemperature } from '../lib/temperature'
 import { DAYS, describeDays } from '../lib/schedules'
+import { actionsFromChoices, choicesFromActions, currentPayload, describeLightStep } from '../lib/sceneChoices'
 import { MinusIcon, PlusIcon, TrashIcon } from '../lib/icons'
 
 const TEMP_STEP = 0.5
-const DEFAULT_TEMPERATURE = 20
-
-// Wat een scène per apparaat doet: niets, aan of uit. Een thermostaat die
-// "aan" gaat, gaat meteen naar een temperatuur (turn_on + set_temperature).
-function choicesFromActions(actions, devices) {
-  const choices = {}
-  for (const device of devices) choices[device.id] = { mode: 'skip', temperature: currentTarget(device) }
-  for (const step of actions ?? []) {
-    const choice = choices[step.device]
-    if (!choice) continue
-    if (step.action === 'turn_off') choice.mode = 'off'
-    if (step.action === 'turn_on') choice.mode = 'on'
-    if (step.action === 'set_temperature') {
-      choice.mode = 'on'
-      choice.temperature = step.payload?.temperature ?? choice.temperature
-    }
-  }
-  return choices
-}
-
-function actionsFromChoices(choices, devices) {
-  const actions = []
-  for (const device of devices) {
-    const choice = choices[device.id]
-    if (!choice || choice.mode === 'skip') continue
-    if (choice.mode === 'off') actions.push({ device: device.id, action: 'turn_off' })
-    else {
-      actions.push({ device: device.id, action: 'turn_on' })
-      if (device.type === 'climate') {
-        actions.push({ device: device.id, action: 'set_temperature', payload: { temperature: choice.temperature } })
-      }
-    }
-  }
-  return actions
-}
-
-function currentTarget(device) {
-  const state = device.expand?.device_state_via_device?.[0]?.state
-  const target = state?.occupied_heating_setpoint ?? state?.attributes?.temperature
-  return typeof target === 'number' ? target : DEFAULT_TEMPERATURE
-}
 
 function rowsFromSchedules(schedules) {
   return [...schedules]
@@ -79,6 +39,13 @@ const MODES = [
   { value: 'on', label: 'Aan' },
   { value: 'off', label: 'Uit' },
 ]
+const CURRENT_MODE = { value: 'current', label: 'Zoals nu' }
+
+// "Zoals nu" kan alleen bij een lamp die nu aan staat en dimt of kleurt, of
+// als de scène al een opgeslagen stand voor die lamp heeft.
+function modesFor(device, choice) {
+  return currentPayload(device) || choice.payload ? [...MODES, CURRENT_MODE] : MODES
+}
 
 // Een scène maken of wijzigen: een naam, en per lamp, stopcontact en
 // thermostaat wat hij doet. Anders dan de detail-sheet met "Opslaan": je
@@ -188,6 +155,7 @@ export default function SceneModal({
             <ul className="scene-rows">
               {devices.map((device) => {
                 const choice = choices[device.id]
+                const modes = modesFor(device, choice)
                 return (
                   <li key={device.id} className="scene-row">
                     <span className="scene-row-name">
@@ -196,7 +164,7 @@ export default function SceneModal({
                     </span>
                     <fieldset className="segmented segmented-small">
                       <legend className="visually-hidden">{device.name} in deze scène</legend>
-                      {MODES.map(({ value, label }) => (
+                      {modes.map(({ value, label }) => (
                         <label
                           key={value}
                           className={`segmented-option ${choice.mode === value ? 'segmented-option-selected' : ''}`}
@@ -207,12 +175,22 @@ export default function SceneModal({
                             value={value}
                             className="visually-hidden"
                             checked={choice.mode === value}
-                            onChange={() => setChoice(device.id, { mode: value })}
+                            onChange={() =>
+                              setChoice(
+                                device.id,
+                                value === 'current'
+                                  ? { mode: value, payload: currentPayload(device) ?? choice.payload }
+                                  : { mode: value },
+                              )
+                            }
                           />
                           {label}
                         </label>
                       ))}
                     </fieldset>
+                    {choice.mode === 'current' && choice.payload && (
+                      <span className="scene-row-room">{describeLightStep(choice.payload)}</span>
+                    )}
                     {device.type === 'climate' && choice.mode === 'on' && (
                       <div className="scene-temperature">
                         <button
