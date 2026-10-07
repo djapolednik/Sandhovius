@@ -111,3 +111,19 @@ func TestAddMQTTSuccessKeepsFlow(t *testing.T) {
 		t.Errorf("deleted = %v, verwacht niets", deleted)
 	}
 }
+
+func TestAddMQTTAbortedStartDoesNotSubmit(t *testing.T) {
+	var paths []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.Method+" "+r.URL.Path)
+		w.Write([]byte(`{"type":"abort","reason":"already_in_progress"}`))
+	}))
+	defer srv.Close()
+	err := NewClient("ws://x", srv.URL, "tok").AddMQTT("mosquitto", 1883)
+	if err == nil {
+		t.Fatal("expected an error when the flow start aborts")
+	}
+	if len(paths) != 1 {
+		t.Fatalf("expected only the start request, got %v", paths)
+	}
+}

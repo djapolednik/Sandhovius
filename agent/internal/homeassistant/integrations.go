@@ -46,10 +46,17 @@ func (c *Client) HasIntegration(domain string) (bool, error) {
 // Mosquitto). Same as Instellingen → Integraties → MQTT in the HA UI.
 func (c *Client) AddMQTT(broker string, port int) error {
 	var form struct {
+		Type   string `json:"type"`
+		Reason string `json:"reason"`
 		FlowID string `json:"flow_id"`
 	}
 	if err := c.postJSON("/api/config/config_entries/flow", map[string]any{"handler": "mqtt"}, &form); err != nil {
 		return fmt.Errorf("ha: start mqtt flow: %w", err)
+	}
+	// An abort (already_in_progress, single_instance_allowed) has no flow to
+	// submit to or to delete.
+	if form.Type != "form" || form.FlowID == "" {
+		return fmt.Errorf("ha: mqtt flow did not start a form (type %q, reason %q)", form.Type, form.Reason)
 	}
 
 	// The form wants the collapsed "other_settings" section too; these are
