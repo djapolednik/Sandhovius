@@ -35,6 +35,19 @@ http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`: alleen
 voor PocketBase zelf en de scripts, de agent gebruikt ze niet meer) · PWA:
 http://localhost:3000 · Mailpit: http://localhost:8025
 
+## Gesimuleerde lampen
+
+Voor dimmen en kleuren zonder echte lamp:
+
+```bash
+pip install -r scripts/requirements.txt
+python scripts/fake-lights.py          # laat draaien; --host/--port als de broker elders staat
+```
+
+Het script meldt drie lampen aan via MQTT-discovery ("Testlamp dimbaar", "Testlamp wit", "Testlamp kleur"). Voeg ze in de app toe als apparaat (of laat ze in PocketBase staan als ze er al zijn). Opruimen: `python scripts/fake-lights.py --remove`, daarna de drie devices in het PocketBase-beheer (http://localhost:8090/_/) verwijderen.
+
+De MQTT-integratie van Home Assistant zet de agent zelf op (eenmalig bij de start, als HA hem nog niet heeft); die blijft staan, ook na `--remove`.
+
 ## Valkuilen
 
 - **Windows + Git Bash:** `gofmt -l` noemt elk bestand (CRLF in de werkmap; git normaliseert bij commit, dus negeren). Geen gcc → geen `go test -race`. Docker Desktop staat in `%LOCALAPPDATA%\Programs\DockerDesktop`. Bij `docker exec … /pad` in Git Bash `MSYS_NO_PATHCONV=1` ervoor, anders wordt het pad een Windows-pad.

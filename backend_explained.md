@@ -198,6 +198,12 @@ agent/
         └── weather.go        weer uit HA naar houses.weather
 ```
 
+`app/mqtt.go` zet bij de start de MQTT-integratie van Home Assistant zelf op
+(`ensureMQTT`, via `homeassistant/integrations.go`): als HA hem nog niet heeft,
+doorloopt de agent de config-flow naar de lokale broker; mislukt dat, dan
+wordt de flow afgebroken.
+Zo zien lampen die zich via MQTT-discovery aanmelden direct HA.
+
 Elk package kent alleen zijn eigen protocol; `app/` is de enige plek die ze
 samenbrengt.
 
@@ -300,7 +306,10 @@ app maakt record  →  commands (pending)  →  agent (realtime SSE)  →  HA-se
    commando wordt maar één keer opgepakt, ook als realtime en inhalen hetzelfde
    zien.
 4. Uitvoeren via HA's domein-agnostische `homeassistant.turn_on/turn_off/toggle`
-   (of `climate.set_temperature`), daarna `sent` of `failed` met reden.
+   (of `climate.set_temperature`). Een `turn_on` met payload op een lamp
+   (`brightness_pct`, `color_temp_kelvin`, `rgb_color`) gaat naar
+   `light.turn_on`, na controle van de sleutels en waarden (`serviceCall` in
+   `app/light.go`); anders `failed` met een Nederlandse reden. Daarna `sent` of `failed` met reden.
 5. De nieuwe stand komt via Pad A terug: geen apart schrijfpad.
 
 Waarom verlopen: bij een korte uitval kan de realtime-verbinding blijven
