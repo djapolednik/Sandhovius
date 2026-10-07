@@ -195,3 +195,68 @@ func TestNonMemberSeesNothing(t *testing.T) {
 		}
 	}
 }
+
+// Favorieten zijn per persoon: je ziet en maakt alleen je eigen favorieten, en
+// alleen voor apparaten van een huis waar je lid van bent.
+func TestFavoritesArePersonal(t *testing.T) {
+	p := startPB(t)
+	w := fixture(t, p)
+	m, mTok := newUserToken(t, p, "huisgenoot@sandhovius.test")
+	addMember(t, p, w.HouseA, m)
+	x, xTok := newUserToken(t, p, "x@sandhovius.test")
+
+	st, out := p.do(t, w.UserATok, "POST", "/api/collections/favorites/records",
+		map[string]any{"user": w.UserA, "device": w.DevA, "order": 1})
+	if st != 200 {
+		t.Fatalf("bewoner A mag geen eigen favoriet maken: %d %v", st, out)
+	}
+	favA, _ := out["id"].(string)
+
+	if ids := listIDs(t, p, w.UserATok, "favorites"); len(ids) != 1 || ids[0] != favA {
+		t.Errorf("A ziet favorieten %v, verwacht alleen %s", ids, favA)
+	}
+	if ids := listIDs(t, p, mTok, "favorites"); len(ids) != 0 {
+		t.Errorf("huisgenoot ziet de favorieten van A: %v", ids)
+	}
+	if st, _ := p.do(t, mTok, "GET", "/api/collections/favorites/records/"+favA, nil); st != 404 {
+		t.Errorf("huisgenoot leest de favoriet van A: %d (verwacht 404)", st)
+	}
+	patchRefused(t, p, mTok, "favorites", favA, map[string]any{"order": 9}, "huisgenoot")
+	if st, _ := p.do(t, mTok, "DELETE", "/api/collections/favorites/records/"+favA, nil); st < 400 {
+		t.Errorf("huisgenoot verwijdert de favoriet van A: %d", st)
+	}
+
+	if st, out := p.do(t, mTok, "POST", "/api/collections/favorites/records",
+		map[string]any{"user": w.UserA, "device": w.DevA, "order": 2}); st < 400 {
+		t.Errorf("huisgenoot maakt een favoriet voor A: %d %v", st, out)
+	}
+	if st, out := p.do(t, mTok, "POST", "/api/collections/favorites/records",
+		map[string]any{"user": m, "device": w.DevA, "order": 1}); st != 200 {
+		t.Errorf("huisgenoot mag geen eigen favoriet maken: %d %v", st, out)
+	}
+	if st, out := p.do(t, xTok, "POST", "/api/collections/favorites/records",
+		map[string]any{"user": x, "device": w.DevA, "order": 1}); st < 400 {
+		t.Errorf("niet-lid maakt een favoriet op een device van A: %d %v", st, out)
+	}
+	if st, out := p.do(t, w.UserATok, "POST", "/api/collections/favorites/records",
+		map[string]any{"user": w.UserA, "device": w.DevB, "order": 1}); st < 400 {
+		t.Errorf("A maakt een favoriet op een device van B: %d %v", st, out)
+	}
+
+	// eigen favoriet: volgorde wijzigen mag, user of device verhangen niet
+	if st, out := p.do(t, w.UserATok, "PATCH", "/api/collections/favorites/records/"+favA,
+		map[string]any{"order": 5}); st != 200 {
+		t.Errorf("A mag de volgorde van een eigen favoriet niet wijzigen: %d %v", st, out)
+	}
+	patchRefused(t, p, w.UserATok, "favorites", favA, map[string]any{"user": m}, "A")
+	patchRefused(t, p, w.UserATok, "favorites", favA, map[string]any{"device": w.DevB}, "A")
+
+	// device weg → favorieten weg
+	if st, out := p.do(t, w.UserATok, "DELETE", "/api/collections/devices/records/"+w.DevA, nil); st != 204 {
+		t.Fatalf("device verwijderen: %d %v", st, out)
+	}
+	if ids := listIDs(t, p, p.AdminToken, "favorites"); len(ids) != 0 {
+		t.Errorf("favorieten blijven na het verwijderen van het device: %v", ids)
+	}
+}
+

@@ -26,6 +26,7 @@ export default function DeviceSettingsModal({
   rooms,
   onSave,
   onSaveError,
+  favorite,
   onToggleFavorite,
   onSetLight,
   houseReachable = true,
@@ -149,9 +150,9 @@ export default function DeviceSettingsModal({
         <span id={`favorite-${device.id}`}>Op Home tonen</span>
         <button
           type="button"
-          className={`switch switch-accent ${device.favorite ? 'switch-on' : ''}`}
+          className={`switch switch-accent ${favorite ? 'switch-on' : ''}`}
           role="switch"
-          aria-checked={!!device.favorite}
+          aria-checked={!!favorite}
           aria-labelledby={`favorite-${device.id}`}
           onClick={handleFavorite}
         >

@@ -18,6 +18,7 @@ import RoomTabs from '../components/RoomTabs'
 import RoomsPanel, { RoomSwitch, describeRoom } from '../components/RoomsPanel'
 import SettingsView from '../components/SettingsView'
 import FavoritesOrderModal from '../components/FavoritesOrderModal'
+import { favoriteDevices as favoriteDevicesOf, favoriteFor, nextOrder } from '../lib/favorites'
 import ChangePasswordModal from '../components/ChangePasswordModal'
 import SignupForm from '../components/SignupForm'
 import ClaimSheet from '../components/ClaimSheet'
@@ -88,6 +89,8 @@ export default function Home() {
   const [houses, setHouses] = useState([])
   const [rooms, setRooms] = useState([])
   const [devices, setDevices] = useState([])
+  // Eigen favorieten (records { user, device, order }); per persoon.
+  const [favorites, setFavorites] = useState([])
   const [scenes, setScenes] = useState([])
   const [schedules, setSchedules] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
@@ -237,6 +240,13 @@ export default function Home() {
           )
         })
       }),
+      pb.collection('favorites').subscribe('*', (e) => {
+        setFavorites((prev) =>
+          e.action === 'delete'
+            ? prev.filter((f) => f.id !== e.record.id)
+            : [...prev.filter((f) => f.id !== e.record.id), e.record]
+        )
+      }),
       pb.collection('houses').subscribe('*', (e) => {
         if (e.action === 'delete') return
         setHouses((prev) => prev.map((h) => (h.id === e.record.id ? e.record : h)))
@@ -380,6 +390,7 @@ export default function Home() {
     setHouses([])
     setRooms([])
     setDevices([])
+    setFavorites([])
     setScenes([])
     setSchedules([])
     setSelectedRoomId('')
@@ -403,18 +414,20 @@ export default function Home() {
   async function fetchAll() {
     setError('')
     try {
-      const [houseRecords, roomRecords, deviceRecords, sceneRecords, scheduleRecords] = await Promise.all([
+      const [houseRecords, roomRecords, deviceRecords, sceneRecords, scheduleRecords, favoriteRecords] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
         pb.collection('devices').getFullList({ expand: 'device_state_via_device' }),
         pb.collection('scenes').getFullList({ sort: 'order,name' }),
         pb.collection('schedules').getFullList({ sort: 'time' }),
+        pb.collection('favorites').getFullList(),
       ])
       setHouses(houseRecords)
       setRooms(roomRecords)
       setDevices(deviceRecords)
       setScenes(sceneRecords)
       setSchedules(scheduleRecords)
+      setFavorites(favoriteRecords)
       setLoaded(true)
     } catch (err) {
       if (isSessionExpired(err)) {
@@ -920,9 +933,22 @@ export default function Home() {
   }
 
   // Een nieuwe favoriet komt achteraan.
+  // Favorieten zijn per persoon: een eigen record, niet een vlag op het
+  // apparaat (dan zou je Home ook dat van je huisgenoten veranderen).
+  async function addFavorite(deviceId) {
+    const created = await pb.collection('favorites').create({
+      user: pb.authStore.record.id,
+      device: deviceId,
+      order: nextOrder(favoritesInHouse),
+    })
+    setFavorites((prev) => [...prev.filter((f) => f.id !== created.id), created])
+  }
+
   async function toggleFavorite(device) {
-    const last = Math.max(0, ...devicesInHouse.filter((d) => d.favorite).map((d) => d.favorite_order ?? 0))
-    await saveDevice(device.id, device.favorite ? { favorite: false } : { favorite: true, favorite_order: last + 1 })
+    const existing = favoriteFor(favorites, device.id)
+    if (!existing) return addFavorite(device.id)
+    await pb.collection('favorites').delete(existing.id)
+    setFavorites((prev) => prev.filter((f) => f.id !== existing.id))
   }
 
   // Eén plek omhoog of omlaag in een geordende lijst. Daarna krijgt de hele
@@ -955,7 +981,8 @@ export default function Home() {
   }
 
   function moveFavorite(deviceId, delta) {
-    moveInList(favoriteDevices, deviceId, delta, 'favorite_order', 'devices', setDevices)
+    const ordered = favoriteDevices.map((d) => favoriteFor(favorites, d.id))
+    moveInList(ordered, favoriteFor(favorites, deviceId)?.id, delta, 'order', 'favorites', setFavorites)
   }
 
   async function saveDevice(deviceId, updates) {
@@ -1006,11 +1033,18 @@ export default function Home() {
     // Zolang Home nog geen favorieten heeft, komt een nieuw apparaat daar
     // meteen op te staan: je eerste lamp moet je direct kunnen aanzetten,
     // niet eerst via Kamers opzoeken. De thermostaat staat er altijd al.
-    const favorite = fields.type !== 'climate' && !devicesInHouse.some((d) => d.favorite && d.type !== 'climate')
-    const created = await pb
-      .collection('devices')
-      .create({ ...fields, favorite, gateway: house.id, online: false })
+    const favorite = fields.type !== 'climate' && favoriteDevices.length === 0
+    const created = await pb.collection('devices').create({ ...fields, gateway: house.id, online: false })
     setDevices((prev) => (prev.some((d) => d.id === created.id) ? prev : [...prev, created]))
+    if (favorite) {
+      // Het apparaat bestaat al; lukt alleen de favoriet niet, dan staat het
+      // in zijn kamer en kun je het daar alsnog op Home zetten.
+      try {
+        await addFavorite(created.id)
+      } catch (err) {
+        showToast(describeError('Op Home zetten', err), 'error')
+      }
+    }
     setNewDeviceIds((prev) => [...prev, created.id])
     setTimeout(() => setNewDeviceIds((prev) => prev.filter((id) => id !== created.id)), NEW_DEVICE_GRACE_MS)
     selectRoom(created.room || '__unassigned')
@@ -1334,9 +1368,8 @@ export default function Home() {
   const climateDevices = devicesInHouse.filter((device) => device.type === 'climate')
   // De thermostaat staat altijd op Home; de rest alleen als favoriet.
   // Op de volgorde die de bewoner koos; zonder keuze op naam.
-  const favoriteDevices = devicesInHouse
-    .filter((device) => device.favorite && device.type !== 'climate')
-    .sort((a, b) => (a.favorite_order ?? 0) - (b.favorite_order ?? 0) || a.name.localeCompare(b.name, 'nl'))
+  const favoriteDevices = favoriteDevicesOf(devicesInHouse, favorites)
+  const favoritesInHouse = favorites.filter((f) => devicesInHouse.some((d) => d.id === f.device))
   // Alleen als de box bereikbaar is: anders weten we niet zeker wat er aan
   // staat.
   const shelfDevices = houseReachable ? devicesInHouse.filter((device) => shelfIds.includes(device.id)) : []
@@ -1752,6 +1785,7 @@ export default function Home() {
           rooms={roomsInHouse}
           onSave={saveDevice}
           onSaveError={(message) => showToast(message, 'error')}
+          favorite={!!favoriteFor(favorites, settingsDevice.id)}
           onToggleFavorite={toggleFavorite}
           onSetLight={setLight}
           houseReachable={houseReachable}

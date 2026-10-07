@@ -18,8 +18,6 @@ func TestBoxModifiersCaught(t *testing.T) {
 		collection, id string
 		body           map[string]any
 	}{
-		{"devices", w.DevA, map[string]any{"favorite_order+": 5}},
-		{"devices", w.DevA, map[string]any{"favorite_order-": 5}},
 		{"devices", w.DevA, map[string]any{"gateway+": w.HouseB}},
 		{"devices", w.DevA, map[string]any{"gateway-": w.HouseA}},
 		{"devices", w.DevA, map[string]any{"+room": w.roomA}},
