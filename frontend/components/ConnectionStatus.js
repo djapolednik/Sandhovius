@@ -10,13 +10,23 @@ import { CheckIcon } from '../lib/icons'
 // er iets mis is.
 //
 // realtimeLink: 'connecting' | 'live' | 'lost' — deze telefoon ↔ Sandhovius
-// house: { reachable, since } — Sandhovius ↔ de box in huis
+// house: { reachable, linked, since } — Sandhovius ↔ de box in huis
 export default function ConnectionStatus({ realtimeLink, house, now }) {
   if (realtimeLink === 'lost') {
     return (
       <div className="connection-notice" role="status">
         <strong>Geen verbinding met Sandhovius.</strong> Je ziet de laatst bekende stand van je apparaten. We
         proberen het automatisch opnieuw.
+      </div>
+    )
+  }
+
+  // Bewust ontkoppeld: geen storing, dus niet "reageert niet".
+  if (!house.linked) {
+    return (
+      <div className="connection-notice" role="status">
+        <strong>Er is geen box aan dit huis gekoppeld.</strong> Tot er een box gekoppeld is, zie je de laatst
+        bekende stand van je apparaten.
       </div>
     )
   }

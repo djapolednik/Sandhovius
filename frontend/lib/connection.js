@@ -7,12 +7,16 @@ const HEARTBEAT_STALE_MS = 90 * 1000
 // - house.select: "offline" zet de agent zelf bij een nette stop;
 // - last_seen: blijft staan bij stroomuitval of een crash, want dan zegt
 //   de agent niets meer.
+// Zonder gekoppelde box (claimed_at leeg, bv. na "Box ontkoppelen") is er
+// niets om te bereiken: dat is geen storing, en zo zeggen we het ook
+// (linked: false).
 export function houseConnection(house, nowMs) {
-  if (!house) return { reachable: true, since: null }
+  if (!house) return { reachable: true, linked: true, since: null }
+  if (!house.claimed_at) return { reachable: false, linked: false, since: null }
   const lastSeenMs = house.last_seen ? new Date(house.last_seen).getTime() : null
   const stale = lastSeenMs === null || nowMs - lastSeenMs > HEARTBEAT_STALE_MS
   const reachable = house.select === 'online' && !stale
-  return { reachable, since: reachable ? null : lastSeenMs }
+  return { reachable, linked: true, since: reachable ? null : lastSeenMs }
 }
 
 const TIME_FORMAT = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit' })
