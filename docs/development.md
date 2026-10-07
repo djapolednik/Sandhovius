@@ -52,6 +52,7 @@ De MQTT-integratie van Home Assistant zet de agent zelf op (eenmalig bij de star
 
 - **Windows + Git Bash:** `gofmt -l` noemt elk bestand (CRLF in de werkmap; git normaliseert bij commit, dus negeren). Geen gcc → geen `go test -race`. Docker Desktop staat in `%LOCALAPPDATA%\Programs\DockerDesktop`. Bij `docker exec … /pad` in Git Bash `MSYS_NO_PATHCONV=1` ervoor, anders wordt het pad een Windows-pad.
 - **PocketBase-datums** komen als `2006-01-02 15:04:05.000Z` (spatie, geen `T`): `time.RFC3339` parse faalt daarop.
+- **Collectie wijzigen via de API of het dashboard** (als superuser, ook in een test) laat de lokale PocketBase een `*_updated_*.js` in `backend/pb_migrations/` schrijven (automigrate). Niet committen: weggooien, de wijziging terugzetten en daarna de history-sync hieronder.
 - **Migratie-historie** opschonen na weggegooide migratiebestanden: `docker exec sandhovius-pocketbase /usr/local/bin/pocketbase migrate history-sync --dir=/pb_data --migrationsDir=/pb_migrations`.
 - **Docker-cache:** verschijnt een frontendwijziging niet na `docker compose up -d --build frontend` (de stap `COPY . .` blijft CACHED, gezien na `git apply`), bouw dan zonder cache: `docker compose build --no-cache frontend && docker compose up -d frontend`. Controle: `docker exec sandhovius-frontend sh -c 'grep -l <nieuwe-klasse> /app/.next/static/chunks/*.css'`.
 - **Hooks:** nieuwe of gewijzigde bestanden in `backend/pb_hooks/` worden op Windows niet altijd opgepikt door de hooks-watcher: `docker compose restart pocketbase`.
