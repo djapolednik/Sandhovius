@@ -47,3 +47,21 @@ export function householdError(what, err) {
   if (status === 400 && err?.response?.data?.email) return 'Vul een geldig e-mailadres in.'
   return describeError(what, err)
 }
+
+// Uit een huis gehaald worden zie je niet live: PocketBase stuurt geen events
+// naar wie de regel niet meer haalt. Weigert de server iets op huisdata (een
+// 4xx, behalve uitgelogd of te veel verzoeken), dan halen we alles opnieuw op
+// om te zien of je er nog in zit.
+const HOUSE_DATA = /\/api\/(collections\/(houses|devices|device_state|rooms|scenes|schedules|commands|favorites)\/|sandhovius\/houses\/)/
+
+export function isHouseDataRefusal(url, status) {
+  if (status < 400 || status >= 500 || status === 401 || status === 429) return false
+  return HOUSE_DATA.test(new URL(url, 'http://x').pathname + '/')
+}
+
+// Huizen die er na opnieuw ophalen niet meer zijn; die je zelf verliet
+// (ignoreIds) tellen niet, die verdwijnen niet onverwacht.
+export function lostHouses(before, after, ignoreIds = []) {
+  const still = new Set(after.map((h) => h.id))
+  return before.filter((h) => !still.has(h.id) && !ignoreIds.includes(h.id))
+}

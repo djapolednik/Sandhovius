@@ -21,7 +21,7 @@ import FavoritesOrderModal from '../components/FavoritesOrderModal'
 import { favoriteDevices as favoriteDevicesOf, favoriteFor, nextOrder } from '../lib/favorites'
 import HouseholdSection from '../components/HouseholdSection'
 import InvitationCard from '../components/InvitationCard'
-import { isAdmin, pickHouse } from '../lib/household'
+import { isAdmin, isHouseDataRefusal, lostHouses, pickHouse } from '../lib/household'
 import ChangePasswordModal from '../components/ChangePasswordModal'
 import SignupForm from '../components/SignupForm'
 import ClaimSheet from '../components/ClaimSheet'
@@ -58,6 +58,10 @@ function tabFromHash() {
 // vanzelf — geen eigen opslag-code nodig.
 // Zonder vaste URL: PocketBase op dezelfde host als de pagina, zodat de
 // telefoon op het LAN (http://192.168.x.x:3000) de box vindt i.p.v. zichzelf.
+// Zo lang weg uit de app (achtergrond, ander tabblad) en we halen alles
+// opnieuw op bij terugkomst.
+const AWAY_REFETCH_MS = 30 * 1000
+
 const pb = new PocketBase(defaultPocketbaseUrl(), new LocalAuthStore('pocketbase_auth'))
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
 // Wat Home laat zien: je favorieten of alles wat aan staat.
@@ -446,6 +450,7 @@ export default function Home() {
   async function removeMember(memberId) {
     await pb.send(`/api/sandhovius/houses/${house.id}/members/${memberId}`, { method: 'DELETE' })
     if (memberId !== userId) return
+    leftHouseIds.current.push(house.id)
     await fetchAll()
     selectTab('home')
   }
@@ -505,6 +510,13 @@ export default function Home() {
         pb.collection('favorites').getFullList(),
         pb.collection('invitations').getFullList({ sort: '-created' }),
       ])
+      // Een huis dat er niet meer is en dat je niet zelf verliet: een ander
+      // heeft je eruit gehaald. Rustig zeggen, en verder met het volgende huis.
+      const lost = lostHouses(housesRef.current, houseRecords, leftHouseIds.current)
+      leftHouseIds.current = []
+      if (lost.length > 0) {
+        showToast(`Je hebt geen toegang meer tot ${lost.map((h) => h.name).join(' en ')}.`)
+      }
       setHouses(houseRecords)
       setRooms(roomRecords)
       setDevices(deviceRecords)
@@ -526,6 +538,45 @@ export default function Home() {
   // heeft zonder zelf opnieuw te abonneren.
   const fetchAllRef = useRef(fetchAll)
   fetchAllRef.current = fetchAll
+  // Voor fetchAll: welke huizen er waren, en welke je zelf net verliet.
+  const housesRef = useRef(houses)
+  housesRef.current = houses
+  const leftHouseIds = useRef([])
+
+  // Uit een huis gehaald worden komt niet via realtime binnen (PocketBase
+  // stuurt niets naar wie de regel niet meer haalt). Daarom opnieuw ophalen:
+  // - als de server iets op huisdata weigert (pb.afterSend ziet elk antwoord,
+  //   ook fouten), samengevoegd tot één keer;
+  // - als je na minstens AWAY_REFETCH_MS terugkomt in de app (ook een huis
+  //   dat je op een ander toestel accepteerde verschijnt dan).
+  useEffect(() => {
+    if (!loggedIn) return
+    let timer = null
+    pb.afterSend = (response, data) => {
+      if (!timer && isHouseDataRefusal(response.url, response.status)) {
+        timer = setTimeout(() => {
+          timer = null
+          fetchAllRef.current()
+        }, 300)
+      }
+      return data
+    }
+    let hiddenAt = null
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = Date.now()
+      } else if (hiddenAt !== null && Date.now() - hiddenAt >= AWAY_REFETCH_MS) {
+        hiddenAt = null
+        fetchAllRef.current()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearTimeout(timer)
+      pb.afterSend = undefined
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [loggedIn])
 
   function retryFetch() {
     setFetchFailed(false)

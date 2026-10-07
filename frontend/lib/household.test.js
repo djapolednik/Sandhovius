@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { expiresText, householdError, isAdmin, pickHouse, roleLabel } from './household.js'
+import { expiresText, householdError, isAdmin, isHouseDataRefusal, lostHouses, pickHouse, roleLabel } from './household.js'
 
 test('roleLabel: beheerder en huisgenoot', () => {
   assert.equal(roleLabel('admin'), 'Beheerder')
@@ -45,4 +45,28 @@ test('householdError: Nederlandse melding van de server bij 403, 409, 410 en "Al
   )
   assert.match(householdError('Uitnodigen', err(400, 'Failed to create record.')), /^Uitnodigen is niet gelukt/)
   assert.match(householdError('Verlaten', err(0, '')), /niet bereikbaar/)
+})
+
+test('isHouseDataRefusal: een 4xx op huisdata, niet op inloggen of bij te veel verzoeken', () => {
+  const base = 'http://localhost:8090'
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/commands/records`, 400), true)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/devices/records/abc`, 404), true)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/houses/records/abc?expand=x`, 403), true)
+  assert.equal(isHouseDataRefusal(`${base}/api/sandhovius/houses/abc/members`, 404), true)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/scenes/records`, 401), false)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/commands/records`, 429), false)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/commands/records`, 200), false)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/commands/records`, 500), false)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/users/records/abc`, 404), false)
+  assert.equal(isHouseDataRefusal(`${base}/api/collections/invitations/records/abc`, 404), false)
+  assert.equal(isHouseDataRefusal(`${base}/api/sandhovius/claim`, 400), false)
+})
+
+test('lostHouses: huizen die weg zijn, behalve die je zelf verliet', () => {
+  const a = { id: 'a', name: 'Thuis' }
+  const b = { id: 'b', name: 'Strandhuis' }
+  assert.deepEqual(lostHouses([a, b], [b]), [a])
+  assert.deepEqual(lostHouses([a, b], [b], ['a']), [])
+  assert.deepEqual(lostHouses([a], [a, b]), [])
+  assert.deepEqual(lostHouses([], []), [])
 })
