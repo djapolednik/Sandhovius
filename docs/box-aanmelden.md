@@ -99,8 +99,9 @@ of hij inmiddels bij een huis hoort.
    - Scant iemand de QR-code met de gewone telefooncamera, dan opent de link de
      app; na inloggen en bevestigen staat de code al ingevuld.
 5. **Waar hoort deze box?**
-   - **Nieuw huis**: met een naam (standaard "Thuis").
-   - **Vervangt de box van …**: een bestaand huis; kamers, apparaten, scènes en
+   - **Nieuw huis**: met een naam (standaard "Thuis"). Wie koppelt, wordt lid
+     en beheerder van dat huis en kan daarna huisgenoten uitnodigen.
+   - **Vervangt de box van …**: een bestaand huis waar je beheerder van bent; kamers, apparaten, scènes en
      schema's blijven, de nieuwe box neemt het over en de oude box wordt
      losgekoppeld.
 6. **Wachten**: "Wachten tot je box zich meldt… Dit kan tot vijf minuten duren."
@@ -112,16 +113,17 @@ of hij inmiddels bij een huis hoort.
 | Melding | Betekenis | Wat te doen |
 |---|---|---|
 | Deze code klopt niet | Serienummer of claimcode is fout (bewust dezelfde melding, zodat niemand serienummers kan aftasten) | Opnieuw overtikken; anders support (nieuwe code) |
-| Deze box is al gekoppeld | De box hoort bij een huis van iemand anders | Vorige eigenaar moet ontkoppelen |
+| Deze box is al gekoppeld | De box hoort bij een huis waar je geen lid van bent | Een beheerder van dat huis moet ontkoppelen |
 | Bevestig eerst je e-mailadres | Account nog niet bevestigd | Mail openen of opnieuw sturen |
 | Te veel pogingen, probeer het over een minuut opnieuw | Meer dan 10 pogingen per minuut | Even wachten |
 
-Nog een keer koppelen van een box die al bij een eigen huis hoort is geen
+Nog een keer koppelen van een box die al bij een huis hoort waar je lid van bent is geen
 fout: de app meldt gewoon succes.
 
 ## 4. Later: ontkoppelen, vervangen, nieuwe code
 
-- **Ontkoppelen** (verkoop of retour): huisinstellingen → "Box ontkoppelen".
+- **Ontkoppelen** (verkoop of retour): huisinstellingen → "Box ontkoppelen"
+  (alleen een beheerder).
   Het huis met al zijn instellingen blijft; de box draait binnen 5 minuten
   weer alleen lokaal. Dezelfde claimcode werkt daarna weer, dus de handleiding
   kan mee naar de nieuwe eigenaar.

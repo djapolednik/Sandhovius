@@ -106,17 +106,20 @@ het starten helemaal op.
 |---|---|---|---|
 | `users` | auth | Bewoners | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
 | `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen) |
-| `houses` | base | Eén per huis, van een bewoner | `user`, `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
+| `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
-| `devices` | base | Apparaten | `gateway` (= huis), `entity_id`, `name`, `type`, `online`, `room`, `favorite`, `favorite_order` |
+| `devices` | base | Apparaten | `gateway` (= huis), `entity_id`, `name`, `type`, `online`, `room` |
+| `favorites` | base | Favorieten op Home, per persoon | `user`, `device` (cascade), `order`; uniek op (user, device) |
+| `invitations` | base | Uitnodigingen voor een huis | `house` (cascade), `email` (kleine letters), `role` (`admin`/`member`), `invited_by`, `house_name`, `inviter_name`, `expires` (+7 dagen), `created`; uniek op (house, email) |
 | `device_state` | base | **Huidige** stand per device (één rij, overschreven) | `device`, `state` (JSON), `updated_at` |
 | `commands` | base | Opdrachten van de app | `device` óf `scene`, `action`, `payload`, `status` (pending/sent/failed), `error`, `created`, `updated` |
 | `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
 | `schedules` | base | Schema's voor scènes | `house`, `scene`, `time` ("HH:MM"), `days`, `enabled`, `last_run`, `last_error` |
 
-Relaties: `users` ← `houses` ← `rooms`/`devices`/`scenes`/`schedules`;
-`devices` ← `device_state`/`commands`. Een box hoort bij hooguit één huis
-(`boxes.house`), een bewoner kan meerdere huizen hebben.
+Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
+`devices` ← `device_state`/`commands`/`favorites`. Een box hoort bij hooguit één huis
+(`boxes.house`), een bewoner kan lid van meerdere huizen zijn en een huis
+heeft meerdere leden (spec: `docs/superpowers/specs/2026-10-07-household-design.md`).
 
 **Waarom `device_state` maar één rij per device heeft**: PocketBase houdt
 alleen de laatste stand bij; de volledige geschiedenis blijft lokaal op de box
@@ -131,11 +134,19 @@ alleen de laatste stand bij; de volledige geschiedenis blijft lokaal op de box
 Elke regel heeft een **bewonerstak** en een **box-tak**:
 
 ```
-bewoner: @request.auth.collectionName = "users" && (… = @request.auth.id)
+bewoner: @request.auth.collectionName = "users" && (…members.id ?= @request.auth.id)
 box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
          && (… = @request.auth.house)
 ```
 
+- Elk lid bedient het huis (`members.id ?= …`; op PocketBase 0.40.4 matcht
+  `members ?= …` zonder `.id` nooit). Alleen een beheerder (`admins.id ?= …`)
+  hernoemt het huis. Niemand zet `members`/`admins` met een gewone PATCH, ook
+  een beheerder niet: dat gaat via `household.pb.js`, dat de invariant bewaakt.
+- Favorieten: alleen je eigen, en alleen voor apparaten van je eigen huizen.
+  Uitnodigingen: zichtbaar voor de beheerders van het huis en voor de
+  genodigde (`email = @request.auth.email:lower`, alleen bevestigd); aanmaken
+  alleen als beheerder met `invited_by` = jezelf; niet wijzigbaar.
 - De bewonerstak eist expliciet `users`; zonder die check matchte een gast
   (lege `auth.id`) huizen zonder eigenaar.
 - De box-tak eist een huis; zonder huis ziet en schrijft een box niets (hij
@@ -154,14 +165,28 @@ box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
 - **`claim.pb.js`** — `POST /api/sandhovius/claim` en `/release`, alleen voor
   ingelogde bewoners met een bevestigd e-mailadres. Volgorde: bevestigd →
   code (hash van de genormaliseerde code, constante-tijd vergelijking) →
-  eigenaar van `replace_house` → al gekoppeld. Alles in één transactie, zodat
+  beheerder van `replace_house` → al gekoppeld (lid van dat huis: 200). Alles in één transactie, zodat
   bij twee gelijktijdige claims precies één wint. Onbekend serienummer en foute
   code geven exact dezelfde 400. Details: `docs/box-aanmelden.md`.
 - **`mail.pb.js` + `mail_texts.js`** — zet bij het starten de app-naam
   ("Sandhovius") en, als `SMTP_HOST` gezet is, SMTP, afzender en `appURL` uit
   env. Bevestigings-, reset- en inlogmeldingsmails gaan in de taal van het
   account (`users.language`, standaard Nederlands); links wijzen naar de PWA
-  (`/bevestig`, `/wachtwoord`).
+  (`/bevestig`, `/wachtwoord`). Ook de uitnodigingsmail (taal van de
+  uitnodiger, naam en huisnaam geëscaped, link `/uitnodiging`).
+- **`household.pb.js`** — lidmaatschap, elk in één transactie, voor ingelogde
+  bewoners. Wie geen lid of beheerder is krijgt 404.
+  - Bij een nieuwe uitnodiging (alleen als de aanvrager beheerder is): e-mail
+    in kleine letters, al lid → 400 "Al lid van dit huis", oude uitnodiging
+    voor hetzelfde adres vervangen, `expires`, `house_name`, `inviter_name`;
+    daarna de mail (mislukt die, dan blijft de uitnodiging en gaat de fout naar
+    het log).
+  - `GET /api/sandhovius/houses/{id}/members` — leden met naam, e-mail en rol.
+  - `POST /api/sandhovius/invitations/{id}/accept` — ander adres 404,
+    onbevestigd 403, verlopen 410; daarna lid (en beheerder bij rol admin).
+  - `PATCH` / `DELETE /api/sandhovius/houses/{id}/members/{user}` — rol
+    wijzigen (beheerder) en verwijderen (beheerder) of verlaten (jezelf);
+    de laatste beheerder → 409. Verlaten ruimt je favorieten in dat huis op.
 
 ### Rate limits
 
@@ -169,7 +194,8 @@ Aan sinds de box-identiteit, per IP: PocketBase-standaarden (`*:auth` 2 per
 3 s, `*:create` 20 per 5 s, `/api/` 300 per 10 s) plus `boxes:auth` 10 per
 minuut, `commands:create`/`device_state:create` 100 per 5 s (anders breekt
 "Alles uit" bij veel apparaten) en `/api/sandhovius/claim` en `/release` elk
-10 per minuut. Padlabels matchen exact. Achter een proxy (fase 3) moet
+10 per minuut, en `invitations:create` 20 per uur per ingelogde gebruiker.
+Padlabels matchen exact. Achter een proxy (fase 3) moet
 PocketBase de echte client-IP kennen, anders delen alle clients één emmer.
 
 ---
@@ -357,7 +383,8 @@ Gevonden door verbindingen echt te verbreken, niet in theorie:
   start een tijdelijke PocketBase 0.40.4 met de echte migraties en hooks en
   bewijst o.a. dat box A niets van huis B ziet of wijzigt, dat body-modifiers
   geen omweg zijn, dat gasten niets zien, de claim-flow (incl. gelijktijdige
-  claims) en de mails per taal.
+  claims), de mails per taal, en het huishouden (rollen per huis,
+  favorieten per persoon, uitnodigen, accepteren, laatste beheerder).
 - **Scripts**: `python -m unittest discover -s scripts -p "test_*.py"`.
 - **PWA**: `cd frontend && node --test lib/*.test.js && npx next build`.
 - Eén set testvectoren voor de claimcode (`backend/tests/testdata/claim_codes.json`)
@@ -379,5 +406,8 @@ Gevonden door verbindingen echt te verbreken, niet in theorie:
   idle-timeout hoort bij fase 3.
 - **Commando's verlopen op de klok van de box**; met een server op Scaleway
   beter de serverklok gebruiken.
+- **Uit een huis gehaald worden** door een ander: je ziet het huis tot de
+  volgende verversing, want realtime stuurt geen update naar wie de regel niet
+  meer haalt.
 - **Wachttijd na koppelen** tot ~5 minuten door de controle van de box; kan
   later via realtime op het eigen box-record.

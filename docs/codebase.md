@@ -57,14 +57,14 @@ het waarom): `backend_explained.md`. Hoe je lokaal draait en test:
 
 **Backend (`backend/`)**
 - `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
-- `backend/pb_hooks/` — `claim.pb.js` (`POST /api/sandhovius/claim` en `/release`), `mail.pb.js` + `mail_texts.js` (SMTP uit env, accountmails per `users.language` nl/en); migratie `1790750000_claim_code.js` (verborgen `boxes.claim_code_hash`, rate limits)
+- `backend/pb_hooks/` — `claim.pb.js` (`POST /api/sandhovius/claim` en `/release`), `household.pb.js` (uitnodigingen, leden, rol, verwijderen/verlaten), `mail.pb.js` + `mail_texts.js` (SMTP uit env, accountmails per `users.language` nl/en); migratie `1790750000_claim_code.js` (verborgen `boxes.claim_code_hash`, rate limits)
 - `backend/tests/` — eigen Go-module met integratietests op de PocketBase-regels en hooks (start PocketBase 0.40.4 op een tijdelijke `pb_data`); `testdata/claim_codes.json` = gedeelde testvectoren voor de claimcode
 
 **Frontend (`frontend/`)**
 - `frontend/app/page.js` — de hele PWA-state: login, realtime-subscriptions, tabs (Home/Kamers/Scènes/Opties; hash `#instellingen` voor Opties), commands
-- `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet), `LightControls` (helderheid, wit/kleur, stalen in de detail-sheet), `RoomsPanel` (kamerlijst met schakelaars op brede schermen, `RoomSwitch`)
-- Claim-UI: `SignupForm`, `VerifyNotice`, `ClaimSheet` (jsQR-camera + code intikken), `QrScanner`, `LanguageChoice`, `AccountShell`; routes `/bevestig`, `/wachtwoord`, `/koppel` (deep link uit de QR)
-- `frontend/lib/` — pure helpers met `node --test`-tests (`claim.js`, `account.js`, `schedules.js`, `weather.js`, `light.js` (capabilities, gloed, payloads, throttle), `sceneChoices.js` ("Zoals nu" in scènes), …)
+- `frontend/components/` — `DeviceCard` (kleine liggende tegel; long-press/rechtsklik = details), `ClimateCard` (compacte thermostaat), `HomeScenes`, `Weather` (regel + kaart), `PullToRefresh`, `BottomNav`, `HousePanel`, `SettingsView`, `DeviceSettingsModal` (detail-sheet), `LightControls` (helderheid, wit/kleur, stalen in de detail-sheet), `RoomsPanel` (kamerlijst met schakelaars op brede schermen, `RoomSwitch`), `HouseholdSection` + `InviteSheet` + `MemberSheet` + `RoleChoice` (Opties → Huisgenoten), `InvitationCard`
+- Claim-UI: `SignupForm`, `VerifyNotice`, `ClaimSheet` (jsQR-camera + code intikken), `QrScanner`, `LanguageChoice`, `AccountShell`; routes `/bevestig`, `/wachtwoord`, `/koppel` (deep link uit de QR), `/uitnodiging` (link uit de uitnodigingsmail)
+- `frontend/lib/` — pure helpers met `node --test`-tests (`claim.js`, `account.js`, `schedules.js`, `weather.js`, `light.js` (capabilities, gloed, payloads, throttle), `sceneChoices.js` ("Zoals nu" in scènes), `favorites.js` (favorieten per persoon), `household.js` (rollen, verlooptekst, huiskeuze, foutteksten), …)
 - `frontend/app/styles/` — `theme.css` (tokens licht/donker), `devices.css`, `rooms.css`, `components.css`, `base.css`, `login.css`
 
 **Scripts (`scripts/`)**
