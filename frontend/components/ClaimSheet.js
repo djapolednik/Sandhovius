@@ -132,7 +132,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
           Wachten tot je box zich meldt…
         </p>
         <p className="login-note">
-          Zet je box aan en sluit hem aan op internet. Dit kan tot vijf minuten duren. Je kunt dit venster sluiten; je
+          Zet je box aan en sluit hem aan op internet. Dit kan een paar minuten duren. Je kunt dit venster sluiten; je
           huis is al gekoppeld.
         </p>
         <button type="button" className="btn btn-secondary" onClick={close}>

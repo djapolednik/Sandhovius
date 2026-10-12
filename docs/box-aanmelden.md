@@ -33,7 +33,7 @@ sequenceDiagram
     Bewoner->>App: QR-code scannen of code overtikken, huis kiezen
     App->>PB: POST /api/sandhovius/claim
     PB-->>App: huis gekoppeld
-    Box->>PB: elke 5 min eigen record → ziet het huis
+    PB-->>Box: realtime op eigen record → ziet het huis (binnen een seconde)
     Box-->>App: eerste hartslag → "Je box is er"
 ```
 
@@ -75,8 +75,9 @@ superuser (`POCKETBASE_ADMIN_EMAIL`, `POCKETBASE_ADMIN_PASSWORD`), en
 
 Wat de box doet zodra hij aanstaat: hij logt in als zichzelf (serienummer +
 boxgeheim), heeft nog geen huis en draait daarom alleen lokaal (automatisering,
-geschiedenis en schema's werken; niets naar de cloud). Elke 5 minuten kijkt hij
-of hij inmiddels bij een huis hoort.
+geschiedenis en schema's werken; niets naar de cloud). Hij volgt zijn eigen
+record via realtime, dus koppelen ziet hij binnen een seconde; als vangnet kijkt
+hij ook elke 5 minuten.
 
 ## 2. De box koppelen (de bewoner, thuis)
 
@@ -107,7 +108,7 @@ of hij inmiddels bij een huis hoort.
    - **Vervangt de box van …**: een bestaand huis waar je beheerder van bent; kamers, apparaten, scènes en
      schema's blijven, de nieuwe box neemt het over en de oude box wordt
      losgekoppeld.
-6. **Wachten**: "Wachten tot je box zich meldt… Dit kan tot vijf minuten duren."
+6. **Wachten**: "Wachten tot je box zich meldt… Dit kan een paar minuten duren." (een box die aanstaat meldt zich binnen seconden; de minuten zijn voor een box die nog opstart).
    Zodra de box zijn huis ziet en een eerste hartslag stuurt, gaat de app naar
    Home van dat huis.
 
@@ -128,8 +129,8 @@ fout: de app meldt gewoon succes.
 
 - **Ontkoppelen** (verkoop of retour): huisinstellingen → "Box ontkoppelen"
   (alleen een beheerder).
-  Het huis met al zijn instellingen blijft; de box draait binnen 5 minuten
-  weer alleen lokaal. Dezelfde claimcode werkt daarna weer, dus de handleiding
+  Het huis met al zijn instellingen blijft; de box draait binnen een seconde
+  weer alleen lokaal (via de stroom; zonder stroom binnen 5 minuten). Dezelfde claimcode werkt daarna weer, dus de handleiding
   kan mee naar de nieuwe eigenaar.
 - **Vervangen** (kapotte box): nieuwe box koppelen met "Vervangt de box van …".
 - **Blad kwijt vóór het koppelen** (jij):

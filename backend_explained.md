@@ -226,7 +226,7 @@ agent/
     └── app/              — de orkestratie
         ├── agent.go          start/stop, HA- en MQTT-events, commando's, hartslag
         ├── connection.go     verbindingslus met backoff + herstelstap
-        ├── house.go          huis uit het box-record, controle elke 5 minuten
+        ├── house.go          huis uit het box-record: realtime + controle elke 5 minuten
         ├── device_cache.go   entity_id → device-id, alleen van het eigen huis
         ├── commands.go       verlopen en claimen van commando's
         ├── scheduler.go + schedule_store.go   schema-klok en snapshot op schijf
@@ -253,8 +253,11 @@ samenbrengt.
 - De agent logt in via `boxes/auth-with-password` en haalt zijn huis uit het
   antwoord. Het laatst bekende huis bewaart hij in `box.json`, zodat hij ook
   zonder internet weet bij welk huis zijn schema's horen.
-- Elke 5 minuten (`houseCheckInterval`) ververst hij zijn record
-  (`auth-refresh`) en volgt een verandering:
+- Hij volgt zijn eigen record via realtime (`listenForHouseChanges`,
+  abonnement op `boxes`; de view-regel laat alleen zijn eigen record door) en
+  leest het bij elke (her)aanmelding één keer (`checkHouse`). Als vangnet elke
+  5 minuten (`houseCheckInterval`) `auth-refresh`. `applyHouse` draait onder
+  een mutex: stroom, poll en opstarten kunnen tegelijk melden. Een verandering:
   - **claim** (geen huis → huis): herstelstap, PocketBase-werk begint;
   - **loskoppelen** (huis → geen): eerst `registered` uit, dan huis leeg;
     hartslag, weer, schrijfacties, device-cache en schema's van het oude huis
