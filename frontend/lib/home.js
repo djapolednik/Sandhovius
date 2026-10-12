@@ -1,6 +1,7 @@
-// Home als thuis, niet als instellingenscherm: een groet, een zin over het
-// huis in gewone woorden, en het licht van de lampen die aan zijn.
+// Home als thuis, niet als instellingenscherm: een groet, en daaronder in
+// gewone woorden hoe het huis erbij staat en hoe het buiten is.
 import { formatTemperature, readTemperature } from './temperature.js'
+import { describeCondition, formatDegrees } from './weather.js'
 
 // "Goedenavond, David": het dagdeel en de voornaam (het eerste woord van de
 // naam). Zonder naam alleen het dagdeel; nooit het e-mailadres.
@@ -36,10 +37,16 @@ export function indoorTemperature(devices) {
   return null
 }
 
-// Hoeveel lamplicht er uit het huis over de pagina valt (0 tot 1): niets als
-// alles uit is, een zweem bij één lamp, vol vanaf vier. Echt licht van echte
-// lampen (The Real Light Rule), nooit decoratie.
-export function lightSpill(lightsOn) {
-  if (lightsOn <= 0) return 0
-  return Math.min(1, 0.4 + 0.2 * (lightsOn - 1))
+// De regel onder de groet: de zin over het huis (null als de box niet
+// bereikbaar is) en het weer van nu, als dat niet verouderd is.
+// "2 lampen aan, binnen 20,5°. Buiten helder, 9°"
+export function homeLede({ summary = null, weather = null, weatherStale = false }) {
+  const parts = []
+  if (summary) parts.push(summary)
+  if (weather?.condition && !weatherStale) {
+    const label = describeCondition(weather.condition).label.toLowerCase()
+    const temp = weather.temperature != null ? `, ${formatDegrees(weather.temperature)}` : ''
+    parts.push(`Buiten ${label}${temp}`)
+  }
+  return parts.length ? parts.join('. ') : null
 }

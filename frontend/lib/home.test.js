@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { greeting, houseSummary, indoorTemperature, lightSpill } from './home.js'
+import { greeting, homeLede, houseSummary, indoorTemperature } from './home.js'
 
 const at = (h) => new Date(2026, 9, 13, h, 30)
 
@@ -29,10 +29,10 @@ test('indoorTemperature: thermostaat eerst, anders een sensor', () => {
   assert.equal(indoorTemperature([]), null)
 })
 
-test('lightSpill: geen lamp, geen licht; meer lampen iets meer, nooit fel', () => {
-  assert.equal(lightSpill(0), 0)
-  assert.ok(lightSpill(1) > 0 && lightSpill(1) < lightSpill(2))
-  assert.ok(lightSpill(2) < lightSpill(4))
-  assert.equal(lightSpill(4), 1)
-  assert.equal(lightSpill(20), 1)
+test('homeLede: huis en buiten in één regel, zonder verouderd weer', () => {
+  const weather = { condition: 'clear-night', temperature: 9.4 }
+  assert.equal(homeLede({ summary: '2 lampen aan', weather }), '2 lampen aan. Buiten helder, 9°')
+  assert.equal(homeLede({ summary: null, weather }), 'Buiten helder, 9°')
+  assert.equal(homeLede({ summary: 'Alles is uit', weather, weatherStale: true }), 'Alles is uit')
+  assert.equal(homeLede({}), null)
 })

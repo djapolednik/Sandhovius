@@ -6,7 +6,7 @@ import PocketBase, { LocalAuthStore } from 'pocketbase'
 import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
-import HousePanel from '../components/HousePanel'
+import HomeNotices from '../components/HomeNotices'
 import ConnectionStatus from '../components/ConnectionStatus'
 import { WeatherCard } from '../components/Weather'
 import HomeScenes from '../components/HomeScenes'
@@ -34,9 +34,10 @@ import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
 import { applyStateEcho, createInflight, settleDevice } from '../lib/inflight'
 import { uid } from '../lib/uid'
-import { greeting, houseSummary, indoorTemperature, lightSpill } from '../lib/home'
+import { greeting, homeLede, houseSummary, indoorTemperature } from '../lib/home'
+import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
-import { LightbulbIcon, PlusIcon, deviceTypeIcon } from '../lib/icons'
+import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
 
@@ -1817,35 +1818,47 @@ export default function Home() {
       </>
     )
   } else {
-    header = <Header title={greeting(new Date(now), pb.authStore.record?.name)} subtitle={formatToday(now)} />
+    header = (
+      <Header
+        title={greeting(new Date(now), pb.authStore.record?.name)}
+        subtitle={formatToday(now)}
+        lede={
+          house
+            ? homeLede({ summary, weather: house.weather, weatherStale: isWeatherStale(house.weather_updated, now) })
+            : null
+        }
+        action={
+          // Alleen als de box bereikbaar is: anders weten we niet zeker wat er
+          // aan staat, en zegt de melding bovenaan genoeg.
+          loaded && houseReachable && devicesOn.length > 0 ? (
+            <button type="button" className="btn btn-secondary home-all-off" onClick={turnAllOff}>
+              <PowerIcon width="18" height="18" aria-hidden="true" />
+              Alles uit
+            </button>
+          ) : null
+        }
+      />
+    )
     content = (
       <>
         {errorBanner}
         {noHouse}
         {house && invitationCards}
+        {house && (
+          <HomeNotices
+            realtimeLink={realtimeLink}
+            houseLink={houseLink}
+            now={now}
+            attention={loaded ? attention : []}
+            onOpenDevice={(device) => setSettingsDeviceId(device.id)}
+          />
+        )}
         <div className="dashboard">
-          {house && (
+          {/* Breed: het weer in een kaart links. Op de telefoon staat het in
+              de regel onder de groet. */}
+          {house?.weather?.condition && (
             <div className="dashboard-side">
-              {/* Zelfde naam als het huis op het inlogscherm: daar glijdt het
-                  vandaan bij binnenkomst. */}
-              <ViewTransition name="house" share="house-glide" default="none">
-                <HousePanel
-                  house={house}
-                  realtimeLink={realtimeLink}
-                  houseLink={houseLink}
-                  now={now}
-                  attention={loaded ? attention : []}
-                  onSwitchHouse={houses.length > 1 ? () => selectTab('instellingen') : undefined}
-                  onOpenDevice={(device) => setSettingsDeviceId(device.id)}
-                  // Alleen als de box bereikbaar is: anders weten we niet zeker
-                  // wat er aan staat, en zegt de verbindingsmelding genoeg.
-                  onAllOff={loaded && houseReachable && devicesOn.length > 0 ? turnAllOff : undefined}
-                  summary={summary}
-                />
-              </ViewTransition>
-              {house.weather?.condition && (
-                <WeatherCard weather={house.weather} updated={house.weather_updated} now={now} />
-              )}
+              <WeatherCard weather={house.weather} updated={house.weather_updated} now={now} />
             </div>
           )}
 
@@ -1928,11 +1941,6 @@ export default function Home() {
 
       <div className="tab-view">
         <div ref={tabViewRef} className="tab-content">
-          {/* Lamplicht dat uit het huis over de pagina valt, alleen op Home en
-              alleen van lampen die echt aan zijn (lib/home lightSpill). */}
-          {tab === 'home' && house && (
-            <div className="home-light" aria-hidden="true" style={{ '--home-light': lightSpill(lightsOn) }} />
-          )}
           {header}
 
           <main className="container">{content}</main>

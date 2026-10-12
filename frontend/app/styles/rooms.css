@@ -38,6 +38,33 @@
   color: var(--text-secondary);
 }
 
+/* Home: onder de groet hoe het huis erbij staat en hoe het buiten is. */
+.topbar-lede {
+  margin: 0.35rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+/* Meldingen bovenaan Home: alleen bij een storing of "Let op". */
+.home-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+  padding: 1rem 1.15rem;
+}
+
+/* Zonder weerkaart geen lege linkerkolom. */
+.dashboard:not(:has(.dashboard-side)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dashboard:not(:has(.dashboard-side)) .dashboard-devices {
+  grid-column: auto;
+}
+
 .topbar-title {
   margin: 0;
   font-size: 2rem;
@@ -529,54 +556,6 @@
   gap: 1rem;
   padding: 1.25rem 1.25rem 1.35rem;
   container-type: inline-size;
-}
-
-/* Het licht van de lampen die aan zijn valt uit het huis over de pagina,
-   zoals licht uit een raam 's avonds op straat: een zachte warme gloed
-   achter de inhoud, met het midden op het huispaneel. Sterkte volgt het
-   aantal lampen (--home-light, 0 tot 1); alles uit = geen licht (The Real
-   Light Rule). Overdag zwakker: lamplicht valt bij daglicht minder op. Hij
-   staat in het tabblad zelf, zodat hij met de tabwissel meeschuift. */
-.tab-content {
-  position: relative;
-  isolation: isolate;
-}
-
-.home-light {
-  --home-light-color: rgba(255, 168, 70, 0.16);
-  --home-light-at: 50% 15rem;
-  position: absolute;
-  z-index: -1;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 44rem;
-  pointer-events: none;
-  background: radial-gradient(ellipse 85% 60% at var(--home-light-at), var(--home-light-color) 0, transparent 72%);
-  opacity: var(--home-light, 0);
-  transition: opacity 1.4s var(--ease-lamp);
-}
-
-[data-theme='dark'] .home-light {
-  --home-light-color: rgba(255, 160, 56, 0.24);
-}
-
-/* Breed staat het huis linksboven in de zijkolom. */
-@media (min-width: 900px) {
-  .home-light {
-    --home-light-at: calc((100% - min(100%, var(--content-max))) / 2 + 10rem) 11rem;
-    background: radial-gradient(
-      ellipse 38rem 30rem at var(--home-light-at),
-      var(--home-light-color) 0,
-      transparent 72%
-    );
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-light {
-    transition: opacity 0.3s ease;
-  }
 }
 
 /* De zin over het huis, direct onder de naam. */
