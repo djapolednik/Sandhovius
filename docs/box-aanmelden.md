@@ -65,8 +65,9 @@ superuser (`POCKETBASE_ADMIN_EMAIL`, `POCKETBASE_ADMIN_PASSWORD`), en
 4. **Printblad** printen en bij de handleiding in de doos doen. Het blad bevat:
    - de QR-code met de link `<app-adres>/koppel#s=<serienummer>&c=<claimcode>`
      (de code staat achter een `#` en komt dus nooit in serverlogs);
-   - serienummer en claimcode in leesbare tekst (bijv. `K7QM-2XRP-9DTW`), om
-     over te tikken;
+   - serienummer en claimcode in leesbare tekst (bijv. `K7QM-2XRP-9DTK`), om
+     over te tikken. Het laatste teken is een controleteken (Luhn mod 32 over
+     de andere elf), zodat de app een tikfout meteen ziet;
    - het adres van de app.
 
    Het blad is het enige waarop de claimcode staat. `sheets/` staat niet in git;
@@ -95,7 +96,9 @@ of hij inmiddels bij een huis hoort.
      HTTPS of op `localhost`. Zonder camera, zonder toestemming of op een
      onbeveiligde verbinding gaat de app meteen naar overtikken.
    - **Overtikken**: serienummer en claimcode. Hoofdletters, spaties en
-     streepjes maken niet uit, en O/0 en I/L/1 ook niet.
+     streepjes maken niet uit, en O/0 en I/L/1 ook niet. Een code met de
+     verkeerde lengte of een tikfout (controleteken klopt niet) houdt de app
+     zelf tegen, zonder serverpoging.
    - Scant iemand de QR-code met de gewone telefooncamera, dan opent de link de
      app; na inloggen en bevestigen staat de code al ingevuld.
 5. **Waar hoort deze box?**
@@ -112,6 +115,7 @@ of hij inmiddels bij een huis hoort.
 
 | Melding | Betekenis | Wat te doen |
 |---|---|---|
+| Een code heeft 12 tekens / Er zit een tikfout in de code | De app ziet aan de lengte of het controleteken dat de code verkeerd is overgetikt (nog niets naar de server) | Opnieuw overtikken |
 | Deze code klopt niet | Serienummer of claimcode is fout (bewust dezelfde melding, zodat niemand serienummers kan aftasten) | Opnieuw overtikken; anders support (nieuwe code) |
 | Deze box is al gekoppeld | De box hoort bij een huis waar je geen lid van bent | Een beheerder van dat huis moet ontkoppelen |
 | Bevestig eerst je e-mailadres | Account nog niet bevestigd | Mail openen of opnieuw sturen |
