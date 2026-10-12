@@ -33,7 +33,7 @@ Stand: 2026-10-07, huisgenoten af. Ontwerpen per onderdeel:
 
 ## Volgende stappen
 
-1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang, en de claim-flow zelf doorlopen met een tweede account (Mailpit). QR scannen met de telefooncamera kan pas via HTTPS (fase 3) of op `localhost`; via `http://192.168…` alleen overtikken. Vóór die test de scanner afknijpen: hij decodeert nu elk camerabeeld (~60× per seconde, ~10 is genoeg). Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
+1. **Op een echte telefoon testen** (geïnstalleerd): omlaag trekken, lang indrukken op tegels en scènes, de tabovergang, en de claim-flow zelf doorlopen met een tweede account (Mailpit). QR scannen met de telefooncamera kan pas via HTTPS (fase 3) of op `localhost`; via `http://192.168…` alleen overtikken. Let op of bewoners de details vinden zonder zichtbare knop; zo niet, een klein "⋯" bij hover (laptop) of een hint bij eerste gebruik.
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
 3. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: idle-timeout op de SSE-stroom van de agent (een dode verbinding valt nu pas na ~3 min TCP-keepalive op) en commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. Ook nodig: een echte SMTP-provider (nu Mailpit; `SMTP_*` + afzender in env), een echte `APP_URL` (links in mails en QR), en trusted-proxy-instellingen in PocketBase achter de proxy, anders delen alle klanten één rate-limit-bucket (limieten gaan per IP).
 4. **Claim-flow, klein en bewust uitgesteld:**

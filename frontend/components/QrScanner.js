@@ -8,6 +8,12 @@ import { parseClaimLink } from '../lib/claim'
 // camera) dan roept dit meteen onUnavailable(reden) aan en doet niets meer;
 // de ouder toont dan het overtikformulier. onResult({ serial, code }) bij
 // een Sandhovius-QR; andere QR-codes worden genegeerd.
+//
+// Hooguit 10 keer per seconde decoderen: elke keer is een getImageData plus
+// jsQR op 640 px, en per beeld (~60/s) maakte dat telefoons warm. Het
+// camerabeeld zelf blijft vloeiend, dat tekent de browser.
+const SCAN_EVERY_MS = 100
+
 export default function QrScanner({ onResult, onUnavailable }) {
   const videoRef = useRef(null)
   const callbacks = useRef({ onResult, onUnavailable })
@@ -16,11 +22,11 @@ export default function QrScanner({ onResult, onUnavailable }) {
   useEffect(() => {
     let cancelled = false
     let stream = null
-    let frame = 0
+    let timer = 0
 
     function stop() {
       cancelled = true
-      cancelAnimationFrame(frame)
+      clearTimeout(timer)
       stream?.getTracks().forEach((t) => t.stop())
     }
 
@@ -57,7 +63,8 @@ export default function QrScanner({ onResult, onUnavailable }) {
 
       function tick() {
         if (cancelled) return
-        if (video.readyState >= 2 && video.videoWidth) {
+        // Op de achtergrond niets decoderen; terug in beeld gaat het verder.
+        if (!document.hidden && video.readyState >= 2 && video.videoWidth) {
           const scale = Math.min(1, 640 / video.videoWidth)
           canvas.width = Math.round(video.videoWidth * scale)
           canvas.height = Math.round(video.videoHeight * scale)
@@ -71,7 +78,7 @@ export default function QrScanner({ onResult, onUnavailable }) {
             return
           }
         }
-        frame = requestAnimationFrame(tick)
+        timer = setTimeout(tick, SCAN_EVERY_MS)
       }
       tick()
     }
