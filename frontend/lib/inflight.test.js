@@ -55,3 +55,24 @@ test('settleDevice: er loopt nog een commando → niets veranderen', () => {
   const d = device('on', { _pending: true, _echo: state('off') })
   assert.equal(settleDevice(d, 1), d)
 })
+
+const at = (s, t) => ({ id: 'st1', device: 'd1', state: { state: s, last_updated: t } })
+
+test('applyStateEcho: een oudere stand dan die op het scherm wordt weggegooid', () => {
+  const d = { id: 'd1', expand: { device_state_via_device: [at('on', '2026-10-12T20:00:02.000Z')] } }
+  assert.equal(applyStateEcho(d, at('off', '2026-10-12T20:00:01.000Z'), 0), d)
+  // Gelijk of nieuwer: wel tonen.
+  assert.equal(applyStateEcho(d, at('off', '2026-10-12T20:00:02.000Z'), 0).expand.device_state_via_device[0].state.state, 'off')
+  assert.equal(applyStateEcho(d, at('off', '2026-10-12T20:00:03.000Z'), 0).expand.device_state_via_device[0].state.state, 'off')
+})
+
+test('applyStateEcho: ook ouder dan een bewaarde echo telt als oud', () => {
+  const newer = at('on', '2026-10-12T20:00:03.000Z')
+  const d = { id: 'd1', _pending: true, _echo: newer, expand: { device_state_via_device: [at('on', '2026-10-12T20:00:01.000Z')] } }
+  assert.equal(applyStateEcho(d, at('off', '2026-10-12T20:00:02.000Z'), 1)._echo, newer)
+})
+
+test('applyStateEcho: zonder tijd (oude box, Zigbee-pad) altijd tonen', () => {
+  const d = { id: 'd1', expand: { device_state_via_device: [at('on', '2026-10-12T20:00:02.000Z')] } }
+  assert.equal(applyStateEcho(d, state('off'), 0).expand.device_state_via_device[0].state.state, 'off')
+})

@@ -28,8 +28,19 @@ export function createInflight() {
   }
 }
 
+// De tijd van een stand (HA's last_updated, door de agent meegeschreven);
+// NaN als hij ontbreekt (oudere agent, Zigbee-pad).
+const stateTime = (record) => Date.parse(record?.state?.last_updated ?? '')
+
 // Een device_state-echo voor dit apparaat; `running` = commando's onderweg.
+// Ouder dan wat we al hebben (op het scherm of bewaard): weggooien. Een
+// optimistische stand houdt de tijd van de echte stand waar hij van komt.
 export function applyStateEcho(device, record, running) {
+  const incoming = stateTime(record)
+  const known = Math.max(
+    ...[device.expand?.device_state_via_device?.[0], device._echo].map(stateTime).filter((t) => !Number.isNaN(t))
+  )
+  if (incoming < known) return device
   if (running > 0) return { ...device, _echo: record }
   const { _echo, ...rest } = device
   return { ...rest, _pending: false, expand: { ...device.expand, device_state_via_device: [record] } }
