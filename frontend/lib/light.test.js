@@ -195,7 +195,7 @@ test('throttle: flush stuurt de laatste waarde meteen en daarna niet nog een kee
 })
 
 // --- detail-sheet ---
-import { createLatestWatchers, controlsVisible, initialMode, swatchSelected, brightnessLabel, createHoldOff, currentRgb } from './light.js'
+import { createLatestWatchers, controlsVisible, initialMode, swatchSelected, brightnessLabel, createHoldOff, currentRgb, kelvinLabel } from './light.js'
 
 const RED = [255, 59, 48]
 const colourAttrs = { supported_color_modes: ['color_temp', 'rgb'], min_color_temp_kelvin: 2000, max_color_temp_kelvin: 6500 }
@@ -270,4 +270,22 @@ test('createLatestWatchers: een oud commando dat te laat terugkomt wordt direct 
   w.register('a', fresh, () => stopped.push('fresh'))
   w.register('a', old, () => stopped.push('old'))
   assert.deepEqual(stopped, ['old'])
+})
+
+test('createHoldOff: remaining zegt hoe lang nog', () => {
+  let now = 1000
+  const hold = createHoldOff(1000, { now: () => now })
+  assert.equal(hold.remaining(), 0)
+  hold.touch()
+  now = 1400
+  assert.equal(hold.remaining(), 600)
+  now = 2500
+  assert.equal(hold.remaining(), 0)
+})
+
+test('kelvinLabel: geen verzonnen waarde bij een lamp die uit staat', () => {
+  assert.equal(kelvinLabel({ state: 'on', attributes: { color_temp_kelvin: 2700 } }, 2700), '2700 K')
+  assert.equal(kelvinLabel({ state: 'off', attributes: {} }, 4250), 'Uit')
+  // Aan in kleur: geen kelvin van de lamp, dus ook geen getal.
+  assert.equal(kelvinLabel({ state: 'on', attributes: { color_mode: 'rgb' } }, 4250), '')
 })

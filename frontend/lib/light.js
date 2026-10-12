@@ -184,6 +184,13 @@ export function brightnessLabel(state, percent) {
   return state?.state === 'on' ? `${percent}%` : 'Uit'
 }
 
+// De Wit-schuif heeft altijd een stand nodig, maar een getal alleen als de
+// lamp echt wit brandt: uit of in kleur heeft hij geen kelvin.
+export function kelvinLabel(state, kelvin) {
+  if (state?.state !== 'on') return 'Uit'
+  return Number.isFinite(state.attributes?.color_temp_kelvin) ? `${kelvin} K` : ''
+}
+
 // Na een eigen wijziging negeert de sheet de lamp-stand even: het echo van
 // je eigen commando laat de schuif anders terugspringen. Een tijdvenster in
 // plaats van een "ik sleep nog"-vlag, want die blijft hangen als je buiten
@@ -196,6 +203,9 @@ export function createHoldOff(ms, env = { now: () => Date.now() }) {
     },
     active() {
       return env.now() < until
+    },
+    remaining() {
+      return Math.max(0, until - env.now())
     },
   }
 }

@@ -8,6 +8,7 @@ import {
   createHoldOff,
   currentRgb,
   initialMode,
+  kelvinLabel,
   kelvinToRgb,
   payloadFor,
   percentFromBrightness,
@@ -52,17 +53,30 @@ export default function LightControls({ device, state, disabled, onChange }) {
   const [rgb, setRgb] = useState(attrRgb)
   const [mode, setMode] = useState(initialMode(attributes))
   const hold = useRef(createHoldOff(HOLD_OFF_MS))
+  // Loopt het hold-off af, dan nog één keer de stand volgen: is je commando
+  // in die tijd mislukt, dan springt de schuif zo alsnog terug.
+  const [holdEnded, setHoldEnded] = useState(0)
+  // De color_mode waar de Wit/Kleur-balk het laatst op is gezet: alleen een
+  // echte wissel van de lamp zet de balk om, niet elke nieuwe stand (je kunt
+  // op "Kleur" staan kijken terwijl de lamp nog wit brandt).
+  const syncedColorMode = useRef(attributes?.color_mode)
 
   // De echte stand van de lamp volgt, behalve vlak na een eigen wijziging:
   // anders springt de schuif terug naar de waarde van een commando van daarnet.
   useEffect(() => {
-    if (hold.current.active()) return
+    if (hold.current.active()) {
+      const timer = setTimeout(() => setHoldEnded((n) => n + 1), hold.current.remaining() + 50)
+      return () => clearTimeout(timer)
+    }
     if (attrPercent !== null) setPercent(attrPercent)
     if (attrKelvin !== null) setKelvin(attrKelvin)
     if (attrRgb) setRgb(attrRgb)
-    if (attributes?.color_mode) setMode(initialMode(attributes))
+    if (attributes?.color_mode && attributes.color_mode !== syncedColorMode.current) {
+      syncedColorMode.current = attributes.color_mode
+      setMode(initialMode(attributes))
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attrPercent, attrKelvin, attrRgb?.join(','), attributes?.color_mode])
+  }, [attrPercent, attrKelvin, attrRgb?.join(','), attributes?.color_mode, holdEnded])
 
   // De throttle leeft zo lang de sheet; de nieuwste onChange via een ref.
   const send = useRef(onChange)
@@ -161,7 +175,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
         <label className="light-slider">
           <span className="light-slider-head">
             <span className="form-label">Wit</span>
-            <span className="reading-value">{kelvin} K</span>
+            <span className="reading-value">{kelvinLabel(state, kelvin)}</span>
           </span>
           <input
             type="range"
@@ -171,7 +185,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
             step="50"
             value={Math.min(caps.maxKelvin, Math.max(caps.minKelvin, kelvin))}
             disabled={disabled}
-            aria-valuetext={`${kelvin} kelvin`}
+            aria-valuetext={state?.state === 'on' ? `${kelvin} kelvin` : 'uit'}
             style={{ '--track': track }}
             onChange={(e) => {
               const next = Number(e.target.value)
