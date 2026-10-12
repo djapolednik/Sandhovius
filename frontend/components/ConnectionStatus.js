@@ -11,7 +11,9 @@ import { CheckIcon } from '../lib/icons'
 //
 // realtimeLink: 'connecting' | 'live' | 'lost' — deze telefoon ↔ Sandhovius
 // house: { reachable, linked, since } — Sandhovius ↔ de box in huis
-export default function ConnectionStatus({ realtimeLink, house, now }) {
+// problemsOnly: alleen iets tonen als er iets mis is (Home). Gezond en
+// "verbinden…" staan dan in Opties; een storing blijft op Home zichtbaar.
+export default function ConnectionStatus({ realtimeLink, house, now, problemsOnly = false }) {
   if (realtimeLink === 'lost') {
     return (
       <div className="connection-notice" role="status">
@@ -41,6 +43,8 @@ export default function ConnectionStatus({ realtimeLink, house, now }) {
       </div>
     )
   }
+
+  if (problemsOnly) return null
 
   if (realtimeLink === 'connecting') {
     return (

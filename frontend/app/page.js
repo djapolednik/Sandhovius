@@ -7,6 +7,7 @@ import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
 import HousePanel from '../components/HousePanel'
+import ConnectionStatus from '../components/ConnectionStatus'
 import { WeatherCard } from '../components/Weather'
 import HomeScenes from '../components/HomeScenes'
 import PullToRefresh from '../components/PullToRefresh'
@@ -1785,6 +1786,7 @@ export default function Home() {
         {errorBanner}
         <SettingsView
           house={house}
+          connection={<ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />}
           isAdmin={houseAdmin}
           household={
             house && (
@@ -1824,7 +1826,10 @@ export default function Home() {
         <div className="dashboard">
           {house && (
             <div className="dashboard-side">
-              <HousePanel
+              {/* Zelfde naam als het huis op het inlogscherm: daar glijdt het
+                  vandaan bij binnenkomst. */}
+              <ViewTransition name="house" share="house-glide" default="none">
+                <HousePanel
                   house={house}
                   realtimeLink={realtimeLink}
                   houseLink={houseLink}
@@ -1836,8 +1841,8 @@ export default function Home() {
                   // wat er aan staat, en zegt de verbindingsmelding genoeg.
                   onAllOff={loaded && houseReachable && devicesOn.length > 0 ? turnAllOff : undefined}
                   summary={summary}
-                  lightsOn={lightsOn}
                 />
+              </ViewTransition>
               {house.weather?.condition && (
                 <WeatherCard weather={house.weather} updated={house.weather_updated} now={now} />
               )}

@@ -17,6 +17,7 @@ const THEME_OPTIONS = [
 // hier welk huis de app laat zien.
 export default function SettingsView({
   house,
+  connection,
   isAdmin = false,
   household,
   houses = [],
@@ -84,6 +85,8 @@ export default function SettingsView({
             </span>
             <ArrowUpRightIcon className="settings-link-arrow" width="18" height="18" aria-hidden="true" />
           </button>
+          {/* Hoe de verbinding met je huis is; op Home staat alleen een storing. */}
+          <div className="settings-connection">{connection}</div>
           <button type="button" className="btn btn-secondary settings-add-box" onClick={onAddBox}>
             Box toevoegen
           </button>

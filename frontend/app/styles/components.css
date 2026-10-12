@@ -1509,6 +1509,15 @@
   margin-top: 0.75rem;
 }
 
+/* De verbinding met je huis, onder de huisrij (op Home alleen bij een storing). */
+.settings-connection {
+  margin-top: 0.75rem;
+}
+
+.settings-connection:empty {
+  display: none;
+}
+
 .empty-state-action {
   display: block;
   margin: 1rem auto 0;

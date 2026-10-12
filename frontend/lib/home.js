@@ -1,6 +1,5 @@
 // Home als thuis, niet als instellingenscherm: een groet, een zin over het
-// huis in gewone woorden, en het huis zelf met een verlicht raam per lamp
-// die aan is.
+// huis in gewone woorden, en het licht van de lampen die aan zijn.
 import { formatTemperature, readTemperature } from './temperature.js'
 
 // "Goedenavond, David": het dagdeel en de voornaam (het eerste woord van de
@@ -35,16 +34,6 @@ export function indoorTemperature(devices) {
     if (typeof t === 'number') return t
   }
   return null
-}
-
-// De gevel heeft zes ramen. Per lamp die aan is gaat er één aan, in een
-// vaste volgorde die over het huis verspreid ligt; de eerste is het raam dat
-// ook op het inlogscherm brandt, zodat binnenkomen klopt.
-const WINDOW_ORDER = [3, 0, 5, 1, 4, 2]
-
-export function litWindows(lightsOn) {
-  const lit = new Set(WINDOW_ORDER.slice(0, Math.max(0, Math.min(lightsOn, WINDOW_ORDER.length))))
-  return WINDOW_ORDER.map((_, i) => lit.has(i))
 }
 
 // Hoeveel lamplicht er uit het huis over de pagina valt (0 tot 1): niets als

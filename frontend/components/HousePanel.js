@@ -1,18 +1,15 @@
 'use client'
 
-import { ViewTransition } from 'react'
 import ConnectionStatus from './ConnectionStatus'
 import { WeatherLine } from './Weather'
 import { ArrowUpRightIcon, PowerIcon } from '../lib/icons'
-import { litWindows } from '../lib/home'
 
-// Het huis in één paneel, naast de apparaten: bovenaan het huis zelf (een
-// gevel met een verlicht raam per lamp die aan is), dan hoe het heet, één
-// zin over hoe het erbij staat, of de box bereikbaar is, het weer (op de
-// telefoon; breed staat het in een eigen kaart) en wat aandacht nodig heeft.
+// Het huis in één paneel, naast de apparaten: hoe het heet, één zin over hoe
+// het erbij staat, een melding als de verbinding mis is (gezond staat in
+// Opties), het weer (op de telefoon; breed staat het in een eigen kaart) en
+// wat aandacht nodig heeft.
 // summary: de zin ("3 lampen aan, binnen 20,5°"), of null als de box niet
 // bereikbaar is (dan weten we het niet; de verbindingsmelding zegt genoeg).
-// lightsOn: hoeveel ramen er branden.
 // attention: [{ device, reason }] — wat aandacht nodig heeft (offline,
 // batterij bijna leeg, klaarzetten mislukt). Elke regel opent de details
 // van dat apparaat.
@@ -28,20 +25,9 @@ export default function HousePanel({
   onOpenDevice,
   onSwitchHouse,
   summary = null,
-  lightsOn = 0,
 }) {
-  const windows = litWindows(lightsOn)
   return (
     <section className="panel house-panel" aria-labelledby="house-name">
-      {/* Zelfde naam als het huis op het inlogscherm: daar glijdt het
-          vandaan bij binnenkomst. Puur beeld; de zin eronder zegt het. */}
-      <ViewTransition name="house" share="house-glide" default="none">
-        <div className="home-house" aria-hidden="true">
-          {windows.map((lit, i) => (
-            <span key={i} className={lit ? 'home-window home-window-lit' : 'home-window'} />
-          ))}
-        </div>
-      </ViewTransition>
       <h2 id="house-name" className="house-name">
         {house.name}
       </h2>
@@ -51,7 +37,7 @@ export default function HousePanel({
           Ander huis
         </button>
       )}
-      <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />
+      <ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} problemsOnly />
       {house.weather?.condition && <WeatherLine weather={house.weather} updated={house.weather_updated} now={now} />}
       {attention.length > 0 && (
         <div className="house-attention">
