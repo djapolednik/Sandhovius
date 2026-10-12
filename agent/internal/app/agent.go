@@ -56,6 +56,8 @@ type Agent struct {
 
 	// handledCommands: commando-ID's die al opgepakt zijn (zie claimCommand).
 	handledCommands sync.Map
+	// stateClock: laatst doorgestuurde HA-stand per entity (zie state_clock.go).
+	stateClock stateClock
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -655,9 +657,20 @@ func (a *Agent) listenToHAEvents() {
 // Onbekende entity_ids worden voor de PocketBase-kant gelogd en
 // overgeslagen, niet als fout behandeld.
 func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
+	a.stateClock.mu.Lock()
+	defer a.stateClock.mu.Unlock()
+	if !a.stateClock.advance(event.EntityID, event.Timestamp) {
+		log.Printf("[APP] Oudere stand genegeerd: %s (%s)\n", event.EntityID, event.Timestamp.Format(time.RFC3339Nano))
+		return
+	}
+
 	state := map[string]any{
 		"state":      event.State,
 		"attributes": event.Attributes,
+	}
+	// De tijd van de stand: de PWA gooit hiermee een oudere echo weg.
+	if !event.Timestamp.IsZero() {
+		state["last_updated"] = event.Timestamp.UTC().Format(time.RFC3339Nano)
 	}
 
 	if err := a.history.Record(event.EntityID, state); err != nil {

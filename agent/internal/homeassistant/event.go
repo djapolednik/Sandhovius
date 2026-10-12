@@ -32,8 +32,9 @@ type rawEventData struct {
 }
 
 type rawState struct {
-	State      string                 `json:"state"`
-	Attributes map[string]interface{} `json:"attributes"`
+	State       string                 `json:"state"`
+	Attributes  map[string]interface{} `json:"attributes"`
+	LastUpdated time.Time              `json:"last_updated"`
 }
 
 // parseStateChanged converts a raw websocket message into an HAEvent.
@@ -52,10 +53,16 @@ func parseStateChanged(raw rawMessage) (HAEvent, bool) {
 	if newState == nil {
 		return HAEvent{}, false
 	}
+	// De tijd van de stand zelf, zoals GetState die ook geeft; time_fired
+	// alleen als HA hem niet meestuurt.
+	ts := newState.LastUpdated
+	if ts.IsZero() {
+		ts = raw.Event.TimeFired
+	}
 	return HAEvent{
 		EntityID:   raw.Event.Data.EntityID,
 		State:      newState.State,
 		Attributes: newState.Attributes,
-		Timestamp:  raw.Event.TimeFired,
+		Timestamp:  ts,
 	}, true
 }
