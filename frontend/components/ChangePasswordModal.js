@@ -3,6 +3,7 @@
 import { useId, useState } from 'react'
 import Modal from './Modal'
 import PasswordField from './PasswordField'
+import PasswordChecks from './PasswordChecks'
 import { describeError } from '../lib/errors'
 import { MIN_PASSWORD_LENGTH, passwordChecks } from '../lib/account'
 import { CheckIcon } from '../lib/icons'
@@ -94,10 +95,7 @@ export default function ChangePasswordModal({ onChange, onClose }) {
           describedBy={checksId}
           required
         />
-        <ul className="password-checks" id={checksId}>
-          <PasswordCheck met={checks.long}>Minstens {MIN_PASSWORD_LENGTH} tekens</PasswordCheck>
-          <PasswordCheck met={checks.same}>Twee keer hetzelfde</PasswordCheck>
-        </ul>
+        <PasswordChecks id={checksId} password={password} passwordConfirm={passwordConfirm} />
         {error && (
           <p className="error-banner" role="alert">
             {error}
@@ -108,20 +106,5 @@ export default function ChangePasswordModal({ onChange, onClose }) {
         </button>
       </form>
     </Modal>
-  )
-}
-
-// Een eis: een lege ring, of een vinkje als hij klopt. Geen groen: dat is
-// voor apparaten die aan staan (The State Means State Rule); het vinkje en
-// de donkerder tekst zeggen het.
-function PasswordCheck({ met, children }) {
-  return (
-    <li className={met ? 'password-check-met' : undefined}>
-      <span className="password-check-mark" aria-hidden="true">
-        {met && <CheckIcon width="14" height="14" />}
-      </span>
-      {children}
-      <span className="visually-hidden">{met ? ', klopt' : ', nog niet'}</span>
-    </li>
   )
 }

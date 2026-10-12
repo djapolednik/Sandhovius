@@ -1,10 +1,12 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useId, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AccountShell from '../../components/AccountShell'
 import { createPb } from '../../lib/pocketbase'
 import { MIN_PASSWORD_LENGTH } from '../../lib/account'
+import PasswordField from '../../components/PasswordField'
+import PasswordChecks from '../../components/PasswordChecks'
 
 function Reset() {
   const token = useSearchParams().get('token')
@@ -14,6 +16,7 @@ function Reset() {
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [invalid, setInvalid] = useState(!token)
+  const checksId = useId()
 
   async function submit(e) {
     e.preventDefault()
@@ -33,7 +36,7 @@ function Reset() {
     } catch (err) {
       console.error('[wachtwoord resetten]', err)
       if (err?.status === 400 && err?.response?.data?.token) setInvalid(true)
-      else if (err?.status === 429) setError('Te veel pogingen, probeer het over een minuut opnieuw')
+      else if (err?.status === 429) setError('Te veel pogingen. Wacht even en probeer het dan opnieuw')
       else if (err?.status === 0) setError('Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw')
       else setError('Het wachtwoord kon niet worden gewijzigd. Probeer het zo opnieuw')
     } finally {
@@ -70,28 +73,23 @@ function Reset() {
   return (
     <AccountShell title="Kies een nieuw wachtwoord.">
       <form onSubmit={submit} className="form-stack">
-        <label className="form-field">
-          <span className="form-label">Nieuw wachtwoord</span>
-          <input
-            className="input"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        <label className="form-field">
-          <span className="form-label">Nog een keer</span>
-          <input
-            className="input"
-            type="password"
-            autoComplete="new-password"
-            value={passwordConfirm}
-            onChange={(e) => setPasswordConfirm(e.target.value)}
-            required
-          />
-        </label>
+        <PasswordField
+          label="Nieuw wachtwoord"
+          autoComplete="new-password"
+          value={password}
+          onChange={setPassword}
+          describedBy={checksId}
+          required
+        />
+        <PasswordField
+          label="Nieuw wachtwoord, nog een keer"
+          autoComplete="new-password"
+          value={passwordConfirm}
+          onChange={setPasswordConfirm}
+          describedBy={checksId}
+          required
+        />
+        <PasswordChecks id={checksId} password={password} passwordConfirm={passwordConfirm} />
         {error && (
           <p className="login-error" role="alert">
             {error}
