@@ -22,7 +22,8 @@ test('validateSignup', () => {
 test('errorMessage', () => {
   const exists = { status: 400, response: { data: { email: { code: 'validation_not_unique' } } } }
   assert.equal(errorMessage(exists), 'Er bestaat al een account met dit e-mailadres')
-  assert.equal(errorMessage({ status: 429 }), 'Te veel pogingen, probeer het over een minuut opnieuw')
+  // Aanmelden: 10 per uur, mail opnieuw: 5 per 10 min (per IP): geen "minuut" beloven.
+  assert.equal(errorMessage({ status: 429 }), 'Te veel pogingen. Wacht even en probeer het dan opnieuw')
   assert.equal(errorMessage({ status: 0 }), 'Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw')
   assert.equal(errorMessage(new Error('boom')), 'Er ging iets mis. Probeer het zo opnieuw')
   assert.equal(errorMessage(null), 'Er ging iets mis. Probeer het zo opnieuw')

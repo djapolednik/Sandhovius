@@ -24,7 +24,8 @@ export function validateSignup({ email, password, passwordConfirm }) {
 // PocketBase-fout naar tekst voor het scherm. De ruwe melding is Engels
 // en technisch; die blijft in de console.
 export function errorMessage(err) {
-  if (err?.status === 429) return 'Te veel pogingen, probeer het over een minuut opnieuw'
+  // Limieten per IP: aanmelden 10 per uur, mail opnieuw 5 per 10 minuten.
+  if (err?.status === 429) return 'Te veel pogingen. Wacht even en probeer het dan opnieuw'
   if (err?.status === 0) return 'Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw'
   const data = err?.response?.data
   if (err?.status === 400 && data?.email) return 'Er bestaat al een account met dit e-mailadres'

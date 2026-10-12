@@ -6,7 +6,7 @@
 //
 // ClientResponseError.status: 0 = geen verbinding / afgebroken,
 // 400 = ongeldige invoer, 401/403 = sessie verlopen of geen rechten,
-// 404 = bestaat niet (meer).
+// 404 = bestaat niet (meer), 429 = te veel pogingen (rate limit).
 export function describeError(what, err) {
   console.error(`[${what}]`, err)
   const status = typeof err?.status === 'number' ? err.status : null
@@ -22,6 +22,9 @@ export function describeError(what, err) {
   }
   if (status === 404) {
     return `${what} is niet gelukt. Het bestaat niet meer; ververs de pagina.`
+  }
+  if (status === 429) {
+    return `${what} is niet gelukt. Te veel pogingen; wacht even en probeer het dan opnieuw.`
   }
   if (status === 400) {
     return `${what} is niet gelukt. Controleer de ingevulde gegevens.`
