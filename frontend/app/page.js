@@ -32,6 +32,7 @@ import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
 import { applyStateEcho, createInflight, settleDevice } from '../lib/inflight'
+import { uid } from '../lib/uid'
 import { isBatteryLow } from '../lib/battery'
 import { PlusIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
@@ -88,7 +89,10 @@ const ARRIVE_REDUCED_MS = 300
 const ARRIVE_IN_MS = 600
 
 export default function Home() {
-  const [loggedIn, setLoggedIn] = useState(false)
+  // null = nog niet bekeken (de server-render en de eerste client-render):
+  // dan alleen de achtergrond. Met false begon elke start met het
+  // inlogscherm en zijn binnenkomst, ook als je al ingelogd was.
+  const [loggedIn, setLoggedIn] = useState(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -712,7 +716,7 @@ export default function Home() {
   // zijn weg te klikken: een bevestiging mag vluchtig zijn, een fout moet
   // je kunnen lezen.
   function showToast(message, type = 'info', action) {
-    const id = crypto.randomUUID()
+    const id = uid()
     const duration = type === 'error' || action ? UNDO_MS : 3500
     setToasts((prev) => [...prev, { id, message, type, duration, action }])
     setTimeout(() => dismissToast(id), duration)
@@ -1369,6 +1373,10 @@ export default function Home() {
     }),
     []
   )
+
+  if (loggedIn === null) {
+    return <main className="app-boot" aria-busy="true" />
+  }
 
   if (!loggedIn) {
     return (

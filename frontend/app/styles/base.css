@@ -188,3 +188,11 @@ html {
     opacity: 0;
   }
 }
+
+/* Heel even bij het starten, voordat de app weet of je ingelogd bent: alleen
+   de achtergrond, geen inlogscherm dat oplicht en weer verdwijnt. */
+.app-boot {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--background);
+}

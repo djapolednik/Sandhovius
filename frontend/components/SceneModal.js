@@ -7,6 +7,7 @@ import { formatTemperature } from '../lib/temperature'
 import { DAYS, describeDays } from '../lib/schedules'
 import { actionsFromChoices, choicesFromActions, currentPayload, describeLightStep } from '../lib/sceneChoices'
 import { MinusIcon, PlusIcon, TrashIcon } from '../lib/icons'
+import { uid } from '../lib/uid'
 
 const TEMP_STEP = 0.5
 
@@ -89,7 +90,7 @@ export default function SceneModal({
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { key: crypto.randomUUID(), time: nextWholeHour(), days: DAYS.map((d) => d.key), enabled: true, dirty: true },
+      { key: uid(), time: nextWholeHour(), days: DAYS.map((d) => d.key), enabled: true, dirty: true },
     ])
   }
 
