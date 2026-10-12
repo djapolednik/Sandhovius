@@ -1,0 +1,37 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { greeting, houseSummary, indoorTemperature, litWindows } from './home.js'
+
+const at = (h) => new Date(2026, 9, 13, h, 30)
+
+test('greeting: dagdeel en voornaam', () => {
+  assert.equal(greeting(at(8), 'David Pieters'), 'Goedemorgen, David')
+  assert.equal(greeting(at(14), 'David'), 'Goedemiddag, David')
+  assert.equal(greeting(at(20), ''), 'Goedenavond')
+  assert.equal(greeting(at(2), null), 'Goedenacht')
+  assert.equal(greeting(at(6), '  '), 'Goedemorgen')
+})
+
+test('houseSummary: in gewone woorden, zonder middelpunten', () => {
+  assert.equal(houseSummary({ lightsOn: 0, plugsOn: 0 }), 'Alles is uit')
+  assert.equal(houseSummary({ lightsOn: 1, plugsOn: 0 }), '1 lamp aan')
+  assert.equal(houseSummary({ lightsOn: 3, plugsOn: 1 }), '3 lampen en 1 stopcontact aan')
+  assert.equal(houseSummary({ lightsOn: 0, plugsOn: 2, indoor: 20.5 }), '2 stopcontacten aan, binnen 20,5°')
+  assert.equal(houseSummary({ lightsOn: 0, plugsOn: 0, indoor: 19 }), 'Alles is uit, binnen 19,0°')
+})
+
+test('indoorTemperature: thermostaat eerst, anders een sensor', () => {
+  const thermostat = { type: 'climate', state: { attributes: { current_temperature: 20.4 } } }
+  const sensor = { type: 'sensor', state: { temperature: 18.2 } }
+  assert.equal(indoorTemperature([sensor, thermostat]), 20.4)
+  assert.equal(indoorTemperature([sensor]), 18.2)
+  assert.equal(indoorTemperature([{ type: 'climate', state: { attributes: {} } }]), null)
+  assert.equal(indoorTemperature([]), null)
+})
+
+test('litWindows: één raam per lamp die aan is, hooguit allemaal', () => {
+  assert.deepEqual(litWindows(0), [false, false, false, false, false, false])
+  assert.deepEqual(litWindows(1), [false, false, false, true, false, false]) // zoals op het inlogscherm
+  assert.equal(litWindows(3).filter(Boolean).length, 3)
+  assert.equal(litWindows(40).filter(Boolean).length, 6)
+})

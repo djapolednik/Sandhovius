@@ -33,8 +33,9 @@ import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
 import { applyStateEcho, createInflight, settleDevice } from '../lib/inflight'
 import { uid } from '../lib/uid'
+import { greeting, houseSummary, indoorTemperature } from '../lib/home'
 import { isBatteryLow } from '../lib/battery'
-import { PlusIcon, deviceTypeIcon } from '../lib/icons'
+import { LightbulbIcon, PlusIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
 
@@ -67,7 +68,6 @@ const AWAY_REFETCH_MS = 30 * 1000
 const pb = new PocketBase(defaultPocketbaseUrl(), new LocalAuthStore('pocketbase_auth'))
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
 // Wat Home laat zien: je favorieten of alles wat aan staat.
-const HOME_VIEW_KEY = 'sandhovius-home-view'
 const SELECTED_HOUSE_KEY = 'sandhovius-selected-house'
 // Zo lang mag het klaarzetten van een nieuw apparaat duren voordat de kaart
 // het niet meer "Wordt klaargezet" noemt (normaal: een paar seconden).
@@ -136,18 +136,6 @@ export default function Home() {
   const [settingsDeviceId, setSettingsDeviceId] = useState(null)
   const [shelfIds, setShelfIds] = useState([])
   const [orderingFavorites, setOrderingFavorites] = useState(false)
-  const [homeView, setHomeView] = useState('favorites')
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(HOME_VIEW_KEY) === 'on') setHomeView('on')
-    } catch {}
-  }, [])
-  function chooseHomeView(view) {
-    setHomeView(view)
-    try {
-      window.localStorage.setItem(HOME_VIEW_KEY, view)
-    } catch {}
-  }
   const [changingPassword, setChangingPassword] = useState(false)
   // Inlogscherm: "Wachtwoord vergeten?" wisselt naar een formulier dat een
   // resetlink laat mailen; resetSent toont daarna de bevestiging.
@@ -1553,6 +1541,21 @@ export default function Home() {
   // Alleen als de box bereikbaar is: anders weten we niet zeker wat er aan
   // staat.
   const shelfDevices = houseReachable ? devicesInHouse.filter((device) => shelfIds.includes(device.id)) : []
+  // Home: wat er naast de favorieten nog aan staat (de favorieten zie je al).
+  const otherOnDevices = shelfDevices.filter((device) => !favoriteDevices.some((f) => f.id === device.id))
+  // Het huis in het huispaneel: een verlicht raam per lamp, en één zin. Alleen
+  // als de box bereikbaar is; anders weten we niet wat er aan staat.
+  const knowsState = loaded && houseReachable
+  const lightsOn = knowsState ? devicesOn.filter((device) => device.type === 'light').length : 0
+  const summary = knowsState
+    ? houseSummary({
+        lightsOn,
+        plugsOn: devicesOn.length - lightsOn,
+        indoor: indoorTemperature(
+          devicesInHouse.map((device) => ({ type: device.type, state: device.expand?.device_state_via_device?.[0]?.state }))
+        ),
+      })
+    : null
   const userEmail = pb.authStore.record?.email
 
   const errorBanner = error && (
@@ -1812,7 +1815,7 @@ export default function Home() {
       </>
     )
   } else {
-    header = <Header title="Welkom thuis" subtitle={formatToday(now)} />
+    header = <Header title={greeting(new Date(now), pb.authStore.record?.name)} subtitle={formatToday(now)} />
     content = (
       <>
         {errorBanner}
@@ -1821,10 +1824,7 @@ export default function Home() {
         <div className="dashboard">
           {house && (
             <div className="dashboard-side">
-              {/* Zelfde naam als het huis op het inlogscherm: daar glijdt het
-                  vandaan bij binnenkomst. */}
-              <ViewTransition name="house" share="house-glide" default="none">
-                <HousePanel
+              <HousePanel
                   house={house}
                   realtimeLink={realtimeLink}
                   houseLink={houseLink}
@@ -1835,8 +1835,9 @@ export default function Home() {
                   // Alleen als de box bereikbaar is: anders weten we niet zeker
                   // wat er aan staat, en zegt de verbindingsmelding genoeg.
                   onAllOff={loaded && houseReachable && devicesOn.length > 0 ? turnAllOff : undefined}
+                  summary={summary}
+                  lightsOn={lightsOn}
                 />
-              </ViewTransition>
               {house.weather?.condition && (
                 <WeatherCard weather={house.weather} updated={house.weather_updated} now={now} />
               )}
@@ -1860,53 +1861,47 @@ export default function Home() {
                   />
                 )}
 
-                {/* Eén rij tegels, met een keuze: je vaste knoppen of alles wat
-                    nu aan staat. */}
-                <section className="home-section home-devices" aria-label="Apparaten">
-                  <div className="section-head">
-                    <fieldset className="segmented home-view">
-                      <legend className="visually-hidden">Laat zien</legend>
-                      {[
-                        ['favorites', 'Favorieten'],
-                        ['on', 'Staat aan'],
-                      ].map(([value, label]) => (
-                        <label
-                          key={value}
-                          className={`segmented-option ${homeView === value ? 'segmented-option-selected' : ''}`}
-                        >
-                          <input
-                            type="radio"
-                            name="home-view"
-                            className="visually-hidden"
-                            checked={homeView === value}
-                            onChange={() => chooseHomeView(value)}
-                          />
-                          {label}
-                        </label>
-                      ))}
-                    </fieldset>
-                    {homeView === 'favorites' && favoriteDevices.length > 1 && (
-                      <button type="button" className="btn btn-plain section-action" onClick={() => setOrderingFavorites(true)}>
-                        Volgorde
-                      </button>
-                    )}
-                  </div>
-                  {homeView === 'favorites' ? (
-                    favoriteDevices.length > 0 ? (
+                {/* Je vaste knoppen, en daaronder wat er verder nog aan staat:
+                    geen keuzebalk, Home laat gewoon het huis zien. */}
+                <div className="home-section home-devices">
+                  <section className="home-devices-group" aria-labelledby="home-favorites">
+                    <div className="section-head">
+                      <h2 id="home-favorites" className="section-heading">
+                        Favorieten
+                      </h2>
+                      {favoriteDevices.length > 1 && (
+                        <button type="button" className="btn btn-plain section-action" onClick={() => setOrderingFavorites(true)}>
+                          Volgorde
+                        </button>
+                      )}
+                    </div>
+                    {favoriteDevices.length > 0 ? (
                       renderByRoom(favoriteDevices)
                     ) : (
-                      <p className="section-hint">
-                        Zet apparaten die je vaak gebruikt hier: houd een apparaat ingedrukt en zet “Op Home tonen” aan.
-                      </p>
-                    )
-                  ) : !houseReachable ? (
-                    <p className="section-hint">Je box reageert niet, dus we weten nu niet zeker wat er aan staat.</p>
-                  ) : shelfDevices.length > 0 ? (
-                    renderByRoom(shelfDevices)
-                  ) : (
-                    <p className="section-hint">Alle lampen en stopcontacten zijn uit.</p>
+                      <div className="panel home-welcome">
+                        <span className="device-icon" aria-hidden="true">
+                          <LightbulbIcon width="22" height="22" />
+                        </span>
+                        <div>
+                          <p className="home-welcome-title">Je vaste lampen komen hier</p>
+                          <p className="home-welcome-text">
+                            Houd een lamp of stopcontact even ingedrukt en kies “Op Home tonen”. Dan bedien je hem met één
+                            tik, meteen als je de app opent.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+
+                  {otherOnDevices.length > 0 && (
+                    <section className="home-devices-group" aria-labelledby="home-on">
+                      <h2 id="home-on" className="section-heading">
+                        Staat nu aan
+                      </h2>
+                      {renderByRoom(otherOnDevices)}
+                    </section>
                   )}
-                </section>
+                </div>
 
                 {climateDevices.length > 0 && (
                   <section className="home-section home-climate" aria-label="Temperatuur">
