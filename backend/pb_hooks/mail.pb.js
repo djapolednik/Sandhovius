@@ -39,6 +39,7 @@ onMailerRecordVerificationSend((e) => {
   const m = texts.verification(e.record.getString("language"), link)
   e.message.subject = m.subject
   e.message.html = m.html
+  e.message.text = m.text
   e.next()
 }, "users")
 
@@ -48,6 +49,7 @@ onMailerRecordPasswordResetSend((e) => {
   const m = texts.reset(e.record.getString("language"), link)
   e.message.subject = m.subject
   e.message.html = m.html
+  e.message.text = m.text
   e.next()
 }, "users")
 
@@ -64,5 +66,6 @@ onMailerRecordAuthAlertSend((e) => {
   const m = texts.authAlert(e.record.getString("language"), e.meta.info)
   e.message.subject = m.subject
   e.message.html = m.html
+  e.message.text = m.text
   e.next()
 }, "users")

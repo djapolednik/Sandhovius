@@ -70,7 +70,8 @@ onRecordAfterCreateSuccess((e) => {
     language,
     inv.getString("inviter_name"),
     inv.getString("house_name"),
-    settings.meta.appURL + "/uitnodiging"
+    settings.meta.appURL + "/uitnodiging",
+    inv.getString("role")
   )
   try {
     $app.newMailClient().send(new MailerMessage({
@@ -78,6 +79,7 @@ onRecordAfterCreateSuccess((e) => {
       to: [{ address: inv.getString("email") }],
       subject: m.subject,
       html: m.html,
+      text: m.text,
     }))
   } catch (err) {
     $app.logger().error("uitnodigingsmail niet verstuurd", "invitation", inv.id, "error", String(err))

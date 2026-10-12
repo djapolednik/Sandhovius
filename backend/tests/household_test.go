@@ -619,3 +619,16 @@ func TestHousemateCannotManage(t *testing.T) {
 		t.Errorf("lidmaatschap veranderd: members %v admins %v", members, admins)
 	}
 }
+
+// De uitnodiging in de opmaak van de app: kaartje met huis en rol, een knop,
+// en ook een platte-tekstversie.
+func TestInviteMailLayout(t *testing.T) {
+	p, w, c := household(t)
+	mustInvite(t, p, w.UserATok, w.UserA, w.HouseA, "nieuw@sandhovius.test", "admin")
+	m := decodeMail(c.wait(t, 1)[0])
+	for _, want := range []string{"text/plain", "text/html", "Als beheerder", "Verloopt over 7 dagen", "Uitnodiging bekijken", "border-radius:28px"} {
+		if !strings.Contains(m, want) {
+			t.Errorf("%q ontbreekt in de mail", want)
+		}
+	}
+}
