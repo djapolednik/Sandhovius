@@ -1,8 +1,12 @@
 /// <reference path="../pb_data/types.d.ts" />
 // Een box koppelen aan een huis (claim) en weer loskoppelen (release).
 //
-// Op de sticker staat een code van 12 tekens; de box bewaart alleen de sha256
-// van de genormaliseerde code in boxes.claim_code_hash (hidden). De regels:
+// Op de sticker staat een code van 12 tekens; de box bewaart alleen de
+// HMAC-SHA256 van de genormaliseerde code in boxes.claim_code_hash (hidden),
+// met de sleutel CLAIM_CODE_KEY uit env. Die sleutel staat niet in de
+// database: wie alleen pb_data of een backup heeft, kan de codes niet
+// terugrekenen. Zonder sleutel weigert de claim (503), nooit een kale hash.
+// De regels:
 // - Onbekend serienummer en foute code geven exact hetzelfde antwoord (400),
 //   zodat je serienummers niet kunt aftasten.
 // - Alles dat records wijzigt gebeurt in één transactie, en de box wordt in
@@ -20,6 +24,12 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
   const str = (v) => (typeof v === "string" ? v : "")
   // Afspraak: hoofdletters, spaties en "-" weg, O -> 0, I en L -> 1.
   const normalize = (s) => s.toUpperCase().replace(/[ -]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1")
+
+  const key = $os.getenv("CLAIM_CODE_KEY")
+  if (!key) {
+    console.error("[claim] CLAIM_CODE_KEY ontbreekt in env: koppelen kan niet")
+    return fail(503, "Koppelen lukt nu niet. Probeer het later opnieuw")
+  }
 
   const user = $app.findRecordById("users", e.auth.id)
   if (!user.verified()) return fail(403, "Bevestig eerst je e-mailadres")
@@ -44,7 +54,7 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
     // Altijd één vergelijking doen, ook zonder box of zonder hash, zodat de
     // looptijd niets verraadt. Een lege hash of lege code telt nooit mee.
     const stored = box ? box.getString("claim_code_hash") : ""
-    const given = code ? $security.sha256(code) : ""
+    const given = code ? $security.hs256(code, key) : ""
     const same = $security.equal(stored || "x", given || "y")
     if (!box || !stored || !code || !same) {
       result = { status: 400, message: "Deze code klopt niet" }

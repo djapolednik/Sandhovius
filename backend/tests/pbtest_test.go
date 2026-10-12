@@ -102,6 +102,11 @@ func freePort(t *testing.T) int {
 	return l.Addr().(*net.TCPAddr).Port
 }
 
+// claimKey is de sleutel voor de claimcode-HMAC in elke test-PocketBase;
+// dezelfde als in testdata/claim_codes.json. Een test kan hem via env
+// overschrijven (leeg = geen sleutel).
+const claimKey = "sandhovius-test-key"
+
 // startPB start een verse PocketBase met een eigen superuser en geeft hem terug.
 func startPB(t *testing.T) *pb { return startPBEnv(t, nil) }
 
@@ -128,7 +133,7 @@ func startPBEnv(t *testing.T, env map[string]string) *pb {
 
 	addr := fmt.Sprintf("127.0.0.1:%d", freePort(t))
 	cmd := exec.Command(bin, "serve", "--http", addr, "--dir", dir, "--migrationsDir", migrations, "--hooksDir", hooks)
-	cmd.Env = os.Environ()
+	cmd.Env = append(os.Environ(), "CLAIM_CODE_KEY="+claimKey)
 	for k, v := range env {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}

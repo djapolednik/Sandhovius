@@ -116,6 +116,8 @@ services:
       - SMTP_HOST=mailpit
       - SMTP_PORT=1025
       - APP_URL=http://localhost:3000
+      # Sleutel van de claimcode-HMAC (pb_hooks/claim.pb.js); niet in de database.
+      - CLAIM_CODE_KEY=${CLAIM_CODE_KEY}
     depends_on:
       - mailpit
     networks:

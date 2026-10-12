@@ -45,10 +45,13 @@ class FakeServer:
             return rec
 
 
-def run(server, *argv):
+ENV = {'POCKETBASE_ADMIN_EMAIL': 'a@b', 'POCKETBASE_ADMIN_PASSWORD': 'x', 'CLAIM_CODE_KEY': 'k'}
+
+
+def run(server, *argv, env=ENV):
     old = (pb.request, pb.load_env, sys.argv)
     pb.request = server.request
-    pb.load_env = lambda: {'POCKETBASE_ADMIN_EMAIL': 'a@b', 'POCKETBASE_ADMIN_PASSWORD': 'x'}
+    pb.load_env = lambda: dict(env)
     sys.argv = ['provision-box.py', *argv]
     out = io.StringIO()
     try:
@@ -71,7 +74,7 @@ class ProvisionBoxTest(unittest.TestCase):
             out = run(server, '--serial', 'SH-T-1', '--app-url', 'http://x', '--out',
                       os.path.join(d, 'box.json'), '--sheets-dir', d)
             code = sheet_code(os.path.join(d, 'SH-T-1.svg'))
-            self.assertEqual(server.boxes['rec1']['hash'], claimcode.code_hash(code))
+            self.assertEqual(server.boxes['rec1']['hash'], claimcode.code_hash(code, 'k'))
             self.assertNotIn(code, out)
             # Eén atomische POST: geen box zonder hash, geen losse PATCH.
             self.assertEqual([c[0] for c in server.calls if 'boxes/records' in c[1] and c[0] != 'GET'], ['POST'])
@@ -91,14 +94,25 @@ class ProvisionBoxTest(unittest.TestCase):
             server = FakeServer({'rec1': {'id': 'rec1', 'serial': 'SH-T-4', 'house': '', 'hash': 'old'}})
             run(server, '--reissue', 'sh-t-4', '--app-url', 'http://x', '--sheets-dir', d)
             code = sheet_code(os.path.join(d, 'SH-T-4.svg'))
-            self.assertEqual(server.boxes['rec1']['hash'], claimcode.code_hash(code))
+            self.assertEqual(server.boxes['rec1']['hash'], claimcode.code_hash(code, 'k'))
 
     def test_reissue_stores_hash_of_new_sheet_code(self):
         with tempfile.TemporaryDirectory() as d:
             server = FakeServer({'rec1': {'id': 'rec1', 'serial': 'SH-T-2', 'house': '', 'hash': 'old'}})
             run(server, '--reissue', 'SH-T-2', '--app-url', 'http://x', '--sheets-dir', d)
             code = sheet_code(os.path.join(d, 'SH-T-2.svg'))
-            self.assertEqual(server.boxes['rec1']['hash'], claimcode.code_hash(code))
+            self.assertEqual(server.boxes['rec1']['hash'], claimcode.code_hash(code, 'k'))
+
+
+    def test_refuses_without_key(self):
+        # Zonder sleutel zou de hash niet passen bij die van PocketBase.
+        with tempfile.TemporaryDirectory() as d:
+            server = FakeServer()
+            env = {k: v for k, v in ENV.items() if k != 'CLAIM_CODE_KEY'}
+            with self.assertRaises(SystemExit):
+                run(server, '--serial', 'SH-T-5', '--app-url', 'http://x', '--out',
+                    os.path.join(d, 'box.json'), '--sheets-dir', d, env=env)
+            self.assertEqual(server.boxes, {})
 
 
 if __name__ == '__main__':

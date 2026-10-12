@@ -4,6 +4,7 @@ De normalisatie moet exact gelijk zijn aan die van de PocketBase-hook en de PWA;
 de gedeelde testvectoren staan in backend/tests/testdata/claim_codes.json.
 """
 import hashlib
+import hmac
 import secrets
 from urllib.parse import quote
 from xml.sax.saxutils import escape
@@ -47,8 +48,12 @@ def normalize(code):
     return code.replace('O', '0').replace('I', '1').replace('L', '1')
 
 
-def code_hash(code):
-    return hashlib.sha256(normalize(code).encode('utf-8')).hexdigest()
+def code_hash(code, key):
+    """HMAC-SHA256 van de genormaliseerde code met CLAIM_CODE_KEY: gelijk aan
+    $security.hs256 in de hook. De sleutel staat niet in de database."""
+    if not key:
+        raise ValueError('CLAIM_CODE_KEY ontbreekt')
+    return hmac.new(key.encode('utf-8'), normalize(code).encode('utf-8'), hashlib.sha256).hexdigest()
 
 
 def claim_url(app_url, serial, code):

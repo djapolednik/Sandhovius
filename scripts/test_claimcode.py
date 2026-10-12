@@ -20,7 +20,11 @@ class ClaimCodeTest(unittest.TestCase):
         for v in vectors:
             with self.subTest(input=v['input']):
                 self.assertEqual(claimcode.normalize(v['input']), v['normalized'])
-                self.assertEqual(claimcode.code_hash(v['input']), v['sha256'])
+                self.assertEqual(claimcode.code_hash(v['input'], 'sandhovius-test-key'), v['hmac'])
+
+    def test_code_hash_needs_key(self):
+        with self.assertRaises(ValueError):
+            claimcode.code_hash('K7QM-2XRP-9DTW', '')
 
     def test_new_code_format(self):
         pattern = re.compile(r'^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){2}$')

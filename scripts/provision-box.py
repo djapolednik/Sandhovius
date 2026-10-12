@@ -42,7 +42,7 @@ def load_env():
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
                     env[key.strip()] = value.strip()
-    env.update({k: v for k, v in os.environ.items() if k.startswith(('POCKETBASE_', 'SANDHOVIUS_'))})
+    env.update({k: v for k, v in os.environ.items() if k.startswith(('POCKETBASE_', 'SANDHOVIUS_', 'CLAIM_CODE_'))})
     return env
 
 
@@ -70,7 +70,7 @@ def write_sheet(sheets_dir, app_url, serial, code):
     return path
 
 
-def reissue(url, email, password, serial, app_url, sheets_dir):
+def reissue(url, email, password, serial, app_url, sheets_dir, key):
     try:
         token = request(url, 'POST', '/api/collections/_superusers/auth-with-password',
                         {'identity': email, 'password': password})['token']
@@ -83,7 +83,7 @@ def reissue(url, email, password, serial, app_url, sheets_dir):
             sys.exit('Box is gekoppeld; ontkoppel hem eerst')
         code = claimcode.new_code()
         request(url, 'PATCH', f'/api/collections/boxes/records/{box["id"]}',
-                {'claim_code_hash': claimcode.code_hash(code)}, token)
+                {'claim_code_hash': claimcode.code_hash(code, key)}, token)
     except RuntimeError as e:
         sys.exit(f'mislukt: {e}')
     sheet = write_sheet(sheets_dir, app_url, serial, code)
@@ -114,6 +114,10 @@ def main():
     password = env.get('POCKETBASE_ADMIN_PASSWORD')
     if not email or not password:
         sys.exit('POCKETBASE_ADMIN_EMAIL/PASSWORD ontbreken (zie .env)')
+    # Sleutel van de claimcode-HMAC: dezelfde als CLAIM_CODE_KEY van PocketBase.
+    key = env.get('CLAIM_CODE_KEY')
+    if not key:
+        sys.exit('CLAIM_CODE_KEY ontbreekt (zie .env; dezelfde als die van PocketBase)')
     app_url = args.app_url or env.get('APP_URL') or os.environ.get('APP_URL')
     if not app_url:
         sys.exit('--app-url (of env APP_URL) is verplicht')
@@ -121,7 +125,7 @@ def main():
         sys.exit(f'{args.out} bestaat al; niet overschrijven')
 
     if args.reissue:
-        reissue(url, email, password, args.reissue, app_url, args.sheets_dir)
+        reissue(url, email, password, args.reissue, app_url, args.sheets_dir, key)
         return
 
     try:
@@ -139,7 +143,7 @@ def main():
             body['house'] = args.house
         # Hash in dezelfde POST (een superuser mag het hidden veld zetten):
         # er bestaat nooit een box zonder hash.
-        body['claim_code_hash'] = claimcode.code_hash(code)
+        body['claim_code_hash'] = claimcode.code_hash(code, key)
         record = request(url, 'POST', '/api/collections/boxes/records', body, token)
     except RuntimeError as e:
         sys.exit(f'mislukt: {e}')

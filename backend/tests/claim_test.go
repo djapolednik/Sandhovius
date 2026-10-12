@@ -5,6 +5,7 @@
 package tests
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -22,8 +23,9 @@ func normalizeCode(s string) string {
 }
 
 func codeHash(code string) string {
-	h := sha256.Sum256([]byte(normalizeCode(code)))
-	return hex.EncodeToString(h[:])
+	mac := hmac.New(sha256.New, []byte(claimKey))
+	mac.Write([]byte(normalizeCode(code)))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 // newCodedBox maakt een box met claimcode en geeft het id terug.
@@ -435,21 +437,48 @@ func TestNormalizationVectors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var vectors []struct{ Input, Normalized, Sha256 string }
+	var vectors []struct{ Input, Normalized, HMAC string }
 	if err := json.Unmarshal(raw, &vectors); err != nil || len(vectors) < 6 {
 		t.Fatalf("vectoren: %v (%d)", err, len(vectors))
 	}
 	p := startPB(t)
 	_, tok := verifiedUser(t, p, "a@sandhovius.test")
 	for i, v := range vectors {
-		if normalizeCode(v.Input) != v.Normalized || codeHash(v.Input) != v.Sha256 {
+		if normalizeCode(v.Input) != v.Normalized || codeHash(v.Input) != v.HMAC {
 			t.Fatalf("Go-helper wijkt af voor %q", v.Input)
 		}
 		serial := "SH-V-" + string(rune('A'+i))
 		p.create(t, "boxes", map[string]any{
-			"serial": serial, "password": boxPw, "passwordConfirm": boxPw, "claim_code_hash": v.Sha256})
+			"serial": serial, "password": boxPw, "passwordConfirm": boxPw, "claim_code_hash": v.HMAC})
 		if st, out := p.claim(t, tok, map[string]any{"serial": serial, "code": v.Input}); st != 200 {
 			t.Errorf("vector %q: %d %v", v.Input, st, out)
 		}
+	}
+}
+
+// Zonder sleutel kan de hook niet vergelijken: weigeren (503), nooit
+// terugvallen op een kale hash.
+func TestClaimWithoutKeyRefuses(t *testing.T) {
+	p := startPBEnv(t, map[string]string{"CLAIM_CODE_KEY": ""})
+	id := newCodedBox(t, p, "SH-C-1", "K7QM-2XRP-9DTW")
+	_, tok := verifiedUser(t, p, "a@sandhovius.test")
+	st, out := p.claim(t, tok, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW"})
+	if st != 503 || out["message"] != "Koppelen lukt nu niet. Probeer het later opnieuw" {
+		t.Fatalf("zonder sleutel: %d %v", st, out)
+	}
+	if p.boxRecord(t, id)["house"] != "" {
+		t.Fatal("box is toch gekoppeld")
+	}
+}
+
+// Een oude kale sha256 (van vóór de sleutel) mag nooit meer passen.
+func TestClaimOldBareHashNoLongerMatches(t *testing.T) {
+	p := startPB(t)
+	bare := sha256.Sum256([]byte(normalizeCode("K7QM-2XRP-9DTW")))
+	p.create(t, "boxes", map[string]any{"serial": "SH-C-1", "password": boxPw, "passwordConfirm": boxPw,
+		"claim_code_hash": hex.EncodeToString(bare[:])})
+	_, tok := verifiedUser(t, p, "a@sandhovius.test")
+	if st, _ := p.claim(t, tok, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW"}); st != 400 {
+		t.Fatalf("kale hash: %d, verwacht 400", st)
 	}
 }

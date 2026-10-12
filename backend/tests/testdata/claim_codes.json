@@ -2,36 +2,36 @@
   {
     "input": "k7qm-2xrp-9dtw",
     "normalized": "K7QM2XRP9DTW",
-    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+    "hmac": "efdc8c43896f8da430bf082a726a90a314183f3b13962487b956f6ee6f86d05c"
   },
   {
     "input": "K7QM 2XRP 9DTW",
     "normalized": "K7QM2XRP9DTW",
-    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+    "hmac": "efdc8c43896f8da430bf082a726a90a314183f3b13962487b956f6ee6f86d05c"
   },
   {
     "input": "K7QM2XRP9DTW",
     "normalized": "K7QM2XRP9DTW",
-    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+    "hmac": "efdc8c43896f8da430bf082a726a90a314183f3b13962487b956f6ee6f86d05c"
   },
   {
     "input": "kOqm-2xrP-9dTl",
     "normalized": "K0QM2XRP9DT1",
-    "sha256": "5e006ba7cb2fa2be8711a2d3c8cabdbdab0798b44ac5c30d7d4c237fa75449a1"
+    "hmac": "e7000514e8ee9c1c900bc0cfca26efa2e73bc72ce649376a1032d2d085921ce8"
   },
   {
     "input": "K7QM-2XRP-9DIL",
     "normalized": "K7QM2XRP9D11",
-    "sha256": "59538ebc71426513ca71d4a2123a1509cb6b3131edecb91571b4abe2312cb40c"
+    "hmac": "f08803734ced3b6bb9f4c79733f58c1d7468bb53a92387662f4cb424ab81de93"
   },
   {
     "input": "  k7qm  2xrp   9dtw  ",
     "normalized": "K7QM2XRP9DTW",
-    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+    "hmac": "efdc8c43896f8da430bf082a726a90a314183f3b13962487b956f6ee6f86d05c"
   },
   {
     "input": "k7qm - 2xrp-9dtw",
     "normalized": "K7QM2XRP9DTW",
-    "sha256": "27191ff1e49e9f87841a6ebd2bfa041a1fff871630564b31e5a5e7997dbb1bcc"
+    "hmac": "efdc8c43896f8da430bf082a726a90a314183f3b13962487b956f6ee6f86d05c"
   }
 ]
