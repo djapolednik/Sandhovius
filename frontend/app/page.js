@@ -410,8 +410,9 @@ export default function Home() {
       password: newPassword,
       passwordConfirm: newPassword,
     })
+    // De sheet zegt zelf dat het gelukt is (en wat dat voor andere
+    // apparaten betekent); geen toast erbij.
     await pb.collection('users').authWithPassword(record.email, newPassword)
-    showToast('Je wachtwoord is gewijzigd')
   }
 
   async function changeLanguage(language) {
@@ -1501,26 +1502,28 @@ export default function Home() {
                     'Inloggen'
                   )}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-plain login-link"
-                  onClick={() => {
-                    setResetMode(true)
-                    setError('')
-                  }}
-                >
-                  Wachtwoord vergeten?
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-plain login-link"
-                  onClick={() => {
-                    setSignupMode(true)
-                    setError('')
-                  }}
-                >
-                  Account aanmaken
-                </button>
+                <div className="login-links">
+                  <button
+                    type="button"
+                    className="btn btn-plain login-link"
+                    onClick={() => {
+                      setResetMode(true)
+                      setError('')
+                    }}
+                  >
+                    Wachtwoord vergeten?
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-plain login-link"
+                    onClick={() => {
+                      setSignupMode(true)
+                      setError('')
+                    }}
+                  >
+                    Account aanmaken
+                  </button>
+                </div>
               </form>
             )}
           </div>

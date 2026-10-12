@@ -157,13 +157,21 @@
 }
 
 /* "Wachtwoord vergeten?" / "Terug naar inloggen": een rustige tekstknop
-   onder de hoofdknop, met een tikvlak van 44px. */
+   onder de hoofdknop, met een tikvlak van 44px. Grijs (btn-plain), bewust:
+   blauw is voor de hoofdknop (The One Voice Rule). */
 .login-link {
   align-self: center;
   min-height: 44px;
   padding: 0.4rem 0.75rem;
-  color: var(--accent-text);
   font-weight: 600;
+}
+
+/* Twee links onder de knop horen bij elkaar: de tikvlakken van 44px geven
+   genoeg lucht, dus niet nog eens de ruimte van de form-stack ertussen. */
+.login-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .login-note {

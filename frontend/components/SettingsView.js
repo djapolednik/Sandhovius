@@ -117,18 +117,25 @@ export default function SettingsView({
         <p className="settings-hint">Automatisch volgt je telefoon: licht overdag, donker als je telefoon dat is.</p>
       </section>
 
-      <section className="panel settings-section" aria-labelledby="settings-account">
+      <section className="panel settings-section settings-account" aria-labelledby="settings-account">
         <h2 id="settings-account" className="settings-heading">
           Account
         </h2>
-        {userEmail && <p className="settings-account-email">Ingelogd als {userEmail}</p>}
-        <h3 className="settings-subheading">Taal van e-mails</h3>
-        <LanguageChoice value={mailLanguage} onChange={chooseLanguage} legend="Nederlands of English" />
-        {languageError && (
-          <p className="login-error" role="alert">
-            {languageError}
+        {userEmail && (
+          <p className="settings-account-email">
+            Ingelogd als <strong>{userEmail}</strong>
           </p>
         )}
+        <div className="settings-group">
+          <h3 className="settings-subheading">Taal van e-mails</h3>
+          <LanguageChoice value={mailLanguage} onChange={chooseLanguage} legend="Nederlands of English" />
+          <p className="settings-hint">Voor de mails die je van Sandhovius krijgt. De app zelf blijft Nederlands.</p>
+          {languageError && (
+            <p className="login-error" role="alert">
+              {languageError}
+            </p>
+          )}
+        </div>
         <div className="settings-account-actions">
           <button type="button" className="btn btn-secondary settings-logout" onClick={onChangePassword}>
             Wachtwoord wijzigen

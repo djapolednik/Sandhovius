@@ -40,3 +40,12 @@ export function confirmFailure(err) {
   if (err?.status === 429) return 'busy'
   return 'offline'
 }
+
+// De eisen aan een nieuw wachtwoord, live onder het veld: lang genoeg, en
+// twee keer hetzelfde (pas zodra de tweede keer iets bevat).
+export function passwordChecks(password, passwordConfirm) {
+  return {
+    long: (password || '').length >= MIN_PASSWORD_LENGTH,
+    same: !!passwordConfirm && password === passwordConfirm,
+  }
+}
