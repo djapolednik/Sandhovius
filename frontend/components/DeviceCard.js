@@ -1,15 +1,15 @@
 'use client'
 
-import { memo, useRef } from 'react'
+import { memo } from 'react'
 import ClimateCard from './ClimateCard'
 import { formatTemperature, readTemperature, temperatureColor } from '../lib/temperature'
 import { deviceTypeIcon } from '../lib/icons'
 import { glowFor, iconColorFor, lightStateText } from '../lib/light'
+import { useLongPress } from '../lib/longPress'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
 export const TOGGLEABLE_TYPES = ['light', 'switch']
-const LONG_PRESS_MS = 500
 
 export const DEVICE_TYPE_LABELS = {
   light: 'Lamp',
@@ -82,33 +82,14 @@ export default memo(function DeviceCard({
   const isPending = canToggle && !!device._pending
   const opensDetails = setupFailed || (device.type === 'sensor' && !isPairing)
 
-  // Ingedrukt houden opent de details, los van de korte tik die schakelt.
-  const pressTimer = useRef(null)
-  const longPressTriggered = useRef(false)
-
-  function startPress(e) {
-    if (e.button > 0) return
-    longPressTriggered.current = false
-    pressTimer.current = setTimeout(() => {
-      longPressTriggered.current = true
-      onOpenSettings(device)
-    }, LONG_PRESS_MS)
-  }
-
-  function cancelPress() {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current)
-      pressTimer.current = null
-    }
-  }
+  // Ingedrukt houden opent de details, los van de korte tik die schakelt;
+  // trekken of scrollen is geen ingedrukt houden (lib/longPress).
+  const press = useLongPress(() => onOpenSettings(device))
 
   function handleActionClick() {
     // Voorkomt dat de tap/click die na het loslaten van een long-press
     // volgt alsnog schakelt/detail opent.
-    if (longPressTriggered.current) {
-      longPressTriggered.current = false
-      return
-    }
+    if (press.consumeLongPress()) return
     if (canToggle) onToggle(device)
     else if (opensDetails) onOpenSettings(device)
   }
@@ -118,8 +99,8 @@ export default memo(function DeviceCard({
   // er na de long-press ook een contextmenu-event: dan niet nog een keer.
   function handleContextMenu(e) {
     e.preventDefault()
-    if (longPressTriggered.current) return
-    cancelPress()
+    if (press.longPressFired()) return
+    press.cancel()
     onOpenSettings(device)
   }
 
@@ -207,10 +188,7 @@ export default memo(function DeviceCard({
           isPending ? 'card-pending' : ''
         } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${isPairing || setupFailed ? 'card-pairing' : ''}`}
         style={glowStyle}
-        onPointerDown={startPress}
-        onPointerUp={cancelPress}
-        onPointerLeave={cancelPress}
-        onPointerCancel={cancelPress}
+        {...press.handlers}
         onContextMenu={handleContextMenu}
       >
         <button

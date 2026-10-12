@@ -1,10 +1,8 @@
 'use client'
 
-import { useRef } from 'react'
 import { CheckIcon, ScenesIcon } from '../lib/icons'
 import { useScrollEdges } from '../lib/useScrollEdges'
-
-const LONG_PRESS_MS = 500
+import { useLongPress } from '../lib/longPress'
 
 // Scènes op Home: één pil per scène, een tik voert hem uit. Alleen het
 // rondje verandert (blauw met een spinner, dan even een vinkje), zodat de
@@ -41,29 +39,13 @@ export default function HomeScenes({ scenes, runState, canRun, onRun, onEdit }) 
 }
 
 function ScenePill({ scene, state, canRun, onRun, onEdit }) {
-  const pressTimer = useRef(null)
-  const longPressTriggered = useRef(false)
-
-  function startPress(e) {
-    if (e.button > 0) return
-    longPressTriggered.current = false
-    pressTimer.current = setTimeout(() => {
-      longPressTriggered.current = true
-      onEdit(scene)
-    }, LONG_PRESS_MS)
-  }
-
-  function cancelPress() {
-    clearTimeout(pressTimer.current)
-    pressTimer.current = null
-  }
+  // Zijwaarts door de pillen schuiven of omlaag trekken is geen ingedrukt
+  // houden (lib/longPress).
+  const press = useLongPress(() => onEdit(scene))
 
   function handleClick() {
     // De klik die na een long-press volgt, voert de scène niet alsnog uit.
-    if (longPressTriggered.current) {
-      longPressTriggered.current = false
-      return
-    }
+    if (press.consumeLongPress()) return
     if (canRun && state !== 'running') onRun(scene)
   }
 
@@ -71,8 +53,8 @@ function ScenePill({ scene, state, canRun, onRun, onEdit }) {
   // ook na de long-press, dan niet nog een keer openen.
   function handleContextMenu(e) {
     e.preventDefault()
-    if (longPressTriggered.current) return
-    cancelPress()
+    if (press.longPressFired()) return
+    press.cancel()
     onEdit(scene)
   }
 
@@ -86,10 +68,7 @@ function ScenePill({ scene, state, canRun, onRun, onEdit }) {
       aria-label={`Scène ${scene.name} uitvoeren`}
       aria-disabled={blocked ? true : undefined}
       onClick={handleClick}
-      onPointerDown={startPress}
-      onPointerUp={cancelPress}
-      onPointerLeave={cancelPress}
-      onPointerCancel={cancelPress}
+      {...press.handlers}
       onContextMenu={handleContextMenu}
     >
       <span className="scene-pill-icon" aria-hidden="true">
