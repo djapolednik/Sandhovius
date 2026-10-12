@@ -139,3 +139,20 @@ func TestSubscribeBoxDeliversHouse(t *testing.T) {
 		t.Errorf("geabonneerd op %q, verwacht boxes", subscribedTo)
 	}
 }
+
+// Een halfopen verbinding (netwerk weg zonder FIN) valt alleen op via TCP-
+// keepalive. Met Go's standaard (15 s, 9 probes) duurde dat ~3 min; de
+// stroom moet binnen 45 s merken dat hij dood is.
+func TestStreamKeepAliveDetectsDeadConnectionQuickly(t *testing.T) {
+	k := streamKeepAlive
+	if !k.Enable {
+		t.Fatal("keepalive staat uit")
+	}
+	if worst := k.Idle + k.Interval*time.Duration(k.Count); worst > 45*time.Second {
+		t.Errorf("dode verbinding valt pas na %s op, verwacht <= 45s", worst)
+	}
+	tr, ok := NewClient("http://x").httpClient.Transport.(*http.Transport)
+	if !ok || tr.DialContext == nil {
+		t.Fatal("stroomclient gebruikt de standaard-transport, niet de keepalive-dialer")
+	}
+}

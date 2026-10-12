@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -37,10 +38,25 @@ type Client struct {
 // staan, en daarmee de schema-lus en de hartslag.
 const restTimeout = 15 * time.Second
 
+// streamKeepAlive bepaalt hoe snel een halfopen realtime-verbinding opvalt
+// (netwerk weg zonder dat de verbinding netjes sluit): na 15 s stilte een
+// probe, daarna elke 5 s, na 3 gemiste is hij dood (~30 s). Met Go's
+// standaard duurde dat ~3 min. Een tijdslimiet op de stroom zelf helpt niet:
+// PocketBase sluit een stille stroom pas na 5 min, dus stilte is normaal.
+var streamKeepAlive = net.KeepAliveConfig{
+	Enable:   true,
+	Idle:     15 * time.Second,
+	Interval: 5 * time.Second,
+	Count:    3,
+}
+
 func NewClient(baseURL string) *Client {
+	dialer := &net.Dialer{Timeout: 10 * time.Second, KeepAliveConfig: streamKeepAlive}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = dialer.DialContext
 	return &Client{
 		baseURL:    baseURL,
-		httpClient: &http.Client{},
+		httpClient: &http.Client{Transport: transport},
 		restClient: &http.Client{Timeout: restTimeout},
 	}
 }
