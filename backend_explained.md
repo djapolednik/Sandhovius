@@ -125,6 +125,15 @@ heeft meerdere leden (spec: `docs/superpowers/specs/2026-10-07-household-design.
 alleen de laatste stand bij; de volledige geschiedenis blijft lokaal op de box
 (§10) — "sensordata blijft lokaal, de cloud is voor gemak".
 
+**Waarom `state.last_updated` erin staat**: de agent schrijft HA's
+`last_updated` mee in de JSON (geen eigen kolom, dus geen migratie). Een
+afstemming (`GetState`) kan na een nieuwer `state_changed`-event binnenkomen;
+de agent onthoudt per entity de laatst doorgestuurde tijd en schrijft nooit
+een oudere stand (`stateClock`, controleren en schrijven onder één lock). De
+PWA gooit een echo weg die ouder is dan wat hij al heeft (`lib/inflight.js`).
+Zelfde idee als Matter's DataVersion. Het Zigbee2MQTT-pad heeft (nog) geen tijd;
+zonder tijd geldt de stand altijd.
+
 ---
 
 ## 4. PocketBase: regels, hooks en rate limits
@@ -288,7 +297,8 @@ Beide doen daarna:
 2. Alleen als de box bij een huis hoort: device opzoeken in de cache (alleen
    devices van het eigen huis; entity-ID's komen uit de naam en kunnen tussen
    huizen botsen), onbekende entity's negeren, `device_state` upserten en
-   `online` bijwerken.
+   `online` bijwerken. Het HA-pad slaat een stand over die ouder is dan de
+   laatst doorgestuurde (zie §3, `last_updated`).
 
 ---
 
