@@ -31,6 +31,7 @@ import { describeError, isSessionExpired } from '../lib/errors'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
+import { applyStateEcho, createInflight, settleDevice } from '../lib/inflight'
 import { isBatteryLow } from '../lib/battery'
 import { PlusIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
@@ -167,6 +168,8 @@ export default function Home() {
   const [hiddenIds, setHiddenIds] = useState([])
   const deleteTimers = useRef({})
   const lightWatchers = useRef(createLatestWatchers())
+  // Commando's onderweg per apparaat (lib/inflight).
+  const inflight = useRef(createInflight())
 
   useEffect(() => {
     setLoggedIn(pb.authStore.isValid)
@@ -261,8 +264,9 @@ export default function Home() {
         setDevices((prev) =>
           prev.map((d) =>
             d.id === e.record.device
-              ? // De echte stand is er: niet langer "wacht op de box".
-                { ...d, _pending: false, expand: { ...d.expand, device_state_via_device: [e.record] } }
+              ? // De echte stand is er; loopt er nog een commando, dan pas
+                // tonen als dat klaar is (anders even een oudere stand).
+                applyStateEcho(d, e.record, inflight.current.count(d.id))
               : d
           )
         )
@@ -277,7 +281,7 @@ export default function Home() {
           const existing = prev.find((d) => d.id === e.record.id)
           if (!existing) return [...prev, e.record]
           return prev.map((d) =>
-            d.id === e.record.id ? { ...e.record, expand: d.expand, _pending: d._pending } : d
+            d.id === e.record.id ? { ...e.record, expand: d.expand, _pending: d._pending, _echo: d._echo } : d
           )
         })
       }),
@@ -822,13 +826,14 @@ export default function Home() {
 
     // Eén foutmelding per fout: de (blijvende, wegklikbare) fouttoast. De
     // banner bovenaan is voor het ophalen van de hele pagina.
+    const done = inflight.current.begin(device.id)
     try {
       const command = await pb.collection('commands').create({
         device: device.id,
         action: 'toggle',
         status: 'pending',
       })
-      watchCommand(command.id, device.name, device.id)
+      watchCommand(command.id, device.name, device.id, { done })
       // De verwarming uitzetten is het ene schakelen met echte gevolgen
       // (een koud huis): even terug te draaien.
       if (device.type === 'climate' && !willBeOn) {
@@ -838,6 +843,7 @@ export default function Home() {
         })
       }
     } catch (err) {
+      done()
       if (isSessionExpired(err)) return endExpiredSession()
       showToast(describeError(`${device.name} ${willBeOn ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
       fetchAll()
@@ -887,15 +893,18 @@ export default function Home() {
     )
     // Eén wachter per lamp: alleen het nieuwste commando mag nog melden.
     const token = lightWatchers.current.begin(device.id)
+    const done = inflight.current.begin(device.id)
     try {
       const command = await pb
         .collection('commands')
         .create({ device: device.id, action: 'turn_on', payload, status: 'pending' }, { requestKey: null })
       const stop = watchCommand(command.id, device.name, device.id, {
         failMessage: `${device.name} kon dit niet instellen. Probeer het opnieuw.`,
+        done,
       })
       lightWatchers.current.register(device.id, token, stop)
     } catch (err) {
+      done()
       if (isSessionExpired(err)) return endExpiredSession()
       showToast(describeError(`${device.name} instellen`, err), 'error')
       fetchAll()
@@ -923,6 +932,7 @@ export default function Home() {
     )
     await Promise.all(
       list.map(async (device) => {
+        const done = inflight.current.begin(device.id)
         try {
           // requestKey: null — anders annuleert de SDK gelijktijdige
           // verzoeken naar hetzelfde adres, en gaat maar één lamp uit.
@@ -930,8 +940,9 @@ export default function Home() {
             { device: device.id, action: on ? 'turn_on' : 'turn_off', status: 'pending' },
             { requestKey: null }
           )
-          watchCommand(command.id, device.name, device.id)
+          watchCommand(command.id, device.name, device.id, { done })
         } catch (err) {
+          done()
           if (isSessionExpired(err)) return endExpiredSession()
           showToast(describeError(`${device.name} ${on ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
           fetchAll()
@@ -1014,6 +1025,7 @@ export default function Home() {
   // de echte stand opnieuw op, zodat de kaart niet blijft doen alsof.
   // options.onSettled(status): voor wie wil weten hoe het afliep (een
   // scène-tegel). options.failMessage: eigen tekst bij mislukken.
+  // options.done: van inflight.begin, bij elk einde (ook stilletjes gestopt).
   function watchCommand(commandId, deviceName, deviceId, options = {}) {
     let unsub
     let stopped = false
@@ -1031,39 +1043,51 @@ export default function Home() {
     function stop() {
       if (stopped) return
       stopped = true
+      options.done?.()
       clearTimeout(slowTimer)
       clearTimeout(giveUpTimer)
       unsub?.()
     }
 
+    // Eén afloop, via het realtime-event of via het nalezen hieronder.
+    function settle(record) {
+      if (stopped || record.status === 'pending') return
+      stop()
+      options.onSettled?.(record.status)
+      // De box heeft het uitgevoerd: dat is de bevestiging, ook als de
+      // nieuwe stand (device_state) nog onderweg is. Loopt er nog een
+      // nieuwer commando, dan blijft het voornemen staan (settleDevice).
+      if (record.status !== 'failed' && deviceId) {
+        const running = inflight.current.count(deviceId)
+        setDevices((prev) => prev.map((d) => (d.id === deviceId ? settleDevice(d, running) : d)))
+      }
+      // De agent-foutmelding (record.error) is technisch en Engels —
+      // die hoort in de console, niet in de melding voor de bewoner.
+      if (record.status === 'failed') {
+        console.error('[command] mislukt:', record.error)
+        showToast(
+          options.failMessage ??
+            `${deviceName} reageerde niet. Controleer of het apparaat stroom heeft en probeer het opnieuw.`,
+          'error'
+        )
+        fetchAll()
+      }
+    }
+
+    // Eerst abonneren, dan één keer nalezen: de box zet een snel commando
+    // binnen milliseconden op "sent", vaak voordat het abonnement er is.
     pb.collection('commands')
-      .subscribe(commandId, (e) => {
-        if (e.record.status === 'pending') return
-        stop()
-        options.onSettled?.(e.record.status)
-        // De box heeft het uitgevoerd: dat is de bevestiging, ook als de
-        // nieuwe stand (device_state) nog onderweg is.
-        if (e.record.status !== 'failed' && deviceId) {
-          setDevices((prev) => prev.map((d) => (d.id === deviceId && d._pending ? { ...d, _pending: false } : d)))
-        }
-        // De agent-foutmelding (e.record.error) is technisch en Engels —
-        // die hoort in de console, niet in de melding voor de bewoner.
-        if (e.record.status === 'failed') {
-          console.error('[command] mislukt:', e.record.error)
-          showToast(
-            options.failMessage ??
-              `${deviceName} reageerde niet. Controleer of het apparaat stroom heeft en probeer het opnieuw.`,
-            'error'
-          )
-          fetchAll()
-        }
-      })
+      .subscribe(commandId, (e) => settle(e.record))
       .then((u) => {
         if (stopped) {
           u()
           return
         }
         unsub = u
+        return pb
+          .collection('commands')
+          .getOne(commandId, { requestKey: null })
+          .then(settle)
       })
       .catch(() => {
         // Best-effort — als het abonneren zelf al mislukt (bv. even
