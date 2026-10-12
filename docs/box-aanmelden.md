@@ -53,7 +53,11 @@ superuser (`POCKETBASE_ADMIN_EMAIL`, `POCKETBASE_ADMIN_PASSWORD`), en
    ```
 
    - Maakt in PocketBase een `boxes`-record: serienummer, een willekeurig
-     boxgeheim (32 bytes) en de **hash** van een nieuwe claimcode.
+     boxgeheim (32 bytes) en de **hash** van een nieuwe claimcode: een
+     HMAC-SHA256 met `CLAIM_CODE_KEY` uit `.env`, dezelfde sleutel die
+     PocketBase heeft. Die sleutel staat niet in de database; zonder hem kan
+     niemand uit een gelekte database of backup de codes terugrekenen. Kwijt
+     of gewijzigd = elke ongekoppelde box een nieuwe code (`--reissue`).
    - Schrijft `box.json` (serienummer + boxgeheim) en het printblad
      `sheets/SH-2026-000123.svg`.
    - Print alleen serienummer, record-id en het pad van het blad — nooit het

@@ -173,7 +173,8 @@ box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
 
 - **`claim.pb.js`** — `POST /api/sandhovius/claim` en `/release`, alleen voor
   ingelogde bewoners met een bevestigd e-mailadres. Volgorde: bevestigd →
-  code (hash van de genormaliseerde code, constante-tijd vergelijking) →
+  code (HMAC-SHA256 van de genormaliseerde code met `CLAIM_CODE_KEY` uit env,
+  constante-tijd vergelijking; zonder sleutel 503, nooit een kale hash) →
   beheerder van `replace_house` → al gekoppeld (lid van dat huis: 200). Alles in één transactie, zodat
   bij twee gelijktijdige claims precies één wint. Onbekend serienummer en foute
   code geven exact dezelfde 400. Details: `docs/box-aanmelden.md`.

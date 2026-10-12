@@ -41,8 +41,8 @@ Stand: 2026-10-07, huisgenoten af. Ontwerpen per onderdeel:
    - Mail-instellingen blijven in PocketBase staan als `SMTP_HOST` later uit env verdwijnt; `APP_URL` met een slash aan het eind geeft `//bevestig`.
    - Mailtalen: alleen Nederlands en Engels (aanname); een taal erbij = teksten in `backend/pb_hooks/mail_texts.js` + waarde in `users.language`.
    - Vóór fase 3 ook: rate limits op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).
-   - `sheets/SH-DEV-0001.svg` (niet in git) bevat de claimcode van de dev-box, nog in de oude link-vorm met `?` (de app accepteert die ook) en zonder controleteken: de app houdt die code nu tegen als tikfout. Opnieuw koppelen testen = eerst ontkoppelen, dan `provision-box.py --reissue SH-DEV-0001`.
-   - Claimcode: 11 willekeurige tekens + controleteken = 55 bits. Online genoeg (rate limit), maar de hash is een kale sha256: wie de database heeft, kan codes van ongekoppelde boxen met een GPU in uren tot dagen terugrekenen. Vóór fase 3: HMAC met een servergeheim (pepper) of een trage hash.
+   - `sheets/SH-DEV-0001.svg` (niet in git): de dev-box heeft nog een code van vóór de HMAC-sleutel; die past niet meer. Opnieuw koppelen testen = eerst ontkoppelen, dan `provision-box.py --reissue SH-DEV-0001`.
+   - Claimcode: 11 willekeurige tekens + controleteken = 55 bits; opgeslagen als HMAC-SHA256 met `CLAIM_CODE_KEY` (env, niet in de database). In de cloud: de sleutel als geheim beheren en bewaren; kwijt = alle ongekoppelde boxen opnieuw uitgeven.
 5. **Huisgenoten, klein en uitgesteld:**
    - Huisgenoten zien openstaande uitnodigingen niet (alleen beheerders en de genodigde); de rechtentabel in de spec zegt "leden en uitnodigingen zien" voor iedereen.
    - De uitnodigings- en ledensheets zijn nog niet met de hand doorgeklikt (screenshots tonen de lijst, de kaart en het lege scherm; de API-stromen zijn getest).
