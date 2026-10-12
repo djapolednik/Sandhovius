@@ -60,6 +60,8 @@ type Agent struct {
 	stateClock stateClock
 	// applyHouseMu: één applyHouse tegelijk (zie house.go).
 	applyHouseMu sync.Mutex
+	// version: de agentversie, bij het bouwen ingebakken (SetVersion).
+	version string
 
 	ctx    context.Context
 	cancel context.CancelFunc

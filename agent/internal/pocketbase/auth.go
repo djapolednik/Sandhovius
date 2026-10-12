@@ -63,6 +63,16 @@ func (c *Client) RefreshBox() (*BoxRecord, error) {
 	return &resp.Record, nil
 }
 
+// ReportBox tells PocketBase which agent version runs on this box; the hook
+// stores it with the time on the box's own record (agent_version,
+// reported_at). Works with or without a house.
+func (c *Client) ReportBox(version string) error {
+	if err := c.doAuthed("POST", "/api/sandhovius/box/report", map[string]string{"agent_version": version}, nil); err != nil {
+		return fmt.Errorf("pocketbase: report box: %w", err)
+	}
+	return nil
+}
+
 // doAuthed is like do, but if the request fails because the token expired
 // (HTTP 401), it re-authenticates once using the stored credentials and
 // retries the request. Domain methods (device_state.go, ...) should call

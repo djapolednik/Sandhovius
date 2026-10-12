@@ -123,3 +123,24 @@ func TestRefreshBoxReloginsOn401(t *testing.T) {
 		t.Errorf("house=%q logins=%d refreshes=%d", rec.House, logins, refreshes)
 	}
 }
+
+func TestReportBoxSendsVersion(t *testing.T) {
+	var path, auth, version string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path, auth = r.URL.Path, r.Header.Get("Authorization")
+		var body map[string]string
+		json.NewDecoder(r.Body).Decode(&body)
+		version = body["agent_version"]
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	c := NewClient(srv.URL)
+	c.setToken("tok1")
+	if err := c.ReportBox("v0.3.1-4-gabc1234"); err != nil {
+		t.Fatal(err)
+	}
+	if path != "/api/sandhovius/box/report" || auth != "tok1" || version != "v0.3.1-4-gabc1234" {
+		t.Errorf("path=%q auth=%q version=%q", path, auth, version)
+	}
+}

@@ -16,8 +16,12 @@ import (
 	"sandhovius/local-agent/internal/pocketbase"
 )
 
+// version wordt bij het bouwen gezet: -ldflags "-X main.version=..." (zie
+// agent/Dockerfile, build-arg AGENT_VERSION). Zonder: "dev".
+var version = "dev"
+
 func main() {
-	fmt.Println("Sandhovius Local Agent is aan het opstarten...")
+	fmt.Printf("Sandhovius Local Agent %s is aan het opstarten...\n", version)
 
 	// 1. Configuratie laden
 	cfg, err := config.LoadConfig()
@@ -51,6 +55,7 @@ func main() {
 
 	// 7. De Agent aanmaken
 	agent := app.New(mqttClient, haClient, pbClient, historyStore, cfg.Box.File, identity, cfg.History.RetentionDays, cfg.Schedules.File)
+	agent.SetVersion(version)
 
 	// 8. Start de agent
 	if err := agent.Start(); err != nil {

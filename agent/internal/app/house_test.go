@@ -215,3 +215,14 @@ func TestApplyHouseConcurrentStartsRecoveryOnce(t *testing.T) {
 		t.Errorf("herstelstap %d keer gestart, verwacht 1", n)
 	}
 }
+
+func TestVersionDefaultsToDev(t *testing.T) {
+	a := &Agent{}
+	if a.Version() != "dev" {
+		t.Errorf("Version() = %q, verwacht dev", a.Version())
+	}
+	a.SetVersion("v1.2.3")
+	if a.Version() != "v1.2.3" {
+		t.Errorf("Version() = %q", a.Version())
+	}
+}

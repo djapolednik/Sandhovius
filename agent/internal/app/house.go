@@ -75,13 +75,40 @@ func (a *Agent) checkHouse() {
 	a.applyHouse(record.House)
 }
 
+// SetVersion zet de agentversie (main krijgt hem bij het bouwen via
+// -ldflags). Vóór Start aanroepen.
+func (a *Agent) SetVersion(version string) { a.version = version }
+
+// Version is de agentversie; "dev" als hij niet bij het bouwen gezet is.
+func (a *Agent) Version() string {
+	if a.version == "" {
+		return "dev"
+	}
+	return a.version
+}
+
+// reportVersion meldt de agentversie aan PocketBase (box-record:
+// agent_version, reported_at). Een fout wordt gelogd; de volgende
+// herverbinding meldt opnieuw.
+func (a *Agent) reportVersion() {
+	if err := a.pbClient.ReportBox(a.Version()); err != nil {
+		log.Printf("[APP] Versie melden mislukt: %v\n", err)
+	}
+}
+
 // listenForHouseChanges volgt het eigen box-record via realtime: koppelen,
 // loskoppelen of wisselen komt zo meteen binnen. Bij elke (her)aanmelding
 // eerst één keer het record lezen, voor wat er veranderde terwijl de stroom
-// weg was. Blijft herverbinden totdat de agent stopt.
+// weg was, en de agentversie melden (de versie verandert alleen bij een
+// herstart, dus dat is vaak genoeg). Blijft herverbinden totdat de agent
+// stopt.
 func (a *Agent) listenForHouseChanges() {
+	onSubscribed := func() {
+		a.checkHouse()
+		a.reportVersion()
+	}
 	for {
-		err := a.pbClient.SubscribeBox(a.ctx, a.checkHouse, func(event pocketbase.BoxEvent) {
+		err := a.pbClient.SubscribeBox(a.ctx, onSubscribed, func(event pocketbase.BoxEvent) {
 			if event.EventType == "update" {
 				a.applyHouse(event.Record.House)
 			}
