@@ -13,9 +13,31 @@ import segno
 ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'  # Crockford-base32
 
 
+def check_char(body):
+    """Controleteken (Luhn mod 32) voor een genormaliseerde code zonder dat
+    teken. Vangt elke enkele tikfout en bijna elke verwisseling van twee
+    buren. Moet gelijk zijn aan checkChar in frontend/lib/claim.js; de
+    gedeelde vectoren staan in backend/tests/testdata/claim_check.json."""
+    n = len(ALPHABET)
+    factor, total = 2, 0
+    for c in reversed(body):
+        addend = factor * ALPHABET.index(c)
+        total += addend // n + addend % n
+        factor = 3 - factor
+    return ALPHABET[(n - total % n) % n]
+
+
+def is_valid(code):
+    """12 tekens uit het alfabet (na normaliseren) met een kloppend controleteken."""
+    code = normalize(code)
+    return (len(code) == 12 and all(c in ALPHABET for c in code)
+            and check_char(code[:-1]) == code[-1])
+
+
 def new_code():
-    """12 willekeurige tekens, getoond als XXXX-XXXX-XXXX."""
-    chars = ''.join(secrets.choice(ALPHABET) for _ in range(12))
+    """11 willekeurige tekens plus een controleteken, getoond als XXXX-XXXX-XXXX."""
+    body = ''.join(secrets.choice(ALPHABET) for _ in range(11))
+    chars = body + check_char(body)
     return '-'.join(chars[i:i + 4] for i in range(0, 12, 4))
 
 

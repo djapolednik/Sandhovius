@@ -1,0 +1,42 @@
+[
+  {
+    "code": "K7QM-2XRP-9DTK",
+    "valid": true,
+    "note": "goed"
+  },
+  {
+    "code": "k7qm-2xrp-9dtk",
+    "valid": true,
+    "note": "kleine letters"
+  },
+  {
+    "code": "0000-ABCD-EFGG",
+    "valid": true,
+    "note": "goed, met nullen"
+  },
+  {
+    "code": "K7QM-24RP-9DTK",
+    "valid": false,
+    "note": "een teken verkeerd"
+  },
+  {
+    "code": "K7Q2-MXRP-9DTK",
+    "valid": false,
+    "note": "twee buren verwisseld"
+  },
+  {
+    "code": "K7QM-2XRP-9DT",
+    "valid": false,
+    "note": "te kort"
+  },
+  {
+    "code": "K7QM-2XRP-9DTKA",
+    "valid": false,
+    "note": "te lang"
+  },
+  {
+    "code": "K7QM-2XRP-9DTU",
+    "valid": false,
+    "note": "U zit niet in het alfabet"
+  }
+]
