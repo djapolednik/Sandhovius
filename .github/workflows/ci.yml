@@ -72,8 +72,9 @@ jobs:
       - run: pip install -r scripts/requirements.txt
       - run: python -m unittest discover -s scripts -p "test_*.py"
 
-  # Replaces GitLab Secret Detection: scans the full history for leaked
-  # secrets (.env values, box secrets, claim codes).
+  # Replaces GitLab Secret Detection: scans the commits of each push or pull
+  # request for leaked secrets (.env values, box secrets, claim codes). It
+  # does not rescan older history; run gitleaks locally for that.
   secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 10
