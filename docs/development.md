@@ -8,6 +8,7 @@ gekoppeld: `docs/box-aanmelden.md`.
 ```bash
 docker compose up -d                              # hele stack
 docker compose up -d --build agent frontend       # na codewijzigingen (beide draaien als gebouwde image, geen hot reload)
+AGENT_VERSION=$(git describe --always --dirty) docker compose up -d --build agent   # met versie (anders "dev"); de box meldt hem in boxes.agent_version
 docker compose logs -f agent
 
 # Lokaal checken zonder container

@@ -57,7 +57,7 @@ het waarom): `backend_explained.md`. Hoe je lokaal draait en test:
 
 **Backend (`backend/`)**
 - `backend/pb_migrations/` — PocketBase-schema (snapshot + incrementele migraties, draaien bij start van de container)
-- `backend/pb_hooks/` — `claim.pb.js` (`POST /api/sandhovius/claim` en `/release`), `household.pb.js` (uitnodigingen, leden, rol, verwijderen/verlaten), `mail.pb.js` + `mail_texts.js` (SMTP uit env, accountmails per `users.language` nl/en); migratie `1790750000_claim_code.js` (verborgen `boxes.claim_code_hash`, rate limits)
+- `backend/pb_hooks/` — `claim.pb.js` (`POST /api/sandhovius/claim` en `/release`), `box.pb.js` (`POST /api/sandhovius/box/report`: agentversie), `household.pb.js` (uitnodigingen, leden, rol, verwijderen/verlaten), `mail.pb.js` + `mail_texts.js` (SMTP uit env, accountmails per `users.language` nl/en); migratie `1790750000_claim_code.js` (verborgen `boxes.claim_code_hash`, rate limits)
 - `backend/tests/` — eigen Go-module met integratietests op de PocketBase-regels en hooks (start PocketBase 0.40.4 op een tijdelijke `pb_data`); `testdata/claim_codes.json` en `claim_check.json` = gedeelde testvectoren voor de claimcode en het controleteken
 
 **Frontend (`frontend/`)**

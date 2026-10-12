@@ -105,7 +105,7 @@ het starten helemaal op.
 | Collectie | Soort | Doel | Belangrijkste velden |
 |---|---|---|---|
 | `users` | auth | Bewoners; token geldt een jaar (de PWA verlengt het dagelijks, dus ingelogd tot je zelf uitlogt; wachtwoord wijzigen maakt alle tokens ongeldig) | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
-| `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen) |
+| `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen), `agent_version` + `reported_at` (alleen via `box.pb.js`) |
 | `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
 | `devices` | base | Apparaten | `gateway` (= huis), `entity_id`, `name`, `type`, `online`, `room` |
@@ -177,6 +177,13 @@ box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
   beheerder van `replace_house` → al gekoppeld (lid van dat huis: 200). Alles in één transactie, zodat
   bij twee gelijktijdige claims precies één wint. Onbekend serienummer en foute
   code geven exact dezelfde 400. Details: `docs/box-aanmelden.md`.
+- **`box.pb.js`** — `POST /api/sandhovius/box/report`, alleen voor boxen: zet
+  `agent_version` (alleen `[0-9A-Za-z._+-]`, max 64) en `reported_at` op het
+  eigen record. Een box mag zijn record niet zelf bijwerken (dan kon hij zijn
+  huis zetten); deze route raakt alleen die twee velden. De agent meldt zich
+  bij elke (her)verbinding van de box-stroom, ook zonder huis, dus
+  `reported_at` = laatste keer dat de box verbond. Te zien in het
+  PocketBase-dashboard (bewoners zien boxen niet).
 - **`mail.pb.js` + `mail_texts.js`** — zet bij het starten de app-naam
   ("Sandhovius") en, als `SMTP_HOST` gezet is, SMTP, afzender en `appURL` uit
   env. Bevestigings-, reset- en inlogmeldingsmails gaan in de taal van het
