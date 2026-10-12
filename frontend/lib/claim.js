@@ -54,7 +54,9 @@ export function claimErrorMessage(status, message) {
     case 400:
       return 'Deze code klopt niet'
     case 409:
-      return 'Deze box is al gekoppeld'
+      // Alleen onze eigen hook geeft 409, in het Nederlands; hij zegt soms
+      // waar de box zit ("hoort al bij Villa").
+      return message || 'Deze box is al gekoppeld'
     case 404:
       return 'Dit huis is niet gevonden'
     case 429:

@@ -73,6 +73,12 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
         linked = txApp.findRecordById("houses", current)
       } catch (_) {}
       if (linked && linked.getStringSlice("members").includes(user.id)) {
+        // Wel een ander eigen huis als vervanging gekozen: er wordt niets
+        // vervangen, dus geen succes melden maar zeggen waar de box zit.
+        if (house && house.id !== linked.id) {
+          result = { status: 409, message: "Deze box hoort al bij " + linked.getString("name") + ". Ontkoppel hem daar eerst" }
+          return
+        }
         result = { status: 200, house: linked.id }
         return
       }

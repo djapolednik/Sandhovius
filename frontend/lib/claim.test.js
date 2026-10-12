@@ -71,7 +71,8 @@ test('parseClaimLink still reads the old query form', () => {
 test('claimErrorMessage', () => {
   assert.equal(claimErrorMessage(403, 'x'), 'Bevestig eerst je e-mailadres')
   assert.equal(claimErrorMessage(400, 'x'), 'Deze code klopt niet')
-  assert.equal(claimErrorMessage(409, 'x'), 'Deze box is al gekoppeld')
+  assert.equal(claimErrorMessage(409, 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst'), 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst')
+  assert.equal(claimErrorMessage(409, ''), 'Deze box is al gekoppeld')
   assert.equal(claimErrorMessage(404, 'x'), 'Dit huis is niet gevonden')
   assert.equal(claimErrorMessage(429, 'Too Many Requests'), 'Te veel pogingen, probeer het over een minuut opnieuw')
   assert.match(claimErrorMessage(0, ''), /verbinding/)

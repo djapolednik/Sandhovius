@@ -236,11 +236,17 @@ func TestClaimRetryAfterSuccess(t *testing.T) {
 	if st != 200 || out["house"] != h {
 		t.Fatalf("opnieuw met house_name: %d %v, verwacht 200 %s", st, out, h)
 	}
-	// Ook met een ander eigen huis als replace_house: de box blijft waar hij is.
+	// Met het eigen huis als replace_house is het ook gewoon nog een keer tikken.
+	st, out = p.claim(t, tokA, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW", "replace_house": h})
+	if st != 200 || out["house"] != h {
+		t.Fatalf("opnieuw met hetzelfde huis: %d %v, verwacht 200 %s", st, out, h)
+	}
+	// Met een ander eigen huis als replace_house wordt er niets vervangen, dus
+	// geen succes melden: zeggen waar de box zit.
 	other := p.create(t, "houses", map[string]any{"members": []string{uid}, "admins": []string{uid}, "name": "Zomerhuis"})
 	st, out = p.claim(t, tokA, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW", "replace_house": other})
-	if st != 200 || out["house"] != h {
-		t.Fatalf("opnieuw met ander eigen huis: %d %v, verwacht 200 %s", st, out, h)
+	if st != 409 || out["message"] != "Deze box hoort al bij Villa. Ontkoppel hem daar eerst" {
+		t.Fatalf("opnieuw met ander eigen huis: %d %v, verwacht 409", st, out)
 	}
 	st, out = p.claim(t, tokB, body)
 	if st != 409 || out["message"] != "Deze box is al gekoppeld" {
