@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { defaultLanguage, validateSignup, errorMessage } from './account.js'
+import { defaultLanguage, validateSignup, errorMessage, confirmFailure } from './account.js'
 
 test('defaultLanguage picks the first nl or en', () => {
   assert.equal(defaultLanguage(['en-GB', 'nl']), 'en')
@@ -27,4 +27,13 @@ test('errorMessage', () => {
   assert.equal(errorMessage({ status: 0 }), 'Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw')
   assert.equal(errorMessage(new Error('boom')), 'Er ging iets mis. Probeer het zo opnieuw')
   assert.equal(errorMessage(null), 'Er ging iets mis. Probeer het zo opnieuw')
+})
+
+test('confirmFailure: alleen een ongeldige link is "werkt niet meer"', () => {
+  assert.equal(confirmFailure({ status: 400 }), 'invalid')
+  assert.equal(confirmFailure({ status: 404 }), 'invalid')
+  assert.equal(confirmFailure({ status: 0 }), 'offline')
+  assert.equal(confirmFailure({ status: 429 }), 'busy')
+  assert.equal(confirmFailure({ status: 500 }), 'offline')
+  assert.equal(confirmFailure(new Error('boom')), 'offline')
 })

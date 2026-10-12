@@ -37,7 +37,6 @@ Stand: 2026-10-07, huisgenoten af. Ontwerpen per onderdeel:
 2. Scènes: volgorde wijzigen (veld `order` bestaat al, nog geen knoppen) — alleen als er vraag naar is.
 3. **Fase 3 — remote toegang:** Headscale + PocketBase op Scaleway, zero external ports. Daarbij: commando's laten verlopen op de serverklok (`Date`-header) i.p.v. de boxklok. Ook nodig: een echte SMTP-provider (nu Mailpit; `SMTP_*` + afzender in env), een echte `APP_URL` (links in mails en QR), en trusted-proxy-instellingen in PocketBase achter de proxy, anders delen alle klanten één rate-limit-bucket (limieten gaan per IP).
 4. **Claim-flow, klein en bewust uitgesteld:**
-   - `/bevestig` zegt "Deze link werkt niet meer" ook bij een netwerkfout of 429; een mislukte bevestigingsmail na aanmelden wordt niet gemeld (wel "Stuur de mail opnieuw").
    - Mail-instellingen blijven in PocketBase staan als `SMTP_HOST` later uit env verdwijnt; `APP_URL` met een slash aan het eind geeft `//bevestig`.
    - Mailtalen: alleen Nederlands en Engels (aanname); een taal erbij = teksten in `backend/pb_hooks/mail_texts.js` + waarde in `users.language`.
    - Vóór fase 3 ook: versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).

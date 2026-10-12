@@ -5,8 +5,9 @@ import { errorMessage } from '../lib/account'
 
 // "Kijk in je mail": getoond na account aanmaken, en in de koppelflow
 // zolang het adres niet bevestigd is. onResend() verstuurt de bevestigingsmail
-// opnieuw en mag een fout gooien. children: extra knoppen onderaan.
-export default function VerifyNotice({ email, onResend, children }) {
+// opnieuw en mag een fout gooien. sendFailed: de eerste mail ging niet weg.
+// children: extra knoppen onderaan.
+export default function VerifyNotice({ email, onResend, sendFailed = false, children }) {
   const [state, setState] = useState('idle') // idle | sending | sent | error
   const [error, setError] = useState('')
 
@@ -25,10 +26,17 @@ export default function VerifyNotice({ email, onResend, children }) {
 
   return (
     <div className="form-stack">
-      <p className="login-note" role="status">
-        We hebben een e-mail gestuurd naar <strong>{email}</strong>. Open de link erin om je adres te bevestigen. Kijk
-        ook even bij je ongewenste mail.
-      </p>
+      {sendFailed && state !== 'sent' ? (
+        <p className="login-error" role="alert">
+          Je account is aangemaakt, maar de bevestigingsmail naar <strong>{email}</strong> is niet verstuurd. Stuur hem
+          hieronder opnieuw.
+        </p>
+      ) : (
+        <p className="login-note" role="status">
+          We hebben een e-mail gestuurd naar <strong>{email}</strong>. Open de link erin om je adres te bevestigen.
+          Kijk ook even bij je ongewenste mail.
+        </p>
+      )}
       {state === 'sent' && (
         <p className="login-note" role="status">
           De mail is opnieuw verstuurd.

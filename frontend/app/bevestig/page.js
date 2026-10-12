@@ -4,15 +4,20 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AccountShell from '../../components/AccountShell'
 import { createPb } from '../../lib/pocketbase'
+import { confirmFailure } from '../../lib/account'
 
 function Confirm() {
   const token = useSearchParams().get('token')
-  const [state, setState] = useState(token ? 'working' : 'invalid') // working | done | invalid
-  const started = useRef(false)
+  // working | done | invalid | offline | busy (zie confirmFailure)
+  const [state, setState] = useState(token ? 'working' : 'invalid')
+  // Elke poging één keer (StrictMode draait effecten dubbel); "Opnieuw
+  // proberen" verhoogt attempt.
+  const [attempt, setAttempt] = useState(0)
+  const started = useRef(-1)
 
   useEffect(() => {
-    if (!token || started.current) return
-    started.current = true
+    if (!token || started.current === attempt) return
+    started.current = attempt
     const pb = createPb()
     pb.collection('users')
       .confirmVerification(token)
@@ -29,9 +34,14 @@ function Confirm() {
       })
       .catch((err) => {
         console.error('[bevestigen]', err)
-        setState('invalid')
+        setState(confirmFailure(err))
       })
-  }, [token])
+  }, [token, attempt])
+
+  function retry() {
+    setState('working')
+    setAttempt((n) => n + 1)
+  }
 
   if (state === 'working') {
     return (
@@ -49,6 +59,22 @@ function Confirm() {
           <a className="btn btn-primary" href="/">
             Naar Sandhovius
           </a>
+        </div>
+      </AccountShell>
+    )
+  }
+  if (state === 'offline' || state === 'busy') {
+    return (
+      <AccountShell title="Bevestigen lukte nu niet.">
+        <div className="form-stack">
+          <p className="login-note" role="alert">
+            {state === 'busy'
+              ? 'Er waren te veel pogingen. Wacht even en probeer het dan opnieuw; je link werkt nog.'
+              : 'Sandhovius is nu niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw; je link werkt nog.'}
+          </p>
+          <button type="button" className="btn btn-primary" onClick={retry}>
+            Opnieuw proberen
+          </button>
         </div>
       </AccountShell>
     )

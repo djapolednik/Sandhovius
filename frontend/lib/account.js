@@ -31,3 +31,12 @@ export function errorMessage(err) {
   if (err?.status === 400 && data?.email) return 'Er bestaat al een account met dit e-mailadres'
   return 'Er ging iets mis. Probeer het zo opnieuw'
 }
+
+// Waarom een bevestigingslink (/bevestig) mislukte. Alleen 400/404 betekent
+// dat de link zelf ongeldig, verlopen of al gebruikt is; bij geen verbinding,
+// een serverfout of te veel pogingen (429) werkt dezelfde link straks nog.
+export function confirmFailure(err) {
+  if (err?.status === 400 || err?.status === 404) return 'invalid'
+  if (err?.status === 429) return 'busy'
+  return 'offline'
+}

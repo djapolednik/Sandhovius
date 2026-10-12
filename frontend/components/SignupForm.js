@@ -16,6 +16,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState(false)
+  const [mailFailed, setMailFailed] = useState(false)
 
   async function submit(e) {
     e.preventDefault()
@@ -31,11 +32,15 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
       await pb.collection('users').create({ email: address, password, passwordConfirm, language })
       setEmail(address)
       setCreated(true)
-      // Het account bestaat; een mislukte mail mag dat niet ongedaan maken:
-      // "Stuur de mail opnieuw" staat al in VerifyNotice.
+      // Het account bestaat; een mislukte mail maakt dat niet ongedaan, maar
+      // de bewoner moet het wel weten: VerifyNotice zegt het en biedt
+      // "Stuur de mail opnieuw".
       pb.collection('users')
         .requestVerification(address)
-        .catch((err) => console.error('[verificatiemail]', err))
+        .catch((err) => {
+          console.error('[verificatiemail]', err)
+          setMailFailed(true)
+        })
     } catch (err) {
       console.error('[account aanmaken]', err)
       setError(errorMessage(err))
@@ -46,7 +51,11 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
 
   if (created) {
     return (
-      <VerifyNotice email={email} onResend={() => pb.collection('users').requestVerification(email)}>
+      <VerifyNotice
+        email={email}
+        sendFailed={mailFailed}
+        onResend={() => pb.collection('users').requestVerification(email)}
+      >
         <button type="button" className="btn btn-primary" onClick={() => onBack(email)}>
           Naar inloggen
         </button>
