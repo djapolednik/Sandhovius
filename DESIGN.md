@@ -31,13 +31,13 @@ colors:
   alarm-red-dark: "#f87171"
   alarm-red-contrast-dark: "#1a0505"
   alarm-red-bg-dark: "#3b0d0d"
-  mist: "#f0f0f0"
+  mist: "#f4f1ec"
   panel-white: "#ffffff"
   inset-mist: "#f3f3f4"
   hairline-gray: "#e4e4e7"
   ink-black: "#000000"
   quiet-slate: "#5e626b"
-  night-black: "#000000"
+  night-black: "#100e0c"
   night-panel: "#17191d"
   night-inset: "#22252a"
   night-hairline: "#2a2d33"
@@ -240,7 +240,7 @@ A black-and-mist palette from the brand sheet, with one interactive voice (Elect
 Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, secondary color). There are no per-type color tints anymore: the kind of device is carried by the icon shape and the name, and color is kept for state. In the add-device tiles, the chosen type's icon circle turns Electric Blue. **Temperature readings** use a per-theme cold→hot scale (`temp-cold` / `temp-hot`, mixed in OKLab by `lib/temperature.js`) so every point stays ≥4.5:1 as text on its panel. The scale is for sensor readings; the thermostat's "Nu" stays neutral.
 
 ### Neutral
-- **Mist** (`mist`) / **Night Black** (`night-black`): the page ground. It is true black, not a tinted near-black, as the brand sheet specifies.
+- **Mist** (`mist`, `#f4f1ec`) / **Night Black** (`night-black`, `#100e0c`): the page ground. Both are warm, deliberately: a warm off-white by day and a warm near-black at night, so the app feels like a room in a home rather than an office or a screen. (Until 2026-10-13 this was the brand sheet's cold `#f0f0f0` and true black `#000000`; the warmer ground was chosen to make Home feel welcoming.) Panels keep their own colours.
 - **Panel White** (`panel-white`) / **Night Panel** (`night-panel`): panels, tiles, modals and sheets.
 - **Inset Mist** (`inset-mist`) / **Night Inset** (`night-inset`): surfaces *inside* a panel, such as inputs, secondary buttons, thermostat steps and modes, the "Details" chip, icon circles (including an unlit lamp) and summary chips.
 - **Hairline Gray** (`hairline-gray`) / **Night Hairline** (`night-hairline`): dividers, and the 1px border that dark panels need.
@@ -324,6 +324,7 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 ### Shadow Vocabulary
 - **Panel** (light only: `0 1px 2px rgba(0,0,0,0.04), 0 14px 32px -20px rgba(0,0,0,0.16)`): every panel, tile and inactive room pill at rest.
 - **Dial glow** (a blurred disc of `--glow` behind the dial, `blur(32px)`, fading in over 0.6s): only while heating is on.
+- **Home light** (a soft radial wash of warm lamp light behind the Home content, centered on the house panel: `rgba(255,168,70,0.16)` by day, `rgba(255,160,56,0.24)` at night, fading to nothing at 72%): the light of the lamps that are on, falling out of the house across the page like light from a window onto the street at night. Its strength follows the number of lamps on (none: no light; one: a trace; four or more: full) and changes over 1.4s. Only on Home, only while the box is reachable.
 - **Tile glow** (a radial gradient centered on the device icon, filling the tile to 70%): `--lamp-glow` while a lamp is on, `--power-glow` while a plug is on. On: it swells from 92% to full size and fades in over 1.2–1.4s with a slow start (`cubic-bezier(0.3, 0, 0.2, 1)`), like a filament warming up. Off: it dies away over 1.8s (`ease-in`). With reduced motion it simply fades in 0.3s.
 - **Navigation** (`0 12px 36px -14px rgba(0,0,0,0.35)`; on black a hairline with a deeper shadow): the bottom bar floats above the content.
 - **Toast** (`0 12px 28px -10px rgba(0,0,0,0.45)`).
@@ -331,7 +332,7 @@ Spacing rhythm is rem-based: xs 0.4rem, sm 0.6rem, md 0.9rem (the bento gap), lg
 - **Login** (the house panel): in the dark theme, a night-colored panel of dark windows, one of which is lit with warm lamp light (the same radial glow as a lamp tile), while a second lamp walks through the house. It is a picture of your home with one lamp on, the image of the app icon; nothing else on the login glows. In the light theme it is the same house by day: a white panel with sky-blue glass and no lamps (lamps don't read in daylight). On load the blinds go all the way up, window by window, once. Logging in floods the windows with pale sunlight instead of lamp light.
 
 ### Named Rules
-**The Real Light Rule.** Only something that is actually live may glow: a lamp that is on (warm), a plug that is on (power blue) and the thermostat while it heats (Electric Blue). Sensors, buttons and panels never glow. A glow that stands for anything other than live energy turns the room into a neon console.
+**The Real Light Rule.** Only something that is actually live may glow: a lamp that is on (warm, on its tile, in its window of the Home facade and as the Home light across the page), a plug that is on (power blue) and the thermostat while it heats (Electric Blue). Sensors, buttons and panels never glow. A glow that stands for anything other than live energy turns the room into a neon console.
 
 **The Offline Fade Rule.** An unreachable device stays in place and says so in text: "Offline" when the device itself is gone, "Niet bereikbaar" when the whole box is (with "Laatst aan/uit" or "…, laatst bekende stand"). Only its icon fades (45% opacity); last-known readings stay at full contrast, because they are still information. It offers no toggle, because it cannot be controlled.
 

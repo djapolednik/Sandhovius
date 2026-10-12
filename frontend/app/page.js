@@ -33,7 +33,7 @@ import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
 import { applyStateEcho, createInflight, settleDevice } from '../lib/inflight'
 import { uid } from '../lib/uid'
-import { greeting, houseSummary, indoorTemperature } from '../lib/home'
+import { greeting, houseSummary, indoorTemperature, lightSpill } from '../lib/home'
 import { isBatteryLow } from '../lib/battery'
 import { LightbulbIcon, PlusIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
@@ -1922,7 +1922,12 @@ export default function Home() {
       <PullToRefresh onRefresh={fetchAll} />
 
       <div className="tab-view">
-        <div ref={tabViewRef}>
+        <div ref={tabViewRef} className="tab-content">
+          {/* Lamplicht dat uit het huis over de pagina valt, alleen op Home en
+              alleen van lampen die echt aan zijn (lib/home lightSpill). */}
+          {tab === 'home' && house && (
+            <div className="home-light" aria-hidden="true" style={{ '--home-light': lightSpill(lightsOn) }} />
+          )}
           {header}
 
           <main className="container">{content}</main>

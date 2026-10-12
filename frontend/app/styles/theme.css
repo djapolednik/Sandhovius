@@ -1,5 +1,6 @@
 /* Sandhovius — merkblad: Electric Blue #0066FF, Signal Green #04D800,
-   zwart #000000, Mist #F0F0F0, wit #FFFFFF (zie DESIGN.md).
+   zwart #000000, Mist #F0F0F0, wit #FFFFFF (zie DESIGN.md). De pagina-
+   achtergrond is sinds 2026-10-13 bewust warmer (#F4F1EC / #100E0C).
 
    Contrastregel: elke kleur die tekst draagt of waar tekst op staat haalt
    ≥4.5:1 in het thema waarin hij staat; bedieningselementen ≥3:1. Het
@@ -12,7 +13,8 @@
   color-scheme: light;
 
   /* Oppervlakken: pagina < paneel < binnen-tegel (in een paneel). */
-  --background: #f0f0f0;
+  /* Warm gebroken wit (geen koel grijs): een huis, geen kantoor. */
+  --background: #f4f1ec;
   --card-background: #ffffff;
   --surface-2: #f3f3f4;
   --border: #e4e4e7;
@@ -76,7 +78,8 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --background: #000000;
+  /* Warm bijna-zwart: een kamer 's avonds, niet het zwart van een scherm. */
+  --background: #100e0c;
   --card-background: #17191d;
   --surface-2: #22252a;
   --border: #2a2d33;

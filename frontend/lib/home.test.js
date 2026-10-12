@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { greeting, houseSummary, indoorTemperature, litWindows } from './home.js'
+import { greeting, houseSummary, indoorTemperature, lightSpill, litWindows } from './home.js'
 
 const at = (h) => new Date(2026, 9, 13, h, 30)
 
@@ -34,4 +34,12 @@ test('litWindows: één raam per lamp die aan is, hooguit allemaal', () => {
   assert.deepEqual(litWindows(1), [false, false, false, true, false, false]) // zoals op het inlogscherm
   assert.equal(litWindows(3).filter(Boolean).length, 3)
   assert.equal(litWindows(40).filter(Boolean).length, 6)
+})
+
+test('lightSpill: geen lamp, geen licht; meer lampen iets meer, nooit fel', () => {
+  assert.equal(lightSpill(0), 0)
+  assert.ok(lightSpill(1) > 0 && lightSpill(1) < lightSpill(2))
+  assert.ok(lightSpill(2) < lightSpill(4))
+  assert.equal(lightSpill(4), 1)
+  assert.equal(lightSpill(20), 1)
 })

@@ -46,3 +46,11 @@ export function litWindows(lightsOn) {
   const lit = new Set(WINDOW_ORDER.slice(0, Math.max(0, Math.min(lightsOn, WINDOW_ORDER.length))))
   return WINDOW_ORDER.map((_, i) => lit.has(i))
 }
+
+// Hoeveel lamplicht er uit het huis over de pagina valt (0 tot 1): niets als
+// alles uit is, een zweem bij één lamp, vol vanaf vier. Echt licht van echte
+// lampen (The Real Light Rule), nooit decoratie.
+export function lightSpill(lightsOn) {
+  if (lightsOn <= 0) return 0
+  return Math.min(1, 0.4 + 0.2 * (lightsOn - 1))
+}

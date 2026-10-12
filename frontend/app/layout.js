@@ -36,8 +36,8 @@ export const viewport = {
   viewportFit: 'cover',
   // De kleur van de statusbalk volgt het thema van de telefoon.
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f0f0f0' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#f4f1ec' },
+    { media: '(prefers-color-scheme: dark)', color: '#100e0c' },
   ],
 }
 
