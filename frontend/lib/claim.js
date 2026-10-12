@@ -14,6 +14,37 @@ export function normalize(code) {
     .replace(/[IL]/g, '1')
 }
 
+const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ' // Crockford-base32
+
+// Controleteken (Luhn mod 32) over een genormaliseerde code zonder dat
+// teken; gelijk aan check_char in scripts/claimcode.py (gedeelde vectoren in
+// backend/tests/testdata/claim_check.json). Vangt elke enkele tikfout.
+export function checkChar(body) {
+  const n = ALPHABET.length
+  let factor = 2
+  let total = 0
+  for (const c of [...body].reverse()) {
+    const addend = factor * ALPHABET.indexOf(c)
+    total += Math.floor(addend / n) + (addend % n)
+    factor = 3 - factor
+  }
+  return ALPHABET[(n - (total % n)) % n]
+}
+
+export function isValidCode(code) {
+  const c = normalize(code)
+  return c.length === 12 && [...c].every((ch) => ALPHABET.includes(ch)) && checkChar(c.slice(0, -1)) === c.at(-1)
+}
+
+// Wat er mis is met een overgetikte code, vóór hij naar de server gaat; ''
+// als hij klopt. Een tikfout zeggen verraadt niets: het controleteken zit
+// in de code zelf, niet in een box.
+export function codeProblem(code) {
+  if (normalize(code).length !== 12) return 'Een code heeft 12 tekens. Kijk hem na op het blad bij je box.'
+  if (!isValidCode(code)) return 'Er zit een tikfout in de code. Kijk hem na op het blad bij je box.'
+  return ''
+}
+
 // Serienummers staan in hoofdletters opgeslagen; "sh-dev-0001" mag ook.
 export function normalizeSerial(serial) {
   return String(serial ?? '')

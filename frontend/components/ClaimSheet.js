@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import QrScanner from './QrScanner'
 import VerifyNotice from './VerifyNotice'
-import { claimErrorMessage, formatCode, isBoxOnline, normalizeSerial, pendingKey } from '../lib/claim'
+import { claimErrorMessage, codeProblem, formatCode, isBoxOnline, normalizeSerial, pendingKey } from '../lib/claim'
 
 const CAMERA_REASON = {
   insecure: 'De camera werkt alleen op een beveiligde verbinding. Tik de code over van het blad bij je box.',
@@ -78,6 +78,13 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
 
   async function submit(e) {
     e.preventDefault()
+    // Een tikfout zie je meteen, zonder serverpoging (die telt mee voor de
+    // rate limit en zegt alleen "klopt niet").
+    const problem = codeProblem(code)
+    if (problem) {
+      setError(problem)
+      return
+    }
     setBusy(true)
     setError('')
     const body = { serial: normalizeSerial(serial), code }

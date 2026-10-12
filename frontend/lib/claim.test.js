@@ -2,7 +2,17 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { normalize, normalizeSerial, parseClaimLink, pendingKey, claimErrorMessage, isBoxOnline, formatCode } from './claim.js'
+import {
+  normalize,
+  normalizeSerial,
+  parseClaimLink,
+  pendingKey,
+  claimErrorMessage,
+  isBoxOnline,
+  formatCode,
+  codeProblem,
+  isValidCode,
+} from './claim.js'
 
 const vectors = JSON.parse(
   readFileSync(new URL('../../backend/tests/testdata/claim_codes.json', import.meta.url), 'utf8')
@@ -93,4 +103,20 @@ test('isBoxOnline: heartbeat must be newer than the claim', () => {
   assert.equal(isBoxOnline({ last_seen: '2026-10-06 12:00:30.000Z' }, claimedAt), true)
   // Zonder claimmoment telt elke hartslag.
   assert.equal(isBoxOnline({ last_seen: '2026-10-06 12:00:30.000Z' }, ''), true)
+})
+
+const checkVectors = JSON.parse(
+  readFileSync(new URL('../../backend/tests/testdata/claim_check.json', import.meta.url), 'utf8')
+)
+
+test('isValidCode: gedeelde vectoren met het printscript', () => {
+  for (const v of checkVectors) assert.equal(isValidCode(v.code), v.valid, `${v.code} (${v.note})`)
+})
+
+test('codeProblem: lengte eerst, dan het controleteken, anders niets', () => {
+  assert.match(codeProblem('K7QM-2XRP-9DT'), /12 tekens/)
+  assert.match(codeProblem('K7QM-2XRP-9DTKA'), /12 tekens/)
+  assert.match(codeProblem('K7QM-24RP-9DTK'), /tikfout/)
+  assert.match(codeProblem('K7QM-2XRP-9DTU'), /tikfout/)
+  assert.equal(codeProblem('k7qm 2xrp 9dtk'), '')
 })
