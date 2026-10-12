@@ -211,7 +211,11 @@ Aan sinds de box-identiteit, per IP: PocketBase-standaarden (`*:auth` 2 per
 3 s, `*:create` 20 per 5 s, `/api/` 300 per 10 s) plus `boxes:auth` 10 per
 minuut, `commands:create`/`device_state:create` 100 per 5 s (anders breekt
 "Alles uit" bij veel apparaten) en `/api/sandhovius/claim` en `/release` elk
-10 per minuut, en `invitations:create` 20 per uur per ingelogde gebruiker.
+10 per minuut, `invitations:create` 20 per uur per ingelogde gebruiker, en
+alles wat mail stuurt of een account maakt: `users:create` 10 per uur,
+`users:requestVerification` en `users:requestPasswordReset` elk 5 per 10
+minuten (migratie `1790820000_mail_rate_limits.js`). De app zegt bij een 429
+"wacht even", geen vaste tijd.
 Padlabels matchen exact. Achter een proxy (fase 3) moet
 PocketBase de echte client-IP kennen, anders delen alle clients één emmer.
 

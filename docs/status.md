@@ -40,7 +40,7 @@ Stand: 2026-10-07, huisgenoten af. Ontwerpen per onderdeel:
    - `/bevestig` zegt "Deze link werkt niet meer" ook bij een netwerkfout of 429; een mislukte bevestigingsmail na aanmelden wordt niet gemeld (wel "Stuur de mail opnieuw").
    - Mail-instellingen blijven in PocketBase staan als `SMTP_HOST` later uit env verdwijnt; `APP_URL` met een slash aan het eind geeft `//bevestig`.
    - Mailtalen: alleen Nederlands en Engels (aanname); een taal erbij = teksten in `backend/pb_hooks/mail_texts.js` + waarde in `users.language`.
-   - Vóór fase 3 ook: rate limits op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).
+   - Vóór fase 3 ook: versleuteling van de PocketBase-instellingen (het SMTP-wachtwoord staat daar).
    - `sheets/SH-DEV-0001.svg` (niet in git): de dev-box heeft nog een code van vóór de HMAC-sleutel; die past niet meer. Opnieuw koppelen testen = eerst ontkoppelen, dan `provision-box.py --reissue SH-DEV-0001`.
    - Claimcode: 11 willekeurige tekens + controleteken = 55 bits; opgeslagen als HMAC-SHA256 met `CLAIM_CODE_KEY` (env, niet in de database). In de cloud: de sleutel als geheim beheren en bewaren; kwijt = alle ongekoppelde boxen opnieuw uitgeven.
 5. **Huisgenoten, klein en uitgesteld:**
