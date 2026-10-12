@@ -45,4 +45,3 @@ Stand: 2026-10-07, huisgenoten af. Ontwerpen per onderdeel:
 5. **Huisgenoten, klein en uitgesteld:**
    - Huisgenoten zien openstaande uitnodigingen niet (alleen beheerders en de genodigde); de rechtentabel in de spec zegt "leden en uitnodigingen zien" voor iedereen.
    - De uitnodigings- en ledensheets zijn nog niet met de hand doorgeklikt (screenshots tonen de lijst, de kaart en het lege scherm; de API-stromen zijn getest).
-6. Klein UI-puntje: "Wachtwoord vergeten?" is grijs omdat `.btn-plain` (components.css) de kleur van `.login-link` overschrijft — bewust of niet, nog beslissen.
