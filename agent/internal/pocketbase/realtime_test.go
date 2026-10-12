@@ -2,6 +2,7 @@ package pocketbase
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -92,5 +93,49 @@ func TestSubscribeCommandsRefusesWithoutToken(t *testing.T) {
 	}
 	if ctx.Err() != nil {
 		t.Error("SubscribeCommands bleef hangen tot de timeout")
+	}
+}
+
+// De box abonneert zich op "boxes"; PocketBase stuurt (door de view-regel)
+// alleen events van zijn eigen record, met het huis erin.
+func TestSubscribeBoxDeliversHouse(t *testing.T) {
+	var subscribedTo string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var body struct {
+				Subscriptions []string `json:"subscriptions"`
+			}
+			json.NewDecoder(r.Body).Decode(&body)
+			if len(body.Subscriptions) == 1 {
+				subscribedTo = body.Subscriptions[0]
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprint(w, "id:client1\nevent:PB_CONNECT\ndata:{}\n\n")
+		fmt.Fprint(w, "event:boxes\ndata:{\"action\":\"update\",\"record\":{\"id\":\"b1\",\"serial\":\"SN-1\",\"house\":\"h1\"}}\n\n")
+		w.(http.Flusher).Flush()
+		<-r.Context().Done()
+	}))
+	defer srv.Close()
+	c := NewClient(srv.URL)
+	c.setToken("box-token")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	got := make(chan BoxEvent, 1)
+	go c.SubscribeBox(ctx, nil, func(e BoxEvent) { got <- e })
+
+	select {
+	case e := <-got:
+		if e.EventType != "update" || e.Record.House != "h1" {
+			t.Errorf("event = %+v, verwacht update met huis h1", e)
+		}
+	case <-ctx.Done():
+		t.Fatal("geen box-event ontvangen")
+	}
+	if subscribedTo != "boxes" {
+		t.Errorf("geabonneerd op %q, verwacht boxes", subscribedTo)
 	}
 }

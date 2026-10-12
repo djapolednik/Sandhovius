@@ -58,6 +58,8 @@ type Agent struct {
 	handledCommands sync.Map
 	// stateClock: laatst doorgestuurde HA-stand per entity (zie state_clock.go).
 	stateClock stateClock
+	// applyHouseMu: één applyHouse tegelijk (zie house.go).
+	applyHouseMu sync.Mutex
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -114,6 +116,7 @@ func (a *Agent) Start() error {
 	go a.runPocketBase()
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
+	go a.listenForHouseChanges()
 	go a.runHeartbeat()
 	go a.ensureMQTT()
 	go a.runWeather()

@@ -54,6 +54,26 @@ func (c *Client) SubscribeDevices(ctx context.Context, handler func(DeviceEvent)
 	})
 }
 
+// BoxEvent is a realtime notification about the box's own record.
+type BoxEvent struct {
+	EventType string    `json:"action"`
+	Record    BoxRecord `json:"record"`
+}
+
+// SubscribeBox opens a realtime connection on the "boxes" collection. The
+// view rule (id = @request.auth.id) means PocketBase only sends events for
+// the box's own record — so a claim or a release arrives within a second
+// instead of at the next poll. onSubscribed (may be nil) is the moment to
+// read the record once, for whatever changed while the stream was down.
+func (c *Client) SubscribeBox(ctx context.Context, onSubscribed func(), handler func(BoxEvent)) error {
+	return c.subscribeCollection(ctx, "boxes", onSubscribed, func(data []byte) {
+		var event BoxEvent
+		if err := json.Unmarshal(data, &event); err == nil {
+			handler(event)
+		}
+	})
+}
+
 // subscribeCollection opens a PocketBase realtime (SSE) connection
 // subscribed to a single collection and calls handler with the raw JSON of
 // every matching event's "data" line. onSubscribed (may be nil) is called

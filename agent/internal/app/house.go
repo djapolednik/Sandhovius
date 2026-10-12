@@ -5,11 +5,14 @@ import (
 	"time"
 
 	"sandhovius/local-agent/internal/box"
+	"sandhovius/local-agent/internal/pocketbase"
 )
 
 // houseCheckInterval is hoe vaak de box bij PocketBase navraagt aan welk
-// huis hij gekoppeld is, met of zonder huis: zo volgt hij een claim, een
-// loskoppeling of een andere koppeling zonder herstart.
+// huis hij gekoppeld is, met of zonder huis. Normaal komt een claim of een
+// loskoppeling binnen een seconde via de realtime-stroom op het eigen
+// box-record (listenForHouseChanges); deze ronde is het vangnet als die
+// stroom weg is.
 const houseCheckInterval = 5 * time.Minute
 
 // applyHouse verwerkt het huis uit het box-record. Geen verandering (en
@@ -18,6 +21,10 @@ const houseCheckInterval = 5 * time.Minute
 // bij welk huis hij hoort. Leeg betekent: alleen lokaal draaien. Een huis
 // (nieuw, of anders dan eerst) start de herstelstap.
 func (a *Agent) applyHouse(house string) {
+	// Opstarten, de poll en de stroom kunnen tegelijk hetzelfde huis
+	// melden: één tegelijk, anders start de herstelstap meer dan eens.
+	a.applyHouseMu.Lock()
+	defer a.applyHouseMu.Unlock()
 	if house == a.house() && (house == "" || a.registered.Load()) {
 		return
 	}
@@ -43,8 +50,7 @@ func (a *Agent) applyHouse(house string) {
 }
 
 // runHouseCheck vraagt elke houseCheckInterval het box-record op en past een
-// gewijzigd huis toe. Een fout wordt gelogd; de volgende ronde probeert het
-// opnieuw. Stopt als de agent stopt.
+// gewijzigd huis toe. Stopt als de agent stopt.
 func (a *Agent) runHouseCheck() {
 	ticker := time.NewTicker(houseCheckInterval)
 	defer ticker.Stop()
@@ -53,12 +59,41 @@ func (a *Agent) runHouseCheck() {
 		case <-a.ctx.Done():
 			return
 		case <-ticker.C:
-			record, err := a.pbClient.RefreshBox()
-			if err != nil {
-				log.Printf("[APP] Huis van de box opvragen mislukt: %v\n", err)
-				continue
+			a.checkHouse()
+		}
+	}
+}
+
+// checkHouse vraagt het box-record op en past het huis toe. Een fout wordt
+// gelogd; de volgende ronde of herverbinding probeert het opnieuw.
+func (a *Agent) checkHouse() {
+	record, err := a.pbClient.RefreshBox()
+	if err != nil {
+		log.Printf("[APP] Huis van de box opvragen mislukt: %v\n", err)
+		return
+	}
+	a.applyHouse(record.House)
+}
+
+// listenForHouseChanges volgt het eigen box-record via realtime: koppelen,
+// loskoppelen of wisselen komt zo meteen binnen. Bij elke (her)aanmelding
+// eerst één keer het record lezen, voor wat er veranderde terwijl de stroom
+// weg was. Blijft herverbinden totdat de agent stopt.
+func (a *Agent) listenForHouseChanges() {
+	for {
+		err := a.pbClient.SubscribeBox(a.ctx, a.checkHouse, func(event pocketbase.BoxEvent) {
+			if event.EventType == "update" {
+				a.applyHouse(event.Record.House)
 			}
-			a.applyHouse(record.House)
+		})
+		if a.ctx.Err() != nil {
+			return // Stop() is aangeroepen
+		}
+		log.Printf("[APP] Box-stream verbroken: %v — probeer over 5s opnieuw\n", err)
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-time.After(5 * time.Second):
 		}
 	}
 }

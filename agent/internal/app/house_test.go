@@ -3,6 +3,8 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -187,5 +189,29 @@ func TestDetachClearsRegisteredBeforeHouse(t *testing.T) {
 	a.applyHouse("")
 	if a.registered.Load() || a.house() != "" {
 		t.Error("na loskoppelen: registered en house moeten allebei leeg zijn")
+	}
+}
+
+// Stroom, poll en opstarten kunnen tegelijk hetzelfde nieuwe huis melden:
+// de herstelstap mag maar één keer starten.
+func TestApplyHouseConcurrentStartsRecoveryOnce(t *testing.T) {
+	a, _ := newHouseTestAgent(t, "")
+	a.devices = newDeviceCache(nil, a.house)
+	var calls atomic.Int32
+	a.onConnected = func() {
+		time.Sleep(10 * time.Millisecond) // de herstelstap duurt even
+		calls.Add(1)
+	}
+	var wg sync.WaitGroup
+	for range 20 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			a.applyHouse("h1")
+		}()
+	}
+	wg.Wait()
+	if n := calls.Load(); n != 1 {
+		t.Errorf("herstelstap %d keer gestart, verwacht 1", n)
 	}
 }
