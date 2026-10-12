@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { createHash } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import {
   normalize,
   normalizeSerial,
@@ -22,7 +22,8 @@ test('normalize matches every shared vector', () => {
   assert.ok(vectors.length > 0)
   for (const v of vectors) {
     assert.equal(normalize(v.input), v.normalized, `input ${JSON.stringify(v.input)}`)
-    assert.equal(createHash('sha256').update(normalize(v.input)).digest('hex'), v.sha256)
+    // Zelfde HMAC als de hook (testsleutel uit backend/tests/pbtest_test.go).
+    assert.equal(createHmac('sha256', 'sandhovius-test-key').update(normalize(v.input)).digest('hex'), v.hmac)
   }
 })
 
@@ -85,6 +86,7 @@ test('claimErrorMessage', () => {
   assert.equal(claimErrorMessage(409, ''), 'Deze box is al gekoppeld')
   assert.equal(claimErrorMessage(404, 'x'), 'Dit huis is niet gevonden')
   assert.equal(claimErrorMessage(429, 'Too Many Requests'), 'Te veel pogingen, probeer het over een minuut opnieuw')
+  assert.equal(claimErrorMessage(503, 'x'), 'Koppelen lukt nu niet. Probeer het later opnieuw')
   assert.match(claimErrorMessage(0, ''), /verbinding/)
   assert.match(claimErrorMessage(500, 'boom'), /Er ging iets mis/)
 })

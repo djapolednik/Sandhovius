@@ -92,6 +92,8 @@ export function claimErrorMessage(status, message) {
       return 'Dit huis is niet gevonden'
     case 429:
       return 'Te veel pogingen, probeer het over een minuut opnieuw'
+    case 503:
+      return 'Koppelen lukt nu niet. Probeer het later opnieuw'
     case 0:
       return 'Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw'
     default:
