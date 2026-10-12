@@ -207,6 +207,8 @@ export default function Home() {
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
+    // Alleen bij in- of uitloggen opnieuw; endExpiredSession is stabiel genoeg.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn])
 
   useEffect(() => {
@@ -214,6 +216,8 @@ export default function Home() {
     if (loggedIn && !loaded) {
       fetchAll()
     }
+    // Alleen bij inloggen ophalen, niet bij elke wijziging van loaded/fetchAll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn])
 
   // Een koppelcode uit de QR-link (/koppel) wacht in sessionStorage: zodra
@@ -1739,7 +1743,7 @@ export default function Home() {
             {firstDevice}
             {loaded && house && count === 0 && devicesInHouse.length > 0 && (
               <p className="empty-state">
-                Nog geen apparaten in deze kamer. Voeg er een toe met "Toevoegen", of verplaats een apparaat hierheen
+                Nog geen apparaten in deze kamer. Voeg er een toe met “Toevoegen”, of verplaats een apparaat hierheen
                 via Details.
               </p>
             )}
@@ -1892,7 +1896,7 @@ export default function Home() {
                       renderByRoom(favoriteDevices)
                     ) : (
                       <p className="section-hint">
-                        Zet apparaten die je vaak gebruikt hier: houd een apparaat ingedrukt en zet "Op Home tonen" aan.
+                        Zet apparaten die je vaak gebruikt hier: houd een apparaat ingedrukt en zet “Op Home tonen” aan.
                       </p>
                     )
                   ) : !houseReachable ? (

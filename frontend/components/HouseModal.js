@@ -81,8 +81,8 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
             onder "Overig" — er wordt niets weggegooid. */}
         <div className="room-confirm">
           <p className="room-confirm-text">
-            Kamer "{room.name}" verwijderen? Apparaten in deze kamer blijven bestaan en komen onder
-            "Overig".
+            Kamer “{room.name}” verwijderen? Apparaten in deze kamer blijven bestaan en komen onder
+            “Overig”.
           </p>
           <div className="room-row-actions">
             <button

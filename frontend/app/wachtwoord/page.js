@@ -2,6 +2,7 @@
 
 import { Suspense, useId, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import AccountShell from '../../components/AccountShell'
 import { createPb } from '../../lib/pocketbase'
 import { MIN_PASSWORD_LENGTH } from '../../lib/account'
@@ -48,9 +49,9 @@ function Reset() {
     return (
       <AccountShell title="Je wachtwoord is gewijzigd.">
         <div className="form-stack">
-          <a className="btn btn-primary" href="/">
+          <Link className="btn btn-primary" href="/">
             Naar inloggen
-          </a>
+          </Link>
         </div>
       </AccountShell>
     )
@@ -63,9 +64,9 @@ function Reset() {
             De link is verlopen of al gebruikt. Kies op het inlogscherm &ldquo;Wachtwoord vergeten?&rdquo; voor een
             nieuwe.
           </p>
-          <a className="btn btn-primary" href="/">
+          <Link className="btn btn-primary" href="/">
             Naar inloggen
-          </a>
+          </Link>
         </div>
       </AccountShell>
     )

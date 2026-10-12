@@ -319,7 +319,7 @@ export default function SceneModal({
           <div className="modal-divider" />
           {confirmingDelete ? (
             <div className="danger-zone">
-              <p className="danger-text">Scène "{scene.name}" verwijderen? Je apparaten blijven gewoon bestaan.</p>
+              <p className="danger-text">Scène “{scene.name}” verwijderen? Je apparaten blijven gewoon bestaan.</p>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setConfirmingDelete(false)}>
                   Annuleren

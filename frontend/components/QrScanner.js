@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { parseClaimLink } from '../lib/claim'
 
 // Leest de QR-code op het blad bij je box met de camera. Eén keer om
@@ -17,7 +17,10 @@ const SCAN_EVERY_MS = 100
 export default function QrScanner({ onResult, onUnavailable }) {
   const videoRef = useRef(null)
   const callbacks = useRef({ onResult, onUnavailable })
-  callbacks.current = { onResult, onUnavailable }
+  // Na de render bijwerken, niet tijdens (React 19): gelezen in handlers en timers.
+  useLayoutEffect(() => {
+    callbacks.current = { onResult, onUnavailable }
+  })
 
   useEffect(() => {
     let cancelled = false

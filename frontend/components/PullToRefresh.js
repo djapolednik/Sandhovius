@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { CheckIcon } from '../lib/icons'
 
 // Hoe ver je moet trekken (zichtbare afstand, na de weerstand) voordat
@@ -37,7 +37,10 @@ function isEnabled() {
 export default function PullToRefresh({ onRefresh }) {
   const indicatorRef = useRef(null)
   const onRefreshRef = useRef(onRefresh)
-  onRefreshRef.current = onRefresh
+  // Na de render bijwerken, niet tijdens (React 19): gelezen in handlers en timers.
+  useLayoutEffect(() => {
+    onRefreshRef.current = onRefresh
+  })
   // idle | pulling | armed | refreshing | done
   const [phase, setPhase] = useState('idle')
   const phaseRef = useRef('idle')

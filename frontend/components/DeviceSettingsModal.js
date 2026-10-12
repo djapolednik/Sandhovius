@@ -204,7 +204,7 @@ export default function DeviceSettingsModal({
       {confirmingDelete ? (
         <div className="danger-zone">
           <p className="danger-text">
-            "{device.name}" uit Sandhovius verwijderen? Het apparaat verdwijnt uit de app; je kunt het later opnieuw
+            “{device.name}” uit Sandhovius verwijderen? Het apparaat verdwijnt uit de app; je kunt het later opnieuw
             toevoegen.
           </p>
           {error && <p className="error-banner">{error}</p>}

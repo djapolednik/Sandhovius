@@ -17,6 +17,7 @@ cd frontend && npx next build                     # moet slagen vóór commit
 
 # Tests
 cd agent && go vet ./... && go test ./...
+cd frontend && npm run lint      # ESLint (flat config, eslint.config.mjs); 0 errors vóór commit
 cd frontend && node --test lib/*.test.js
 cd backend/tests && go test -tags integration ./...   # regels per huis/box, hooks, mail
 pip install -r scripts/requirements.txt                # segno, voor claimcode/sheet

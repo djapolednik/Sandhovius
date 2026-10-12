@@ -411,7 +411,7 @@ Gevonden door verbindingen echt te verbreken, niet in theorie:
   claims), de mails per taal, en het huishouden (rollen per huis,
   favorieten per persoon, uitnodigen, accepteren, laatste beheerder).
 - **Scripts**: `python -m unittest discover -s scripts -p "test_*.py"`.
-- **PWA**: `cd frontend && node --test lib/*.test.js && npx next build`.
+- **PWA**: `cd frontend && npm run lint && node --test lib/*.test.js && npx next build`.
 - Eén set testvectoren voor de claimcode (`backend/tests/testdata/claim_codes.json`)
   houdt Python, de hook en de app gelijk; `claim_check.json` doet hetzelfde
   voor het controleteken (Python en de app; de hook vergelijkt alleen de hash,

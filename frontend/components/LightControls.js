@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   brightnessLabel,
   capabilities,
@@ -80,18 +80,25 @@ export default function LightControls({ device, state, disabled, onChange }) {
 
   // De throttle leeft zo lang de sheet; de nieuwste onChange via een ref.
   const send = useRef(onChange)
-  send.current = onChange
-  const limiter = useMemo(() => throttle((payload) => send.current(payload), SEND_EVERY_MS), [])
-  useEffect(() => () => limiter.flush(), [limiter])
+  useLayoutEffect(() => {
+    send.current = onChange
+  })
+  // Pas aangemaakt bij de eerste wijziging (een handler), niet tijdens de render.
+  const limiterRef = useRef(null)
+  function limiter() {
+    if (!limiterRef.current) limiterRef.current = throttle((payload) => send.current(payload), SEND_EVERY_MS)
+    return limiterRef.current
+  }
+  useEffect(() => () => limiterRef.current?.flush(), [])
 
   // Elke eigen wijziging gaat hier langs: het hold-off loopt vanaf de laatste.
   function emit(payload) {
     hold.current.touch()
-    limiter.call(payload)
+    limiter().call(payload)
   }
   function release() {
     hold.current.touch()
-    limiter.flush()
+    limiter().flush()
   }
   const dragProps = {
     onPointerUp: release,
@@ -104,7 +111,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
     setRgb(next)
     setMode('colour')
     emit(payloadFor({ rgb: next }))
-    if (immediate) limiter.flush()
+    if (immediate) limiter().flush()
   }
 
   // De Wit/Kleur-balk wisselt alleen het beeld; pas een gekozen waarde of een

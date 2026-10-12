@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { formatTemperature } from '../lib/temperature'
 import { MinusIcon, PlusIcon } from '../lib/icons'
 
@@ -63,7 +63,10 @@ export default function ClimateCard({
   const pendingRef = useRef(null)
   const commitTimer = useRef(null)
   const onSetRef = useRef(onSetTemperature)
-  onSetRef.current = onSetTemperature
+  // Na de render bijwerken, niet tijdens (React 19): gelezen in handlers en timers.
+  useLayoutEffect(() => {
+    onSetRef.current = onSetTemperature
+  })
 
   function commit() {
     clearTimeout(commitTimer.current)

@@ -33,7 +33,7 @@ docker compose up -d                              # hele stack
 docker compose up -d --build agent frontend       # na codewijzigingen (geen hot reload)
 cd agent && go vet ./... && go test ./...
 cd backend/tests && go test -tags integration ./...
-cd frontend && node --test lib/*.test.js && npx next build   # build moet slagen vóór commit
+cd frontend && npm run lint && node --test lib/*.test.js && npx next build   # lint (0 errors) en build vóór commit
 python -m unittest discover -s scripts -p "test_*.py"
 ```
 

@@ -50,7 +50,7 @@ export default function ScenesView({
           Maak je eerste scène
         </h2>
         <p className="intro-panel-text">
-          Met een scène zet je met één tik meerdere apparaten tegelijk goed, bijvoorbeeld "Naar bed": alle lampen uit en
+          Met een scène zet je met één tik meerdere apparaten tegelijk goed, bijvoorbeeld “Naar bed”: alle lampen uit en
           de verwarming lager.
         </p>
         <button type="button" className="btn btn-primary" onClick={onCreate}>

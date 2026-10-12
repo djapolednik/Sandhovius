@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
 // Ingedrukt houden (een tegel, een scènepil) opent de details. Gedeeld door
 // DeviceCard en HomeScenes.
@@ -23,7 +23,10 @@ export function useLongPress(onLongPress) {
   const start = useRef(null)
   const triggered = useRef(false)
   const callback = useRef(onLongPress)
-  callback.current = onLongPress
+  // Na de render bijwerken, niet tijdens (React 19): gelezen in handlers en timers.
+  useLayoutEffect(() => {
+    callback.current = onLongPress
+  })
 
   function cancel() {
     clearTimeout(timer.current)

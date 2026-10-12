@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import AccountShell from '../../components/AccountShell'
 import { createPb } from '../../lib/pocketbase'
 import { confirmFailure } from '../../lib/account'
@@ -56,9 +57,9 @@ function Confirm() {
     return (
       <AccountShell title="Je e-mailadres is bevestigd.">
         <div className="form-stack">
-          <a className="btn btn-primary" href="/">
+          <Link className="btn btn-primary" href="/">
             Naar Sandhovius
-          </a>
+          </Link>
         </div>
       </AccountShell>
     )
@@ -85,9 +86,9 @@ function Confirm() {
         <p className="login-note" role="alert">
           De link is verlopen of al gebruikt. Log in en vraag een nieuwe bevestigingsmail aan.
         </p>
-        <a className="btn btn-primary" href="/">
+        <Link className="btn btn-primary" href="/">
           Naar inloggen
-        </a>
+        </Link>
       </div>
     </AccountShell>
   )
