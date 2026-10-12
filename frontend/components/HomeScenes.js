@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { CheckIcon, ScenesIcon } from '../lib/icons'
 import { useScrollEdges } from '../lib/useScrollEdges'
 import { useLongPress } from '../lib/longPress'
