@@ -1,3 +1,6 @@
+'use client'
+
+import { useTranslations } from 'use-intl'
 import { MIN_PASSWORD_LENGTH, passwordChecks } from '../lib/account'
 import { CheckIcon } from '../lib/icons'
 
@@ -5,11 +8,12 @@ import { CheckIcon } from '../lib/icons'
 // "Wachtwoord wijzigen" en op /wachtwoord). id: voor aria-describedby van
 // de velden.
 export default function PasswordChecks({ id, password, passwordConfirm }) {
+  const t = useTranslations('password')
   const checks = passwordChecks(password, passwordConfirm)
   return (
     <ul className="password-checks" id={id}>
-      <PasswordCheck met={checks.long}>Minstens {MIN_PASSWORD_LENGTH} tekens</PasswordCheck>
-      <PasswordCheck met={checks.same}>Twee keer hetzelfde</PasswordCheck>
+      <PasswordCheck met={checks.long}>{t('checkLong', { min: MIN_PASSWORD_LENGTH })}</PasswordCheck>
+      <PasswordCheck met={checks.same}>{t('checkSame')}</PasswordCheck>
     </ul>
   )
 }
@@ -18,13 +22,14 @@ export default function PasswordChecks({ id, password, passwordConfirm }) {
 // voor apparaten die aan staan (The State Means State Rule); het vinkje en
 // de donkerder tekst zeggen het.
 function PasswordCheck({ met, children }) {
+  const t = useTranslations('password')
   return (
     <li className={met ? 'password-check-met' : undefined}>
       <span className="password-check-mark" aria-hidden="true">
         {met && <CheckIcon width="14" height="14" />}
       </span>
       {children}
-      <span className="visually-hidden">{met ? ', klopt' : ', nog niet'}</span>
+      <span className="visually-hidden">{met ? t('checkMet') : t('checkNotMet')}</span>
     </li>
   )
 }

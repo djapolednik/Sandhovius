@@ -1,0 +1,74 @@
+{
+  "language": {
+    "nl": "Nederlands",
+    "en": "English"
+  },
+  "login": {
+    "lede": "Log in om je huis te bedienen.",
+    "ledeSignup": "Maak een account aan.",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "submit": "Inloggen",
+    "submitting": "Bezig met inloggen…",
+    "welcome": "Welkom thuis",
+    "forgot": "Wachtwoord vergeten?",
+    "createAccount": "Account aanmaken",
+    "resetNote": "Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.",
+    "resetSent": "Als er een account bij {email} hoort, krijg je een e-mail met een link om een nieuw wachtwoord te kiezen. Kijk ook even bij je ongewenste mail.",
+    "sendReset": "Stuur resetlink",
+    "backToLogin": "Terug naar inloggen",
+    "wrongCombination": "Dit e-mailadres en wachtwoord horen niet bij elkaar. Controleer ze en probeer het opnieuw."
+  },
+  "account": {
+    "passwordAgain": "Wachtwoord nog een keer",
+    "busy": "Bezig…",
+    "haveAccount": "Ik heb al een account",
+    "toLogin": "Naar inloggen",
+    "enterEmail": "Vul je e-mailadres in",
+    "passwordTooShort": "Kies een wachtwoord van minstens {min} tekens",
+    "passwordsDiffer": "De twee wachtwoorden zijn niet gelijk",
+    "tooManyAttempts": "Te veel pogingen. Wacht even en probeer het dan opnieuw",
+    "offline": "Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw",
+    "emailTaken": "Er bestaat al een account met dit e-mailadres",
+    "somethingWrong": "Er ging iets mis. Probeer het zo opnieuw"
+  },
+  "verify": {
+    "sent": "We hebben een e-mail gestuurd naar <strong>{email}</strong>. Open de link erin om je adres te bevestigen. Kijk ook even bij je ongewenste mail.",
+    "sendFailed": "Je account is aangemaakt, maar de bevestigingsmail naar <strong>{email}</strong> is niet verstuurd. Stuur hem hieronder opnieuw.",
+    "resent": "De mail is opnieuw verstuurd.",
+    "resend": "Stuur de mail opnieuw"
+  },
+  "password": {
+    "show": "Wachtwoord tonen",
+    "checkLong": "Minstens {min} tekens",
+    "checkSame": "Twee keer hetzelfde",
+    "checkMet": ", klopt",
+    "checkNotMet": ", nog niet"
+  },
+  "confirm": {
+    "working": "Even geduld…",
+    "workingNote": "We bevestigen je e-mailadres.",
+    "done": "Je e-mailadres is bevestigd.",
+    "toApp": "Naar Sandhovius",
+    "failed": "Bevestigen lukte nu niet.",
+    "busy": "Er waren te veel pogingen. Wacht even en probeer het dan opnieuw; je link werkt nog.",
+    "offline": "Sandhovius is nu niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw; je link werkt nog.",
+    "retry": "Opnieuw proberen",
+    "invalid": "Deze link werkt niet meer.",
+    "invalidNote": "De link is verlopen of al gebruikt. Log in en vraag een nieuwe bevestigingsmail aan."
+  },
+  "reset": {
+    "title": "Kies een nieuw wachtwoord.",
+    "newPassword": "Nieuw wachtwoord",
+    "newPasswordAgain": "Nieuw wachtwoord, nog een keer",
+    "save": "Wachtwoord opslaan",
+    "done": "Je wachtwoord is gewijzigd.",
+    "invalidNote": "De link is verlopen of al gebruikt. Kies op het inlogscherm “Wachtwoord vergeten?” voor een nieuwe.",
+    "failed": "Het wachtwoord kon niet worden gewijzigd. Probeer het zo opnieuw"
+  },
+  "settings": {
+    "language": "Taal",
+    "languageHint": "Voor de app en voor de mails die je van Sandhovius krijgt.",
+    "languageFailed": "De taal kon niet worden gewijzigd. Probeer het zo opnieuw."
+  }
+}

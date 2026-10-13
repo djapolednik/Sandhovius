@@ -3,13 +3,15 @@
 import { Suspense, useId, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'use-intl'
 import AccountShell from '../../components/AccountShell'
 import { createPb } from '../../lib/pocketbase'
-import { MIN_PASSWORD_LENGTH } from '../../lib/account'
+import { MIN_PASSWORD_LENGTH, requestErrorKey } from '../../lib/account'
 import PasswordField from '../../components/PasswordField'
 import PasswordChecks from '../../components/PasswordChecks'
 
 function Reset() {
+  const t = useTranslations()
   const token = useSearchParams().get('token')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -22,11 +24,11 @@ function Reset() {
   async function submit(e) {
     e.preventDefault()
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Kies een wachtwoord van minstens ${MIN_PASSWORD_LENGTH} tekens`)
+      setError(t('account.passwordTooShort', { min: MIN_PASSWORD_LENGTH }))
       return
     }
     if (password !== passwordConfirm) {
-      setError('De twee wachtwoorden zijn niet gelijk')
+      setError(t('account.passwordsDiffer'))
       return
     }
     setBusy(true)
@@ -37,9 +39,8 @@ function Reset() {
     } catch (err) {
       console.error('[wachtwoord resetten]', err)
       if (err?.status === 400 && err?.response?.data?.token) setInvalid(true)
-      else if (err?.status === 429) setError('Te veel pogingen. Wacht even en probeer het dan opnieuw')
-      else if (err?.status === 0) setError('Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw')
-      else setError('Het wachtwoord kon niet worden gewijzigd. Probeer het zo opnieuw')
+      else if (err?.status === 429 || err?.status === 0) setError(t(requestErrorKey(err)))
+      else setError(t('reset.failed'))
     } finally {
       setBusy(false)
     }
@@ -47,10 +48,10 @@ function Reset() {
 
   if (done) {
     return (
-      <AccountShell title="Je wachtwoord is gewijzigd.">
+      <AccountShell title={t('reset.done')}>
         <div className="form-stack">
           <Link className="btn btn-primary" href="/">
-            Naar inloggen
+            {t('account.toLogin')}
           </Link>
         </div>
       </AccountShell>
@@ -58,24 +59,23 @@ function Reset() {
   }
   if (invalid) {
     return (
-      <AccountShell title="Deze link werkt niet meer.">
+      <AccountShell title={t('confirm.invalid')}>
         <div className="form-stack">
           <p className="login-note" role="alert">
-            De link is verlopen of al gebruikt. Kies op het inlogscherm &ldquo;Wachtwoord vergeten?&rdquo; voor een
-            nieuwe.
+            {t('reset.invalidNote')}
           </p>
           <Link className="btn btn-primary" href="/">
-            Naar inloggen
+            {t('account.toLogin')}
           </Link>
         </div>
       </AccountShell>
     )
   }
   return (
-    <AccountShell title="Kies een nieuw wachtwoord.">
+    <AccountShell title={t('reset.title')}>
       <form onSubmit={submit} className="form-stack">
         <PasswordField
-          label="Nieuw wachtwoord"
+          label={t('reset.newPassword')}
           autoComplete="new-password"
           value={password}
           onChange={setPassword}
@@ -83,7 +83,7 @@ function Reset() {
           required
         />
         <PasswordField
-          label="Nieuw wachtwoord, nog een keer"
+          label={t('reset.newPasswordAgain')}
           autoComplete="new-password"
           value={passwordConfirm}
           onChange={setPasswordConfirm}
@@ -97,7 +97,7 @@ function Reset() {
           </p>
         )}
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          Wachtwoord opslaan
+          {t('reset.save')}
         </button>
       </form>
     </AccountShell>

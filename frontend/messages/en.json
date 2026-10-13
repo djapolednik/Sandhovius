@@ -1,0 +1,74 @@
+{
+  "language": {
+    "nl": "Nederlands",
+    "en": "English"
+  },
+  "login": {
+    "lede": "Log in to control your home.",
+    "ledeSignup": "Create an account.",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Log in",
+    "submitting": "Logging in…",
+    "welcome": "Welcome home",
+    "forgot": "Forgot your password?",
+    "createAccount": "Create an account",
+    "resetNote": "Enter your email address. We’ll send you a link to choose a new password.",
+    "resetSent": "If there is an account for {email}, you’ll get an email with a link to choose a new password. Have a look in your junk mail too.",
+    "sendReset": "Send reset link",
+    "backToLogin": "Back to log in",
+    "wrongCombination": "This email address and password don’t match. Check them and try again."
+  },
+  "account": {
+    "passwordAgain": "Password again",
+    "busy": "Working…",
+    "haveAccount": "I already have an account",
+    "toLogin": "Go to log in",
+    "enterEmail": "Enter your email address",
+    "passwordTooShort": "Choose a password of at least {min} characters",
+    "passwordsDiffer": "The two passwords aren’t the same",
+    "tooManyAttempts": "Too many attempts. Wait a moment and try again",
+    "offline": "No connection to Sandhovius. Check your internet and try again",
+    "emailTaken": "There is already an account with this email address",
+    "somethingWrong": "Something went wrong. Try again in a moment"
+  },
+  "verify": {
+    "sent": "We’ve sent an email to <strong>{email}</strong>. Open the link in it to confirm your address. Have a look in your junk mail too.",
+    "sendFailed": "Your account has been created, but the confirmation email to <strong>{email}</strong> wasn’t sent. Send it again below.",
+    "resent": "The email has been sent again.",
+    "resend": "Send the email again"
+  },
+  "password": {
+    "show": "Show password",
+    "checkLong": "At least {min} characters",
+    "checkSame": "The same twice",
+    "checkMet": ", done",
+    "checkNotMet": ", not yet"
+  },
+  "confirm": {
+    "working": "One moment…",
+    "workingNote": "We’re confirming your email address.",
+    "done": "Your email address is confirmed.",
+    "toApp": "Go to Sandhovius",
+    "failed": "Confirming didn’t work just now.",
+    "busy": "There were too many attempts. Wait a moment and try again; your link still works.",
+    "offline": "Sandhovius can’t be reached right now. Check your internet connection and try again; your link still works.",
+    "retry": "Try again",
+    "invalid": "This link no longer works.",
+    "invalidNote": "The link has expired or has already been used. Log in and ask for a new confirmation email."
+  },
+  "reset": {
+    "title": "Choose a new password.",
+    "newPassword": "New password",
+    "newPasswordAgain": "New password again",
+    "save": "Save password",
+    "done": "Your password has been changed.",
+    "invalidNote": "The link has expired or has already been used. Choose “Forgot your password?” on the login screen for a new one.",
+    "failed": "The password couldn’t be changed. Try again in a moment"
+  },
+  "settings": {
+    "language": "Language",
+    "languageHint": "For the app and for the emails you get from Sandhovius.",
+    "languageFailed": "The language couldn’t be changed. Try again in a moment."
+  }
+}

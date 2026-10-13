@@ -3,11 +3,14 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslations } from 'use-intl'
 import AccountShell from '../../components/AccountShell'
 import { createPb } from '../../lib/pocketbase'
 import { confirmFailure } from '../../lib/account'
 
 function Confirm() {
+  const t = useTranslations('confirm')
+  const tAccount = useTranslations('account')
   const token = useSearchParams().get('token')
   // working | done | invalid | offline | busy (zie confirmFailure)
   const [state, setState] = useState(token ? 'working' : 'invalid')
@@ -46,19 +49,19 @@ function Confirm() {
 
   if (state === 'working') {
     return (
-      <AccountShell title="Even geduld…">
+      <AccountShell title={t('working')}>
         <p className="login-note" role="status">
-          We bevestigen je e-mailadres.
+          {t('workingNote')}
         </p>
       </AccountShell>
     )
   }
   if (state === 'done') {
     return (
-      <AccountShell title="Je e-mailadres is bevestigd.">
+      <AccountShell title={t('done')}>
         <div className="form-stack">
           <Link className="btn btn-primary" href="/">
-            Naar Sandhovius
+            {t('toApp')}
           </Link>
         </div>
       </AccountShell>
@@ -66,28 +69,26 @@ function Confirm() {
   }
   if (state === 'offline' || state === 'busy') {
     return (
-      <AccountShell title="Bevestigen lukte nu niet.">
+      <AccountShell title={t('failed')}>
         <div className="form-stack">
           <p className="login-note" role="alert">
-            {state === 'busy'
-              ? 'Er waren te veel pogingen. Wacht even en probeer het dan opnieuw; je link werkt nog.'
-              : 'Sandhovius is nu niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw; je link werkt nog.'}
+            {state === 'busy' ? t('busy') : t('offline')}
           </p>
           <button type="button" className="btn btn-primary" onClick={retry}>
-            Opnieuw proberen
+            {t('retry')}
           </button>
         </div>
       </AccountShell>
     )
   }
   return (
-    <AccountShell title="Deze link werkt niet meer.">
+    <AccountShell title={t('invalid')}>
       <div className="form-stack">
         <p className="login-note" role="alert">
-          De link is verlopen of al gebruikt. Log in en vraag een nieuwe bevestigingsmail aan.
+          {t('invalidNote')}
         </p>
         <Link className="btn btn-primary" href="/">
-          Naar inloggen
+          {tAccount('toLogin')}
         </Link>
       </div>
     </AccountShell>

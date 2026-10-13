@@ -2,14 +2,15 @@
 
 import { useId } from 'react'
 
+// Elke taal in zijn eigen woorden: wie de andere taal zoekt, herkent die zo.
 const OPTIONS = [
   { value: 'nl', label: 'Nederlands' },
   { value: 'en', label: 'English' },
 ]
 
-// Taal van de e-mails (bevestigen, wachtwoord vergeten). Dezelfde balk met
-// twee standen als het thema in Opties.
-export default function LanguageChoice({ value, onChange, legend = 'Taal van e-mails', disabled = false }) {
+// De taal van de app en de mails (Opties). Dezelfde balk met twee standen
+// als het thema.
+export default function LanguageChoice({ value, onChange, legend, disabled = false }) {
   const name = useId()
   return (
     <fieldset className="segmented" disabled={disabled}>

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'use-intl'
 import LanguageChoice from './LanguageChoice'
 import { useTheme } from '../app/ThemeContext'
+import { useLanguage } from '../app/LanguageContext'
 import { ArrowUpRightIcon, CheckIcon, RoomsIcon } from '../lib/icons'
 
 const THEME_OPTIONS = [
@@ -24,7 +26,6 @@ export default function SettingsView({
   onSelectHouse,
   roomCount,
   userEmail,
-  language,
   onChangeLanguage,
   onOpenHouse,
   onAddBox,
@@ -32,19 +33,23 @@ export default function SettingsView({
   onLogout,
 }) {
   const { mode, setMode } = useTheme()
-  const [mailLanguage, setMailLanguage] = useState(language)
+  const { language, setLanguage } = useLanguage()
+  const t = useTranslations('settings')
   const [languageError, setLanguageError] = useState('')
 
+  // Meteen wisselen, dan het account bijwerken (de mails volgen het
+  // account). Lukt dat niet, dan terug: anders kreeg je de mails in een
+  // andere taal dan de app.
   async function chooseLanguage(value) {
-    const previous = mailLanguage
-    setMailLanguage(value)
+    const previous = language
+    setLanguage(value)
     setLanguageError('')
     try {
       await onChangeLanguage(value)
     } catch (err) {
-      console.error('[taal van e-mails]', err)
-      setMailLanguage(previous)
-      setLanguageError('De taal kon niet worden gewijzigd. Probeer het zo opnieuw.')
+      console.error('[taal wijzigen]', err)
+      setLanguage(previous)
+      setLanguageError(t('languageFailed'))
     }
   }
 
@@ -130,9 +135,9 @@ export default function SettingsView({
           </p>
         )}
         <div className="settings-group">
-          <h3 className="settings-subheading">Taal van e-mails</h3>
-          <LanguageChoice value={mailLanguage} onChange={chooseLanguage} legend="Nederlands of English" />
-          <p className="settings-hint">Voor de mails die je van Sandhovius krijgt. De app zelf blijft Nederlands.</p>
+          <h3 className="settings-subheading">{t('language')}</h3>
+          <LanguageChoice value={language} onChange={chooseLanguage} legend={t('language')} />
+          <p className="settings-hint">{t('languageHint')}</p>
           {languageError && (
             <p className="login-error" role="alert">
               {languageError}

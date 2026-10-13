@@ -29,6 +29,9 @@ import ClaimSheet from '../components/ClaimSheet'
 import { pendingKey } from '../lib/claim'
 import { LAST_REFRESH_KEY, needsRefresh } from '../lib/session'
 import { describeError, isSessionExpired } from '../lib/errors'
+import { requestErrorKey } from '../lib/account'
+import { useTranslations } from 'use-intl'
+import { useLanguage } from './LanguageContext'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
@@ -91,6 +94,8 @@ const ARRIVE_REDUCED_MS = 300
 const ARRIVE_IN_MS = 600
 
 export default function Home() {
+  const t = useTranslations()
+  const { language, setLanguage, adoptAccountLanguage } = useLanguage()
   // null = nog niet bekeken (de server-render en de eerste client-render):
   // dan alleen de achtergrond. Met false begon elke start met het
   // inlogscherm en zijn binnenkomst, ook als je al ingelogd was.
@@ -168,6 +173,16 @@ export default function Home() {
   useEffect(() => {
     setLoggedIn(pb.authStore.isValid)
   }, [])
+
+  // De taal van het account geldt, ook op een nieuwe telefoon; en ook als
+  // het record later bijgewerkt wordt (verlengen, Opties → Taal).
+  useEffect(() => {
+    if (!loggedIn) return
+    adoptAccountLanguage(pb.authStore.record?.language)
+    return pb.authStore.onChange((token, record) => adoptAccountLanguage(record?.language))
+    // adoptAccountLanguage is per render nieuw, maar doet hetzelfde.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loggedIn])
 
   // Ingelogd blijven tot je zelf uitlogt: het inlogtoken verlengen bij het
   // openen en bij terugkeer naar de app, hooguit eens per dag (zie
@@ -356,11 +371,8 @@ export default function Home() {
     } catch (err) {
       // 400 is bij inloggen vrijwel altijd een onjuiste combinatie — dat
       // verdient een specifiekere melding dan "controleer de gegevens".
-      setError(
-        err?.status === 400
-          ? 'Dit e-mailadres en wachtwoord horen niet bij elkaar. Controleer ze en probeer het opnieuw.'
-          : describeError('Inloggen', err)
-      )
+      console.error('[inloggen]', err)
+      setError(err?.status === 400 ? t('login.wrongCombination') : t(requestErrorKey(err)))
       setLoggingIn(false)
       setArriving(false)
     }
@@ -376,7 +388,8 @@ export default function Home() {
       await pb.collection('users').requestPasswordReset(email)
       setResetSent(true)
     } catch (err) {
-      setError(describeError('De resetlink versturen', err))
+      console.error('[resetlink versturen]', err)
+      setError(t(requestErrorKey(err)))
     } finally {
       setLoggingIn(false)
     }
@@ -1357,6 +1370,7 @@ export default function Home() {
   }
 
   if (!loggedIn) {
+    const otherLanguage = language === 'nl' ? 'en' : 'nl'
     return (
       <main className={arriving ? 'login-page is-arriving' : 'login-page'}>
         <div className="login-layout">
@@ -1377,7 +1391,7 @@ export default function Home() {
                 </span>
               ))}
             </h1>
-            <p className="login-lede">{signupMode ? 'Maak een account aan.' : 'Log in om je huis te bedienen.'}</p>
+            <p className="login-lede">{signupMode ? t('login.ledeSignup') : t('login.lede')}</p>
             {/* Zichtbare labels i.p.v. alleen placeholders: een placeholder
                 verdwijnt zodra je begint te typen. autoComplete laat de
                 wachtwoordbeheerder van de telefoon het formulier invullen. */}
@@ -1395,8 +1409,7 @@ export default function Home() {
               resetSent ? (
                 <div className="form-stack">
                   <p className="login-note" role="status">
-                    Als er een account bij {email} hoort, krijg je een e-mail met een link om een nieuw wachtwoord te
-                    kiezen. Kijk ook even bij je ongewenste mail.
+                    {t('login.resetSent', { email })}
                   </p>
                   <button
                     type="button"
@@ -1406,14 +1419,14 @@ export default function Home() {
                       setResetSent(false)
                     }}
                   >
-                    Terug naar inloggen
+                    {t('login.backToLogin')}
                   </button>
                 </div>
               ) : (
                 <form onSubmit={requestReset} className="form-stack">
-                  <p className="login-note">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+                  <p className="login-note">{t('login.resetNote')}</p>
                   <label className="form-field">
-                    <span className="form-label">E-mailadres</span>
+                    <span className="form-label">{t('login.email')}</span>
                     <input
                       className="input"
                       type="email"
@@ -1430,7 +1443,7 @@ export default function Home() {
                     </p>
                   )}
                   <button type="submit" className="btn btn-primary" disabled={loggingIn}>
-                    Stuur resetlink
+                    {t('login.sendReset')}
                   </button>
                   <button
                     type="button"
@@ -1440,14 +1453,14 @@ export default function Home() {
                       setError('')
                     }}
                   >
-                    Terug naar inloggen
+                    {t('login.backToLogin')}
                   </button>
                 </form>
               )
             ) : (
               <form onSubmit={login} className="form-stack">
                 <label className="form-field">
-                  <span className="form-label">E-mailadres</span>
+                  <span className="form-label">{t('login.email')}</span>
                   <input
                     className="input"
                     type="email"
@@ -1459,7 +1472,7 @@ export default function Home() {
                   />
                 </label>
                 <label className="form-field">
-                  <span className="form-label">Wachtwoord</span>
+                  <span className="form-label">{t('login.password')}</span>
                   <input
                     className="input"
                     type="password"
@@ -1476,14 +1489,14 @@ export default function Home() {
                 )}
                 <button type="submit" className="btn btn-primary" disabled={loggingIn}>
                   {arriving ? (
-                    'Welkom thuis'
+                    t('login.welcome')
                   ) : loggingIn ? (
                     <>
                       <span className="spinner" aria-hidden="true" />
-                      Bezig met inloggen…
+                      {t('login.submitting')}
                     </>
                   ) : (
-                    'Inloggen'
+                    t('login.submit')
                   )}
                 </button>
                 <div className="login-links">
@@ -1495,7 +1508,7 @@ export default function Home() {
                       setError('')
                     }}
                   >
-                    Wachtwoord vergeten?
+                    {t('login.forgot')}
                   </button>
                   <button
                     type="button"
@@ -1505,11 +1518,21 @@ export default function Home() {
                       setError('')
                     }}
                   >
-                    Account aanmaken
+                    {t('login.createAccount')}
                   </button>
                 </div>
               </form>
             )}
+            {/* De andere taal, in die taal zelf: wie hem zoekt, herkent hem.
+                Ook tijdens het aanmaken: het account krijgt deze taal. */}
+            <button
+              type="button"
+              className="btn btn-plain login-link login-language"
+              lang={otherLanguage}
+              onClick={() => setLanguage(otherLanguage)}
+            >
+              {t(`language.${otherLanguage}`)}
+            </button>
           </div>
         </div>
       </main>
@@ -1790,7 +1813,6 @@ export default function Home() {
           onSelectHouse={selectHouse}
           roomCount={roomsInHouse.length}
           userEmail={userEmail}
-          language={pb.authStore.record?.language || 'nl'}
           onChangeLanguage={changeLanguage}
           onOpenHouse={() => setHouseModalOpen(true)}
           onAddBox={() => setClaim({ initial: null })}

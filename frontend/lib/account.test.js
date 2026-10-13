@@ -1,32 +1,31 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { defaultLanguage, validateSignup, errorMessage, confirmFailure, passwordChecks } from './account.js'
+import { validateSignup, requestErrorKey, signupErrorKey, confirmFailure, passwordChecks } from './account.js'
+import { assertMessage } from './messages.testkit.js'
 
-test('defaultLanguage picks the first nl or en', () => {
-  assert.equal(defaultLanguage(['en-GB', 'nl']), 'en')
-  assert.equal(defaultLanguage(['nl-BE']), 'nl')
-  assert.equal(defaultLanguage(['de']), 'nl')
-  assert.equal(defaultLanguage(['de', 'en-US']), 'en')
-  assert.equal(defaultLanguage([]), 'nl')
-  assert.equal(defaultLanguage(undefined), 'nl')
-})
-
-test('validateSignup', () => {
+test('validateSignup: een sleutel per probleem, die in beide talen bestaat', () => {
   const ok = { email: 'a@b.nl', password: '12345678', passwordConfirm: '12345678' }
   assert.equal(validateSignup(ok), null)
-  assert.match(validateSignup({ ...ok, email: '  ' }), /e-mailadres/)
-  assert.match(validateSignup({ ...ok, password: '1234567', passwordConfirm: '1234567' }), /8 tekens/)
-  assert.match(validateSignup({ ...ok, passwordConfirm: 'x2345678' }), /niet gelijk/)
+  const keys = [
+    validateSignup({ ...ok, email: '  ' }),
+    validateSignup({ ...ok, password: '1234567', passwordConfirm: '1234567' }),
+    validateSignup({ ...ok, passwordConfirm: 'x2345678' }),
+  ]
+  assert.deepEqual(keys, ['account.enterEmail', 'account.passwordTooShort', 'account.passwordsDiffer'])
+  keys.forEach(assertMessage)
 })
 
-test('errorMessage', () => {
+test('requestErrorKey en signupErrorKey', () => {
   const exists = { status: 400, response: { data: { email: { code: 'validation_not_unique' } } } }
-  assert.equal(errorMessage(exists), 'Er bestaat al een account met dit e-mailadres')
+  assert.equal(signupErrorKey(exists), 'account.emailTaken')
+  // Een resetlink voor een ongeldig adres is geen "bestaat al".
+  assert.equal(requestErrorKey(exists), 'account.somethingWrong')
   // Aanmelden: 10 per uur, mail opnieuw: 5 per 10 min (per IP): geen "minuut" beloven.
-  assert.equal(errorMessage({ status: 429 }), 'Te veel pogingen. Wacht even en probeer het dan opnieuw')
-  assert.equal(errorMessage({ status: 0 }), 'Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw')
-  assert.equal(errorMessage(new Error('boom')), 'Er ging iets mis. Probeer het zo opnieuw')
-  assert.equal(errorMessage(null), 'Er ging iets mis. Probeer het zo opnieuw')
+  assert.equal(requestErrorKey({ status: 429 }), 'account.tooManyAttempts')
+  assert.equal(signupErrorKey({ status: 0 }), 'account.offline')
+  assert.equal(requestErrorKey(new Error('boom')), 'account.somethingWrong')
+  assert.equal(signupErrorKey(null), 'account.somethingWrong')
+  ;['account.emailTaken', 'account.tooManyAttempts', 'account.offline', 'account.somethingWrong'].forEach(assertMessage)
 })
 
 test('confirmFailure: alleen een ongeldige link is "werkt niet meer"', () => {

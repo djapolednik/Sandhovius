@@ -1,18 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import LanguageChoice from './LanguageChoice'
+import { useTranslations } from 'use-intl'
 import VerifyNotice from './VerifyNotice'
-import { defaultLanguage, errorMessage, validateSignup } from '../lib/account'
+import { useLanguage } from '../app/LanguageContext'
+import { MIN_PASSWORD_LENGTH, signupErrorKey, validateSignup } from '../lib/account'
 
 // Account aanmaken in de login-kaart. Maakt het account, vraagt de
 // bevestigingsmail aan en toont daarna VerifyNotice. pb is de PocketBase-client
 // van page.js; onBack gaat terug naar inloggen met het ingevulde adres.
+// Het account krijgt de taal waarin je het formulier invult (de knop op het
+// inlogscherm wisselt die): geen apart veld meer.
 export default function SignupForm({ pb, initialEmail = '', onBack }) {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [language, setLanguage] = useState(() => defaultLanguage(navigator.languages))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [created, setCreated] = useState(false)
@@ -22,7 +26,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
     e.preventDefault()
     const problem = validateSignup({ email, password, passwordConfirm })
     if (problem) {
-      setError(problem)
+      setError(t(problem, { min: MIN_PASSWORD_LENGTH }))
       return
     }
     setBusy(true)
@@ -43,7 +47,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
         })
     } catch (err) {
       console.error('[account aanmaken]', err)
-      setError(errorMessage(err))
+      setError(t(signupErrorKey(err)))
     } finally {
       setBusy(false)
     }
@@ -57,7 +61,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
         onResend={() => pb.collection('users').requestVerification(email)}
       >
         <button type="button" className="btn btn-primary" onClick={() => onBack(email)}>
-          Naar inloggen
+          {t('account.toLogin')}
         </button>
       </VerifyNotice>
     )
@@ -66,7 +70,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
   return (
     <form onSubmit={submit} className="form-stack">
       <label className="form-field">
-        <span className="form-label">E-mailadres</span>
+        <span className="form-label">{t('login.email')}</span>
         <input
           className="input"
           type="email"
@@ -78,7 +82,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
         />
       </label>
       <label className="form-field">
-        <span className="form-label">Wachtwoord</span>
+        <span className="form-label">{t('login.password')}</span>
         <input
           className="input"
           type="password"
@@ -89,7 +93,7 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
         />
       </label>
       <label className="form-field">
-        <span className="form-label">Wachtwoord nog een keer</span>
+        <span className="form-label">{t('account.passwordAgain')}</span>
         <input
           className="input"
           type="password"
@@ -99,10 +103,6 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
           required
         />
       </label>
-      <div className="form-field">
-        <span className="form-label">Taal van e-mails</span>
-        <LanguageChoice value={language} onChange={setLanguage} />
-      </div>
       {error && (
         <p className="login-error" role="alert">
           {error}
@@ -112,14 +112,14 @@ export default function SignupForm({ pb, initialEmail = '', onBack }) {
         {busy ? (
           <>
             <span className="spinner" aria-hidden="true" />
-            Bezig…
+            {t('account.busy')}
           </>
         ) : (
-          'Account aanmaken'
+          t('login.createAccount')
         )}
       </button>
       <button type="button" className="btn btn-plain login-link" onClick={() => onBack(email)}>
-        Ik heb al een account
+        {t('account.haveAccount')}
       </button>
     </form>
   )

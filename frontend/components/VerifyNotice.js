@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { errorMessage } from '../lib/account'
+import { useTranslations } from 'use-intl'
+import { requestErrorKey } from '../lib/account'
 
 // "Kijk in je mail": getoond na account aanmaken, en in de koppelflow
 // zolang het adres niet bevestigd is. onResend() verstuurt de bevestigingsmail
 // opnieuw en mag een fout gooien. sendFailed: de eerste mail ging niet weg.
 // children: extra knoppen onderaan.
 export default function VerifyNotice({ email, onResend, sendFailed = false, children }) {
+  const t = useTranslations()
   const [state, setState] = useState('idle') // idle | sending | sent | error
   const [error, setError] = useState('')
 
@@ -19,7 +21,7 @@ export default function VerifyNotice({ email, onResend, sendFailed = false, chil
       setState('sent')
     } catch (err) {
       console.error('[verificatie opnieuw versturen]', err)
-      setError(errorMessage(err))
+      setError(t(requestErrorKey(err)))
       setState('error')
     }
   }
@@ -28,18 +30,16 @@ export default function VerifyNotice({ email, onResend, sendFailed = false, chil
     <div className="form-stack">
       {sendFailed && state !== 'sent' ? (
         <p className="login-error" role="alert">
-          Je account is aangemaakt, maar de bevestigingsmail naar <strong>{email}</strong> is niet verstuurd. Stuur hem
-          hieronder opnieuw.
+          {t.rich('verify.sendFailed', { email, strong: (chunks) => <strong>{chunks}</strong> })}
         </p>
       ) : (
         <p className="login-note" role="status">
-          We hebben een e-mail gestuurd naar <strong>{email}</strong>. Open de link erin om je adres te bevestigen.
-          Kijk ook even bij je ongewenste mail.
+          {t.rich('verify.sent', { email, strong: (chunks) => <strong>{chunks}</strong> })}
         </p>
       )}
       {state === 'sent' && (
         <p className="login-note" role="status">
-          De mail is opnieuw verstuurd.
+          {t('verify.resent')}
         </p>
       )}
       {state === 'error' && (
@@ -48,7 +48,7 @@ export default function VerifyNotice({ email, onResend, sendFailed = false, chil
         </p>
       )}
       <button type="button" className="btn btn-secondary" onClick={resend} disabled={state === 'sending'}>
-        Stuur de mail opnieuw
+        {t('verify.resend')}
       </button>
       {children}
     </div>

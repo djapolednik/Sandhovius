@@ -7,6 +7,7 @@ import './styles/rooms.css'
 import './styles/devices.css'
 import './styles/components.css'
 import { ThemeProvider } from './ThemeContext'
+import { LanguageProvider } from './LanguageContext'
 
 // Een open (OFL) stand-in voor Lufga uit het merkblad: zelfde vriendelijk-
 // geometrische vormen. next/font host hem zelf mee, dus geen verzoek naar
@@ -60,14 +61,17 @@ const themeInitScript = `
 export default function RootLayout({ children }) {
   return (
     // suppressHydrationWarning: themeInitScript zet data-theme bewust al
-    // vóór hydration; dat verschil met de server-HTML is precies de
-    // bedoeling (geldt alleen voor dit ene element, niet voor kinderen).
+    // vóór hydration, en LanguageProvider zet lang naar de gekozen taal;
+    // dat verschil met de server-HTML is precies de bedoeling (geldt alleen
+    // voor dit ene element, niet voor kinderen).
     <html lang="nl" className={urbanist.variable} suppressHydrationWarning>
       <body>
         <Script id="theme-init" strategy="beforeInteractive">
           {themeInitScript}
         </Script>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
