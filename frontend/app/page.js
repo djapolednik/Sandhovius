@@ -34,7 +34,7 @@ import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
 import { applyStateEcho, createInflight, settleDevice } from '../lib/inflight'
 import { uid } from '../lib/uid'
-import { greeting, homeLede, houseSummary, indoorTemperature } from '../lib/home'
+import { greeting, homeLede, houseSummary, indoorTemperature, sortAttention } from '../lib/home'
 import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
@@ -737,14 +737,16 @@ export default function Home() {
   // kamers. Alleen als de box bereikbaar is: anders is álles onbekend en zegt de
   // verbindingsmelding genoeg. Net toegevoegde apparaten tellen nog niet.
   const attention = houseReachable
-    ? devicesInHouse.flatMap((device) => {
-        if (newDeviceIds.includes(device.id)) return []
-        if (!device.entity_id) return [{ device, reason: 'klaarzetten is niet gelukt' }]
-        if (!device.online) return [{ device, reason: 'offline' }]
-        const battery = device.expand?.device_state_via_device?.[0]?.state?.battery
-        if (isBatteryLow(battery)) return [{ device, reason: `batterij bijna leeg (${battery}%)` }]
-        return []
-      })
+    ? sortAttention(
+        devicesInHouse.flatMap((device) => {
+          if (newDeviceIds.includes(device.id)) return []
+          if (!device.entity_id) return [{ device, kind: 'setup', reason: 'klaarzetten is niet gelukt' }]
+          if (!device.online) return [{ device, kind: 'offline', reason: 'offline' }]
+          const battery = device.expand?.device_state_via_device?.[0]?.state?.battery
+          if (isBatteryLow(battery)) return [{ device, kind: 'battery', reason: `batterij bijna leeg (${battery}%)` }]
+          return []
+        })
+      )
     : []
 
   // "Staat aan" op Home: alles wat aan staat, ook favorieten. Zet je er een uit, dan blijft hij (met "Uit") staan tot

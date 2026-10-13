@@ -50,3 +50,20 @@ export function homeLede({ summary = null, weather = null, weatherStale = false 
   }
   return parts.length ? parts.join('. ') : null
 }
+
+// "Let op": eerst wat het zwaarst weegt. Een mislukt klaarzetten en een
+// apparaat dat offline is doen het niet; een bijna lege batterij nog wel.
+// Binnen een soort blijft de volgorde van de apparaten.
+const ATTENTION_ORDER = { setup: 0, offline: 1, battery: 2 }
+
+export function sortAttention(items) {
+  return [...items].sort((a, b) => ATTENTION_ORDER[a.kind] - ATTENTION_ORDER[b.kind])
+}
+
+// De ene regel op Home: bij één apparaat wat er is, bij meer hoeveel.
+// "Testlamp: offline", "3 apparaten vragen aandacht"
+export function attentionLine(items) {
+  if (items.length === 0) return null
+  if (items.length === 1) return `${items[0].device.name}: ${items[0].reason}`
+  return `${items.length} apparaten vragen aandacht`
+}

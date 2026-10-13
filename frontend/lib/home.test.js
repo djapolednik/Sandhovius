@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { greeting, homeLede, houseSummary, indoorTemperature } from './home.js'
+import { attentionLine, greeting, homeLede, houseSummary, indoorTemperature, sortAttention } from './home.js'
 
 const at = (h) => new Date(2026, 9, 13, h, 30)
 
@@ -35,4 +35,29 @@ test('homeLede: huis en buiten in één regel, zonder verouderd weer', () => {
   assert.equal(homeLede({ summary: null, weather }), 'Buiten helder, 9°')
   assert.equal(homeLede({ summary: 'Alles is uit', weather, weatherStale: true }), 'Alles is uit')
   assert.equal(homeLede({}), null)
+})
+
+const item = (name, kind, reason) => ({ device: { id: name, name }, kind, reason })
+
+test('sortAttention: wat het niet doet eerst, de volgorde binnen een soort blijft', () => {
+  const items = [
+    item('Sensor', 'battery', 'batterij bijna leeg (12%)'),
+    item('Lamp A', 'offline', 'offline'),
+    item('Stekker', 'setup', 'klaarzetten is niet gelukt'),
+    item('Lamp B', 'offline', 'offline'),
+  ]
+  assert.deepEqual(
+    sortAttention(items).map((i) => i.device.name),
+    ['Stekker', 'Lamp A', 'Lamp B', 'Sensor']
+  )
+  assert.equal(items[0].device.name, 'Sensor')
+})
+
+test('attentionLine: één apparaat bij naam, meer als aantal', () => {
+  assert.equal(attentionLine([]), null)
+  assert.equal(attentionLine([item('Testlamp', 'offline', 'offline')]), 'Testlamp: offline')
+  assert.equal(
+    attentionLine([item('A', 'offline', 'offline'), item('B', 'battery', 'batterij bijna leeg (9%)')]),
+    '2 apparaten vragen aandacht'
+  )
 })
