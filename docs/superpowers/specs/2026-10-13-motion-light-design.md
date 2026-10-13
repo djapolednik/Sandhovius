@@ -1,6 +1,6 @@
 # Bewegingslicht: lampen aan bij beweging, op de box
 
-Datum: 2026-10-13 · Status: ontwerp, nog niet gebouwd · Bouwt op: schema's
+Datum: 2026-10-13 · Status: gebouwd (2026-10-13, branch `feat/motion-light`) · Bouwt op: schema's
 (`2026-09-28-schedules-design.md`), agent zonder PocketBase
 (`2026-10-06-agent-offline-start-design.md`)
 

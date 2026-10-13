@@ -115,6 +115,7 @@ het starten helemaal op.
 | `commands` | base | Opdrachten van de app | `device` óf `scene`, `action`, `payload`, `status` (pending/sent/failed), `error`, `created`, `updated` |
 | `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
 | `schedules` | base | Schema's voor scènes | `house`, `scene`, `time` ("HH:MM"), `days`, `enabled`, `last_run`, `last_error` |
+| `motion_lights` | base | Bewegingslicht: lampen aan bij beweging | `house`, `sensor`, `devices` (max 10), `only_dark`, `off_after` (1–60 min), `enabled`, `last_run`, `last_error` |
 
 Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
 `devices` ← `device_state`/`commands`/`favorites`. Een box hoort bij hooguit één huis
@@ -326,9 +327,12 @@ naamconventies) is bewust geaccepteerd.
 
 Beide doen daarna:
 1. **Eerst, altijd**: lokaal naar SQLite (§10), vóór en los van PocketBase.
-2. Alleen als de box bij een huis hoort: device opzoeken in de cache (alleen
+2. De bewegingslichten krijgen de stand (§12), ook zonder PocketBase.
+3. Alleen als de box bij een huis hoort: device opzoeken in de cache (alleen
    devices van het eigen huis; entity-ID's komen uit de naam en kunnen tussen
-   huizen botsen), onbekende entity's negeren, `device_state` upserten en
+   huizen botsen; realtime create/update/delete van devices houden hem bij,
+   zodat een opnieuw gekoppelde sensor met dezelfde naam niet naar het
+   verwijderde device wijst), onbekende entity's negeren, `device_state` upserten en
    `online` bijwerken. Het HA-pad slaat een stand over die ouder is dan de
    laatst doorgestuurde (zie §3, `last_updated`).
 
@@ -397,6 +401,21 @@ geen lamp meer aanzetten.
   Gemiste runs worden niet ingehaald. Tijden in `Europe/Amsterdam`. Zonder huis
   is de snapshot leeg, zodat een losgekoppelde box geen schema's van de vorige
   eigenaar draait.
+- **Bewegingslicht** (`motion.go`, `motion_runner.go`, `motion_agent.go`; spec
+  `2026-10-13-motion-light-design.md`): de regels reizen mee in hetzelfde
+  snapshot. Elke stand van Zigbee2MQTT en HA gaat direct na de lokale
+  geschiedenis (§8) naar de motor, vóór alles met PocketBase: een gang werkt
+  dus zonder internet. Beweging = `occupancy`/`motion` (Zigbee) of `on` (HA);
+  donker = `sun.sun` onder de horizon, onbekend telt als donker. Een regel doet
+  alleen uit wat hij zelf aanzette (een lamp die al aan stond blijft van de
+  bewoner; een lamp die tussendoor uit gaat is van niemand meer); twee regels
+  delen een lamp tot beide loslaten. Uit `off_after` minuten na het eerste
+  "geen beweging" (een herhaald "geen beweging" bij een batterij-update zet de
+  klok niet opnieuw); een klok van 15 s. Wie welke lamp bezit tot wanneer staat
+  in `/data/motion.json` (`MOTION_FILE`), zodat een lamp na een herstart op
+  tijd uitgaat. Schakelen gaat met de controles van een scène-stap;
+  `last_run`/`last_error` best effort naar PocketBase. Een wijziging in de app
+  geldt binnen een minuut (het snapshot).
 - **Weer**: elk half uur uit HA (Met.no) naar `houses.weather`; alleen de box
   mag dat schrijven.
 

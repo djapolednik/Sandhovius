@@ -50,6 +50,16 @@ Het script meldt drie lampen aan via MQTT-discovery ("Testlamp dimbaar", "Testla
 
 De MQTT-integratie van Home Assistant zet de agent zelf op (eenmalig bij de start, als HA hem nog niet heeft); die blijft staan, ook na `--remove`.
 
+### Bewegingslicht zonder sensor
+
+Een bewegingssensor is ook nep te maken, via het Zigbee-pad zoals een echte sensor meldt. Maak in het PocketBase-beheer een device met `type=sensor`, `gateway=<huis-id>` en `entity_id=test_beweging` (dan maakt de agent geen helper aan), en meld beweging:
+
+```bash
+docker exec sandhovius-mosquitto mosquitto_pub -t zigbee2mqtt/test_beweging -m '{"occupancy":true}'
+```
+
+Pas daarna staat de sensor in de sheet (alleen sensoren die ooit beweging meldden). Een bewegingslicht geldt op de box binnen een minuut (het snapshot); `{"occupancy":false}` laat de klok lopen. Kies een virtuele lamp (een `input_boolean`), geen echte. In het log: `[BEWEGING]`. Opruimen: het bewegingslicht en het device verwijderen.
+
 ## Valkuilen
 
 - **Windows + Git Bash:** `gofmt -l` noemt elk bestand (CRLF in de werkmap; git normaliseert bij commit, dus negeren). Geen gcc → geen `go test -race`. Docker Desktop staat in `%LOCALAPPDATA%\Programs\DockerDesktop`. Bij `docker exec … /pad` in Git Bash `MSYS_NO_PATHCONV=1` ervoor, anders wordt het pad een Windows-pad.
