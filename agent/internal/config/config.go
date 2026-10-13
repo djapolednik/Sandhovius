@@ -32,6 +32,11 @@ type Config struct {
 		// een herstart zonder PocketBase lopen.
 		File string
 	}
+	Motion struct {
+		// File bewaart welke bewegingslichten welke lamp aanzetten en tot
+		// wanneer, zodat een lamp ook na een herstart op tijd uitgaat.
+		File string
+	}
 }
 
 func env(key, def string) string {
@@ -52,6 +57,7 @@ func LoadConfig() (*Config, error) {
 	c.Box.File = env("BOX_FILE", "/data/box.json")
 	c.History.DBPath = env("HISTORY_DB_PATH", "/data/history.db")
 	c.Schedules.File = env("SCHEDULES_FILE", "/data/schedules.json")
+	c.Motion.File = env("MOTION_FILE", "/data/motion.json")
 	c.History.RetentionDays = 30
 	if n, err := strconv.Atoi(os.Getenv("HISTORY_RETENTION_DAYS")); err == nil && n > 0 {
 		c.History.RetentionDays = n

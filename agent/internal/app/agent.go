@@ -24,6 +24,9 @@ type Agent struct {
 	devices       *deviceCache
 	boxFile       string // identiteitsbestand (serial, secret, house)
 	schedulesFile string // schema-snapshot, zodat schema's zonder PocketBase lopen
+	// motion: de bewegingslichten (motion_runner.go); nil in tests die hem
+	// niet nodig hebben.
+	motion *motionRunner
 
 	// gatewayID is het houses-record waaraan deze box gekoppeld is (leeg: geen huis). Alleen via house() en
 	// setHouse(): scheduler, hartslag en weer lezen het al terwijl de
@@ -67,7 +70,7 @@ type Agent struct {
 	cancel context.CancelFunc
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile string) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile, motionFile string) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &Agent{
 		mqttClient:       mqttClient,
@@ -84,6 +87,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.setHouse(identity.House)
 	a.onConnected = a.onPocketBaseConnected
 	a.devices = newDeviceCache(pbClient, a.house)
+	a.motion = newMotionRunner(motionFile, a.switchForMotion, a.reportMotionLight)
 	return a
 }
 
@@ -114,6 +118,7 @@ func (a *Agent) Start() error {
 		return err
 	}
 	go a.listenToHAEvents()
+	go a.runMotionClock()
 
 	go a.runPocketBase()
 	go a.listenForCommands()
@@ -562,6 +567,8 @@ func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
 	if err := a.history.Record(event.FriendlyName, event.State); err != nil {
 		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.FriendlyName, err)
 	}
+	// Bewegingslicht: vóór alles met PocketBase, dus ook zonder internet.
+	a.motion.onState(event.FriendlyName, event.State, time.Now())
 
 	if !a.registered.Load() {
 		return // geen huis: alleen de lokale geschiedenis
@@ -681,6 +688,8 @@ func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
 	if err := a.history.Record(event.EntityID, state); err != nil {
 		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.EntityID, err)
 	}
+	// Bewegingslicht (ook sun.sun): vóór alles met PocketBase.
+	a.motion.onState(event.EntityID, state, time.Now())
 
 	if !a.registered.Load() {
 		return // geen huis: alleen de lokale geschiedenis

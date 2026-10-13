@@ -97,3 +97,30 @@ func TestSnapshotNoTempFileLeft(t *testing.T) {
 		t.Errorf("tijdelijk bestand blijft staan: %v", err)
 	}
 }
+
+// Bewegingslichten reizen mee in hetzelfde bestand.
+func TestSnapshotKeepsMotionLights(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "schedules.json")
+	snap := testSnapshot()
+	snap.motionLights = []pocketbase.MotionLight{motionRule("gang", "d1", 3, "d1")}
+	if err := saveSnapshot(p, "huis1", snap, savedAt); err != nil {
+		t.Fatal(err)
+	}
+	got, err := loadSnapshot(p, "huis1")
+	if err != nil || got == nil || len(got.motionLights) != 1 || got.motionLights[0].OffAfter != 3 {
+		t.Fatalf("motionLights = %+v, %v", got, err)
+	}
+}
+
+// Een bestand van vóór de bewegingslichten blijft leesbaar.
+func TestSnapshotWithoutMotionLights(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "schedules.json")
+	old := `{"house":"huis1","saved_at":"2026-10-06T21:00:00Z","schedules":[],"scenes":[],"devices":[]}`
+	if err := os.WriteFile(p, []byte(old), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := loadSnapshot(p, "huis1")
+	if err != nil || got == nil || len(got.motionLights) != 0 {
+		t.Fatalf("oud bestand: %+v, %v", got, err)
+	}
+}

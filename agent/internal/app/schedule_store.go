@@ -19,7 +19,9 @@ type snapshotFile struct {
 	SavedAt   string                `json:"saved_at"`
 	Schedules []pocketbase.Schedule `json:"schedules"`
 	Scenes    []pocketbase.Scene    `json:"scenes"`
-	Devices   []pocketbase.Device   `json:"devices"`
+	// Ontbreekt in bestanden van vóór de bewegingslichten: dan gewoon leeg.
+	MotionLights []pocketbase.MotionLight `json:"motion_lights"`
+	Devices      []pocketbase.Device      `json:"devices"`
 }
 
 // saveSnapshot schrijft de snapshot atomisch (tijdelijk bestand + rename),
@@ -28,9 +30,10 @@ func saveSnapshot(path, house string, snap *scheduleSnapshot, now time.Time) err
 	file := snapshotFile{
 		House:     house,
 		SavedAt:   now.Format(time.RFC3339),
-		Schedules: snap.schedules,
-		Scenes:    make([]pocketbase.Scene, 0, len(snap.scenes)),
-		Devices:   make([]pocketbase.Device, 0, len(snap.devices)),
+		Schedules:    snap.schedules,
+		Scenes:       make([]pocketbase.Scene, 0, len(snap.scenes)),
+		MotionLights: snap.motionLights,
+		Devices:      make([]pocketbase.Device, 0, len(snap.devices)),
 	}
 	for _, scene := range snap.scenes {
 		file.Scenes = append(file.Scenes, scene)
@@ -70,9 +73,10 @@ func loadSnapshot(path, house string) (*scheduleSnapshot, error) {
 		return nil, nil
 	}
 	snap := &scheduleSnapshot{
-		schedules: file.Schedules,
-		scenes:    make(map[string]pocketbase.Scene, len(file.Scenes)),
-		devices:   make(map[string]pocketbase.Device, len(file.Devices)),
+		schedules:    file.Schedules,
+		scenes:       make(map[string]pocketbase.Scene, len(file.Scenes)),
+		motionLights: file.MotionLights,
+		devices:      make(map[string]pocketbase.Device, len(file.Devices)),
 	}
 	for _, scene := range file.Scenes {
 		snap.scenes[scene.ID] = scene

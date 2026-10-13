@@ -32,12 +32,14 @@ func dueSchedules(schedules []pocketbase.Schedule, now time.Time) []pocketbase.S
 	return due
 }
 
-// scheduleSnapshot is alles wat nodig is om schema's uit te voeren zonder
-// PocketBase: de schema's, scènes en devices van dit huis.
+// scheduleSnapshot is alles wat nodig is om schema's en bewegingslichten uit
+// te voeren zonder PocketBase: de schema's, scènes, bewegingslichten en
+// devices van dit huis.
 type scheduleSnapshot struct {
-	schedules []pocketbase.Schedule
-	scenes    map[string]pocketbase.Scene
-	devices   map[string]pocketbase.Device
+	schedules    []pocketbase.Schedule
+	scenes       map[string]pocketbase.Scene
+	motionLights []pocketbase.MotionLight
+	devices      map[string]pocketbase.Device
 }
 
 func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
@@ -50,11 +52,13 @@ func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
 
 // scheduler is de klok: elke minuut één tick. fetch, run en save zijn
 // functies zodat de tests zonder PocketBase, Home Assistant en schijf
-// kunnen. save mag nil zijn.
+// kunnen. save en fresh mogen nil zijn; fresh krijgt elke nieuwe snapshot
+// (de bewegingslichten).
 type scheduler struct {
 	fetch      func() (*scheduleSnapshot, error)
 	run        func(snap *scheduleSnapshot, s pocketbase.Schedule, now time.Time)
 	save       func(snap *scheduleSnapshot) error
+	fresh      func(snap *scheduleSnapshot)
 	snap       *scheduleSnapshot
 	lastMinute string
 }
@@ -72,6 +76,9 @@ func (s *scheduler) tick(now time.Time) {
 		log.Printf("[SCHEMA] Schema's verversen mislukt, laatst bekende worden gebruikt: %v\n", err)
 	} else {
 		s.snap = fresh
+		if s.fresh != nil {
+			s.fresh(fresh)
+		}
 		// Opslaan is bijzaak: een volle schijf mag een schema niet
 		// tegenhouden, dus alleen loggen.
 		if s.save != nil {
@@ -94,10 +101,15 @@ func (s *scheduler) tick(now time.Time) {
 // volgende minuut over; REST-calls naar PocketBase hebben een timeout van
 // 15 s, dus dat gebeurt alleen als Home Assistant zelf hangt.
 func (a *Agent) runScheduler() {
+	loaded := a.loadScheduleSnapshot()
+	// De bewegingslichten uit het bestand gelden meteen, ook zonder
+	// PocketBase; daarna geeft elke geslaagde fetch ze opnieuw door.
+	a.motion.start(a.house(), loaded)
 	s := &scheduler{
-		snap:  a.loadScheduleSnapshot(),
+		snap:  loaded,
 		fetch: a.fetchScheduleSnapshot,
 		run:   a.runSchedule,
+		fresh: a.motion.apply,
 		save: func(snap *scheduleSnapshot) error {
 			if a.house() == "" {
 				return nil // niets om te bewaren zonder huis
@@ -146,12 +158,17 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	motionLights, err := a.pbClient.ListMotionLights(house)
+	if err != nil {
+		return nil, err
+	}
 	devices, err := a.pbClient.ListHouseDevices(house)
 	if err != nil {
 		return nil, err
 	}
 	snap := &scheduleSnapshot{
-		schedules: schedules,
+		schedules:    schedules,
+		motionLights: motionLights,
 		scenes:    make(map[string]pocketbase.Scene, len(scenes)),
 		devices:   make(map[string]pocketbase.Device, len(devices)),
 	}
