@@ -88,11 +88,11 @@ export function iconColorFor(rgb, theme) {
   return contrast(rgb, circle) >= MIN_CONTRAST ? rgbString(rgb) : null
 }
 
-export function lightStateText(state) {
-  if (state?.state !== 'on') return 'Uit'
+export function lightStateText(t, state) {
+  if (state?.state !== 'on') return t('device.off')
   const caps = capabilities(state.attributes)
   const percent = caps.dim ? percentFromBrightness(state.attributes?.brightness) : null
-  return percent === null ? 'Aan' : `Aan · ${percent}%`
+  return percent === null ? t('device.on') : t('device.onPercent', { percent })
 }
 
 // Het turn_on-payload voor een schuif of staal: alleen de sleutels die

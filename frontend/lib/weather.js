@@ -8,28 +8,33 @@
 // internet (Met.no is een internetdienst).
 export const WEATHER_STALE_MS = 2 * 60 * 60 * 1000
 
-// De standen van een HA weather-entiteit, in gewone woorden. icon is de
-// sleutel in WeatherIcon (lib/icons.js).
-const CONDITIONS = {
-  'clear-night': { label: 'Helder', icon: 'moon' },
-  sunny: { label: 'Zonnig', icon: 'sun' },
-  partlycloudy: { label: 'Half bewolkt', icon: 'partly' },
-  cloudy: { label: 'Bewolkt', icon: 'cloud' },
-  fog: { label: 'Mist', icon: 'fog' },
-  rainy: { label: 'Regen', icon: 'rain' },
-  pouring: { label: 'Zware regen', icon: 'rain' },
-  'lightning-rainy': { label: 'Onweer en regen', icon: 'storm' },
-  lightning: { label: 'Onweer', icon: 'storm' },
-  hail: { label: 'Hagel', icon: 'snow' },
-  snowy: { label: 'Sneeuw', icon: 'snow' },
-  'snowy-rainy': { label: 'Natte sneeuw', icon: 'snow' },
-  windy: { label: 'Winderig', icon: 'wind' },
-  'windy-variant': { label: 'Winderig en bewolkt', icon: 'wind' },
-  exceptional: { label: 'Uitzonderlijk weer', icon: 'cloud' },
+import { cachedFormat } from './language.js'
+
+// De standen van een HA weather-entiteit, met hun icoon (de sleutel in
+// WeatherIcon, lib/icons.js). De woorden staan in messages/*.json onder
+// weather.conditions.<stand>.
+const ICONS = {
+  'clear-night': 'moon',
+  sunny: 'sun',
+  partlycloudy: 'partly',
+  cloudy: 'cloud',
+  fog: 'fog',
+  rainy: 'rain',
+  pouring: 'rain',
+  'lightning-rainy': 'storm',
+  lightning: 'storm',
+  hail: 'snow',
+  snowy: 'snow',
+  'snowy-rainy': 'snow',
+  windy: 'wind',
+  'windy-variant': 'wind',
+  exceptional: 'cloud',
 }
 
+// { key, icon }: key is de sleutel van de woorden ("Half bewolkt").
 export function describeCondition(condition) {
-  return CONDITIONS[condition] ?? { label: 'Onbekend', icon: 'cloud' }
+  if (!ICONS[condition]) return { key: 'weather.conditions.unknown', icon: 'cloud' }
+  return { key: `weather.conditions.${condition}`, icon: ICONS[condition] }
 }
 
 // Weer in hele graden: een voorspelling is geen meting, 25,6° suggereert
@@ -63,18 +68,17 @@ export function upcomingDays(weather, now, count = 5) {
   return (weather?.days ?? []).filter((day) => localDay(day.date) >= today).slice(0, count)
 }
 
-const WEEKDAY = new Intl.DateTimeFormat('nl-NL', { weekday: 'long' })
-const HOUR = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit' })
-
-// "Vandaag", "Morgen", daarna de weekdag ("Zaterdag").
-export function dayLabel(date, now) {
+// "Vandaag", "Morgen", daarna de weekdag ("Zaterdag"). intl: { t, locale }
+// (useIntl in app/LanguageContext.js).
+export function dayLabel({ t, locale }, date, now) {
   const diff = Math.round((localDay(date) - localDay(now)) / 86400000)
-  if (diff === 0) return 'Vandaag'
-  if (diff === 1) return 'Morgen'
-  const name = WEEKDAY.format(new Date(date))
-  return name.charAt(0).toUpperCase() + name.slice(1)
+  if (diff === 0) return t('weather.today')
+  if (diff === 1) return t('weather.tomorrow')
+  const name = cachedFormat(Intl.DateTimeFormat, locale, { weekday: 'long' }).format(new Date(date))
+  return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1)
 }
 
-export function formatHour(time) {
-  return HOUR.format(new Date(time))
+// "14:00", in beide talen met een 24-uursklok (en-GB).
+export function formatHour(time, locale) {
+  return cachedFormat(Intl.DateTimeFormat, locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(time))
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { useTranslations } from 'use-intl'
 import { CheckIcon, ScenesIcon } from '../lib/icons'
 import { useScrollEdges } from '../lib/useScrollEdges'
 import { useLongPress } from '../lib/longPress'
@@ -14,13 +15,14 @@ import { useLongPress } from '../lib/longPress'
 //
 // runState: { [sceneId]: 'running' | 'done' }, gedeeld met ScenesView.
 export default function HomeScenes({ scenes, runState, canRun, onRun, onEdit }) {
+  const t = useTranslations('scenes')
   const stripRef = useRef(null)
   const edges = useScrollEdges(stripRef, scenes.length)
 
   return (
     <section className="home-section home-scenes" aria-labelledby="home-scenes">
       <h2 id="home-scenes" className="section-heading">
-        Scènes
+        {t('title')}
       </h2>
       <ul ref={stripRef} className={`scene-strip ${edges}`}>
         {scenes.map((scene) => {
@@ -29,7 +31,7 @@ export default function HomeScenes({ scenes, runState, canRun, onRun, onEdit }) 
             <li key={scene.id}>
               <ScenePill scene={scene} state={state} canRun={canRun} onRun={onRun} onEdit={onEdit} />
               <span className="visually-hidden" role="status">
-                {state === 'running' ? `${scene.name} wordt uitgevoerd` : state === 'done' ? `${scene.name} is klaar` : ''}
+                {state === 'running' ? t('running', { name: scene.name }) : state === 'done' ? t('done', { name: scene.name }) : ''}
               </span>
             </li>
           )
@@ -40,6 +42,7 @@ export default function HomeScenes({ scenes, runState, canRun, onRun, onEdit }) 
 }
 
 function ScenePill({ scene, state, canRun, onRun, onEdit }) {
+  const t = useTranslations('scenes')
   // Zijwaarts door de pillen schuiven of omlaag trekken is geen ingedrukt
   // houden (lib/longPress).
   const press = useLongPress(() => onEdit(scene))
@@ -66,7 +69,7 @@ function ScenePill({ scene, state, canRun, onRun, onEdit }) {
     <button
       type="button"
       className={`scene-pill ${state ? `scene-pill-${state}` : ''}`}
-      aria-label={`Scène ${scene.name} uitvoeren`}
+      aria-label={t('run', { name: scene.name })}
       aria-disabled={blocked ? true : undefined}
       onClick={handleClick}
       {...press.handlers}

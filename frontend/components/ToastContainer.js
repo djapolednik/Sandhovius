@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { CloseIcon } from '../lib/icons'
 
 // toasts: [{ id, message, type, duration, action? }]. action = { label,
@@ -35,6 +36,7 @@ export default function ToastContainer({ toasts, onDismiss }) {
 }
 
 function Toast({ toast, onDismiss }) {
+  const t = useTranslations('common')
   return (
     <div className={`toast toast-${toast.type}`} style={{ '--toast-duration': `${toast.duration}ms` }}>
       <span className="toast-message">{toast.message}</span>
@@ -51,7 +53,7 @@ function Toast({ toast, onDismiss }) {
         </button>
       )}
       {onDismiss && !toast.action && (
-        <button type="button" className="toast-dismiss" aria-label="Melding sluiten" onClick={() => onDismiss(toast.id)}>
+        <button type="button" className="toast-dismiss" aria-label={t('closeNotice')} onClick={() => onDismiss(toast.id)}>
           <CloseIcon />
         </button>
       )}

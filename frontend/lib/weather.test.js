@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { dayLabel, formatDegrees, isWeatherStale, upcomingDays, upcomingHours, WEATHER_STALE_MS } from './weather.js'
+import { dayLabel, describeCondition, formatDegrees, formatHour, isWeatherStale, upcomingDays, upcomingHours, WEATHER_STALE_MS } from './weather.js'
+import { INTL, assertMessage } from './messages.testkit.js'
 
 const now = new Date(2026, 8, 30, 14, 20).getTime()
 
@@ -20,10 +21,26 @@ test('upcomingDays starts today', () => {
   )
 })
 
-test('dayLabel says Vandaag, Morgen, then the weekday', () => {
-  assert.equal(dayLabel(new Date(2026, 8, 30, 12), now), 'Vandaag')
-  assert.equal(dayLabel(new Date(2026, 9, 1, 12), now), 'Morgen')
-  assert.equal(dayLabel(new Date(2026, 9, 3, 12), now), 'Zaterdag')
+test('dayLabel says Vandaag, Morgen, then the weekday, in each language', () => {
+  assert.equal(dayLabel(INTL.nl, new Date(2026, 8, 30, 12), now), 'Vandaag')
+  assert.equal(dayLabel(INTL.nl, new Date(2026, 9, 1, 12), now), 'Morgen')
+  assert.equal(dayLabel(INTL.nl, new Date(2026, 9, 3, 12), now), 'Zaterdag')
+  assert.equal(dayLabel(INTL.en, new Date(2026, 9, 1, 12), now), 'Tomorrow')
+  assert.equal(dayLabel(INTL.en, new Date(2026, 9, 3, 12), now), 'Saturday')
+})
+
+test('describeCondition: a key in both languages, also for an unknown state', () => {
+  assert.deepEqual(describeCondition('partlycloudy'), { key: 'weather.conditions.partlycloudy', icon: 'partly' })
+  assert.equal(describeCondition('volcano').key, 'weather.conditions.unknown')
+  ;['clear-night', 'sunny', 'pouring', 'snowy-rainy', 'windy-variant', 'volcano'].forEach((c) =>
+    assertMessage(describeCondition(c).key)
+  )
+})
+
+test('formatHour: a 24-hour clock in both languages', () => {
+  const at = new Date(2026, 9, 3, 14, 0)
+  assert.equal(formatHour(at, 'nl-NL'), '14:00')
+  assert.equal(formatHour(at, 'en-GB'), '14:00')
 })
 
 test('weather is stale after two hours, or without a time', () => {

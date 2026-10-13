@@ -30,8 +30,10 @@ import { pendingKey } from '../lib/claim'
 import { LAST_REFRESH_KEY, needsRefresh } from '../lib/session'
 import { describeError, isSessionExpired } from '../lib/errors'
 import { requestErrorKey } from '../lib/account'
+import { formatTemperature } from '../lib/temperature'
+import { cachedFormat } from '../lib/language'
 import { useTranslations } from 'use-intl'
-import { useLanguage } from './LanguageContext'
+import { useIntl, useLanguage } from './LanguageContext'
 import { houseConnection } from '../lib/connection'
 import { useNow } from '../lib/useNow'
 import { createLatestWatchers } from '../lib/light'
@@ -44,12 +46,10 @@ import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons
 import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
 
-const DATE_FORMAT = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })
-
-// "Zondag 27 september"
-function formatToday(ms) {
-  const text = DATE_FORMAT.format(ms)
-  return text.charAt(0).toUpperCase() + text.slice(1)
+// "Zondag 27 september", "Sunday 27 September"
+function formatToday(ms, locale) {
+  const text = cachedFormat(Intl.DateTimeFormat, locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(ms)
+  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1)
 }
 
 // Het tabblad staat in de URL (#kamers), zodat de terugknop van de
@@ -96,6 +96,8 @@ const ARRIVE_IN_MS = 600
 export default function Home() {
   const t = useTranslations()
   const { language, setLanguage, adoptAccountLanguage } = useLanguage()
+  const intl = useIntl()
+  const { locale } = intl
   // null = nog niet bekeken (de server-render en de eerste client-render):
   // dan alleen de achtergrond. Met false begon elke start met het
   // inlogscherm en zijn binnenkomst, ook als je al ingelogd was.
@@ -437,7 +439,7 @@ export default function Home() {
   async function inviteMember(email, role) {
     const created = await pb.collection('invitations').create({ house: house.id, email, role, invited_by: userId })
     setInvitations((prev) => [created, ...prev.filter((i) => i.id !== created.id)])
-    showToast(`Uitnodiging verstuurd naar ${created.email}`)
+    showToast(t('toast.invitationSent', { email: created.email }))
   }
 
   async function changeMemberRole(memberId, role) {
@@ -458,7 +460,7 @@ export default function Home() {
   async function releaseBox(houseId) {
     await pb.send('/api/sandhovius/release', { method: 'POST', body: { house: houseId } })
     await fetchAll()
-    showToast('Je box is ontkoppeld')
+    showToast(t('toast.boxReleased'))
   }
 
   function logout() {
@@ -490,7 +492,7 @@ export default function Home() {
   // terug naar het inlogscherm, met uitleg waarom.
   function endExpiredSession() {
     logout()
-    setError('Je bent automatisch uitgelogd omdat je sessie verlopen is. Log opnieuw in om verder te gaan.')
+    setError(t('toast.sessionExpired'))
   }
 
   // houses/rooms/devices.listRule filteren al op de ingelogde user, dus we
@@ -514,7 +516,8 @@ export default function Home() {
       const lost = lostHouses(housesRef.current, houseRecords, leftHouseIds.current)
       leftHouseIds.current = []
       if (lost.length > 0) {
-        showToast(`Je hebt geen toegang meer tot ${lost.map((h) => h.name).join(' en ')}.`)
+        const names = cachedFormat(Intl.ListFormat, locale, { type: 'conjunction' }).format(lost.map((h) => h.name))
+        showToast(t('toast.lostAccess', { names }))
       }
       setHouses(houseRecords)
       setRooms(roomRecords)
@@ -529,7 +532,7 @@ export default function Home() {
         endExpiredSession()
         return
       }
-      setError(describeError('Je apparaten ophalen', err))
+      setError(describeError(t, t('errors.what.fetchDevices'), err))
       setFetchFailed(true)
     }
   }
@@ -726,7 +729,7 @@ export default function Home() {
       label: room.name,
       devices: devicesInHouse.filter((device) => device.room === room.id),
     })),
-    ...(unassignedDevices.length > 0 ? [{ id: '__unassigned', label: 'Overig', devices: unassignedDevices }] : []),
+    ...(unassignedDevices.length > 0 ? [{ id: '__unassigned', label: t('rooms.unassigned'), devices: unassignedDevices }] : []),
   ].map((room) => {
     const switchable = room.devices.filter(
       (device) => TOGGLEABLE_TYPES.includes(device.type) && device.online && device.entity_id
@@ -753,10 +756,10 @@ export default function Home() {
     ? sortAttention(
         devicesInHouse.flatMap((device) => {
           if (newDeviceIds.includes(device.id)) return []
-          if (!device.entity_id) return [{ device, kind: 'setup', reason: 'klaarzetten is niet gelukt' }]
-          if (!device.online) return [{ device, kind: 'offline', reason: 'offline' }]
+          if (!device.entity_id) return [{ device, kind: 'setup' }]
+          if (!device.online) return [{ device, kind: 'offline' }]
           const battery = device.expand?.device_state_via_device?.[0]?.state?.battery
-          if (isBatteryLow(battery)) return [{ device, kind: 'battery', reason: `batterij bijna leeg (${battery}%)` }]
+          if (isBatteryLow(battery)) return [{ device, kind: 'battery', battery }]
           return []
         })
       )
@@ -791,11 +794,11 @@ export default function Home() {
     // De kaart biedt voor een offline apparaat geen toggle aan; dit is de
     // vangrail voor het geval de online-status net omsloeg tijdens de tik.
     if (!houseReachable) {
-      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      showToast(t('toast.boxUnreachable'), 'error')
       return
     }
     if (!device.online) {
-      showToast(`${device.name} is offline`, 'error')
+      showToast(t('toast.deviceOffline', { name: device.name }), 'error')
       return
     }
     const stateRecord = device.expand?.device_state_via_device?.[0]
@@ -833,15 +836,15 @@ export default function Home() {
       // De verwarming uitzetten is het ene schakelen met echte gevolgen
       // (een koud huis): even terug te draaien.
       if (device.type === 'climate' && !willBeOn) {
-        showToast('Verwarming uitgezet', 'info', {
-          label: 'Ongedaan maken',
+        showToast(t('toast.heatingOff'), 'info', {
+          label: t('toast.undo'),
           onClick: () => setSwitches([device], true),
         })
       }
     } catch (err) {
       done()
       if (isSessionExpired(err)) return endExpiredSession()
-      showToast(describeError(`${device.name} ${willBeOn ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
+      showToast(describeError(t, t(willBeOn ? 'errors.what.switchOn' : 'errors.what.switchOff', { name: device.name }), err), 'error')
       fetchAll()
     }
   }
@@ -854,11 +857,11 @@ export default function Home() {
   // commando krijgt zijn eigen requestKey: de SDK annuleert er anders één.
   async function setLight(device, payload) {
     if (!houseReachable) {
-      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      showToast(t('toast.boxUnreachable'), 'error')
       return
     }
     if (!device.online) {
-      showToast(`${device.name} is offline`, 'error')
+      showToast(t('toast.deviceOffline', { name: device.name }), 'error')
       return
     }
     // De stand die dit commando oplevert, voor een vlotte tegel.
@@ -895,14 +898,14 @@ export default function Home() {
         .collection('commands')
         .create({ device: device.id, action: 'turn_on', payload, status: 'pending' }, { requestKey: null })
       const stop = watchCommand(command.id, device.name, device.id, {
-        failMessage: `${device.name} kon dit niet instellen. Probeer het opnieuw.`,
+        failMessage: t('toast.couldNotAdjust', { name: device.name }),
         done,
       })
       lightWatchers.current.register(device.id, token, stop)
     } catch (err) {
       done()
       if (isSessionExpired(err)) return endExpiredSession()
-      showToast(describeError(`${device.name} instellen`, err), 'error')
+      showToast(describeError(t, t('errors.what.adjust', { name: device.name }), err), 'error')
       fetchAll()
     }
   }
@@ -913,7 +916,7 @@ export default function Home() {
   // voornemen-tot-bevestiging als een tik (_pending).
   async function setSwitches(list, on) {
     if (!houseReachable) {
-      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      showToast(t('toast.boxUnreachable'), 'error')
       return false
     }
     const ids = list.map((device) => device.id)
@@ -940,7 +943,7 @@ export default function Home() {
         } catch (err) {
           done()
           if (isSessionExpired(err)) return endExpiredSession()
-          showToast(describeError(`${device.name} ${on ? 'inschakelen' : 'uitschakelen'}`, err), 'error')
+          showToast(describeError(t, t(on ? 'errors.what.switchOn' : 'errors.what.switchOff', { name: device.name }), err), 'error')
           fetchAll()
         }
       })
@@ -954,8 +957,8 @@ export default function Home() {
   async function turnAllOff() {
     const list = devicesOn
     if (list.length === 0 || !(await setSwitches(list, false))) return
-    showToast(list.length === 1 ? `${list[0].name} gaat uit` : `${list.length} apparaten gaan uit`, 'info', {
-      label: 'Ongedaan maken',
+    showToast(t('toast.allOff', { count: list.length, name: list[0].name }), 'info', {
+      label: t('toast.undo'),
       onClick: () => setSwitches(list, true),
     })
   }
@@ -967,11 +970,10 @@ export default function Home() {
     const turnOn = room.on.length === 0
     const list = turnOn ? room.switchable : room.on
     if (list.length === 0 || !(await setSwitches(list, turnOn))) return
-    const verb = turnOn ? 'aan' : 'uit'
     showToast(
-      list.length === 1 ? `${list[0].name} gaat ${verb}` : `${list.length} apparaten in ${room.label} gaan ${verb}`,
+      t(turnOn ? 'toast.roomOn' : 'toast.roomOff', { count: list.length, name: list[0].name, room: room.label }),
       'info',
-      { label: 'Ongedaan maken', onClick: () => setSwitches(list, !turnOn) }
+      { label: t('toast.undo'), onClick: () => setSwitches(list, !turnOn) }
     )
   }
 
@@ -980,7 +982,7 @@ export default function Home() {
   // vlakke state-veld dat lampen/switches gebruiken.
   async function setDeviceTemperature(device, temperature) {
     if (!houseReachable) {
-      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      showToast(t('toast.boxUnreachable'), 'error')
       return
     }
     const stateRecord = device.expand?.device_state_via_device?.[0]
@@ -1009,7 +1011,10 @@ export default function Home() {
       watchCommand(command.id, device.name)
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
-      showToast(describeError(`${device.name} op ${temperature}°C zetten`, err), 'error')
+      showToast(
+          describeError(t, t('errors.what.setTemperature', { name: device.name, temperature: formatTemperature(temperature, locale) }), err),
+          'error'
+        )
       fetchAll()
     }
   }
@@ -1026,13 +1031,13 @@ export default function Home() {
     let unsub
     let stopped = false
     const slowTimer = setTimeout(() => {
-      showToast(`${deviceName} reageert nog niet. Even geduld…`)
+      showToast(t('toast.slow', { name: deviceName }))
     }, COMMAND_SLOW_MS)
     const giveUpTimer = setTimeout(() => {
       if (stopped) return
       stop()
       options.onSettled?.('failed')
-      showToast(`${deviceName} heeft niet gereageerd. Je ziet weer de laatst bekende stand.`, 'error')
+      showToast(t('toast.gaveUp', { name: deviceName }), 'error')
       fetchAll()
     }, COMMAND_GIVE_UP_MS)
 
@@ -1062,8 +1067,7 @@ export default function Home() {
       if (record.status === 'failed') {
         console.error('[command] mislukt:', record.error)
         showToast(
-          options.failMessage ??
-            `${deviceName} reageerde niet. Controleer of het apparaat stroom heeft en probeer het opnieuw.`,
+          options.failMessage ?? t('toast.failed', { name: deviceName }),
           'error'
         )
         fetchAll()
@@ -1132,7 +1136,7 @@ export default function Home() {
         )
       )
     } catch (err) {
-      showToast(describeError('Volgorde opslaan', err), 'error')
+      showToast(describeError(t, t('errors.what.saveOrder'), err), 'error')
       fetchAll()
     }
   }
@@ -1163,12 +1167,12 @@ export default function Home() {
         await commit()
         onDone()
       } catch (err) {
-        showToast(describeError(`${label} verwijderen`, err), 'error')
+        showToast(describeError(t, t('errors.what.deleteNamed', { name: label }), err), 'error')
       }
       unhide()
     }, UNDO_MS)
-    showToast(`${label} verwijderd`, 'info', {
-      label: 'Ongedaan maken',
+    showToast(t('toast.deleted', { label }), 'info', {
+      label: t('toast.undo'),
       onClick: () => {
         clearTimeout(deleteTimers.current[id])
         delete deleteTimers.current[id]
@@ -1181,7 +1185,7 @@ export default function Home() {
     const device = devices.find((d) => d.id === deviceId)
     deleteLater(
       deviceId,
-      `"${device?.name ?? 'Apparaat'}"`,
+      t('toast.labelDevice', { name: device?.name ?? t('toast.aDevice') }),
       () => pb.collection('devices').delete(deviceId),
       () => setDevices((prev) => prev.filter((d) => d.id !== deviceId))
     )
@@ -1203,7 +1207,7 @@ export default function Home() {
       try {
         await addFavorite(created.id)
       } catch (err) {
-        showToast(describeError('Op Home zetten', err), 'error')
+        showToast(describeError(t, t('errors.what.addToHome'), err), 'error')
       }
     }
     setNewDeviceIds((prev) => [...prev, created.id])
@@ -1238,7 +1242,7 @@ export default function Home() {
     const room = rooms.find((r) => r.id === roomId)
     deleteLater(
       roomId,
-      `Kamer "${room?.name ?? ''}"`,
+      t('toast.labelRoom', { name: room?.name ?? '' }),
       () => pb.collection('rooms').delete(roomId),
       () => setRooms((prev) => prev.filter((r) => r.id !== roomId))
     )
@@ -1255,7 +1259,7 @@ export default function Home() {
   // watchCommand dat.
   async function retrySetup(device) {
     if (!houseReachable) {
-      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      showToast(t('toast.boxUnreachable'), 'error')
       return
     }
     setNewDeviceIds((prev) => [...prev, device.id])
@@ -1266,7 +1270,7 @@ export default function Home() {
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
       setNewDeviceIds((prev) => prev.filter((id) => id !== device.id))
-      showToast(describeError(`${device.name} klaarzetten`, err), 'error')
+      showToast(describeError(t, t('errors.what.provision', { name: device.name }), err), 'error')
     }
   }
 
@@ -1275,7 +1279,7 @@ export default function Home() {
   // dan even "Klaar"; de apparaten zelf veranderen via de realtime stand.
   async function runScene(scene) {
     if (!houseReachable) {
-      showToast('Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.', 'error')
+      showToast(t('toast.boxUnreachable'), 'error')
       return
     }
     const setRun = (value) =>
@@ -1291,7 +1295,7 @@ export default function Home() {
         .collection('commands')
         .create({ scene: scene.id, action: 'run_scene', status: 'pending' }, { requestKey: null })
       watchCommand(command.id, `"${scene.name}"`, null, {
-        failMessage: `"${scene.name}" is niet helemaal gelukt. Kijk bij Let op of al je apparaten bereikbaar zijn.`,
+        failMessage: t('toast.sceneIncomplete', { name: scene.name }),
         onSettled: (status) => {
           if (status !== 'sent') return setRun(null)
           setRun('done')
@@ -1301,7 +1305,7 @@ export default function Home() {
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
       setRun(null)
-      showToast(describeError(`"${scene.name}" uitvoeren`, err), 'error')
+      showToast(describeError(t, t('errors.what.runScene', { name: scene.name }), err), 'error')
     }
   }
 
@@ -1335,7 +1339,10 @@ export default function Home() {
     } catch (err) {
       if (isSessionExpired(err)) return endExpiredSession()
       flip(!enabled)
-      showToast(describeError(`Het schema van ${schedule.time} ${enabled ? 'aanzetten' : 'uitzetten'}`, err), 'error')
+      showToast(
+        describeError(t, t(enabled ? 'errors.what.scheduleOn' : 'errors.what.scheduleOff', { time: schedule.time }), err),
+        'error'
+      )
     }
   }
 
@@ -1348,7 +1355,7 @@ export default function Home() {
     const scene = scenes.find((s) => s.id === sceneId)
     deleteLater(
       sceneId,
-      `Scène "${scene?.name ?? ''}"`,
+      t('toast.labelScene', { name: scene?.name ?? '' }),
       () => pb.collection('scenes').delete(sceneId),
       () => setScenes((prev) => prev.filter((s) => s.id !== sceneId))
     )
@@ -1555,7 +1562,7 @@ export default function Home() {
   const knowsState = loaded && houseReachable
   const lightsOn = knowsState ? devicesOn.filter((device) => device.type === 'light').length : 0
   const summary = knowsState
-    ? houseSummary({
+    ? houseSummary(intl, {
         lightsOn,
         plugsOn: devicesOn.length - lightsOn,
         indoor: indoorTemperature(
@@ -1570,7 +1577,7 @@ export default function Home() {
       <span>{error}</span>
       {fetchFailed && (
         <button type="button" className="btn btn-secondary error-banner-action" onClick={retryFetch}>
-          Opnieuw proberen
+          {t('common.retry')}
         </button>
       )}
     </div>
@@ -1607,15 +1614,14 @@ export default function Home() {
     <div className="empty-state-invitations">
       {invitationCards}
       <button type="button" className="btn btn-secondary empty-state-action" onClick={() => setClaim({ initial: null })}>
-        Box toevoegen
+        {t('home.addBox')}
       </button>
     </div>
   ) : (
     <p className="empty-state">
-      Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt
-      je huis hier.
+      {t('home.noHouse')}
       <button type="button" className="btn btn-primary empty-state-action" onClick={() => setClaim({ initial: null })}>
-        Box toevoegen
+        {t('home.addBox')}
       </button>
     </p>
   ))
@@ -1636,14 +1642,12 @@ export default function Home() {
         })}
       </div>
       <h2 id="first-device-title" className="intro-panel-title">
-        Voeg je eerste apparaat toe
+        {t('home.firstDevice.title')}
       </h2>
-      <p className="intro-panel-text">
-        Een lamp, stopcontact, sensor of thermostaat. Hij verschijnt meteen op Home, zodat je hem met één tik bedient.
-      </p>
+      <p className="intro-panel-text">{t('home.firstDevice.text')}</p>
       <button type="button" className="btn btn-primary" onClick={() => setAddDeviceOpen(true)}>
         <PlusIcon width="20" height="20" aria-hidden="true" />
-        Apparaat toevoegen
+        {t('nav.addDevice')}
       </button>
     </section>
   )
@@ -1674,7 +1678,7 @@ export default function Home() {
   // volgorde van de kamers (zonder kamer als laatste). De groepen lopen in
   // kolommen, zodat kleine kamers naast elkaar staan en Home laag blijft.
   function renderByRoom(list) {
-    const groups = [...roomsInHouse.map((room) => ({ id: room.id, name: room.name })), { id: null, name: 'Geen kamer' }]
+    const groups = [...roomsInHouse.map((room) => ({ id: room.id, name: room.name })), { id: null, name: t('home.noRoom') }]
       .map((group) => ({
         ...group,
         devices: list.filter((device) =>
@@ -1698,11 +1702,11 @@ export default function Home() {
     <button
       type="button"
       className="btn btn-primary btn-add"
-      aria-label="Apparaat toevoegen"
+      aria-label={t('nav.addDevice')}
       onClick={() => setAddDeviceOpen(true)}
     >
       <PlusIcon width="20" height="20" aria-hidden="true" />
-      Toevoegen
+      {t('rooms.add')}
     </button>
   )
 
@@ -1710,7 +1714,7 @@ export default function Home() {
   let content
   if (tab === 'kamers') {
     const count = devicesInSelectedRoom.length
-    header = <Header title="Kamers" action={addDeviceButton} />
+    header = <Header title={t('nav.kamers')} action={addDeviceButton} />
     content = (
       <>
         {errorBanner}
@@ -1738,7 +1742,7 @@ export default function Home() {
               <div className="room-head">
                 <div className="room-head-titles">
                   <h2 className="room-head-title">{selectedRoom.label}</h2>
-                  {count > 0 && <p className="section-count">{count === 1 ? '1 apparaat' : `${count} apparaten`}</p>}
+                  {count > 0 && <p className="section-count">{t('rooms.count', { count })}</p>}
                 </div>
                 {selectedRoom.switchable.length > 0 && (
                   <div className="room-head-switch">
@@ -1753,8 +1757,7 @@ export default function Home() {
             {firstDevice}
             {loaded && house && count === 0 && devicesInHouse.length > 0 && (
               <p className="empty-state">
-                Nog geen apparaten in deze kamer. Voeg er een toe met “Toevoegen”, of verplaats een apparaat hierheen
-                via Details.
+                {t('rooms.empty')}
               </p>
             )}
             {skeleton}
@@ -1764,7 +1767,7 @@ export default function Home() {
       </>
     )
   } else if (tab === 'scenes') {
-    header = <Header title="Scènes" />
+    header = <Header title={t('nav.scenes')} />
     content = (
       <>
         {errorBanner}
@@ -1786,7 +1789,7 @@ export default function Home() {
       </>
     )
   } else if (tab === 'instellingen') {
-    header = <Header title="Opties" />
+    header = <Header title={t('nav.instellingen')} />
     content = (
       <>
         {errorBanner}
@@ -1824,11 +1827,11 @@ export default function Home() {
   } else {
     header = (
       <Header
-        title={greeting(new Date(now), pb.authStore.record?.name)}
-        subtitle={formatToday(now)}
+        title={greeting(intl, new Date(now), pb.authStore.record?.name)}
+        subtitle={formatToday(now, locale)}
         lede={
           house
-            ? homeLede({ summary, weather: house.weather, weatherStale: isWeatherStale(house.weather_updated, now) })
+            ? homeLede(intl, { summary, weather: house.weather, weatherStale: isWeatherStale(house.weather_updated, now) })
             : null
         }
         action={
@@ -1837,7 +1840,7 @@ export default function Home() {
           loaded && houseReachable && devicesOn.length > 0 ? (
             <button type="button" className="btn btn-secondary home-all-off" onClick={turnAllOff}>
               <PowerIcon width="18" height="18" aria-hidden="true" />
-              Alles uit
+              {t('home.allOff')}
             </button>
           ) : null
         }
@@ -1889,11 +1892,11 @@ export default function Home() {
                   <section className="home-devices-group" aria-labelledby="home-favorites">
                     <div className="section-head">
                       <h2 id="home-favorites" className="section-heading">
-                        Favorieten
+                        {t('home.favorites')}
                       </h2>
                       {favoriteDevices.length > 1 && (
                         <button type="button" className="btn btn-plain section-action" onClick={() => setOrderingFavorites(true)}>
-                          Volgorde
+                          {t('home.order')}
                         </button>
                       )}
                     </div>
@@ -1905,11 +1908,8 @@ export default function Home() {
                           <LightbulbIcon width="22" height="22" />
                         </span>
                         <div>
-                          <p className="home-welcome-title">Je vaste lampen komen hier</p>
-                          <p className="home-welcome-text">
-                            Houd een lamp of stopcontact even ingedrukt en kies “Op Home tonen”. Dan bedien je hem met één
-                            tik, meteen als je de app opent.
-                          </p>
+                          <p className="home-welcome-title">{t('home.welcome.title')}</p>
+                          <p className="home-welcome-text">{t('home.welcome.text')}</p>
                         </div>
                       </div>
                     )}
@@ -1918,7 +1918,7 @@ export default function Home() {
                   {otherOnDevices.length > 0 && (
                     <section className="home-devices-group" aria-labelledby="home-on">
                       <h2 id="home-on" className="section-heading">
-                        Staat nu aan
+                        {t('home.nowOn')}
                       </h2>
                       {renderByRoom(otherOnDevices)}
                     </section>
@@ -1926,7 +1926,7 @@ export default function Home() {
                 </div>
 
                 {climateDevices.length > 0 && (
-                  <section className="home-section home-climate" aria-label="Temperatuur">
+                  <section className="home-section home-climate" aria-label={t('home.temperature')}>
                     {renderDevices(climateDevices)}
                   </section>
                 )}

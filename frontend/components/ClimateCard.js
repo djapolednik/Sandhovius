@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useIntl } from '../app/LanguageContext'
 import { formatTemperature } from '../lib/temperature'
 import { MinusIcon, PlusIcon } from '../lib/icons'
 
@@ -37,10 +38,12 @@ export default function ClimateCard({
   state,
   isOn,
   isOnline,
-  offlineText = 'Offline',
+  offlineText,
   onSetTemperature,
   onToggleHeating,
 }) {
+  const { t, locale } = useIntl()
+  const degrees = (celsius) => formatTemperature(celsius, locale)
   const attrs = state?.attributes ?? {}
   // Zigbee-achtige apparaten leggen dit plat in de state neer
   // (local_temperature/occupied_heating_setpoint); een echte Home
@@ -59,7 +62,7 @@ export default function ClimateCard({
   const [pendingTarget, setPendingTarget] = useState(null)
   // Wat een schermlezer hoort: het doel pas als je klaar bent met tikken,
   // niet elke halve graad onderweg.
-  const [announced, setAnnounced] = useState('')
+  const [announced, setAnnounced] = useState(null)
   const pendingRef = useRef(null)
   const commitTimer = useRef(null)
   const onSetRef = useRef(onSetTemperature)
@@ -75,7 +78,7 @@ export default function ClimateCard({
     pendingRef.current = null
     setPendingTarget(null)
     if (value !== null) {
-      setAnnounced(`Doeltemperatuur ${formatTemperature(value)}`)
+      setAnnounced(value)
       onSetRef.current?.(value)
     }
   }
@@ -110,18 +113,21 @@ export default function ClimateCard({
 
 
 
+  // Een code, geen zin: de blauwe gloed hangt aan "heating", in elke taal.
   let status
-  if (!isOnline) status = `${offlineText}, laatst bekende stand`
-  else if (!isOn) status = 'Verwarming uit'
-  else if (hasCurrent && hasTarget && current < shownTarget - AT_TARGET_MARGIN) status = 'Verwarmt'
-  else if (hasCurrent && hasTarget) status = 'Op temperatuur'
+  if (!isOnline) status = 'offline'
+  else if (!isOn) status = 'off'
+  else if (hasCurrent && hasTarget && current < shownTarget - AT_TARGET_MARGIN) status = 'heating'
+  else if (hasCurrent && hasTarget) status = 'atTarget'
   else status = null
+  const statusText =
+    status === 'offline' ? t('climate.status.lastKnown', { status: offlineText ?? t('device.offline') }) : status && t(`climate.status.${status}`)
 
   const clamp = (v) => Math.max(0, Math.min(1, (v - minTemp) / (maxTemp - minTemp)))
   const targetFraction = hasTarget ? clamp(shownTarget) : 0
   const knob = pointOnDial(targetFraction)
   const currentMark = hasCurrent ? pointOnDial(clamp(current)) : null
-  const isHeating = status === 'Verwarmt'
+  const isHeating = status === 'heating'
 
   const stepButton = (label, delta, disabled, Icon) => (
     <button
@@ -135,12 +141,12 @@ export default function ClimateCard({
     </button>
   )
 
-  if (!hasCurrent && !hasTarget) return <p className="reading-empty">Nog geen meetwaarden ontvangen</p>
+  if (!hasCurrent && !hasTarget) return <p className="reading-empty">{t('climate.noReadings')}</p>
 
   return (
     <div className="climate-layout">
       <div className="climate-dial-row">
-        {hasTarget && stepButton('Kouder', -TEMP_STEP, !canAdjust || shownTarget <= minTemp, MinusIcon)}
+        {hasTarget && stepButton(t('climate.colder'), -TEMP_STEP, !canAdjust || shownTarget <= minTemp, MinusIcon)}
 
         {/* Blauwe boog zolang de verwarming aan staat; de gloed alleen als
             hij echt verwarmt (Real Light Rule), niet bij "Op temperatuur". */}
@@ -174,23 +180,23 @@ export default function ClimateCard({
             {hasTarget && (
               <>
                 <span className="dial-target">
-                  <span className="visually-hidden">Doeltemperatuur </span>
-                  {formatTemperature(shownTarget)}
+                  <span className="visually-hidden">{t('climate.target')} </span>
+                  {degrees(shownTarget)}
                 </span>
                 <span className="visually-hidden" aria-live="polite">
-                  {announced}
+                  {announced !== null && t('climate.targetAnnounced', { temperature: degrees(announced) })}
                 </span>
               </>
             )}
             {hasCurrent && (
               <span className="dial-now">
-                Nu <span>{formatTemperature(current)}</span>
+                {t.rich('climate.now', { temperature: degrees(current), value: (chunks) => <span>{chunks}</span> })}
               </span>
             )}
           </div>
         </div>
 
-        {hasTarget && stepButton('Warmer', TEMP_STEP, !canAdjust || shownTarget >= maxTemp, PlusIcon)}
+        {hasTarget && stepButton(t('climate.warmer'), TEMP_STEP, !canAdjust || shownTarget >= maxTemp, PlusIcon)}
       </div>
 
       {/* Eén schakelaar: aan of uit is apparaatstand, dus het "aan"-groen
@@ -199,9 +205,9 @@ export default function ClimateCard({
           focusbaar (aria-disabled), zodat je de stand kunt horen. */}
       <div className="climate-power">
         <span className="climate-power-text">
-          <span id={powerId}>Verwarming</span>
-          {status && (
-            <span className={`climate-status ${isHeating ? 'climate-status-heating' : ''}`}>{status}</span>
+          <span id={powerId}>{t('climate.heating')}</span>
+          {statusText && (
+            <span className={`climate-status ${isHeating ? 'climate-status-heating' : ''}`}>{statusText}</span>
           )}
         </span>
         <button

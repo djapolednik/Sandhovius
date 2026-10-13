@@ -1,5 +1,6 @@
 'use client'
 
+import { useIntl } from '../app/LanguageContext'
 import { formatSince } from '../lib/connection'
 import { CheckIcon } from '../lib/icons'
 
@@ -14,11 +15,12 @@ import { CheckIcon } from '../lib/icons'
 // problemsOnly: alleen iets tonen als er iets mis is (Home). Gezond en
 // "verbinden…" staan dan in Opties; een storing blijft op Home zichtbaar.
 export default function ConnectionStatus({ realtimeLink, house, now, problemsOnly = false }) {
+  const { t, locale } = useIntl()
+  const strong = (chunks) => <strong>{chunks}</strong>
   if (realtimeLink === 'lost') {
     return (
       <div className="connection-notice" role="status">
-        <strong>Geen verbinding met Sandhovius.</strong> Je ziet de laatst bekende stand van je apparaten. We
-        proberen het automatisch opnieuw.
+        {t.rich('connection.lost', { strong })}
       </div>
     )
   }
@@ -27,8 +29,7 @@ export default function ConnectionStatus({ realtimeLink, house, now, problemsOnl
   if (!house.linked) {
     return (
       <div className="connection-notice" role="status">
-        <strong>Er is geen box aan dit huis gekoppeld.</strong> Tot er een box gekoppeld is, zie je de laatst
-        bekende stand van je apparaten.
+        {t.rich('connection.noBox', { strong })}
       </div>
     )
   }
@@ -36,10 +37,9 @@ export default function ConnectionStatus({ realtimeLink, house, now, problemsOnl
   if (!house.reachable) {
     return (
       <div className="connection-notice" role="status">
-        <strong>
-          Je Sandhovius-box reageert niet{house.since ? ` sinds ${formatSince(house.since, now)}` : ''}.
-        </strong>{' '}
-        Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.
+        {house.since
+          ? t.rich('connection.boxSilentSince', { strong, since: formatSince(house.since, now, locale) })
+          : t.rich('connection.boxSilent', { strong })}
       </div>
     )
   }
@@ -49,7 +49,7 @@ export default function ConnectionStatus({ realtimeLink, house, now, problemsOnl
   if (realtimeLink === 'connecting') {
     return (
       <p className="connection-status" role="status">
-        Verbinden met je huis…
+        {t('connection.connecting')}
       </p>
     )
   }
@@ -57,7 +57,7 @@ export default function ConnectionStatus({ realtimeLink, house, now, problemsOnl
   return (
     <p className="connection-status connection-status-live" role="status">
       <CheckIcon width="14" height="14" aria-hidden="true" />
-      Verbonden met je huis
+      {t('connection.live')}
     </p>
   )
 }

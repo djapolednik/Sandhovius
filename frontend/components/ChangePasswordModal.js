@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useId, useState } from 'react'
 import Modal from './Modal'
 import PasswordField from './PasswordField'
@@ -14,6 +15,7 @@ import { CheckIcon } from '../lib/icons'
 // niet buitensluit. Onder het nieuwe staan de eisen, die meelopen terwijl
 // je typt. Na afloop zegt de sheet zelf dat het gelukt is.
 export default function ChangePasswordModal({ onChange, onClose }) {
+  const t = useTranslations()
   const [oldPassword, setOldPassword] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -42,7 +44,7 @@ export default function ChangePasswordModal({ onChange, onClose }) {
       setError(
         err?.response?.data?.oldPassword
           ? 'Je huidige wachtwoord klopt niet. Controleer het en probeer het opnieuw.'
-          : describeError('Wachtwoord wijzigen', err)
+          : describeError(t, t('errors.what.changePassword'), err)
       )
     } finally {
       setSaving(false)

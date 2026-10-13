@@ -1,10 +1,12 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useEffect, useRef, useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { TrashIcon } from '../lib/icons'
-import { relativeTimeNL } from '../lib/relativeTime'
+import { relativeTime } from '../lib/relativeTime'
+import { useIntl } from '../app/LanguageContext'
 import { useNow } from '../lib/useNow'
 import { formatTemperature, temperatureColor, readTemperature } from '../lib/temperature'
 import { isBatteryLow } from '../lib/battery'
@@ -34,6 +36,7 @@ export default function DeviceSettingsModal({
   onRetrySetup,
   onClose,
 }) {
+  const t = useTranslations()
   const [name, setName] = useState(device.name ?? '')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -67,7 +70,7 @@ export default function DeviceSettingsModal({
       await onSave(device.id, updates)
       if (mounted.current) setSavedTick((n) => n + 1)
     } catch (err) {
-      const message = describeError(what, err)
+      const message = describeError(t, what, err)
       if (mounted.current) setError(message)
       else onSaveError?.(message)
     }
@@ -82,7 +85,7 @@ export default function DeviceSettingsModal({
     }
     if (trimmed === savedName.current) return
     savedName.current = trimmed
-    save({ name: trimmed }, 'Naam wijzigen')
+    save({ name: trimmed }, t('errors.what.rename'))
   }
 
   function close() {
@@ -95,7 +98,7 @@ export default function DeviceSettingsModal({
     try {
       await onToggleFavorite(device)
     } catch (err) {
-      setError(describeError('Favoriet aanpassen', err))
+      setError(describeError(t, t('errors.what.favorite'), err))
     }
   }
 
@@ -106,7 +109,7 @@ export default function DeviceSettingsModal({
       await onDelete(device.id)
       onClose()
     } catch (err) {
-      setError(describeError('Verwijderen', err))
+      setError(describeError(t, t('errors.what.delete'), err))
       setSaving(false)
     }
   }
@@ -117,7 +120,7 @@ export default function DeviceSettingsModal({
         // Herstellen i.p.v. "verwijder en voeg opnieuw toe": de box probeert
         // het gewoon nog een keer.
         <div className="setup-failed">
-          <p className="setup-failed-text">Het klaarzetten is niet gelukt.</p>
+          <p className="setup-failed-text">{t('deviceSheet.setupFailed')}</p>
           <button
             type="button"
             className="btn btn-secondary"
@@ -126,7 +129,7 @@ export default function DeviceSettingsModal({
               onClose()
             }}
           >
-            Opnieuw proberen
+            {t('common.retry')}
           </button>
         </div>
       ) : device.type === 'sensor' ? (
@@ -147,7 +150,7 @@ export default function DeviceSettingsModal({
       <div className="modal-divider" />
 
       <div className="settings-row">
-        <span id={`favorite-${device.id}`}>Op Home tonen</span>
+        <span id={`favorite-${device.id}`}>{t('deviceSheet.showOnHome')}</span>
         <button
           type="button"
           className={`switch switch-accent ${favorite ? 'switch-on' : ''}`}
@@ -165,7 +168,7 @@ export default function DeviceSettingsModal({
       {/* Enter in het naamveld = klaar: het veld verlaten slaat op. */}
       <form onSubmit={(e) => (e.preventDefault(), document.activeElement?.blur())} className="form-stack">
         <label className="form-field">
-          <span className="form-label">Naam</span>
+          <span className="form-label">{t('deviceSheet.name')}</span>
           <input
             className="input"
             type="text"
@@ -177,13 +180,13 @@ export default function DeviceSettingsModal({
         </label>
 
         <label className="form-field">
-          <span className="form-label">Kamer</span>
+          <span className="form-label">{t('deviceSheet.room')}</span>
           <select
             className="input"
             value={device.room ?? ''}
-            onChange={(e) => save({ room: e.target.value || null }, 'Kamer wijzigen')}
+            onChange={(e) => save({ room: e.target.value || null }, t('errors.what.changeRoom'))}
           >
-            <option value="">Geen kamer</option>
+            <option value="">{t('home.noRoom')}</option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
                 {room.name}
@@ -193,7 +196,7 @@ export default function DeviceSettingsModal({
         </label>
 
         <p className="form-saved" role="status">
-          {showSaved ? 'Opgeslagen' : ''}
+          {showSaved ? t('common.saved') : ''}
         </p>
 
         {error && !confirmingDelete && <p className="error-banner">{error}</p>}
@@ -204,23 +207,22 @@ export default function DeviceSettingsModal({
       {confirmingDelete ? (
         <div className="danger-zone">
           <p className="danger-text">
-            “{device.name}” uit Sandhovius verwijderen? Het apparaat verdwijnt uit de app; je kunt het later opnieuw
-            toevoegen.
+            {t('deviceSheet.confirmDelete', { name: device.name })}
           </p>
           {error && <p className="error-banner">{error}</p>}
           <div className="form-actions">
             <button type="button" className="btn btn-secondary" onClick={() => setConfirmingDelete(false)} disabled={saving}>
-              Annuleren
+              {t('common.cancel')}
             </button>
             <button type="button" className="btn btn-danger" onClick={handleDelete} disabled={saving}>
-              Verwijderen
+              {t('common.delete')}
             </button>
           </div>
         </div>
       ) : (
         <button type="button" className="btn btn-danger-text" onClick={() => setConfirmingDelete(true)} disabled={saving}>
           <TrashIcon />
-          Apparaat verwijderen
+          {t('deviceSheet.delete')}
         </button>
       )}
     </Modal>
@@ -231,19 +233,20 @@ export default function DeviceSettingsModal({
 // eronder is op een telefoon bedekt door de sheet, dus hier nog een keer,
 // in woorden.
 function DeviceStatus({ device }) {
+  const t = useTranslations()
   const state = device.expand?.device_state_via_device?.[0]?.state
   const known = typeof state?.state === 'string'
   const on = isDeviceOn(device.type, state)
-  const word = device.type === 'climate' ? (on ? 'Verwarming aan' : 'Verwarming uit') : on ? 'Aan' : 'Uit'
+  const word = device.type === 'climate' ? (on ? 'heatingOn' : 'heatingOff') : on ? 'on' : 'off'
 
   let value
-  if (!known) value = 'Nog onbekend'
-  else if (!device.online) value = `Offline, laatst ${word.toLowerCase()}`
-  else value = word
+  if (!known) value = t('deviceSheet.stateUnknown')
+  else if (!device.online) value = t(`deviceSheet.offlineLast.${word}`)
+  else value = t(`deviceSheet.state.${word}`)
 
   return (
     <div className="sensor-detail-row">
-      <span className="form-label">Stand</span>
+      <span className="form-label">{t('deviceSheet.stateLabel')}</span>
       <span className="reading-value">{value}</span>
     </div>
   )
@@ -252,6 +255,8 @@ function DeviceStatus({ device }) {
 // Wat een sensor meet, met wanneer hij dat voor het laatst deed. Eigen
 // klok: alleen dit blok tikt mee voor "Laatst bijgewerkt".
 function SensorReadings({ device }) {
+  const intl = useIntl()
+  const { t, locale } = intl
   const now = useNow(5000)
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
@@ -265,40 +270,42 @@ function SensorReadings({ device }) {
   const updatedAt = stateRecord?.updated_at ? new Date(stateRecord.updated_at).getTime() : null
 
   if (!hasTemperatureReading && !hasMotionReading && !hasBattery) {
-    return <p className="reading-empty">Nog geen meetwaarden ontvangen</p>
+    return <p className="reading-empty">{t('climate.noReadings')}</p>
   }
 
   return (
     <div className="sensor-detail-rows">
       {hasTemperatureReading && (
         <div className="sensor-detail-row">
-          <span className="form-label">Temperatuur</span>
+          <span className="form-label">{t('home.temperature')}</span>
           <span className="reading-value" style={{ color: temperatureColor(temperature) }}>
-            {formatTemperature(temperature)}
+            {formatTemperature(temperature, locale)}
           </span>
         </div>
       )}
       {hasMotionReading && (
         <div className="sensor-detail-row">
-          <span className="form-label">Beweging</span>
-          <span className="reading-value">{occupancy ? 'Er is nu beweging' : 'Geen beweging'}</span>
+          <span className="form-label">{t('device.motion')}</span>
+          <span className="reading-value">{occupancy ? t('deviceSheet.motionNow') : t('device.noMotion')}</span>
         </div>
       )}
       {hasBattery && (
         <div className="sensor-detail-row">
-          <span className="form-label">Batterij</span>
+          <span className="form-label">{t('deviceSheet.battery')}</span>
           <span className={`reading-value ${isBatteryLow(battery) ? 'reading-alert' : ''}`}>
-            {isBatteryLow(battery) ? `Bijna leeg (${battery}%)` : `${battery}%`}
+            {isBatteryLow(battery)
+              ? t('deviceSheet.batteryLow', { percent: battery })
+              : t('deviceSheet.batteryPercent', { percent: battery })}
           </span>
         </div>
       )}
       {updatedAt && (
         <div className="sensor-detail-row">
-          <span className="form-label">Laatst bijgewerkt</span>
-          <span className="reading-value">{relativeTimeNL(updatedAt, now)}</span>
+          <span className="form-label">{t('deviceSheet.lastUpdated')}</span>
+          <span className="reading-value">{relativeTime(intl, updatedAt, now)}</span>
         </div>
       )}
-      {!device.online && <p className="status-offline">Offline, dit is de laatst bekende stand.</p>}
+      {!device.online && <p className="status-offline">{t('deviceSheet.offlineNote')}</p>}
     </div>
   )
 }

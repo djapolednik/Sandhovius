@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useEffect, useState } from 'react'
 import InviteSheet from './InviteSheet'
 import MemberSheet from './MemberSheet'
@@ -24,6 +25,7 @@ export default function HouseholdSection({
   onRemove,
   onRevoke,
 }) {
+  const t = useTranslations()
   const [members, setMembers] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [inviting, setInviting] = useState(false)
@@ -42,7 +44,7 @@ export default function HouseholdSection({
         setLoadError('')
       })
       .catch((err) => {
-        if (!cancelled) setLoadError(householdError('Huisgenoten ophalen', err))
+        if (!cancelled) setLoadError(householdError(t, t('errors.what.loadMembers'), err))
       })
     return () => {
       cancelled = true
@@ -57,7 +59,7 @@ export default function HouseholdSection({
     try {
       await onRemove(userId)
     } catch (err) {
-      setError(householdError('Huis verlaten', err))
+      setError(householdError(t, t('errors.what.leaveHouse'), err))
       setBusy(false)
     }
   }
@@ -67,11 +69,11 @@ export default function HouseholdSection({
     try {
       await onRevoke(invitation.id)
     } catch (err) {
-      setError(householdError('Intrekken', err))
+      setError(householdError(t, t('errors.what.revoke'), err))
     }
   }
 
-  const memberText = (m) => (m.id === userId ? `${roleLabel(m.role)}, jij` : roleLabel(m.role))
+  const memberText = (m) => (m.id === userId ? t('household.you', { role: roleLabel(t, m.role) }) : roleLabel(t, m.role))
 
   return (
     <section className="panel settings-section" aria-labelledby="settings-household">
@@ -109,7 +111,7 @@ export default function HouseholdSection({
               <span className="settings-link-text">
                 <span className="member-name">{inv.email}</span>
                 <span className="settings-link-sub">
-                  Uitgenodigd als {roleLabel(inv.role).toLowerCase()}, {expiresText(inv.expires)}
+                  {t('household.invitedAs', { role: inv.role, expires: expiresText(t, inv.expires) })}
                 </span>
               </span>
               {admin && (

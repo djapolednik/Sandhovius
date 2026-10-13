@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import RoleChoice from './RoleChoice'
@@ -9,6 +10,7 @@ import { householdError } from '../lib/household'
 // bij het e-mailadres: alleen wie met dat adres inlogt, kan hem accepteren.
 // onInvite(email, role) maakt de uitnodiging; de server stuurt de mail.
 export default function InviteSheet({ houseName, onInvite, onClose }) {
+  const t = useTranslations()
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('member')
   const [sending, setSending] = useState(false)
@@ -22,7 +24,7 @@ export default function InviteSheet({ houseName, onInvite, onClose }) {
       await onInvite(email.trim(), role)
       onClose()
     } catch (err) {
-      setError(householdError('Uitnodigen', err))
+      setError(householdError(t, t('errors.what.invite'), err))
       setSending(false)
     }
   }

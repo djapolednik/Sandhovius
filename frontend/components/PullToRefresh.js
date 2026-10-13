@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTranslations } from 'use-intl'
 import { CheckIcon } from '../lib/icons'
 
 // Hoe ver je moet trekken (zichtbare afstand, na de weerstand) voordat
@@ -44,7 +45,9 @@ export default function PullToRefresh({ onRefresh }) {
   // idle | pulling | armed | refreshing | done
   const [phase, setPhase] = useState('idle')
   const phaseRef = useRef('idle')
-  const [announce, setAnnounce] = useState('')
+  const t = useTranslations('refresh')
+  // Wat een schermlezer hoort: een stand, de woorden pas bij het tekenen.
+  const [announce, setAnnounce] = useState(null) // null | 'refreshing' | 'done'
 
   useEffect(() => {
     if (!isEnabled()) return
@@ -109,7 +112,7 @@ export default function PullToRefresh({ onRefresh }) {
         return
       }
       set('refreshing')
-      setAnnounce('Bijwerken…')
+      setAnnounce('refreshing')
       place(HOLD_AT, true)
       const began = Date.now()
       try {
@@ -117,7 +120,7 @@ export default function PullToRefresh({ onRefresh }) {
       } finally {
         await new Promise((resolve) => setTimeout(resolve, Math.max(0, MIN_SPIN_MS - (Date.now() - began))))
         set('done')
-        setAnnounce('Bijgewerkt')
+        setAnnounce('done')
         await new Promise((resolve) => setTimeout(resolve, DONE_MS))
         set('idle')
         place(0, true)
@@ -150,7 +153,7 @@ export default function PullToRefresh({ onRefresh }) {
         )}
       </div>
       <span className="visually-hidden" role="status">
-        {announce}
+        {announce && t(announce)}
       </span>
     </>
   )

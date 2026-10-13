@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import ClimateCard from './ClimateCard'
+import { useIntl } from '../app/LanguageContext'
 import { formatTemperature, readTemperature, temperatureColor } from '../lib/temperature'
 import { deviceTypeIcon } from '../lib/icons'
 import { glowFor, iconColorFor, lightStateText } from '../lib/light'
@@ -11,23 +12,16 @@ import { useLongPress } from '../lib/longPress'
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
 export const TOGGLEABLE_TYPES = ['light', 'switch']
 
-export const DEVICE_TYPE_LABELS = {
-  light: 'Lamp',
-  switch: 'Stopcontact',
-  sensor: 'Sensor',
-  climate: 'Thermostaat',
-}
-
 // Climate-entities rapporteren hun state als hvac_mode ("heat", "off", ...)
 // i.p.v. het simpele "on"/"off" van lampen/stopcontacten — vandaar het
 // aparte geval hier.
 // Wat een sensor nu meet, in woorden, voor de naam van zijn tegelknop.
-function describeReading(state) {
+function describeReading({ t, locale }, state) {
   const parts = []
   const temperature = readTemperature(state)
-  if (typeof temperature === 'number') parts.push(formatTemperature(temperature))
+  if (typeof temperature === 'number') parts.push(formatTemperature(temperature, locale))
   const occupancy = state?.occupancy ?? state?.motion
-  if (typeof occupancy === 'boolean') parts.push(occupancy ? 'er is nu beweging' : 'geen beweging')
+  if (typeof occupancy === 'boolean') parts.push(occupancy ? t('device.motionNow') : t('device.noMotionNow'))
   return parts.join(', ')
 }
 
@@ -53,6 +47,8 @@ export default memo(function DeviceCard({
   onSetTemperature,
   onOpenSettings,
 }) {
+  const intl = useIntl()
+  const { t, locale } = intl
   const stateRecord = device.expand?.device_state_via_device?.[0] ?? null
   const state = stateRecord?.state ?? null
   const Icon = deviceTypeIcon(device.type)
@@ -60,7 +56,7 @@ export default memo(function DeviceCard({
   // Twee manieren om onbereikbaar te zijn: het apparaat zelf is weg, of de
   // hele box (dan zegt "Offline" per apparaat het verkeerde).
   const isOnline = !!device.online && houseReachable
-  const offlineText = houseReachable ? 'Offline' : 'Niet bereikbaar'
+  const offlineText = houseReachable ? t('device.offline') : t('device.unreachable')
   // Net toegevoegd (isNew, zie page.js): de agent maakt er nog een Home
   // Assistant-entity voor aan (entity_id leeg), of die heeft nog geen
   // eerste stand gemeld. Dat is geen storing — "Offline" zou hier ten
@@ -116,7 +112,7 @@ export default memo(function DeviceCard({
           <button
             type="button"
             className="climate-head"
-            aria-label={`Details van ${device.name}`}
+            aria-label={t('device.details', { name: device.name })}
             onClick={() => onOpenSettings(device)}
           >
             <span className="tile-name">{device.name}</span>
@@ -137,32 +133,34 @@ export default memo(function DeviceCard({
   // De stand, in één woord of getal: dat is waarvoor je kijkt.
   let stateText
   let stateStyle
-  const reading = device.type === 'sensor' ? describeReading(state) : ''
-  if (isPairing) stateText = 'Wordt klaargezet'
-  else if (setupFailed) stateText = 'Niet klaargezet'
+  const reading = device.type === 'sensor' ? describeReading(intl, state) : ''
+  if (isPairing) stateText = t('device.pairing')
+  else if (setupFailed) stateText = t('device.setupFailed')
   else if (device.type === 'sensor') {
     const temperature = readTemperature(state)
     const occupancy = state?.occupancy ?? state?.motion
-    let value = 'Geen metingen'
+    let value = t('device.noReadings')
     if (typeof temperature === 'number') {
-      value = formatTemperature(temperature)
+      value = formatTemperature(temperature, locale)
       if (isOnline) stateStyle = { color: temperatureColor(temperature) }
-    } else if (typeof occupancy === 'boolean') value = occupancy ? 'Beweging' : 'Geen beweging'
+    } else if (typeof occupancy === 'boolean') value = occupancy ? t('device.motion') : t('device.noMotion')
     // Offline blijft de laatste meting staan (dat is nog informatie), met
     // erbij dat het niet actueel is.
-    stateText = isOnline ? value : `${value}, ${offlineText.toLowerCase()}`
+    stateText = isOnline ? value : t('device.lastKnown', { value, status: offlineText.toLocaleLowerCase(locale) })
   } else if (!isOnline) stateText = offlineText
   else if (state?.state === 'on' || state?.state === 'off') {
-    const base = device.type === 'light' ? lightStateText(state) : isOn ? 'Aan' : 'Uit'
+    const base = device.type === 'light' ? lightStateText(t, state) : isOn ? t('device.on') : t('device.off')
     stateText = base + (isPending ? '…' : '')
   }
-  else stateText = 'Onbekend'
+  else stateText = t('device.unknown')
 
   // De hoofdactie is een echte <button> over de hele tegel (zie
   // .device-card-action); de naam en stand blijven gewone tekst.
   const actionLabel = canToggle
     ? device.name
-    : `Details van ${device.name}${reading ? `, ${reading}` : ''}`
+    : reading
+      ? t('device.detailsWithReading', { name: device.name, reading })
+      : t('device.details', { name: device.name })
   const isClickable = canToggle || opensDetails
 
   // De gloed van een lamp in zijn echte kleur en sterkte (zie .card-lit);

@@ -22,6 +22,15 @@ export function browserLanguage(navigatorLanguages) {
   return 'nl'
 }
 
+// Intl-formatters zijn duur om te maken: één per soort, taal en opties.
+const formatters = new Map()
+
+export function cachedFormat(Format, locale, options = {}) {
+  const key = `${Format.name}|${locale}|${JSON.stringify(options)}`
+  if (!formatters.has(key)) formatters.set(key, new Format(locale, options))
+  return formatters.get(key)
+}
+
 // Het account wint, dan wat deze telefoon onthield, dan de browser.
 export function pickLanguage({ account, stored, navigatorLanguages }) {
   if (isLanguage(account)) return account

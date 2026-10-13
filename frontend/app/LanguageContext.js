@@ -1,7 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { IntlProvider } from 'use-intl'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { IntlProvider, useLocale, useTranslations } from 'use-intl'
 import nl from '../messages/nl.json'
 import en from '../messages/en.json'
 import { LOCALES, STORAGE_KEY, isLanguage, pickLanguage } from '../lib/language'
@@ -12,6 +12,15 @@ const LanguageContext = createContext(undefined)
 
 // { language, setLanguage, adoptAccountLanguage } — zie LanguageProvider.
 export const useLanguage = () => useContext(LanguageContext)
+
+// { t, locale } voor de helpers in lib/ die zelf een zin maken
+// (houseSummary, dayLabel, …): de vertaler zonder namespace en de locale
+// ("nl-NL", "en-GB") voor de Intl-opmaak.
+export function useIntl() {
+  const t = useTranslations()
+  const locale = useLocale()
+  return useMemo(() => ({ t, locale }), [t, locale])
+}
 
 function readStored() {
   try {

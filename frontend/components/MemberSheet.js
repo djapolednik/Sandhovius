@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import RoleChoice from './RoleChoice'
@@ -10,6 +11,7 @@ import { householdError } from '../lib/household'
 // server bewaakt dat er altijd een beheerder overblijft; die melding staat
 // dan hier.
 export default function MemberSheet({ member, houseName, isSelf, onChangeRole, onRemove, onClose }) {
+  const t = useTranslations()
   const [role, setRole] = useState(member.role)
   const [busy, setBusy] = useState(false)
   const [confirmingRemove, setConfirmingRemove] = useState(false)
@@ -25,7 +27,7 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
       await onChangeRole(member.id, value)
     } catch (err) {
       setRole(previous)
-      setError(householdError('Rol wijzigen', err))
+      setError(householdError(t, t('errors.what.changeRole'), err))
     } finally {
       setBusy(false)
     }
@@ -38,7 +40,7 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
       await onRemove(member.id)
       onClose()
     } catch (err) {
-      setError(householdError(isSelf ? 'Huis verlaten' : 'Verwijderen', err))
+      setError(householdError(t, t(isSelf ? 'errors.what.leaveHouse' : 'errors.what.delete'), err))
       setBusy(false)
     }
   }

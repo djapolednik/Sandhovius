@@ -1,3 +1,5 @@
+import { cachedFormat } from './language.js'
+
 // A cold-to-hot color for displaying a temperature reading. The position
 // on the scale is computed here; the two endpoint colors are theme tokens
 // (--temp-cold / --temp-hot in theme.css), because the reading is text and
@@ -13,15 +15,11 @@ export function temperatureColor(celsius) {
   return `color-mix(in oklab, var(--temp-hot) ${hotPercent}%, var(--temp-cold))`
 }
 
-// "21,5°" — Nederlandse decimale komma en altijd één decimaal, zodat een
+// "21,5°" (Nederlands) of "21.5°" (Engels), altijd één decimaal, zodat een
 // stap van 21,0 naar 21,5 niet van breedte verspringt.
-const TEMPERATURE_FORMAT = new Intl.NumberFormat('nl-NL', {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-})
-
-export function formatTemperature(celsius) {
-  return `${TEMPERATURE_FORMAT.format(celsius)}°`
+export function formatTemperature(celsius, locale) {
+  const format = cachedFormat(Intl.NumberFormat, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+  return `${format.format(celsius)}°`
 }
 
 // Leest een temperatuurwaarde uit een device_state.state blob, ongeacht de

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
@@ -62,6 +63,7 @@ export default function SceneModal({
   onDelete,
   onClose,
 }) {
+  const t = useTranslations()
   const [name, setName] = useState(scene?.name ?? '')
   const [choices, setChoices] = useState(() => choicesFromActions(scene?.actions, devices))
   const [rows, setRows] = useState(() => rowsFromSchedules(schedules))
@@ -125,7 +127,7 @@ export default function SceneModal({
       }
       onClose()
     } catch (err) {
-      setError(describeError('Scène opslaan', err))
+      setError(describeError(t, t('errors.what.saveScene'), err))
       setSaving(false)
     }
   }

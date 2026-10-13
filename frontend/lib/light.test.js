@@ -1,6 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { capabilities, glowFor, iconColorFor, kelvinToRgb, lightStateText, payloadFor, percentFromBrightness, throttle } from './light.js'
+import { INTL } from './messages.testkit.js'
+
+const { t } = INTL.nl
 
 const caps = (modes) => capabilities({ supported_color_modes: modes })
 const none = { dim: false, white: false, colour: false }
@@ -84,11 +87,12 @@ test('iconColorFor: donkere kleur op donker thema valt terug', () => {
 })
 
 test('lightStateText', () => {
-  assert.equal(lightStateText({ state: 'on', attributes: { supported_color_modes: ['brightness'], brightness: 153 } }), 'Aan · 60%')
-  assert.equal(lightStateText({ state: 'on', attributes: { supported_color_modes: ['onoff'] } }), 'Aan')
-  assert.equal(lightStateText({ state: 'on', attributes: { supported_color_modes: ['brightness'] } }), 'Aan')
-  assert.equal(lightStateText({ state: 'off', attributes: { supported_color_modes: ['brightness'] } }), 'Uit')
-  assert.equal(lightStateText({ state: 'on' }), 'Aan')
+  assert.equal(lightStateText(INTL.en.t, { state: 'on', attributes: { supported_color_modes: ['brightness'], brightness: 153 } }), 'On · 60%')
+  assert.equal(lightStateText(t, { state: 'on', attributes: { supported_color_modes: ['brightness'], brightness: 153 } }), 'Aan · 60%')
+  assert.equal(lightStateText(t, { state: 'on', attributes: { supported_color_modes: ['onoff'] } }), 'Aan')
+  assert.equal(lightStateText(t, { state: 'on', attributes: { supported_color_modes: ['brightness'] } }), 'Aan')
+  assert.equal(lightStateText(t, { state: 'off', attributes: { supported_color_modes: ['brightness'] } }), 'Uit')
+  assert.equal(lightStateText(t, { state: 'on' }), 'Aan')
 })
 
 // --- Task 5: payloadFor en throttle ---

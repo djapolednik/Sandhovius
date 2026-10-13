@@ -70,5 +70,281 @@
     "language": "Taal",
     "languageHint": "Voor de app en voor de mails die je van Sandhovius krijgt.",
     "languageFailed": "De taal kon niet worden gewijzigd. Probeer het zo opnieuw."
+  },
+  "time": {
+    "neverConnected": "nog niet verbonden",
+    "justNow": "zojuist"
+  },
+  "device": {
+    "on": "Aan",
+    "off": "Uit",
+    "onPercent": "Aan · {percent}%",
+    "types": {
+      "light": "Lamp",
+      "switch": "Stopcontact",
+      "sensor": "Sensor",
+      "climate": "Thermostaat"
+    },
+    "offline": "Offline",
+    "unreachable": "Niet bereikbaar",
+    "pairing": "Wordt klaargezet",
+    "setupFailed": "Niet klaargezet",
+    "noReadings": "Geen metingen",
+    "motion": "Beweging",
+    "noMotion": "Geen beweging",
+    "motionNow": "er is nu beweging",
+    "noMotionNow": "geen beweging",
+    "unknown": "Onbekend",
+    "lastKnown": "{value}, {status}",
+    "details": "Details van {name}",
+    "detailsWithReading": "Details van {name}, {reading}"
+  },
+  "home": {
+    "greeting": {
+      "night": "Goedenacht",
+      "morning": "Goedemorgen",
+      "afternoon": "Goedemiddag",
+      "evening": "Goedenavond"
+    },
+    "greetingWithName": "{greeting}, {name}",
+    "summary": {
+      "lights": "{count, plural, one {# lamp} other {# lampen}}",
+      "plugs": "{count, plural, one {# stopcontact} other {# stopcontacten}}",
+      "on": "{things} aan",
+      "allOff": "Alles is uit",
+      "withIndoor": "{state}, binnen {temperature}"
+    },
+    "outside": "Buiten {condition}",
+    "outsideWithTemperature": "Buiten {condition}, {temperature}",
+    "attention": {
+      "setup": "klaarzetten is niet gelukt",
+      "offline": "offline",
+      "battery": "batterij bijna leeg ({percent}%)",
+      "one": "{name}: {reason}",
+      "many": "{count, plural, one {# apparaat vraagt} other {# apparaten vragen}} aandacht",
+      "title": "Let op",
+      "notices": "Meldingen"
+    },
+    "addBox": "Box toevoegen",
+    "noHouse": "Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt je huis hier.",
+    "firstDevice": {
+      "title": "Voeg je eerste apparaat toe",
+      "text": "Een lamp, stopcontact, sensor of thermostaat. Hij verschijnt meteen op Home, zodat je hem met één tik bedient."
+    },
+    "noRoom": "Geen kamer",
+    "allOff": "Alles uit",
+    "favorites": "Favorieten",
+    "order": "Volgorde",
+    "welcome": {
+      "title": "Je vaste lampen komen hier",
+      "text": "Houd een lamp of stopcontact even ingedrukt en kies “Op Home tonen”. Dan bedien je hem met één tik, meteen als je de app opent."
+    },
+    "nowOn": "Staat nu aan",
+    "temperature": "Temperatuur"
+  },
+  "weather": {
+    "today": "Vandaag",
+    "tomorrow": "Morgen",
+    "conditions": {
+      "clear-night": "Helder",
+      "sunny": "Zonnig",
+      "partlycloudy": "Half bewolkt",
+      "cloudy": "Bewolkt",
+      "fog": "Mist",
+      "rainy": "Regen",
+      "pouring": "Zware regen",
+      "lightning-rainy": "Onweer en regen",
+      "lightning": "Onweer",
+      "hail": "Hagel",
+      "snowy": "Sneeuw",
+      "snowy-rainy": "Natte sneeuw",
+      "windy": "Winderig",
+      "windy-variant": "Winderig en bewolkt",
+      "exceptional": "Uitzonderlijk weer",
+      "unknown": "Onbekend"
+    },
+    "title": "Weer",
+    "stale": "Niet bijgewerkt sinds {time}. Heeft je Sandhovius-box internet?",
+    "hours": "De komende uren",
+    "days": "De komende dagen",
+    "low": "laagste",
+    "high": "hoogste",
+    "updated": "Bijgewerkt om {time}"
+  },
+  "climate": {
+    "targetAnnounced": "Doeltemperatuur {temperature}",
+    "target": "Doeltemperatuur",
+    "status": {
+      "lastKnown": "{status}, laatst bekende stand",
+      "off": "Verwarming uit",
+      "heating": "Verwarmt",
+      "atTarget": "Op temperatuur"
+    },
+    "noReadings": "Nog geen meetwaarden ontvangen",
+    "colder": "Kouder",
+    "warmer": "Warmer",
+    "now": "Nu <value>{temperature}</value>",
+    "heating": "Verwarming"
+  },
+  "scenes": {
+    "title": "Scènes",
+    "running": "{name} wordt uitgevoerd",
+    "done": "{name} is klaar",
+    "run": "Scène {name} uitvoeren"
+  },
+  "nav": {
+    "home": "Home",
+    "kamers": "Kamers",
+    "scenes": "Scènes",
+    "instellingen": "Opties",
+    "menu": "Hoofdmenu",
+    "addDevice": "Apparaat toevoegen"
+  },
+  "errors": {
+    "failed": {
+      "offline": "{what} is niet gelukt. Sandhovius is nu niet bereikbaar; controleer je internetverbinding en probeer het opnieuw.",
+      "signedOut": "{what} is niet gelukt. Je bent uitgelogd; log opnieuw in.",
+      "forbidden": "{what} is niet gelukt. Dit mag je account niet aanpassen.",
+      "notFound": "{what} is niet gelukt. Het bestaat niet meer; ververs de pagina.",
+      "tooMany": "{what} is niet gelukt. Te veel pogingen; wacht even en probeer het dan opnieuw.",
+      "invalid": "{what} is niet gelukt. Controleer de ingevulde gegevens.",
+      "other": "{what} is niet gelukt. Probeer het zo opnieuw."
+    },
+    "invalidEmail": "Vul een geldig e-mailadres in.",
+    "what": {
+      "fetchDevices": "Je apparaten ophalen",
+      "switchOn": "{name} inschakelen",
+      "switchOff": "{name} uitschakelen",
+      "adjust": "{name} instellen",
+      "setTemperature": "{name} op {temperature} zetten",
+      "saveOrder": "Volgorde opslaan",
+      "deleteNamed": "{name} verwijderen",
+      "addToHome": "Op Home zetten",
+      "provision": "{name} klaarzetten",
+      "runScene": "„{name}” uitvoeren",
+      "scheduleOn": "Het schema van {time} aanzetten",
+      "scheduleOff": "Het schema van {time} uitzetten",
+      "addDevice": "Apparaat toevoegen",
+      "changePassword": "Wachtwoord wijzigen",
+      "favorite": "Favoriet aanpassen",
+      "delete": "Verwijderen",
+      "loadMembers": "Huisgenoten ophalen",
+      "leaveHouse": "Huis verlaten",
+      "revoke": "Intrekken",
+      "saveRoomName": "Kamernaam opslaan",
+      "deleteRoom": "Kamer verwijderen",
+      "saveName": "Naam opslaan",
+      "addRoom": "Kamer toevoegen",
+      "accept": "Accepteren",
+      "decline": "Weigeren",
+      "dismiss": "Weghalen",
+      "invite": "Uitnodigen",
+      "changeRole": "Rol wijzigen",
+      "saveScene": "Scène opslaan",
+      "rename": "Naam wijzigen",
+      "changeRoom": "Kamer wijzigen"
+    }
+  },
+  "household": {
+    "roles": {
+      "admin": "Beheerder",
+      "member": "Huisgenoot"
+    },
+    "expires": {
+      "expired": "verlopen",
+      "today": "verloopt vandaag",
+      "tomorrow": "verloopt morgen",
+      "inDays": "verloopt over {days} dagen"
+    },
+    "you": "{role}, jij",
+    "invitedAs": "Uitgenodigd als {role, select, admin {beheerder} other {huisgenoot}}, {expires}"
+  },
+  "invitation": {
+    "someone": "Iemand",
+    "label": "Uitnodiging voor {house}",
+    "expiredTitle": "Deze uitnodiging is verlopen",
+    "expiredText": "{who} nodigde je uit voor {house}. Vraag om een nieuwe uitnodiging.",
+    "title": "{who} nodigt je uit voor {house}",
+    "meta": "Als {role, select, admin {beheerder} other {huisgenoot}}, {expires}.",
+    "accept": "Accepteren",
+    "decline": "Weigeren",
+    "dismiss": "Weghalen"
+  },
+  "connection": {
+    "lost": "<strong>Geen verbinding met Sandhovius.</strong> Je ziet de laatst bekende stand van je apparaten. We proberen het automatisch opnieuw.",
+    "noBox": "<strong>Er is geen box aan dit huis gekoppeld.</strong> Tot er een box gekoppeld is, zie je de laatst bekende stand van je apparaten.",
+    "boxSilent": "<strong>Je Sandhovius-box reageert niet.</strong> Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.",
+    "boxSilentSince": "<strong>Je Sandhovius-box reageert niet sinds {since}.</strong> Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.",
+    "connecting": "Verbinden met je huis…",
+    "live": "Verbonden met je huis"
+  },
+  "refresh": {
+    "refreshing": "Bijwerken…",
+    "done": "Bijgewerkt"
+  },
+  "common": {
+    "close": "Sluiten",
+    "closeNotice": "Melding sluiten",
+    "retry": "Opnieuw proberen",
+    "saved": "Opgeslagen",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen"
+  },
+  "toast": {
+    "boxUnreachable": "Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.",
+    "deviceOffline": "{name} is offline",
+    "undo": "Ongedaan maken",
+    "invitationSent": "Uitnodiging verstuurd naar {email}",
+    "boxReleased": "Je box is ontkoppeld",
+    "sessionExpired": "Je bent automatisch uitgelogd omdat je sessie verlopen is. Log opnieuw in om verder te gaan.",
+    "lostAccess": "Je hebt geen toegang meer tot {names}.",
+    "heatingOff": "Verwarming uitgezet",
+    "couldNotAdjust": "{name} kon dit niet instellen. Probeer het opnieuw.",
+    "allOff": "{count, plural, one {{name} gaat uit} other {# apparaten gaan uit}}",
+    "roomOn": "{count, plural, one {{name} gaat aan} other {# apparaten in {room} gaan aan}}",
+    "roomOff": "{count, plural, one {{name} gaat uit} other {# apparaten in {room} gaan uit}}",
+    "slow": "{name} reageert nog niet. Even geduld…",
+    "gaveUp": "{name} heeft niet gereageerd. Je ziet weer de laatst bekende stand.",
+    "failed": "{name} reageerde niet. Controleer of het apparaat stroom heeft en probeer het opnieuw.",
+    "deleted": "{label} verwijderd",
+    "labelDevice": "“{name}”",
+    "labelRoom": "Kamer “{name}”",
+    "labelScene": "Scène “{name}”",
+    "aDevice": "Apparaat",
+    "sceneIncomplete": "“{name}” is niet helemaal gelukt. Kijk bij Let op of al je apparaten bereikbaar zijn."
+  },
+  "rooms": {
+    "unassigned": "Overig",
+    "add": "Toevoegen",
+    "count": "{count, plural, one {# apparaat} other {# apparaten}}",
+    "empty": "Nog geen apparaten in deze kamer. Voeg er een toe met “Toevoegen”, of verplaats een apparaat hierheen via Details."
+  },
+  "deviceSheet": {
+    "setupFailed": "Het klaarzetten is niet gelukt.",
+    "showOnHome": "Op Home tonen",
+    "name": "Naam",
+    "room": "Kamer",
+    "confirmDelete": "“{name}” uit Sandhovius verwijderen? Het apparaat verdwijnt uit de app; je kunt het later opnieuw toevoegen.",
+    "delete": "Apparaat verwijderen",
+    "stateUnknown": "Nog onbekend",
+    "stateLabel": "Stand",
+    "state": {
+      "on": "Aan",
+      "off": "Uit",
+      "heatingOn": "Verwarming aan",
+      "heatingOff": "Verwarming uit"
+    },
+    "offlineLast": {
+      "on": "Offline, laatst aan",
+      "off": "Offline, laatst uit",
+      "heatingOn": "Offline, laatst verwarming aan",
+      "heatingOff": "Offline, laatst verwarming uit"
+    },
+    "motionNow": "Er is nu beweging",
+    "battery": "Batterij",
+    "batteryLow": "Bijna leeg ({percent}%)",
+    "batteryPercent": "{percent}%",
+    "lastUpdated": "Laatst bijgewerkt",
+    "offlineNote": "Offline, dit is de laatst bekende stand."
   }
 }

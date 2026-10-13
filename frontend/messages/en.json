@@ -70,5 +70,281 @@
     "language": "Language",
     "languageHint": "For the app and for the emails you get from Sandhovius.",
     "languageFailed": "The language couldn’t be changed. Try again in a moment."
+  },
+  "time": {
+    "neverConnected": "not connected yet",
+    "justNow": "just now"
+  },
+  "device": {
+    "on": "On",
+    "off": "Off",
+    "onPercent": "On · {percent}%",
+    "types": {
+      "light": "Light",
+      "switch": "Plug",
+      "sensor": "Sensor",
+      "climate": "Thermostat"
+    },
+    "offline": "Offline",
+    "unreachable": "Can’t be reached",
+    "pairing": "Being set up",
+    "setupFailed": "Not set up",
+    "noReadings": "No readings",
+    "motion": "Motion",
+    "noMotion": "No motion",
+    "motionNow": "motion right now",
+    "noMotionNow": "no motion",
+    "unknown": "Unknown",
+    "lastKnown": "{value}, {status}",
+    "details": "Details of {name}",
+    "detailsWithReading": "Details of {name}, {reading}"
+  },
+  "home": {
+    "greeting": {
+      "night": "Good night",
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "greetingWithName": "{greeting}, {name}",
+    "summary": {
+      "lights": "{count, plural, one {# light} other {# lights}}",
+      "plugs": "{count, plural, one {# plug} other {# plugs}}",
+      "on": "{things} on",
+      "allOff": "Everything is off",
+      "withIndoor": "{state}, {temperature} inside"
+    },
+    "outside": "Outside {condition}",
+    "outsideWithTemperature": "Outside {condition}, {temperature}",
+    "attention": {
+      "setup": "setup didn’t work",
+      "offline": "offline",
+      "battery": "battery nearly empty ({percent}%)",
+      "one": "{name}: {reason}",
+      "many": "{count, plural, one {# device needs} other {# devices need}} attention",
+      "title": "Needs attention",
+      "notices": "Notices"
+    },
+    "addBox": "Add a box",
+    "noHouse": "There’s no home linked to your account yet. As soon as your Sandhovius box is linked to your account, your home will appear here.",
+    "firstDevice": {
+      "title": "Add your first device",
+      "text": "A light, plug, sensor or thermostat. It appears on Home straight away, so you can control it with one tap."
+    },
+    "noRoom": "No room",
+    "allOff": "All off",
+    "favorites": "Favourites",
+    "order": "Order",
+    "welcome": {
+      "title": "Your everyday lights go here",
+      "text": "Press and hold a light or plug and choose “Show on Home”. Then you can control it with one tap, as soon as you open the app."
+    },
+    "nowOn": "On right now",
+    "temperature": "Temperature"
+  },
+  "weather": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "conditions": {
+      "clear-night": "Clear",
+      "sunny": "Sunny",
+      "partlycloudy": "Partly cloudy",
+      "cloudy": "Cloudy",
+      "fog": "Fog",
+      "rainy": "Rain",
+      "pouring": "Heavy rain",
+      "lightning-rainy": "Thunder and rain",
+      "lightning": "Thunder",
+      "hail": "Hail",
+      "snowy": "Snow",
+      "snowy-rainy": "Sleet",
+      "windy": "Windy",
+      "windy-variant": "Windy and cloudy",
+      "exceptional": "Unusual weather",
+      "unknown": "Unknown"
+    },
+    "title": "Weather",
+    "stale": "Not updated since {time}. Does your Sandhovius box have internet?",
+    "hours": "The coming hours",
+    "days": "The coming days",
+    "low": "low",
+    "high": "high",
+    "updated": "Updated at {time}"
+  },
+  "climate": {
+    "targetAnnounced": "Target temperature {temperature}",
+    "target": "Target temperature",
+    "status": {
+      "lastKnown": "{status}, last known setting",
+      "off": "Heating off",
+      "heating": "Heating",
+      "atTarget": "At temperature"
+    },
+    "noReadings": "No readings received yet",
+    "colder": "Cooler",
+    "warmer": "Warmer",
+    "now": "Now <value>{temperature}</value>",
+    "heating": "Heating"
+  },
+  "scenes": {
+    "title": "Scenes",
+    "running": "{name} is running",
+    "done": "{name} is done",
+    "run": "Run scene {name}"
+  },
+  "nav": {
+    "home": "Home",
+    "kamers": "Rooms",
+    "scenes": "Scenes",
+    "instellingen": "Settings",
+    "menu": "Main menu",
+    "addDevice": "Add a device"
+  },
+  "errors": {
+    "failed": {
+      "offline": "{what} didn’t work. Sandhovius can’t be reached right now; check your internet connection and try again.",
+      "signedOut": "{what} didn’t work. You’ve been logged out; log in again.",
+      "forbidden": "{what} didn’t work. Your account isn’t allowed to change this.",
+      "notFound": "{what} didn’t work. It no longer exists; refresh the page.",
+      "tooMany": "{what} didn’t work. Too many attempts; wait a moment and try again.",
+      "invalid": "{what} didn’t work. Check what you filled in.",
+      "other": "{what} didn’t work. Try again in a moment."
+    },
+    "invalidEmail": "Enter a valid email address.",
+    "what": {
+      "fetchDevices": "Loading your devices",
+      "switchOn": "Switching on {name}",
+      "switchOff": "Switching off {name}",
+      "adjust": "Adjusting {name}",
+      "setTemperature": "Setting {name} to {temperature}",
+      "saveOrder": "Saving the order",
+      "deleteNamed": "Deleting {name}",
+      "addToHome": "Adding to Home",
+      "provision": "Setting up {name}",
+      "runScene": "Running “{name}”",
+      "scheduleOn": "Turning on the {time} schedule",
+      "scheduleOff": "Turning off the {time} schedule",
+      "addDevice": "Adding the device",
+      "changePassword": "Changing your password",
+      "favorite": "Changing the favourite",
+      "delete": "Deleting",
+      "loadMembers": "Loading the household",
+      "leaveHouse": "Leaving the home",
+      "revoke": "Withdrawing the invitation",
+      "saveRoomName": "Saving the room name",
+      "deleteRoom": "Deleting the room",
+      "saveName": "Saving the name",
+      "addRoom": "Adding the room",
+      "accept": "Accepting",
+      "decline": "Declining",
+      "dismiss": "Removing",
+      "invite": "Inviting",
+      "changeRole": "Changing the role",
+      "saveScene": "Saving the scene",
+      "rename": "Renaming",
+      "changeRoom": "Changing the room"
+    }
+  },
+  "household": {
+    "roles": {
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "expires": {
+      "expired": "expired",
+      "today": "expires today",
+      "tomorrow": "expires tomorrow",
+      "inDays": "expires in {days} days"
+    },
+    "you": "{role}, you",
+    "invitedAs": "Invited as {role, select, admin {an admin} other {a member}}, {expires}"
+  },
+  "invitation": {
+    "someone": "Someone",
+    "label": "Invitation to {house}",
+    "expiredTitle": "This invitation has expired",
+    "expiredText": "{who} invited you to {house}. Ask for a new invitation.",
+    "title": "{who} invites you to {house}",
+    "meta": "As {role, select, admin {an admin} other {a member}}, {expires}.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "dismiss": "Remove"
+  },
+  "connection": {
+    "lost": "<strong>No connection to Sandhovius.</strong> You’re seeing the last known state of your devices. We’ll keep trying.",
+    "noBox": "<strong>No box is linked to this home.</strong> Until a box is linked, you’ll see the last known state of your devices.",
+    "boxSilent": "<strong>Your Sandhovius box isn’t responding.</strong> Check that the box has power and internet. Until it responds, you’ll see the last known state.",
+    "boxSilentSince": "<strong>Your Sandhovius box hasn’t responded since {since}.</strong> Check that the box has power and internet. Until it responds, you’ll see the last known state.",
+    "connecting": "Connecting to your home…",
+    "live": "Connected to your home"
+  },
+  "refresh": {
+    "refreshing": "Updating…",
+    "done": "Updated"
+  },
+  "common": {
+    "close": "Close",
+    "closeNotice": "Close notice",
+    "retry": "Try again",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "toast": {
+    "boxUnreachable": "Your Sandhovius box can’t be reached right now. Try again once it responds.",
+    "deviceOffline": "{name} is offline",
+    "undo": "Undo",
+    "invitationSent": "Invitation sent to {email}",
+    "boxReleased": "Your box has been unlinked",
+    "sessionExpired": "You’ve been logged out because your session expired. Log in again to continue.",
+    "lostAccess": "You no longer have access to {names}.",
+    "heatingOff": "Heating turned off",
+    "couldNotAdjust": "{name} couldn’t make that change. Try again.",
+    "allOff": "{count, plural, one {{name} is turning off} other {# devices are turning off}}",
+    "roomOn": "{count, plural, one {{name} is turning on} other {# devices in {room} are turning on}}",
+    "roomOff": "{count, plural, one {{name} is turning off} other {# devices in {room} are turning off}}",
+    "slow": "{name} isn’t responding yet. One moment…",
+    "gaveUp": "{name} didn’t respond. You’re seeing the last known state again.",
+    "failed": "{name} didn’t respond. Check that the device has power and try again.",
+    "deleted": "{label} deleted",
+    "labelDevice": "“{name}”",
+    "labelRoom": "Room “{name}”",
+    "labelScene": "Scene “{name}”",
+    "aDevice": "Device",
+    "sceneIncomplete": "“{name}” didn’t fully work. Check Needs attention to see whether all your devices can be reached."
+  },
+  "rooms": {
+    "unassigned": "Other",
+    "add": "Add",
+    "count": "{count, plural, one {# device} other {# devices}}",
+    "empty": "No devices in this room yet. Add one with “Add”, or move a device here from its details."
+  },
+  "deviceSheet": {
+    "setupFailed": "Setting it up didn’t work.",
+    "showOnHome": "Show on Home",
+    "name": "Name",
+    "room": "Room",
+    "confirmDelete": "Delete “{name}” from Sandhovius? The device disappears from the app; you can add it again later.",
+    "delete": "Delete device",
+    "stateUnknown": "Not known yet",
+    "stateLabel": "State",
+    "state": {
+      "on": "On",
+      "off": "Off",
+      "heatingOn": "Heating on",
+      "heatingOff": "Heating off"
+    },
+    "offlineLast": {
+      "on": "Offline, last on",
+      "off": "Offline, last off",
+      "heatingOn": "Offline, heating last on",
+      "heatingOff": "Offline, heating last off"
+    },
+    "motionNow": "Motion right now",
+    "battery": "Battery",
+    "batteryLow": "Nearly empty ({percent}%)",
+    "batteryPercent": "{percent}%",
+    "lastUpdated": "Last updated",
+    "offlineNote": "Offline; this is the last known state."
   }
 }

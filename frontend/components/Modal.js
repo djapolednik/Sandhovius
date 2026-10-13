@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef } from 'react'
+import { useTranslations } from 'use-intl'
 import { CloseIcon } from '../lib/icons'
 
 // Native <dialog> via showModal(): de browser regelt zelf de focus-trap,
@@ -9,6 +10,7 @@ import { CloseIcon } from '../lib/icons'
 // eigenaar van open/dicht: Escape (het 'cancel'-event) en een klik op de
 // backdrop roepen onClose aan, de ouder unmount ons dan.
 export default function Modal({ title, onClose, children }) {
+  const t = useTranslations('common')
   const dialogRef = useRef(null)
   const openerRef = useRef(null)
   const titleId = useId()
@@ -60,7 +62,7 @@ export default function Modal({ title, onClose, children }) {
           <h2 className="modal-title" id={titleId}>
             {title}
           </h2>
-          <button className="btn btn-icon btn-plain" aria-label="Sluiten" onClick={onClose}>
+          <button className="btn btn-icon btn-plain" aria-label={t('close')} onClick={onClose}>
             <CloseIcon />
           </button>
         </div>

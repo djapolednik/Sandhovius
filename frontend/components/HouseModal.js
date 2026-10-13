@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
@@ -8,6 +9,7 @@ import { CheckIcon, CloseIcon, TrashIcon } from '../lib/icons'
 import MoveButtons from './MoveButtons'
 
 function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
+  const t = useTranslations()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(room.name)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -22,7 +24,7 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
       await onRename(room.id, name)
       setEditing(false)
     } catch (err) {
-      setError(describeError('Kamernaam opslaan', err))
+      setError(describeError(t, t('errors.what.saveRoomName'), err))
     } finally {
       setBusy(false)
     }
@@ -34,7 +36,7 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
     try {
       await onDelete(room.id)
     } catch (err) {
-      setError(describeError('Kamer verwijderen', err))
+      setError(describeError(t, t('errors.what.deleteRoom'), err))
       setBusy(false)
     }
   }
@@ -141,6 +143,7 @@ export default function HouseModal({
   onReleaseBox,
   onClose,
 }) {
+  const t = useTranslations()
   const [houseName, setHouseName] = useState(house?.name ?? '')
   const [savingName, setSavingName] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
@@ -170,7 +173,7 @@ export default function HouseModal({
     try {
       await onRenameHouse(houseName)
     } catch (err) {
-      setError(describeError('Naam opslaan', err))
+      setError(describeError(t, t('errors.what.saveName'), err))
     } finally {
       setSavingName(false)
     }
@@ -184,7 +187,7 @@ export default function HouseModal({
       await onAddRoom(newRoomName)
       setNewRoomName('')
     } catch (err) {
-      setError(describeError('Kamer toevoegen', err))
+      setError(describeError(t, t('errors.what.addRoom'), err))
     } finally {
       setAddingRoom(false)
     }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
@@ -16,6 +17,7 @@ const DEVICE_TYPES = [
 // (sneller en duidelijker dan een uitklaplijst), en de voorbeeldnaam past
 // zich erop aan. De kamer staat al op de kamer die je net bekeek.
 export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onCreate }) {
+  const t = useTranslations()
   const [name, setName] = useState('')
   const [type, setType] = useState('light')
   const [roomId, setRoomId] = useState(defaultRoomId)
@@ -34,7 +36,7 @@ export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onC
       await onCreate({ name: name.trim(), type, room: roomId || null })
       onClose()
     } catch (err) {
-      setError(describeError('Apparaat toevoegen', err))
+      setError(describeError(t, t('errors.what.addDevice'), err))
       setSaving(false)
     }
   }

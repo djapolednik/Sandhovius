@@ -1,10 +1,14 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { expiresText, householdError, isAdmin, isHouseDataRefusal, lostHouses, pickHouse, roleLabel } from './household.js'
+import { expiresText, householdError, isAdmin, isExpired, isHouseDataRefusal, lostHouses, pickHouse, roleLabel } from './household.js'
+import { INTL } from './messages.testkit.js'
+
+const { t } = INTL.nl
 
 test('roleLabel: beheerder en huisgenoot', () => {
-  assert.equal(roleLabel('admin'), 'Beheerder')
-  assert.equal(roleLabel('member'), 'Huisgenoot')
+  assert.equal(roleLabel(t, 'admin'), 'Beheerder')
+  assert.equal(roleLabel(t, 'member'), 'Huisgenoot')
+  assert.equal(roleLabel(INTL.en.t, 'admin'), 'Admin')
 })
 
 test('isAdmin: alleen wie in admins van dit huis staat', () => {
@@ -18,11 +22,14 @@ test('isAdmin: alleen wie in admins van dit huis staat', () => {
 test('expiresText: vandaag, morgen, over N dagen, verlopen', () => {
   const now = new Date('2026-10-07T10:00:00Z')
   const at = (days, hours = 0) => new Date(now.getTime() + (days * 24 + hours) * 3600 * 1000).toISOString().replace('T', ' ')
-  assert.equal(expiresText(at(0, 3), now), 'verloopt vandaag')
-  assert.equal(expiresText(at(1), now), 'verloopt morgen')
-  assert.equal(expiresText(at(5), now), 'verloopt over 5 dagen')
-  assert.equal(expiresText(at(0, -1), now), 'verlopen')
-  assert.equal(expiresText('', now), 'verlopen')
+  assert.equal(expiresText(t, at(0, 3), now), 'verloopt vandaag')
+  assert.equal(expiresText(t, at(1), now), 'verloopt morgen')
+  assert.equal(expiresText(t, at(5), now), 'verloopt over 5 dagen')
+  assert.equal(expiresText(t, at(0, -1), now), 'verlopen')
+  assert.equal(expiresText(t, '', now), 'verlopen')
+  assert.equal(expiresText(INTL.en.t, at(5), now), 'expires in 5 days')
+  assert.equal(isExpired(at(0, -1), now), true)
+  assert.equal(isExpired(at(1), now), false)
 })
 
 test('pickHouse: gekozen huis, anders het eerste, anders niets', () => {
@@ -33,18 +40,27 @@ test('pickHouse: gekozen huis, anders het eerste, anders niets', () => {
   assert.equal(pickHouse([], 'a'), undefined)
 })
 
-test('householdError: Nederlandse melding van de server bij 403, 409, 410 en "Al lid"', () => {
-  const err = (status, message, data = {}) => ({ status, response: { status, message, data } })
-  assert.equal(householdError('Rol wijzigen', err(409, 'Er moet minstens één beheerder blijven')), 'Er moet minstens één beheerder blijven')
-  assert.equal(householdError('Accepteren', err(410, 'Deze uitnodiging is verlopen')), 'Deze uitnodiging is verlopen')
-  assert.equal(householdError('Accepteren', err(403, 'Bevestig eerst je e-mailadres')), 'Bevestig eerst je e-mailadres')
-  assert.equal(householdError('Uitnodigen', err(400, 'Al lid van dit huis.')), 'Al lid van dit huis.')
-  assert.equal(
-    householdError('Uitnodigen', err(400, 'Failed to create record.', { email: { code: 'validation_is_email' } })),
-    'Vul een geldig e-mailadres in.'
-  )
-  assert.match(householdError('Uitnodigen', err(400, 'Failed to create record.')), /^Uitnodigen is niet gelukt/)
-  assert.match(householdError('Verlaten', err(0, '')), /niet bereikbaar/)
+test('householdError: de code van de server eerst, in elke taal', () => {
+  const err = (status, message, extra = {}) => ({ status, response: { status, message, data: {}, ...extra } })
+  const quiet = console.error
+  console.error = () => {}
+  try {
+    // Zolang een hook nog geen code stuurt: de oude Nederlandse melding.
+    assert.equal(householdError(t, 'Rol wijzigen', err(409, 'Er moet minstens één beheerder blijven')), 'Er moet minstens één beheerder blijven')
+    assert.equal(householdError(t, 'Accepteren', err(410, 'Deze uitnodiging is verlopen')), 'Deze uitnodiging is verlopen')
+    assert.equal(householdError(t, 'Accepteren', err(403, 'Bevestig eerst je e-mailadres')), 'Bevestig eerst je e-mailadres')
+    assert.equal(householdError(t, 'Uitnodigen', err(400, 'Al lid van dit huis.')), 'Al lid van dit huis.')
+    assert.equal(
+      householdError(t, 'Uitnodigen', err(400, 'Failed to create record.', { data: { email: { code: 'validation_is_email' } } })),
+      'Vul een geldig e-mailadres in.'
+    )
+    assert.match(householdError(t, 'Uitnodigen', err(400, 'Failed to create record.')), /^Uitnodigen is niet gelukt/)
+    assert.match(householdError(t, 'Verlaten', err(0, '')), /niet bereikbaar/)
+    // Een onbekende code valt terug op de status.
+    assert.match(householdError(INTL.en.t, 'Inviting', err(400, 'x', { code: 'no_such_code' })), /^Inviting didn’t work/)
+  } finally {
+    console.error = quiet
+  }
 })
 
 test('isHouseDataRefusal: een 4xx op huisdata, niet op inloggen of bij te veel verzoeken', () => {

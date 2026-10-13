@@ -3,7 +3,8 @@
 // zelf als test draait.
 import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
-import { LANGUAGES } from './language.js'
+import { createTranslator } from 'use-intl/core'
+import { LANGUAGES, LOCALES } from './language.js'
 
 const dir = new URL('../messages/', import.meta.url)
 
@@ -14,6 +15,24 @@ export const MESSAGES = Object.fromEntries(
 export function lookup(messages, key) {
   return key.split('.').reduce((node, part) => (node == null ? undefined : node[part]), messages)
 }
+
+// { t, locale } per taal, zoals useIntl in de app: zo testen de helpers met
+// de echte berichten. Een ontbrekende sleutel of waarde gooit een fout.
+export const INTL = Object.fromEntries(
+  LANGUAGES.map((language) => [
+    language,
+    {
+      locale: LOCALES[language],
+      t: createTranslator({
+        locale: LOCALES[language],
+        messages: MESSAGES[language],
+        onError: (error) => {
+          throw error
+        },
+      }),
+    },
+  ])
+)
 
 // Een sleutel die een helper teruggeeft, moet in elke taal een tekst zijn.
 export function assertMessage(key) {
