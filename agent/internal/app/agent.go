@@ -222,6 +222,7 @@ func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 	if device.Gateway != a.house() {
 		return // device van een andere box
 	}
+	a.devices.applyEvent(event.EventType, device)
 
 	if event.EventType == "create" && device.EntityID == "" {
 		if err := a.provisionDeviceEntity(device); err != nil {

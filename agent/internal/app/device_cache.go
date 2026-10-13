@@ -79,6 +79,35 @@ func (d *deviceCache) entityIDs() []string {
 	return ids
 }
 
+// applyEvent houdt de cache bij met de realtime-events van devices: een
+// verwijderd device verdwijnt, een nieuw of gewijzigd device komt erin met
+// zijn huidige entity. Zonder dit bleef een entity na verwijderen naar het
+// oude device wijzen (lookup ververst alleen bij een miss), en weigerde
+// PocketBase elke stand van een opnieuw gekoppelde sensor met dezelfde naam.
+func (d *deviceCache) applyEvent(action string, device pocketbase.Device) {
+	if d == nil || device.Gateway != d.house() {
+		return
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	for entity, id := range d.byEntity {
+		if id == device.ID {
+			delete(d.byEntity, entity)
+		}
+	}
+	if action != "delete" && device.EntityID != "" {
+		d.byEntity[device.EntityID] = device.ID
+	}
+}
+
+// cached zegt wat de cache nu weet, zonder te verversen (voor tests).
+func (d *deviceCache) cached(entityID string) (string, bool) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	id, ok := d.byEntity[entityID]
+	return id, ok
+}
+
 // lookup returns the PocketBase device id for entityID, refreshing the
 // cache once from PocketBase if it isn't found yet.
 func (d *deviceCache) lookup(entityID string) (deviceID string, found bool, err error) {

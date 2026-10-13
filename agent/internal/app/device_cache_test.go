@@ -37,3 +37,30 @@ func TestDeviceCacheRefreshWithoutHouse(t *testing.T) {
 		t.Error("refresh zonder huis gaf geen fout")
 	}
 }
+
+// Een device verwijderen en opnieuw aanmaken met dezelfde entity (een
+// sensor opnieuw koppelen onder dezelfde naam): de cache mag niet naar het
+// verwijderde device blijven wijzen, anders weigert PocketBase elke stand.
+func TestDeviceCacheFollowsDeviceEvents(t *testing.T) {
+	cache := newDeviceCache(nil, func() string { return "huis1" })
+	cache.applyEvent("create", pocketbase.Device{ID: "oud", Gateway: "huis1", EntityID: "gang_sensor"})
+	if id, ok := cache.cached("gang_sensor"); !ok || id != "oud" {
+		t.Fatalf("na create: %q %v", id, ok)
+	}
+	cache.applyEvent("delete", pocketbase.Device{ID: "oud", Gateway: "huis1", EntityID: "gang_sensor"})
+	if _, ok := cache.cached("gang_sensor"); ok {
+		t.Fatalf("na delete nog in de cache")
+	}
+	cache.applyEvent("create", pocketbase.Device{ID: "nieuw", Gateway: "huis1", EntityID: "gang_sensor"})
+	if id, _ := cache.cached("gang_sensor"); id != "nieuw" {
+		t.Errorf("na opnieuw aanmaken: %q, want nieuw", id)
+	}
+	// Een andere entity voor hetzelfde device: de oude verdwijnt.
+	cache.applyEvent("update", pocketbase.Device{ID: "nieuw", Gateway: "huis1", EntityID: "binary_sensor.gang"})
+	if _, ok := cache.cached("gang_sensor"); ok {
+		t.Errorf("oude entity nog in de cache")
+	}
+	if id, _ := cache.cached("binary_sensor.gang"); id != "nieuw" {
+		t.Errorf("nieuwe entity: %q", id)
+	}
+}
