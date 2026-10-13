@@ -77,6 +77,14 @@
   flex-shrink: 0;
 }
 
+/* "Alles uit" rechts in de kop van Home: het icoon naast de tekst. */
+.home-all-off {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 0.95rem;
+}
+
 /* "Apparaat toevoegen": een primaire knop, maar niet over de volle
    breedte zoals in een formulier. */
 .btn-add {
