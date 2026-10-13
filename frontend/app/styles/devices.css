@@ -1,7 +1,7 @@
 /* ==================== Panelen ====================
-   Eén vlaktype voor alles wat op de pagina "ligt": het huis-paneel, de
-   apparaattegels, de thermostaat. Grote ronde hoeken (28px); de vlakken
-   erbinnen (knoppen, modus-tegels) zijn kleiner rond (18px), knoppen
+   Eén vlaktype voor alles wat op de pagina "ligt": de apparaattegels,
+   de thermostaat, de weerkaart, de meldingen. Grote ronde hoeken (28px);
+   de vlakken erbinnen (knoppen, modus-tegels) zijn kleiner rond (18px), knoppen
    helemaal rond — hoe groter het vlak, hoe ronder. */
 .panel {
   background: var(--card-background);

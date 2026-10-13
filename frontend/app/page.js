@@ -732,9 +732,9 @@ export default function Home() {
       device.online &&
       isDeviceOn(device.type, device.expand?.device_state_via_device?.[0]?.state)
   )
-  // "Let op" in het huis-paneel: wat de bewoner zelf moet oplossen, op één
-  // plek i.p.v. verspreid over tegels in verschillende kamers. Alleen als
-  // de box bereikbaar is: anders is álles onbekend en zegt de
+  // "Let op" bovenaan Home (HomeNotices): wat de bewoner zelf moet
+  // oplossen, op één plek i.p.v. verspreid over tegels in verschillende
+  // kamers. Alleen als de box bereikbaar is: anders is álles onbekend en zegt de
   // verbindingsmelding genoeg. Net toegevoegde apparaten tellen nog niet.
   const attention = houseReachable
     ? devicesInHouse.flatMap((device) => {
@@ -933,7 +933,7 @@ export default function Home() {
     return true
   }
 
-  // "Alles uit" in het huis-paneel: elke lamp en elk stopcontact dat aan
+  // "Alles uit" bovenaan Home: elke lamp en elk stopcontact dat aan
   // staat. Hier wél een melding, want je ziet niet alle tegels tegelijk, en
   // met "Ongedaan maken" gaat precies hetzelfde rijtje weer aan.
   async function turnAllOff() {

@@ -411,13 +411,12 @@
 }
 
 /* ==================== Dashboard ====================
-   Het huis-paneel en de apparaten. Breed: het huis als vaste kolom links
-   (zoals het weer-paneel in de inspiratie, maar met echte informatie),
-   de apparaten als bento-raster ernaast. Smal: onder elkaar. */
+   Breed: het weer als vaste kolom links, de apparaten als bento-raster
+   ernaast. Smal: alleen de apparaten (het weer staat onder de groet). */
 .dashboard {
   display: grid;
-  /* minmax(0, …): een lang woord in de huisnaam mag de kolom niet breder
-     maken dan het scherm. */
+  /* minmax(0, …): een lang woord mag de kolom niet breder maken dan het
+     scherm. */
   grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
   container: dashboard / inline-size;
@@ -431,11 +430,12 @@
   }
 }
 
-/* De linkerkolom: het huis-paneel en (breed) de weerkaart eronder. Niet
-   sticky: samen zijn ze hoger dan een laptopscherm, en een sticky kolom
-   zou dan zijn onderkant nooit laten zien. */
+/* De linkerkolom, alleen breed: de weerkaart. Op de telefoon weg, anders
+   houdt de lege kolom een tussenruimte boven de apparaten. Niet sticky:
+   met kleine schermhoogte zou een sticky kolom zijn onderkant nooit laten
+   zien. */
 .dashboard-side {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
@@ -485,9 +485,13 @@
   }
 }
 
-/* Breed: de apparaten altijd in de rechterkolom, ook zolang het
-   huis-paneel er nog niet is (tijdens het laden). */
+/* Breed: de apparaten in de rechterkolom, naast het weer (zonder weer
+   geen linkerkolom, zie .dashboard:not(:has(.dashboard-side))). */
 @media (min-width: 900px) {
+  .dashboard-side {
+    display: flex;
+  }
+
   .dashboard-devices {
     grid-column: 2;
   }
