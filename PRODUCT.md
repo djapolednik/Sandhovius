@@ -35,7 +35,7 @@ Sandhovius is a plug-and-play smart-home appliance: an Intel N100 mini PC runnin
 
 - Current features: create an account (with e-mail confirmation) and log in, password reset, linking a box by QR code or typed code (new house or replacing the box of an existing one), unlinking a box, multiple houses per account, rooms, favourites, small device tiles (lamp, plug, thermostat, sensor) with a detail sheet, adding devices, scenes and schedules, weather, "Alles uit", pull to refresh, toasts, and Opties with theme (Licht / Donker / Automatisch) and the language of account e-mails.
 - Light and dark themes are both product requirements.
-- The app and the account e-mails come in Dutch and English, one choice per account (Opties → Taal; before login the browser language). Names people type (houses, rooms, devices, scenes) are never translated. Dutch is the reference copy; English is British. Design: `docs/superpowers/specs/2026-10-13-app-language-design.md` (not built yet; until then the UI is Dutch only).
+- The app and the account e-mails come in Dutch and English, one choice per account (Opties → Taal; before login the browser language). Names people type (houses, rooms, devices, scenes) are never translated. Dutch is the reference copy; English is British. Design: `docs/superpowers/specs/2026-10-13-app-language-design.md`.
 - The product is in development: Fase 2 (local stack, PWA, realtime commands, per-box identity, self-service linking) is done; Fase 3 (remote access via Headscale, PocketBase on a server, HTTPS, a real mail provider) is next. Until then everything runs locally. There is no webshop or marketing surface in this repo.
 
 ## Brand Commitments

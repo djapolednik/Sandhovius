@@ -273,9 +273,11 @@ Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, s
 - **Meta** (500, 0.85–0.95rem): the connection line, labels, tile captions, navigation labels, "Laatst aan", dial scale and "Nu".
 
 ### Named Rules
-**The Readings Are Loudest Rule.** On a tile, the value a person came to check (on/off state, temperature, the thermostat target) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use the Dutch decimal comma with one decimal ("21,5°", `formatTemperature`).
+**The Readings Are Loudest Rule.** On a tile, the value a person came to check (on/off state, temperature, the thermostat target) is the heaviest and largest text. Device names come second, and meta and labels recede. Temperatures use one decimal in the format of the app's language ("21,5°" in Dutch, "21.5°" in English, `formatTemperature`).
 
 **The Sentence Case Rule.** Labels, buttons and headings are written as sentences ("Wat voeg je toe?", "Naam"), never in uppercase or with letter-spaced stamps. Meta is written as sentences too ("Offline, laatst bekende stand"), not as strings joined with middle dots.
+
+**The Same Voice In English Rule.** The app speaks Dutch or English (Opties → Taal); Dutch is the reference copy. English is British ("Favourites", "colour", 24-hour clock), in sentence case, in the same plain, warm words: "device" is fine, "entity", "integration" or "node" are not. Every text lives in `frontend/messages/nl.json` and `en.json` under the same key; names people type (homes, rooms, devices, scenes) are never translated.
 
 **The Legibility Floor Rule.** Some users are older or have reduced sight. No text that carries information may go below 0.85rem. Meta text at that size must still meet 4.5:1 contrast.
 

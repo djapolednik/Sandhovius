@@ -1,6 +1,6 @@
 # Taal van de app — ontwerp
 
-Datum: 2026-10-13 · Status: stap 1 gebouwd (op `feat/app-language`), stap 2 en 3 nog niet · Bouwt op: claim-flow
+Datum: 2026-10-13 · Status: gebouwd (stap 1–3, branch `feat/app-language`) · Bouwt op: claim-flow
 (`2026-10-06-claim-flow-design.md`, de mailtaal per account)
 
 ## Doel

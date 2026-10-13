@@ -171,6 +171,19 @@ box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
 
 ### Hooks (`backend/pb_hooks/`)
 
+**Foutantwoorden zijn codes, geen zinnen.** Elke fout die de app kan tonen
+heeft de vorm van PocketBase plus `code` en `params`:
+`{status, code, params, message, data}`, bv. `{status: 409, code:
+"box_linked_elsewhere", params: {house: "Villa"}}`. De app maakt er de zin
+van in de taal van de bewoner (`errors.codes.<code>` in
+`frontend/messages/*.json`); `message` is een korte Engelse diagnose en komt
+nooit op het scherm. Niet in `data`: daar zet PocketBase veldfouten per
+veldnaam. Een nieuwe fout = een code hier, een tekst in beide
+berichtenbestanden. Om dezelfde reden zijn `commands.error` en
+`schedules.last_error` (van de agent) diagnose voor de ontwikkelaar: de app
+toont ze nooit, alleen óf er een fout is. Spec:
+`docs/superpowers/specs/2026-10-13-app-language-design.md`.
+
 - **`claim.pb.js`** — `POST /api/sandhovius/claim` en `/release`, alleen voor
   ingelogde bewoners met een bevestigd e-mailadres. Volgorde: bevestigd →
   code (HMAC-SHA256 van de genormaliseerde code met `CLAIM_CODE_KEY` uit env,
@@ -194,16 +207,20 @@ box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
 - **`household.pb.js`** — lidmaatschap, elk in één transactie, voor ingelogde
   bewoners. Wie geen lid of beheerder is krijgt 404.
   - Bij een nieuwe uitnodiging (alleen als de aanvrager beheerder is): e-mail
-    in kleine letters, al lid → 400 "Al lid van dit huis", oude uitnodiging
+    in kleine letters, al lid → 400 `already_member` (een `e.json` zonder
+    `e.next()`: een `BadRequestError` kan geen code meegeven), oude uitnodiging
     voor hetzelfde adres vervangen, `expires`, `house_name`, `inviter_name`;
     daarna de mail (mislukt die, dan blijft de uitnodiging en gaat de fout naar
     het log).
   - `GET /api/sandhovius/houses/{id}/members` — leden met naam, e-mail en rol.
-  - `POST /api/sandhovius/invitations/{id}/accept` — ander adres 404,
-    onbevestigd 403, verlopen 410; daarna lid (en beheerder bij rol admin).
+  - `POST /api/sandhovius/invitations/{id}/accept` — ander adres 404
+    `invitation_not_found`, onbevestigd 403 `email_not_verified`, verlopen 410
+    `invitation_expired`; daarna lid (en beheerder bij rol admin).
   - `PATCH` / `DELETE /api/sandhovius/houses/{id}/members/{user}` — rol
     wijzigen (beheerder) en verwijderen (beheerder) of verlaten (jezelf);
-    de laatste beheerder → 409. Verlaten ruimt je favorieten in dat huis op.
+    de laatste beheerder → 409 `last_admin` (account verwijderen als enige
+    beheerder: 409 `last_admin_of_house` met `params.house`). Verlaten ruimt je
+    favorieten in dat huis op.
 
 ### Rate limits
 
