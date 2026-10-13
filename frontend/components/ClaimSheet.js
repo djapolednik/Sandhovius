@@ -1,16 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'use-intl'
 import Modal from './Modal'
 import QrScanner from './QrScanner'
 import VerifyNotice from './VerifyNotice'
-import { claimErrorMessage, codeProblem, formatCode, isBoxOnline, normalizeSerial, pendingKey } from '../lib/claim'
+import { claimError, codeProblem, formatCode, isBoxOnline, normalizeSerial, pendingKey } from '../lib/claim'
 
-const CAMERA_REASON = {
-  insecure: 'De camera werkt alleen op een beveiligde verbinding. Tik de code over van het blad bij je box.',
-  denied: 'Je hebt de camera niet toegestaan. Tik de code over van het blad bij je box.',
-  nocamera: 'Er is geen camera gevonden. Tik de code over van het blad bij je box.',
-}
+// Waarom de camera niet kan: de woorden staan onder claim.camera.<reden>.
+const CAMERA_REASONS = ['insecure', 'denied', 'nocamera']
 
 function clearPending() {
   try {
@@ -26,13 +24,15 @@ function clearPending() {
 // pb: PocketBase-client. houses: eigen huizen, live bijgewerkt.
 // onClaimed(houseId): de huizen opnieuw ophalen en dit huis tonen.
 export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClose }) {
+  const t = useTranslations()
   const [verified, setVerified] = useState(Boolean(user?.verified))
   const [mode, setMode] = useState(initial ? 'form' : 'scan') // scan | form
   const [cameraNote, setCameraNote] = useState('')
   const [serial, setSerial] = useState(initial?.serial ?? '')
   const [code, setCode] = useState(initial?.code ?? '')
   const [target, setTarget] = useState('new') // 'new' of een huis-id
-  const [houseName, setHouseName] = useState('Thuis')
+  // Een voorstel dat je ziet en kunt wijzigen, in de taal van de app.
+  const [houseName, setHouseName] = useState(() => t('claim.defaultHouseName'))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [claimed, setClaimed] = useState(null) // { houseId, claimedAt }
@@ -82,13 +82,13 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
     // rate limit en zegt alleen "klopt niet").
     const problem = codeProblem(code)
     if (problem) {
-      setError(problem)
+      setError(t(problem))
       return
     }
     setBusy(true)
     setError('')
     const body = { serial: normalizeSerial(serial), code }
-    if (target === 'new') body.house_name = houseName.trim() || 'Thuis'
+    if (target === 'new') body.house_name = houseName.trim() || t('claim.defaultHouseName')
     else body.replace_house = target
     let res
     try {
@@ -96,7 +96,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
     } catch (err) {
       console.error('[koppelen]', err?.status)
       if (err?.status === 403) setVerified(false)
-      setError(claimErrorMessage(err?.status ?? 0, err?.message))
+      setError(claimError(t, err))
       setBusy(false)
       return
     }
@@ -123,20 +123,19 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
   if (claimed) {
     body = online ? (
       <p className="login-note" role="status">
-        Je box is gekoppeld en meldt zich. Je huis staat klaar.
+        {t('claim.online')}
       </p>
     ) : (
       <div className="form-stack">
         <p className="claim-wait" role="status">
           <span className="claim-pulse" aria-hidden="true" />
-          Wachten tot je box zich meldt…
+          {t('claim.waiting')}
         </p>
         <p className="login-note">
-          Zet je box aan en sluit hem aan op internet. Dit kan een paar minuten duren. Je kunt dit venster sluiten; je
-          huis is al gekoppeld.
+          {t('claim.waitingNote')}
         </p>
         <button type="button" className="btn btn-secondary" onClick={close}>
-          Sluiten
+          {t('common.close')}
         </button>
       </div>
     )
@@ -144,14 +143,14 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
     body = (
       <VerifyNotice email={user?.email} onResend={() => pb.collection('users').requestVerification(user.email)}>
         <p className="login-note">
-          Je box-code bewaren we zolang dit venster open staat. Zodra je e-mailadres bevestigd is, ga je hier verder.
+          {t('claim.verifyNote')}
         </p>
       </VerifyNotice>
     )
   } else if (mode === 'scan') {
     body = (
       <div className="form-stack">
-        <p className="login-note">Richt de camera op de QR-code op het blad bij je box.</p>
+        <p className="login-note">{t('claim.aim')}</p>
         <QrScanner
           onResult={(found) => {
             setSerial(found.serial)
@@ -159,12 +158,12 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
             setMode('form')
           }}
           onUnavailable={(reason) => {
-            setCameraNote(CAMERA_REASON[reason] || CAMERA_REASON.nocamera)
+            setCameraNote(t(`claim.camera.${CAMERA_REASONS.includes(reason) ? reason : 'nocamera'}`))
             setMode('form')
           }}
         />
         <button type="button" className="btn btn-secondary" onClick={() => setMode('form')}>
-          Code overtikken
+          {t('claim.typeCode')}
         </button>
       </div>
     )
@@ -179,11 +178,11 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
         )}
         {prefilled && (
           <p className="login-note" role="status">
-            We hebben de gegevens van je box ingevuld.
+            {t('claim.prefilled')}
           </p>
         )}
         <label className="form-field">
-          <span className="form-label">Serienummer</span>
+          <span className="form-label">{t('claim.serial')}</span>
           <input
             className="input"
             type="text"
@@ -197,7 +196,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
           />
         </label>
         <label className="form-field">
-          <span className="form-label">Code</span>
+          <span className="form-label">{t('claim.code')}</span>
           <input
             className="input claim-code"
             type="text"
@@ -213,7 +212,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
         </label>
 
         <fieldset className="claim-target">
-          <legend className="form-label">Waar hoort deze box?</legend>
+          <legend className="form-label">{t('claim.where')}</legend>
           <label className={`house-choice-option ${target === 'new' ? 'house-choice-selected' : ''}`}>
             <input
               type="radio"
@@ -222,7 +221,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
               checked={target === 'new'}
               onChange={() => setTarget('new')}
             />
-            <span>Nieuw huis</span>
+            <span>{t('claim.newHouse')}</span>
           </label>
           {houses.map((h) => (
             <label key={h.id} className={`house-choice-option ${target === h.id ? 'house-choice-selected' : ''}`}>
@@ -233,18 +232,18 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
                 checked={target === h.id}
                 onChange={() => setTarget(h.id)}
               />
-              <span>Vervangt de box van {h.name}</span>
+              <span>{t('claim.replaces', { house: h.name })}</span>
             </label>
           ))}
         </fieldset>
 
         {target === 'new' ? (
           <label className="form-field">
-            <span className="form-label">Naam van je huis</span>
+            <span className="form-label">{t('houseSheet.houseName')}</span>
             <input className="input" type="text" value={houseName} onChange={(e) => setHouseName(e.target.value)} />
           </label>
         ) : (
-          <p className="login-note">Je kamers, apparaten en scènes blijven bewaard; de nieuwe box neemt het over.</p>
+          <p className="login-note">{t('claim.replaceNote')}</p>
         )}
 
         {error && (
@@ -256,11 +255,11 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
           {/* Zonder camera (cameraNote gezet) heeft scannen geen zin. */}
           {!cameraNote && (
             <button type="button" className="btn btn-plain" onClick={() => setMode('scan')}>
-              Scan de QR-code
+              {t('claim.scan')}
             </button>
           )}
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            Box koppelen
+            {t('claim.link')}
           </button>
         </div>
       </form>
@@ -268,7 +267,7 @@ export default function ClaimSheet({ pb, user, houses, initial, onClaimed, onClo
   }
 
   return (
-    <Modal title="Box toevoegen" onClose={close}>
+    <Modal title={t('home.addBox')} onClose={close}>
       {body}
     </Modal>
   )

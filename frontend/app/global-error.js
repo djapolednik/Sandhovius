@@ -2,19 +2,34 @@
 
 import { useEffect } from 'react'
 import { isStaleBuildError, sessionStore, shouldAutoReload } from '../lib/staleBuild'
+import { STORAGE_KEY, pickLanguage } from '../lib/language'
+import nl from '../messages/nl.json'
+import en from '../messages/en.json'
+
+// Zonder layout is er geen LanguageProvider: zelf de taal kiezen, zoals die
+// het ook doet (deze telefoon, anders de browser).
+function crashTexts() {
+  let stored = null
+  try {
+    stored = window.localStorage.getItem(STORAGE_KEY)
+  } catch {}
+  const language = typeof window === 'undefined' ? 'nl' : pickLanguage({ stored, navigatorLanguages: navigator.languages })
+  return { language, texts: (language === 'en' ? en : nl).crash }
+}
 
 // Het laatste vangnet (de root-layout zelf viel om). Krijgt geen app-CSS,
 // dus eigen, minimale stijl in de kleuren van DESIGN.md; licht of donker
 // volgt de telefoon. Zelfde gedrag als app/error.js: bij een oude versie één
 // keer vanzelf herladen.
 export default function GlobalError({ error }) {
+  const { language, texts } = crashTexts()
   useEffect(() => {
     console.error('[app]', error)
     if (isStaleBuildError(error) && shouldAutoReload(sessionStore())) window.location.reload()
   }, [error])
 
   return (
-    <html lang="nl">
+    <html lang={language}>
       <body>
         <title>Sandhovius</title>
         <style>{`
@@ -35,10 +50,10 @@ export default function GlobalError({ error }) {
           }
         `}</style>
         <main className="card">
-          <h1>Er ging iets mis.</h1>
-          <p role="alert">Je huis werkt gewoon door; alleen de app liep vast. Laad hem opnieuw.</p>
+          <h1>{texts.title}</h1>
+          <p role="alert">{texts.text}</p>
           <button type="button" onClick={() => window.location.reload()}>
-            Opnieuw laden
+            {texts.reload}
           </button>
         </main>
       </body>

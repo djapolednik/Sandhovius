@@ -78,11 +78,11 @@ export default function HouseholdSection({
   return (
     <section className="panel settings-section" aria-labelledby="settings-household">
       <h2 id="settings-household" className="settings-heading">
-        Huisgenoten
+        {t('household.title')}
       </h2>
 
       {loadError && <p className="error-banner">{loadError}</p>}
-      {!members && !loadError && <p className="settings-hint">Even laden…</p>}
+      {!members && !loadError && <p className="settings-hint">{t('common.loading')}</p>}
 
       {members && (
         <ul className="member-list">
@@ -118,10 +118,10 @@ export default function HouseholdSection({
                 <button
                   type="button"
                   className="btn btn-plain member-revoke"
-                  aria-label={`Uitnodiging voor ${inv.email} intrekken`}
+                  aria-label={t('household.revokeLabel', { email: inv.email })}
                   onClick={() => revoke(inv)}
                 >
-                  Intrekken
+                  {t('household.revoke')}
                 </button>
               )}
             </li>
@@ -131,7 +131,7 @@ export default function HouseholdSection({
 
       {admin && (
         <button type="button" className="btn btn-secondary settings-add-box" onClick={() => setInviting(true)}>
-          Iemand uitnodigen
+          {t('household.invite')}
         </button>
       )}
 
@@ -139,20 +139,20 @@ export default function HouseholdSection({
         members &&
         (confirmingLeave ? (
           <div className="room-confirm member-leave">
-            <p className="room-confirm-text">Huis verlaten? Je verliest de toegang tot {house.name}.</p>
+            <p className="room-confirm-text">{t('household.confirmLeave', { house: house.name })}</p>
             <div className="room-row-actions">
               <button className="btn btn-plain" onClick={() => setConfirmingLeave(false)} disabled={busy}>
-                Annuleren
+                {t('common.cancel')}
               </button>
               <button className="btn btn-danger-text" onClick={leave} disabled={busy}>
-                Huis verlaten
+                {t('household.leave')}
               </button>
             </div>
           </div>
         ) : (
           <div className="member-leave">
             <button className="btn btn-danger-text" onClick={() => setConfirmingLeave(true)}>
-              Huis verlaten
+              {t('household.leave')}
             </button>
           </div>
         ))}

@@ -1,27 +1,28 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
+import { roleLabel } from '../lib/household'
+
 // Huisgenoot of beheerder: dezelfde balk als Weergave (echte radioknoppen
 // onder een pillenbalk).
-const ROLES = [
-  { value: 'member', label: 'Huisgenoot' },
-  { value: 'admin', label: 'Beheerder' },
-]
+const ROLES = ['member', 'admin']
 
 export default function RoleChoice({ value, onChange, name, disabled = false }) {
+  const t = useTranslations()
   return (
     <fieldset className="segmented" disabled={disabled}>
-      <legend className="visually-hidden">Rol</legend>
-      {ROLES.map((r) => (
-        <label key={r.value} className={`segmented-option ${value === r.value ? 'segmented-option-selected' : ''}`}>
+      <legend className="visually-hidden">{t('household.role')}</legend>
+      {ROLES.map((role) => (
+        <label key={role} className={`segmented-option ${value === role ? 'segmented-option-selected' : ''}`}>
           <input
             type="radio"
             name={name}
-            value={r.value}
+            value={role}
             className="visually-hidden"
-            checked={value === r.value}
-            onChange={() => onChange(r.value)}
+            checked={value === role}
+            onChange={() => onChange(role)}
           />
-          {r.label}
+          {roleLabel(t, role)}
         </label>
       ))}
     </fieldset>

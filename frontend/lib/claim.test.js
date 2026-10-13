@@ -7,12 +7,13 @@ import {
   normalizeSerial,
   parseClaimLink,
   pendingKey,
-  claimErrorMessage,
+  claimError,
   isBoxOnline,
   formatCode,
   codeProblem,
   isValidCode,
 } from './claim.js'
+import { INTL, assertMessage } from './messages.testkit.js'
 
 const vectors = JSON.parse(
   readFileSync(new URL('../../backend/tests/testdata/claim_codes.json', import.meta.url), 'utf8')
@@ -79,16 +80,21 @@ test('parseClaimLink still reads the old query form', () => {
   assert.equal(parseClaimLink(undefined), null)
 })
 
-test('claimErrorMessage', () => {
-  assert.equal(claimErrorMessage(403, 'x'), 'Bevestig eerst je e-mailadres')
-  assert.equal(claimErrorMessage(400, 'x'), 'Deze code klopt niet')
-  assert.equal(claimErrorMessage(409, 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst'), 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst')
-  assert.equal(claimErrorMessage(409, ''), 'Deze box is al gekoppeld')
-  assert.equal(claimErrorMessage(404, 'x'), 'Dit huis is niet gevonden')
-  assert.equal(claimErrorMessage(429, 'Too Many Requests'), 'Te veel pogingen, probeer het over een minuut opnieuw')
-  assert.equal(claimErrorMessage(503, 'x'), 'Koppelen lukt nu niet. Probeer het later opnieuw')
-  assert.match(claimErrorMessage(0, ''), /verbinding/)
-  assert.match(claimErrorMessage(500, 'boom'), /Er ging iets mis/)
+test('claimError: de code van de hook, anders per status', () => {
+  const { t } = INTL.nl
+  const err = (status, extra = {}) => ({ status, response: { status, message: '', ...extra } })
+  assert.equal(claimError(t, err(409, { code: 'box_linked_elsewhere', params: { house: 'Villa' } })), 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst')
+  assert.equal(claimError(INTL.en.t, err(409, { code: 'box_linked_elsewhere', params: { house: 'Villa' } })), 'This box already belongs to Villa. Unlink it there first')
+  assert.equal(claimError(t, err(403)), 'Bevestig eerst je e-mailadres')
+  assert.equal(claimError(t, err(400)), 'Deze code klopt niet')
+  // Overgang: een 409 zonder code toont de melding van de hook.
+  assert.equal(claimError(t, err(409, { message: 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst' })), 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst')
+  assert.equal(claimError(t, err(409)), 'Deze box is al gekoppeld')
+  assert.equal(claimError(t, err(404)), 'Dit huis is niet gevonden')
+  assert.equal(claimError(t, err(429)), 'Te veel pogingen, probeer het over een minuut opnieuw')
+  assert.equal(claimError(t, err(503)), 'Koppelen lukt nu niet. Probeer het later opnieuw')
+  assert.match(claimError(t, { status: 0 }), /verbinding/)
+  assert.match(claimError(t, err(500)), /Er ging iets mis/)
 })
 
 test('isBoxOnline: heartbeat must be newer than the claim', () => {
@@ -116,9 +122,10 @@ test('isValidCode: gedeelde vectoren met het printscript', () => {
 })
 
 test('codeProblem: lengte eerst, dan het controleteken, anders niets', () => {
-  assert.match(codeProblem('K7QM-2XRP-9DT'), /12 tekens/)
-  assert.match(codeProblem('K7QM-2XRP-9DTKA'), /12 tekens/)
-  assert.match(codeProblem('K7QM-24RP-9DTK'), /tikfout/)
-  assert.match(codeProblem('K7QM-2XRP-9DTU'), /tikfout/)
+  assert.equal(codeProblem('K7QM-2XRP-9DT'), 'claim.codeLength')
+  assert.equal(codeProblem('K7QM-2XRP-9DTKA'), 'claim.codeLength')
+  assert.equal(codeProblem('K7QM-24RP-9DTK'), 'claim.codeTypo')
+  assert.equal(codeProblem('K7QM-2XRP-9DTU'), 'claim.codeTypo')
+  ;['claim.codeLength', 'claim.codeTypo'].forEach(assertMessage)
   assert.equal(codeProblem('k7qm 2xrp 9dtk'), '')
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTranslations } from 'use-intl'
 import {
   brightnessLabel,
   capabilities,
@@ -26,13 +27,14 @@ const SEND_EVERY_MS = 400
 const HOLD_OFF_MS = 1000
 
 // Zes stalen, geen kleurenwiel: de rest zit achter "Meer kleuren".
+// De namen staan onder light.swatches.<key>.
 const SWATCHES = [
-  { name: 'Rood', rgb: [255, 59, 48] },
-  { name: 'Oranje', rgb: [255, 149, 0] },
-  { name: 'Geel', rgb: [255, 214, 10] },
-  { name: 'Groen', rgb: [52, 199, 89] },
-  { name: 'Blauw', rgb: [10, 132, 255] },
-  { name: 'Paars', rgb: [175, 82, 222] },
+  { key: 'red', rgb: [255, 59, 48] },
+  { key: 'orange', rgb: [255, 149, 0] },
+  { key: 'yellow', rgb: [255, 214, 10] },
+  { key: 'green', rgb: [52, 199, 89] },
+  { key: 'blue', rgb: [10, 132, 255] },
+  { key: 'purple', rgb: [175, 82, 222] },
 ]
 
 const toHex = (rgb) => '#' + rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')
@@ -40,6 +42,7 @@ const fromHex = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
 const sameRgb = (a, b) => a && b && a.every((c, i) => Math.abs(c - b[i]) < 2)
 
 export default function LightControls({ device, state, disabled, onChange }) {
+  const t = useTranslations()
   const attributes = state?.attributes
   const caps = capabilities(attributes)
   const hasKelvin = caps.white && caps.minKelvin !== null && caps.maxKelvin !== null
@@ -134,8 +137,8 @@ export default function LightControls({ device, state, disabled, onChange }) {
     <div className="light-controls">
       <label className="light-slider">
         <span className="light-slider-head">
-          <span className="form-label">Helderheid</span>
-          <span className="reading-value">{brightnessLabel(state, percent)}</span>
+          <span className="form-label">{t('light.brightness')}</span>
+          <span className="reading-value">{brightnessLabel(t, state, percent)}</span>
         </span>
         <input
           type="range"
@@ -145,7 +148,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
           step="1"
           value={percent}
           disabled={disabled}
-          aria-valuetext={state?.state === 'on' ? `${percent} procent` : 'uit'}
+          aria-valuetext={state?.state === 'on' ? t('light.percentValue', { percent }) : t('light.offValue')}
           style={{ '--fill': `${percent}%` }}
           onChange={(e) => {
             const next = Number(e.target.value)
@@ -158,11 +161,8 @@ export default function LightControls({ device, state, disabled, onChange }) {
 
       {showBar && (
         <fieldset className="segmented segmented-small light-mode" disabled={disabled}>
-          <legend className="visually-hidden">Wit of kleur</legend>
-          {[
-            ['white', 'Wit'],
-            ['colour', 'Kleur'],
-          ].map(([value, label]) => (
+          <legend className="visually-hidden">{t('light.whiteOrColour')}</legend>
+          {['white', 'colour'].map((value) => (
             <label key={value} className={`segmented-option ${mode === value ? 'segmented-option-selected' : ''}`}>
               <input
                 type="radio"
@@ -172,7 +172,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
                 checked={mode === value}
                 onChange={() => pickMode(value)}
               />
-              {label}
+              {t(`light.modes.${value}`)}
             </label>
           ))}
         </fieldset>
@@ -181,8 +181,8 @@ export default function LightControls({ device, state, disabled, onChange }) {
       {showWhite && (
         <label className="light-slider">
           <span className="light-slider-head">
-            <span className="form-label">Wit</span>
-            <span className="reading-value">{kelvinLabel(state, kelvin)}</span>
+            <span className="form-label">{t('light.modes.white')}</span>
+            <span className="reading-value">{kelvinLabel(t, state, kelvin)}</span>
           </span>
           <input
             type="range"
@@ -192,7 +192,7 @@ export default function LightControls({ device, state, disabled, onChange }) {
             step="50"
             value={Math.min(caps.maxKelvin, Math.max(caps.minKelvin, kelvin))}
             disabled={disabled}
-            aria-valuetext={state?.state === 'on' ? `${kelvin} kelvin` : 'uit'}
+            aria-valuetext={state?.state === 'on' ? t('light.kelvinValue', { kelvin }) : t('light.offValue')}
             style={{ '--track': track }}
             onChange={(e) => {
               const next = Number(e.target.value)
@@ -206,16 +206,16 @@ export default function LightControls({ device, state, disabled, onChange }) {
       )}
 
       {showColour && (
-        <div className="light-swatches" role="group" aria-label="Kleur">
+        <div className="light-swatches" role="group" aria-label={t('light.modes.colour')}>
           {SWATCHES.map((swatch) => {
             const selected = mode === 'colour' && swatchSelected(state, swatch.rgb)
             return (
               <button
-                key={swatch.name}
+                key={swatch.key}
                 type="button"
                 className={`light-swatch ${selected ? 'light-swatch-selected' : ''}`}
                 style={{ '--swatch': toHex(swatch.rgb) }}
-                aria-label={swatch.name}
+                aria-label={t(`light.swatches.${swatch.key}`)}
                 aria-pressed={selected}
                 disabled={disabled}
                 onClick={() => pickRgb(swatch.rgb, true)}
@@ -230,11 +230,11 @@ export default function LightControls({ device, state, disabled, onChange }) {
               className="light-more-input"
               value={toHex(rgb ?? SWATCHES[0].rgb)}
               disabled={disabled}
-              aria-label="Meer kleuren"
+              aria-label={t('light.moreColours')}
               onChange={(e) => pickRgb(fromHex(e.target.value), false)}
               {...dragProps}
             />
-            <span>Meer kleuren</span>
+            <span>{t('light.moreColours')}</span>
           </label>
         </div>
       )}

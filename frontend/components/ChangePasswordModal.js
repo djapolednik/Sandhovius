@@ -28,11 +28,11 @@ export default function ChangePasswordModal({ onChange, onClose }) {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!checks.long) {
-      setError(`Kies een nieuw wachtwoord van minstens ${MIN_PASSWORD_LENGTH} tekens.`)
+      setError(t('changePassword.tooShort', { min: MIN_PASSWORD_LENGTH }))
       return
     }
     if (!checks.same) {
-      setError('De twee nieuwe wachtwoorden zijn niet gelijk. Typ ze nog een keer.')
+      setError(t('changePassword.differ'))
       return
     }
     setSaving(true)
@@ -43,7 +43,7 @@ export default function ChangePasswordModal({ onChange, onClose }) {
     } catch (err) {
       setError(
         err?.response?.data?.oldPassword
-          ? 'Je huidige wachtwoord klopt niet. Controleer het en probeer het opnieuw.'
+          ? t('changePassword.wrongCurrent')
           : describeError(t, t('errors.what.changePassword'), err)
       )
     } finally {
@@ -53,28 +53,28 @@ export default function ChangePasswordModal({ onChange, onClose }) {
 
   if (done) {
     return (
-      <Modal title="Wachtwoord wijzigen" onClose={onClose}>
+      <Modal title={t('settings.changePassword')} onClose={onClose}>
         <div className="password-done" role="status">
           <span className="password-done-icon" aria-hidden="true">
             <CheckIcon width="28" height="28" />
           </span>
-          <p className="password-done-title">Je wachtwoord is gewijzigd.</p>
+          <p className="password-done-title">{t('reset.done')}</p>
           <p className="settings-hint">
-            Op dit apparaat blijf je ingelogd. Op je andere apparaten log je opnieuw in met je nieuwe wachtwoord.
+            {t('changePassword.doneNote')}
           </p>
         </div>
         <button type="button" className="btn btn-primary password-done-close" onClick={onClose}>
-          Klaar
+          {t('scenes.doneShort')}
         </button>
       </Modal>
     )
   }
 
   return (
-    <Modal title="Wachtwoord wijzigen" onClose={onClose}>
+    <Modal title={t('settings.changePassword')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="form-stack change-password">
         <PasswordField
-          label="Huidig wachtwoord"
+          label={t('changePassword.current')}
           autoComplete="current-password"
           value={oldPassword}
           onChange={setOldPassword}
@@ -82,7 +82,7 @@ export default function ChangePasswordModal({ onChange, onClose }) {
         />
         <div className="modal-divider" role="presentation" />
         <PasswordField
-          label="Nieuw wachtwoord"
+          label={t('reset.newPassword')}
           autoComplete="new-password"
           value={password}
           onChange={setPassword}
@@ -90,7 +90,7 @@ export default function ChangePasswordModal({ onChange, onClose }) {
           required
         />
         <PasswordField
-          label="Nieuw wachtwoord, nog een keer"
+          label={t('reset.newPasswordAgain')}
           autoComplete="new-password"
           value={passwordConfirm}
           onChange={setPasswordConfirm}
@@ -104,7 +104,7 @@ export default function ChangePasswordModal({ onChange, onClose }) {
           </p>
         )}
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? 'Bezig met wijzigen…' : 'Wachtwoord wijzigen'}
+          {saving ? t('changePassword.saving') : t('settings.changePassword')}
         </button>
       </form>
     </Modal>

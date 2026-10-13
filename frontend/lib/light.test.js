@@ -215,7 +215,7 @@ test('controlsVisible: alleen voor aan of uit', () => {
 test('uitstaande kleurlamp: geen staal gekozen, label "Uit", wit eerst', () => {
   const off = { state: 'off', attributes: colourAttrs }
   assert.equal(swatchSelected(off, RED), false)
-  assert.equal(brightnessLabel(off, 100), 'Uit')
+  assert.equal(brightnessLabel(t, off, 100), 'Uit')
   assert.equal(initialMode(off.attributes), 'white')
   assert.equal(currentRgb(off.attributes), null)
 })
@@ -224,7 +224,7 @@ test('aan in rgb-modus: dat staal is gekozen, label met procent', () => {
   const on = { state: 'on', attributes: { ...colourAttrs, color_mode: 'rgb', rgb_color: RED, brightness: 128 } }
   assert.equal(swatchSelected(on, RED), true)
   assert.equal(swatchSelected(on, [10, 132, 255]), false)
-  assert.equal(brightnessLabel(on, 50), '50%')
+  assert.equal(brightnessLabel(t, on, 50), '50%')
   assert.equal(initialMode(on.attributes), 'colour')
 })
 
@@ -288,8 +288,8 @@ test('createHoldOff: remaining zegt hoe lang nog', () => {
 })
 
 test('kelvinLabel: geen verzonnen waarde bij een lamp die uit staat', () => {
-  assert.equal(kelvinLabel({ state: 'on', attributes: { color_temp_kelvin: 2700 } }, 2700), '2700 K')
-  assert.equal(kelvinLabel({ state: 'off', attributes: {} }, 4250), 'Uit')
+  assert.equal(kelvinLabel(t, { state: 'on', attributes: { color_temp_kelvin: 2700 } }, 2700), '2700 K')
+  assert.equal(kelvinLabel(t, { state: 'off', attributes: {} }, 4250), 'Uit')
   // Aan in kleur: geen kelvin van de lamp, dus ook geen getal.
-  assert.equal(kelvinLabel({ state: 'on', attributes: { color_mode: 'rgb' } }, 4250), '')
+  assert.equal(kelvinLabel(t, { state: 'on', attributes: { color_mode: 'rgb' } }, 4250), '')
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'use-intl'
 import AccountShell from '../components/AccountShell'
 import { isStaleBuildError, sessionStore, shouldAutoReload } from '../lib/staleBuild'
 
@@ -9,6 +10,7 @@ import { isStaleBuildError, sessionStore, shouldAutoReload } from '../lib/staleB
 // herladen; anders (of als dat net al gebeurde) een rustige melding met
 // "Opnieuw laden", in plaats van Engelse "This page couldn't load".
 export default function Error({ error, retry }) {
+  const t = useTranslations('crash')
   const [reloading, setReloading] = useState(false)
 
   useEffect(() => {
@@ -21,25 +23,25 @@ export default function Error({ error, retry }) {
 
   if (reloading) {
     return (
-      <AccountShell title="Even bijwerken…">
+      <AccountShell title={t('updating')}>
         <p className="login-note" role="status">
-          Er is een nieuwe versie van Sandhovius. We laden hem nu.
+          {t('updatingNote')}
         </p>
       </AccountShell>
     )
   }
 
   return (
-    <AccountShell title="Er ging iets mis.">
+    <AccountShell title={t('title')}>
       <div className="form-stack">
         <p className="login-note" role="alert">
-          Je huis werkt gewoon door; alleen de app liep vast. Laad hem opnieuw.
+          {t('text')}
         </p>
         <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
-          Opnieuw laden
+          {t('reload')}
         </button>
         <button type="button" className="btn btn-plain login-link" onClick={() => retry()}>
-          Nog een keer proberen
+          {t('retry')}
         </button>
       </div>
     </AccountShell>

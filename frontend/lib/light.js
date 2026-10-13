@@ -180,14 +180,14 @@ export function swatchSelected(state, swatchRgb) {
   return rgb.every((c, i) => Math.abs(c - swatchRgb[i]) < 2)
 }
 
-export function brightnessLabel(state, percent) {
-  return state?.state === 'on' ? `${percent}%` : 'Uit'
+export function brightnessLabel(t, state, percent) {
+  return state?.state === 'on' ? `${percent}%` : t('device.off')
 }
 
 // De Wit-schuif heeft altijd een stand nodig, maar een getal alleen als de
 // lamp echt wit brandt: uit of in kleur heeft hij geen kelvin.
-export function kelvinLabel(state, kelvin) {
-  if (state?.state !== 'on') return 'Uit'
+export function kelvinLabel(t, state, kelvin) {
+  if (state?.state !== 'on') return t('device.off')
   return Number.isFinite(state.attributes?.color_temp_kelvin) ? `${kelvin} K` : ''
 }
 

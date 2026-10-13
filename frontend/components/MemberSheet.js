@@ -49,7 +49,7 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
     <Modal title={name} onClose={onClose}>
       {member.name && <p className="member-sheet-email">{member.email}</p>}
       <div className="form-field">
-        <span className="form-label">Rol</span>
+        <span className="form-label">{t('household.role')}</span>
         <RoleChoice value={role} onChange={chooseRole} name={`role-${member.id}`} disabled={busy} />
       </div>
 
@@ -59,22 +59,22 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
         <div className="room-confirm">
           <p className="room-confirm-text">
             {isSelf
-              ? `Huis verlaten? Je verliest de toegang tot ${houseName}.`
-              : `${name} uit ${houseName} verwijderen? Diegene verliest de toegang tot het huis.`}
+              ? t('household.confirmLeave', { house: houseName })
+              : t('household.confirmRemove', { name, house: houseName })}
           </p>
           <div className="room-row-actions">
             <button className="btn btn-plain" onClick={() => setConfirmingRemove(false)} disabled={busy}>
-              Annuleren
+              {t('common.cancel')}
             </button>
             <button className="btn btn-danger-text" onClick={handleRemove} disabled={busy}>
-              {isSelf ? 'Huis verlaten' : 'Verwijderen'}
+              {isSelf ? t('household.leave') : t('common.delete')}
             </button>
           </div>
         </div>
       ) : (
         <div>
           <button className="btn btn-danger-text" onClick={() => setConfirmingRemove(true)}>
-            {isSelf ? 'Huis verlaten' : 'Uit het huis verwijderen'}
+            {isSelf ? t('household.leave') : t('household.remove')}
           </button>
         </div>
       )}

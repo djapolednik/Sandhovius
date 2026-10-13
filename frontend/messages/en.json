@@ -69,7 +69,24 @@
   "settings": {
     "language": "Language",
     "languageHint": "For the app and for the emails you get from Sandhovius.",
-    "languageFailed": "The language couldn’t be changed. Try again in a moment."
+    "languageFailed": "The language couldn’t be changed. Try again in a moment.",
+    "house": "Home",
+    "whichHouse": "Which home do you want to see?",
+    "houseSubAdmin": "{count, plural, one {# room} other {# rooms}}. Change the name and rooms",
+    "houseSub": "{count, plural, one {# room} other {# rooms}}. Change the rooms",
+    "addBox": "Add a box",
+    "look": "Appearance",
+    "theme": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Automatic"
+    },
+    "themeHint": "Automatic follows your phone: light during the day, dark when your phone is.",
+    "account": "Account",
+    "loggedInAs": "Logged in as <strong>{email}</strong>",
+    "changePassword": "Change password",
+    "logout": "Log out"
   },
   "time": {
     "neverConnected": "not connected yet",
@@ -259,6 +276,21 @@
       "saveScene": "Saving the scene",
       "rename": "Renaming",
       "changeRoom": "Changing the room"
+    },
+    "codes": {
+      "email_not_verified": "Confirm your email address first",
+      "invalid_code": "This code isn’t right",
+      "house_not_found": "This home wasn’t found",
+      "box_linked_elsewhere": "This box already belongs to {house}. Unlink it there first",
+      "box_already_linked": "This box is already linked",
+      "claim_unavailable": "Linking isn’t possible right now. Try again later",
+      "already_member": "Already a member of this home",
+      "invitation_not_found": "This invitation wasn’t found",
+      "member_not_found": "This member wasn’t found",
+      "invitation_expired": "This invitation has expired",
+      "invalid_role": "Choose admin or member",
+      "last_admin": "There must be at least one admin",
+      "last_admin_of_house": "You’re the last admin of {house}. Make someone else an admin first."
     }
   },
   "household": {
@@ -273,7 +305,20 @@
       "inDays": "expires in {days} days"
     },
     "you": "{role}, you",
-    "invitedAs": "Invited as {role, select, admin {an admin} other {a member}}, {expires}"
+    "invitedAs": "Invited as {role, select, admin {an admin} other {a member}}, {expires}",
+    "title": "Household",
+    "revokeLabel": "Withdraw the invitation for {email}",
+    "revoke": "Withdraw",
+    "invite": "Invite someone",
+    "confirmLeave": "Leave this home? You’ll lose access to {house}.",
+    "leave": "Leave home",
+    "role": "Role",
+    "adminHint": "An admin can do everything, including inviting others, renaming {house} and unlinking the box.",
+    "memberHint": "A member controls the home and sets up devices, rooms and scenes.",
+    "expiresAfter": "The invitation expires after 7 days.",
+    "send": "Send invitation",
+    "confirmRemove": "Remove {name} from {house}? They’ll lose access to the home.",
+    "remove": "Remove from the home"
   },
   "invitation": {
     "someone": "Someone",
@@ -305,7 +350,10 @@
     "saved": "Saved",
     "cancel": "Cancel",
     "delete": "Delete",
-    "save": "Save"
+    "save": "Save",
+    "loading": "Loading…",
+    "moveUp": "Move {label} up",
+    "moveDown": "Move {label} down"
   },
   "toast": {
     "boxUnreachable": "Your Sandhovius box can’t be reached right now. Try again once it responds.",
@@ -381,7 +429,25 @@
   "light": {
     "warmWhite": "warm white",
     "coolWhite": "cool white",
-    "colour": "colour"
+    "colour": "colour",
+    "brightness": "Brightness",
+    "percentValue": "{percent} percent",
+    "offValue": "off",
+    "whiteOrColour": "White or colour",
+    "modes": {
+      "white": "White",
+      "colour": "Colour"
+    },
+    "kelvinValue": "{kelvin} kelvin",
+    "moreColours": "More colours",
+    "swatches": {
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "purple": "Purple"
+    }
   },
   "sceneSheet": {
     "needAction": "Choose what the scene does for at least one device.",
@@ -409,5 +475,78 @@
     "addTime": "Add a time",
     "confirmDelete": "Delete scene “{name}”? Your devices stay as they are.",
     "delete": "Delete scene"
+  },
+  "claim": {
+    "tooMany": "Too many attempts, try again in a minute",
+    "offline": "No connection to Sandhovius. Check your internet and try again",
+    "other": "Something went wrong. Try again in a moment",
+    "codeLength": "A code has 12 characters. Check it on the sheet that came with your box.",
+    "codeTypo": "There’s a typo in the code. Check it on the sheet that came with your box.",
+    "defaultHouseName": "Home",
+    "online": "Your box is linked and checking in. Your home is ready.",
+    "waiting": "Waiting for your box to check in…",
+    "waitingNote": "Switch your box on and connect it to the internet. This can take a few minutes. You can close this window; your home is already linked.",
+    "verifyNote": "We keep your box code while this window is open. As soon as your email address is confirmed, you’ll continue here.",
+    "aim": "Point the camera at the QR code on the sheet that came with your box.",
+    "camera": {
+      "insecure": "The camera only works on a secure connection. Type the code from the sheet that came with your box.",
+      "denied": "You didn’t allow the camera. Type the code from the sheet that came with your box.",
+      "nocamera": "No camera was found. Type the code from the sheet that came with your box."
+    },
+    "typeCode": "Type the code",
+    "prefilled": "We’ve filled in your box’s details.",
+    "serial": "Serial number",
+    "code": "Code",
+    "where": "Where does this box belong?",
+    "newHouse": "New home",
+    "replaces": "Replaces the box of {house}",
+    "replaceNote": "Your rooms, devices and scenes are kept; the new box takes over.",
+    "scan": "Scan the QR code",
+    "link": "Link box"
+  },
+  "houseSheet": {
+    "newRoomName": "New name for room “{name}”",
+    "confirmDeleteRoom": "Delete room “{name}”? The devices in this room stay and move to “Other”.",
+    "deleteRoom": "Delete room",
+    "renameRoom": "Rename room “{name}”",
+    "deleteRoomLabel": "Delete room “{name}”",
+    "titleAdmin": "Edit home",
+    "title": "Edit rooms",
+    "houseName": "Name of your home",
+    "newRoom": "Name of the new room",
+    "newRoomPlaceholder": "E.g. Bedroom",
+    "confirmRelease": "Unlink the box? Your home and settings are kept. You can link a box later.",
+    "release": "Unlink box",
+    "box": "Box"
+  },
+  "changePassword": {
+    "tooShort": "Choose a new password of at least {min} characters.",
+    "differ": "The two new passwords aren’t the same. Type them again.",
+    "wrongCurrent": "Your current password isn’t right. Check it and try again.",
+    "doneNote": "You stay logged in on this device. On your other devices, log in again with your new password.",
+    "current": "Current password",
+    "saving": "Changing…"
+  },
+  "addDevice": {
+    "what": "What are you adding?",
+    "saving": "Adding…",
+    "examples": {
+      "light": "E.g. Reading light",
+      "switch": "E.g. TV plug",
+      "sensor": "E.g. Hallway motion sensor",
+      "climate": "E.g. Living room thermostat"
+    }
+  },
+  "favoritesOrder": {
+    "title": "Order of favourites",
+    "hint": "The top one comes first on Home."
+  },
+  "crash": {
+    "updating": "Updating…",
+    "updatingNote": "There’s a new version of Sandhovius. We’re loading it now.",
+    "title": "Something went wrong.",
+    "text": "Your home keeps working; only the app got stuck. Reload it.",
+    "reload": "Reload",
+    "retry": "Try once more"
   }
 }

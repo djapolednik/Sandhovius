@@ -30,10 +30,10 @@ export default function InviteSheet({ houseName, onInvite, onClose }) {
   }
 
   return (
-    <Modal title="Iemand uitnodigen" onClose={onClose}>
+    <Modal title={t('household.invite')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="form-stack">
         <label className="form-field">
-          <span className="form-label">E-mailadres</span>
+          <span className="form-label">{t('login.email')}</span>
           <input
             className="input"
             type="email"
@@ -45,14 +45,12 @@ export default function InviteSheet({ houseName, onInvite, onClose }) {
           />
         </label>
         <div className="form-field">
-          <span className="form-label">Rol</span>
+          <span className="form-label">{t('household.role')}</span>
           <RoleChoice value={role} onChange={setRole} name="invite-role" />
         </div>
         <p className="settings-hint" style={{ margin: 0 }}>
-          {role === 'admin'
-            ? `Een beheerder kan alles, ook anderen uitnodigen, ${houseName} hernoemen en de box ontkoppelen.`
-            : 'Een huisgenoot bedient het huis en richt apparaten, kamers en scènes in.'}{' '}
-          De uitnodiging verloopt na 7 dagen.
+          {role === 'admin' ? t('household.adminHint', { house: houseName }) : t('household.memberHint')}{' '}
+          {t('household.expiresAfter')}
         </p>
         {error && (
           <p className="error-banner" role="alert">
@@ -60,7 +58,7 @@ export default function InviteSheet({ houseName, onInvite, onClose }) {
           </p>
         )}
         <button type="submit" className="btn btn-primary" disabled={sending}>
-          Uitnodiging versturen
+          {t('household.send')}
         </button>
       </form>
     </Modal>

@@ -6,12 +6,9 @@ import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { deviceTypeIcon } from '../lib/icons'
 
-const DEVICE_TYPES = [
-  { value: 'light', label: 'Lamp', example: 'Bijv. Leeslamp' },
-  { value: 'switch', label: 'Stopcontact', example: 'Bijv. Stopcontact tv' },
-  { value: 'sensor', label: 'Sensor', example: 'Bijv. Bewegingssensor gang' },
-  { value: 'climate', label: 'Thermostaat', example: 'Bijv. Thermostaat woonkamer' },
-]
+// De woorden (naam en voorbeeld) staan onder device.types.<value> en
+// addDevice.examples.<value>.
+const DEVICE_TYPES = ['light', 'switch', 'sensor', 'climate']
 
 // Soort eerst, dan de naam: de soort is een keuze uit vier grote tegels
 // (sneller en duidelijker dan een uitklaplijst), en de voorbeeldnaam past
@@ -41,30 +38,30 @@ export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onC
     }
   }
 
-  const example = DEVICE_TYPES.find((t) => t.value === type)?.example
+  const example = t(`addDevice.examples.${type}`)
 
   return (
-    <Modal title="Apparaat toevoegen" onClose={onClose}>
+    <Modal title={t('nav.addDevice')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="form-stack">
         <fieldset className="type-picker">
-          <legend className="form-label">Wat voeg je toe?</legend>
+          <legend className="form-label">{t('addDevice.what')}</legend>
           <div className="type-picker-grid">
-            {DEVICE_TYPES.map((t) => {
-              const Icon = deviceTypeIcon(t.value)
+            {DEVICE_TYPES.map((value) => {
+              const Icon = deviceTypeIcon(value)
               return (
-                <label key={t.value} className={`type-tile ${type === t.value ? 'type-tile-selected' : ''}`}>
+                <label key={value} className={`type-tile ${type === value ? 'type-tile-selected' : ''}`}>
                   <input
                     type="radio"
                     name="device-type"
-                    value={t.value}
-                    checked={type === t.value}
-                    onChange={() => setType(t.value)}
+                    value={value}
+                    checked={type === value}
+                    onChange={() => setType(value)}
                     className="visually-hidden"
                   />
-                  <span className={`device-icon device-icon-${t.value} type-tile-icon`}>
+                  <span className={`device-icon device-icon-${value} type-tile-icon`}>
                     <Icon />
                   </span>
-                  <span className="type-tile-label">{t.label}</span>
+                  <span className="type-tile-label">{t(`device.types.${value}`)}</span>
                 </label>
               )
             })}
@@ -72,7 +69,7 @@ export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onC
         </fieldset>
 
         <label className="form-field">
-          <span className="form-label">Naam</span>
+          <span className="form-label">{t('deviceSheet.name')}</span>
           <input
             className="input"
             type="text"
@@ -84,9 +81,9 @@ export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onC
         </label>
 
         <label className="form-field">
-          <span className="form-label">Kamer</span>
+          <span className="form-label">{t('deviceSheet.room')}</span>
           <select className="input" value={roomId} onChange={(e) => setRoomId(e.target.value)}>
-            <option value="">Geen kamer</option>
+            <option value="">{t('home.noRoom')}</option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
                 {room.name}
@@ -99,7 +96,7 @@ export default function AddDeviceModal({ rooms, defaultRoomId = '', onClose, onC
 
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Bezig met toevoegen…' : 'Toevoegen'}
+            {saving ? t('addDevice.saving') : t('rooms.add')}
           </button>
         </div>
       </form>

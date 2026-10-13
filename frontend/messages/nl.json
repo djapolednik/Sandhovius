@@ -69,7 +69,24 @@
   "settings": {
     "language": "Taal",
     "languageHint": "Voor de app en voor de mails die je van Sandhovius krijgt.",
-    "languageFailed": "De taal kon niet worden gewijzigd. Probeer het zo opnieuw."
+    "languageFailed": "De taal kon niet worden gewijzigd. Probeer het zo opnieuw.",
+    "house": "Huis",
+    "whichHouse": "Welk huis wil je zien?",
+    "houseSubAdmin": "{count, plural, one {# kamer} other {# kamers}}. Naam en kamers wijzigen",
+    "houseSub": "{count, plural, one {# kamer} other {# kamers}}. Kamers wijzigen",
+    "addBox": "Box toevoegen",
+    "look": "Weergave",
+    "theme": "Thema",
+    "themes": {
+      "light": "Licht",
+      "dark": "Donker",
+      "auto": "Automatisch"
+    },
+    "themeHint": "Automatisch volgt je telefoon: licht overdag, donker als je telefoon dat is.",
+    "account": "Account",
+    "loggedInAs": "Ingelogd als <strong>{email}</strong>",
+    "changePassword": "Wachtwoord wijzigen",
+    "logout": "Uitloggen"
   },
   "time": {
     "neverConnected": "nog niet verbonden",
@@ -259,6 +276,21 @@
       "saveScene": "Scène opslaan",
       "rename": "Naam wijzigen",
       "changeRoom": "Kamer wijzigen"
+    },
+    "codes": {
+      "email_not_verified": "Bevestig eerst je e-mailadres",
+      "invalid_code": "Deze code klopt niet",
+      "house_not_found": "Dit huis is niet gevonden",
+      "box_linked_elsewhere": "Deze box hoort al bij {house}. Ontkoppel hem daar eerst",
+      "box_already_linked": "Deze box is al gekoppeld",
+      "claim_unavailable": "Koppelen lukt nu niet. Probeer het later opnieuw",
+      "already_member": "Al lid van dit huis",
+      "invitation_not_found": "Deze uitnodiging is niet gevonden",
+      "member_not_found": "Deze huisgenoot is niet gevonden",
+      "invitation_expired": "Deze uitnodiging is verlopen",
+      "invalid_role": "Kies beheerder of huisgenoot",
+      "last_admin": "Er moet minstens één beheerder blijven",
+      "last_admin_of_house": "Je bent de laatste beheerder van {house}. Maak eerst iemand anders beheerder."
     }
   },
   "household": {
@@ -273,7 +305,20 @@
       "inDays": "verloopt over {days} dagen"
     },
     "you": "{role}, jij",
-    "invitedAs": "Uitgenodigd als {role, select, admin {beheerder} other {huisgenoot}}, {expires}"
+    "invitedAs": "Uitgenodigd als {role, select, admin {beheerder} other {huisgenoot}}, {expires}",
+    "title": "Huisgenoten",
+    "revokeLabel": "Uitnodiging voor {email} intrekken",
+    "revoke": "Intrekken",
+    "invite": "Iemand uitnodigen",
+    "confirmLeave": "Huis verlaten? Je verliest de toegang tot {house}.",
+    "leave": "Huis verlaten",
+    "role": "Rol",
+    "adminHint": "Een beheerder kan alles, ook anderen uitnodigen, {house} hernoemen en de box ontkoppelen.",
+    "memberHint": "Een huisgenoot bedient het huis en richt apparaten, kamers en scènes in.",
+    "expiresAfter": "De uitnodiging verloopt na 7 dagen.",
+    "send": "Uitnodiging versturen",
+    "confirmRemove": "{name} uit {house} verwijderen? Diegene verliest de toegang tot het huis.",
+    "remove": "Uit het huis verwijderen"
   },
   "invitation": {
     "someone": "Iemand",
@@ -305,7 +350,10 @@
     "saved": "Opgeslagen",
     "cancel": "Annuleren",
     "delete": "Verwijderen",
-    "save": "Opslaan"
+    "save": "Opslaan",
+    "loading": "Even laden…",
+    "moveUp": "{label} omhoog",
+    "moveDown": "{label} omlaag"
   },
   "toast": {
     "boxUnreachable": "Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.",
@@ -381,7 +429,25 @@
   "light": {
     "warmWhite": "warm wit",
     "coolWhite": "koel wit",
-    "colour": "kleur"
+    "colour": "kleur",
+    "brightness": "Helderheid",
+    "percentValue": "{percent} procent",
+    "offValue": "uit",
+    "whiteOrColour": "Wit of kleur",
+    "modes": {
+      "white": "Wit",
+      "colour": "Kleur"
+    },
+    "kelvinValue": "{kelvin} kelvin",
+    "moreColours": "Meer kleuren",
+    "swatches": {
+      "red": "Rood",
+      "orange": "Oranje",
+      "yellow": "Geel",
+      "green": "Groen",
+      "blue": "Blauw",
+      "purple": "Paars"
+    }
   },
   "sceneSheet": {
     "needAction": "Kies bij minstens één apparaat wat de scène doet.",
@@ -409,5 +475,78 @@
     "addTime": "Tijd toevoegen",
     "confirmDelete": "Scène “{name}” verwijderen? Je apparaten blijven gewoon bestaan.",
     "delete": "Scène verwijderen"
+  },
+  "claim": {
+    "tooMany": "Te veel pogingen, probeer het over een minuut opnieuw",
+    "offline": "Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw",
+    "other": "Er ging iets mis. Probeer het zo opnieuw",
+    "codeLength": "Een code heeft 12 tekens. Kijk hem na op het blad bij je box.",
+    "codeTypo": "Er zit een tikfout in de code. Kijk hem na op het blad bij je box.",
+    "defaultHouseName": "Thuis",
+    "online": "Je box is gekoppeld en meldt zich. Je huis staat klaar.",
+    "waiting": "Wachten tot je box zich meldt…",
+    "waitingNote": "Zet je box aan en sluit hem aan op internet. Dit kan een paar minuten duren. Je kunt dit venster sluiten; je huis is al gekoppeld.",
+    "verifyNote": "Je box-code bewaren we zolang dit venster open staat. Zodra je e-mailadres bevestigd is, ga je hier verder.",
+    "aim": "Richt de camera op de QR-code op het blad bij je box.",
+    "camera": {
+      "insecure": "De camera werkt alleen op een beveiligde verbinding. Tik de code over van het blad bij je box.",
+      "denied": "Je hebt de camera niet toegestaan. Tik de code over van het blad bij je box.",
+      "nocamera": "Er is geen camera gevonden. Tik de code over van het blad bij je box."
+    },
+    "typeCode": "Code overtikken",
+    "prefilled": "We hebben de gegevens van je box ingevuld.",
+    "serial": "Serienummer",
+    "code": "Code",
+    "where": "Waar hoort deze box?",
+    "newHouse": "Nieuw huis",
+    "replaces": "Vervangt de box van {house}",
+    "replaceNote": "Je kamers, apparaten en scènes blijven bewaard; de nieuwe box neemt het over.",
+    "scan": "Scan de QR-code",
+    "link": "Box koppelen"
+  },
+  "houseSheet": {
+    "newRoomName": "Nieuwe naam voor kamer “{name}”",
+    "confirmDeleteRoom": "Kamer “{name}” verwijderen? Apparaten in deze kamer blijven bestaan en komen onder “Overig”.",
+    "deleteRoom": "Kamer verwijderen",
+    "renameRoom": "Kamer “{name}” hernoemen",
+    "deleteRoomLabel": "Kamer “{name}” verwijderen",
+    "titleAdmin": "Huis wijzigen",
+    "title": "Kamers wijzigen",
+    "houseName": "Naam van je huis",
+    "newRoom": "Naam van de nieuwe kamer",
+    "newRoomPlaceholder": "Bijv. Slaapkamer",
+    "confirmRelease": "Box ontkoppelen? Je huis en instellingen blijven bewaard. Je kunt later een box koppelen.",
+    "release": "Box ontkoppelen",
+    "box": "Box"
+  },
+  "changePassword": {
+    "tooShort": "Kies een nieuw wachtwoord van minstens {min} tekens.",
+    "differ": "De twee nieuwe wachtwoorden zijn niet gelijk. Typ ze nog een keer.",
+    "wrongCurrent": "Je huidige wachtwoord klopt niet. Controleer het en probeer het opnieuw.",
+    "doneNote": "Op dit apparaat blijf je ingelogd. Op je andere apparaten log je opnieuw in met je nieuwe wachtwoord.",
+    "current": "Huidig wachtwoord",
+    "saving": "Bezig met wijzigen…"
+  },
+  "addDevice": {
+    "what": "Wat voeg je toe?",
+    "saving": "Bezig met toevoegen…",
+    "examples": {
+      "light": "Bijv. Leeslamp",
+      "switch": "Bijv. Stopcontact tv",
+      "sensor": "Bijv. Bewegingssensor gang",
+      "climate": "Bijv. Thermostaat woonkamer"
+    }
+  },
+  "favoritesOrder": {
+    "title": "Volgorde favorieten",
+    "hint": "De bovenste staat op Home het eerst."
+  },
+  "crash": {
+    "updating": "Even bijwerken…",
+    "updatingNote": "Er is een nieuwe versie van Sandhovius. We laden hem nu.",
+    "title": "Er ging iets mis.",
+    "text": "Je huis werkt gewoon door; alleen de app liep vast. Laad hem opnieuw.",
+    "reload": "Opnieuw laden",
+    "retry": "Nog een keer proberen"
   }
 }

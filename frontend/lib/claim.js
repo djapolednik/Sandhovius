@@ -40,8 +40,8 @@ export function isValidCode(code) {
 // als hij klopt. Een tikfout zeggen verraadt niets: het controleteken zit
 // in de code zelf, niet in een box.
 export function codeProblem(code) {
-  if (normalize(code).length !== 12) return 'Een code heeft 12 tekens. Kijk hem na op het blad bij je box.'
-  if (!isValidCode(code)) return 'Er zit een tikfout in de code. Kijk hem na op het blad bij je box.'
+  if (normalize(code).length !== 12) return 'claim.codeLength'
+  if (!isValidCode(code)) return 'claim.codeTypo'
   return ''
 }
 
@@ -78,26 +78,34 @@ export function parseClaimLink(text) {
   return { serial, code }
 }
 
-export function claimErrorMessage(status, message) {
+// Waarom koppelen of ontkoppelen niet lukte, in de taal van de app. err is
+// de fout van pb.send (ClientResponseError).
+export function claimError(t, err) {
+  const status = err?.status ?? 0
+  const response = err?.response || {}
+  // De code van de hook (spec 2026-10-13-app-language-design, stap 3).
+  if (response.code && t.has(`errors.codes.${response.code}`)) {
+    return t(`errors.codes.${response.code}`, response.params || {})
+  }
   switch (status) {
     case 403:
-      return 'Bevestig eerst je e-mailadres'
+      return t('errors.codes.email_not_verified')
     case 400:
-      return 'Deze code klopt niet'
+      return t('errors.codes.invalid_code')
     case 409:
-      // Alleen onze eigen hook geeft 409, in het Nederlands; hij zegt soms
+      // Overgang: een hook zonder code zei het in het Nederlands, soms met
       // waar de box zit ("hoort al bij Villa").
-      return message || 'Deze box is al gekoppeld'
+      return response.message || t('errors.codes.box_already_linked')
     case 404:
-      return 'Dit huis is niet gevonden'
+      return t('errors.codes.house_not_found')
     case 429:
-      return 'Te veel pogingen, probeer het over een minuut opnieuw'
+      return t('claim.tooMany')
     case 503:
-      return 'Koppelen lukt nu niet. Probeer het later opnieuw'
+      return t('errors.codes.claim_unavailable')
     case 0:
-      return 'Geen verbinding met Sandhovius. Controleer je internet en probeer het opnieuw'
+      return t('claim.offline')
     default:
-      return 'Er ging iets mis. Probeer het zo opnieuw'
+      return t('claim.other')
   }
 }
 

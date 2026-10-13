@@ -7,11 +7,8 @@ import { useTheme } from '../app/ThemeContext'
 import { useLanguage } from '../app/LanguageContext'
 import { ArrowUpRightIcon, CheckIcon, RoomsIcon } from '../lib/icons'
 
-const THEME_OPTIONS = [
-  { value: 'light', label: 'Licht' },
-  { value: 'dark', label: 'Donker' },
-  { value: 'auto', label: 'Automatisch' },
-]
+// De woorden staan onder settings.themes.<value>.
+const THEME_OPTIONS = ['light', 'dark', 'auto']
 
 // Het tabblad Opties: je huis en kamers, hoe de app eruitziet, en je
 // account. Geen losse menu's of vensters meer achter een avatar — alles
@@ -58,11 +55,11 @@ export default function SettingsView({
       {house && (
         <section className="panel settings-section" aria-labelledby="settings-house">
           <h2 id="settings-house" className="settings-heading">
-            Huis
+            {t('house')}
           </h2>
           {houses.length > 1 && (
             <fieldset className="house-choice">
-              <legend className="visually-hidden">Welk huis wil je zien?</legend>
+              <legend className="visually-hidden">{t('whichHouse')}</legend>
               {houses.map((h) => (
                 <label key={h.id} className={`house-choice-option ${h.id === house.id ? 'house-choice-selected' : ''}`}>
                   <input
@@ -85,7 +82,7 @@ export default function SettingsView({
             <span className="settings-link-text">
               <span className="settings-link-title">{house.name}</span>
               <span className="settings-link-sub">
-                {roomCount === 1 ? '1 kamer' : `${roomCount} kamers`}. {isAdmin ? 'Naam en kamers wijzigen' : 'Kamers wijzigen'}
+                {t(isAdmin ? 'houseSubAdmin' : 'houseSub', { count: roomCount })}
               </span>
             </span>
             <ArrowUpRightIcon className="settings-link-arrow" width="18" height="18" aria-hidden="true" />
@@ -93,7 +90,7 @@ export default function SettingsView({
           {/* Hoe de verbinding met je huis is; op Home staat alleen een storing. */}
           <div className="settings-connection">{connection}</div>
           <button type="button" className="btn btn-secondary settings-add-box" onClick={onAddBox}>
-            Box toevoegen
+            {t('addBox')}
           </button>
         </section>
       )}
@@ -102,13 +99,13 @@ export default function SettingsView({
 
       <section className="panel settings-section" aria-labelledby="settings-look">
         <h2 id="settings-look" className="settings-heading">
-          Weergave
+          {t('look')}
         </h2>
         {/* Echte radioknoppen (pijltjes, één tabstop), visueel als één
             balk met drie standen. */}
         <fieldset className="segmented">
-          <legend className="visually-hidden">Thema</legend>
-          {THEME_OPTIONS.map(({ value, label }) => (
+          <legend className="visually-hidden">{t('theme')}</legend>
+          {THEME_OPTIONS.map((value) => (
             <label key={value} className={`segmented-option ${mode === value ? 'segmented-option-selected' : ''}`}>
               <input
                 type="radio"
@@ -118,20 +115,20 @@ export default function SettingsView({
                 checked={mode === value}
                 onChange={() => setMode(value)}
               />
-              {label}
+              {t(`themes.${value}`)}
             </label>
           ))}
         </fieldset>
-        <p className="settings-hint">Automatisch volgt je telefoon: licht overdag, donker als je telefoon dat is.</p>
+        <p className="settings-hint">{t('themeHint')}</p>
       </section>
 
       <section className="panel settings-section settings-account" aria-labelledby="settings-account">
         <h2 id="settings-account" className="settings-heading">
-          Account
+          {t('account')}
         </h2>
         {userEmail && (
           <p className="settings-account-email">
-            Ingelogd als <strong>{userEmail}</strong>
+            {t.rich('loggedInAs', { email: userEmail, strong: (chunks) => <strong>{chunks}</strong> })}
           </p>
         )}
         <div className="settings-group">
@@ -146,10 +143,10 @@ export default function SettingsView({
         </div>
         <div className="settings-account-actions">
           <button type="button" className="btn btn-secondary settings-logout" onClick={onChangePassword}>
-            Wachtwoord wijzigen
+            {t('changePassword')}
           </button>
           <button type="button" className="btn btn-secondary settings-logout" onClick={onLogout}>
-            Uitloggen
+            {t('logout')}
           </button>
         </div>
       </section>

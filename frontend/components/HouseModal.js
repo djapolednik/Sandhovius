@@ -4,7 +4,7 @@ import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
-import { claimErrorMessage } from '../lib/claim'
+import { claimError } from '../lib/claim'
 import { CheckIcon, CloseIcon, TrashIcon } from '../lib/icons'
 import MoveButtons from './MoveButtons'
 
@@ -50,17 +50,17 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-label={`Nieuwe naam voor kamer "${room.name}"`}
+            aria-label={t('houseSheet.newRoomName', { name: room.name })}
             autoFocus
             required
           />
-          <button type="submit" className="btn btn-icon btn-plain" aria-label="Opslaan" disabled={busy}>
+          <button type="submit" className="btn btn-icon btn-plain" aria-label={t('common.save')} disabled={busy}>
             <CheckIcon />
           </button>
           <button
             type="button"
             className="btn btn-icon btn-plain"
-            aria-label="Annuleren"
+            aria-label={t('common.cancel')}
             onClick={() => {
               setName(room.name)
               setEditing(false)
@@ -83,8 +83,7 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
             onder "Overig" — er wordt niets weggegooid. */}
         <div className="room-confirm">
           <p className="room-confirm-text">
-            Kamer “{room.name}” verwijderen? Apparaten in deze kamer blijven bestaan en komen onder
-            “Overig”.
+            {t('houseSheet.confirmDeleteRoom', { name: room.name })}
           </p>
           <div className="room-row-actions">
             <button
@@ -92,10 +91,10 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
               onClick={() => setConfirmingDelete(false)}
               disabled={busy}
             >
-              Annuleren
+              {t('common.cancel')}
             </button>
             <button className="btn btn-danger-text" onClick={handleDelete} disabled={busy}>
-              Kamer verwijderen
+              {t('houseSheet.deleteRoom')}
             </button>
           </div>
         </div>
@@ -109,16 +108,16 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
       <div className="room-row">
         <button
           className="room-row-name room-row-name-editable"
-          aria-label={`Kamer "${room.name}" hernoemen`}
+          aria-label={t('houseSheet.renameRoom', { name: room.name })}
           onClick={() => setEditing(true)}
         >
           {room.name}
         </button>
         <div className="room-row-actions">
-          <MoveButtons label={`Kamer "${room.name}"`} index={index} count={count} onMove={(delta) => onMove(room.id, delta)} />
+          <MoveButtons label={t('toast.labelRoom', { name: room.name })} index={index} count={count} onMove={(delta) => onMove(room.id, delta)} />
           <button
             className="btn btn-icon btn-plain"
-            aria-label={`Kamer "${room.name}" verwijderen`}
+            aria-label={t('houseSheet.deleteRoomLabel', { name: room.name })}
             onClick={() => setConfirmingDelete(true)}
           >
             <TrashIcon />
@@ -160,7 +159,7 @@ export default function HouseModal({
       setConfirmingRelease(false)
     } catch (err) {
       console.error('[ontkoppelen]', err?.status)
-      setError(claimErrorMessage(err?.status ?? 0, err?.message))
+      setError(claimError(t, err))
     } finally {
       setReleasing(false)
     }
@@ -194,12 +193,12 @@ export default function HouseModal({
   }
 
   return (
-    <Modal title={isAdmin ? 'Huis wijzigen' : 'Kamers wijzigen'} onClose={onClose}>
+    <Modal title={isAdmin ? t('houseSheet.titleAdmin') : t('houseSheet.title')} onClose={onClose}>
       {isAdmin && (
         <>
           <form onSubmit={handleRenameHouse} className="form-stack">
             <label className="form-field">
-              <span className="form-label">Naam van je huis</span>
+              <span className="form-label">{t('houseSheet.houseName')}</span>
               <input
                 className="input"
                 type="text"
@@ -210,7 +209,7 @@ export default function HouseModal({
             </label>
             <div className="form-actions">
               <button type="submit" className="btn btn-primary" disabled={savingName}>
-                Opslaan
+                {t('common.save')}
               </button>
             </div>
           </form>
@@ -219,7 +218,7 @@ export default function HouseModal({
         </>
       )}
 
-      <span className="form-label">Kamers</span>
+      <span className="form-label">{t('nav.kamers')}</span>
       {rooms.length > 0 && (
         <ul className="house-list" style={{ marginTop: '0.5rem' }}>
           {rooms.map((room, index) => (
@@ -242,37 +241,37 @@ export default function HouseModal({
           type="text"
           value={newRoomName}
           onChange={(e) => setNewRoomName(e.target.value)}
-          aria-label="Naam van de nieuwe kamer"
-          placeholder="Bijv. Slaapkamer"
+          aria-label={t('houseSheet.newRoom')}
+          placeholder={t('houseSheet.newRoomPlaceholder')}
           required
         />
         <button type="submit" className="btn btn-secondary" disabled={addingRoom}>
-          Toevoegen
+          {t('rooms.add')}
         </button>
       </form>
 
       {isAdmin && house?.claimed_at && (
         <>
           <div className="modal-divider" />
-          <span className="form-label">Box</span>
+          <span className="form-label">{t('houseSheet.box')}</span>
           {confirmingRelease ? (
             <div className="room-confirm">
               <p className="room-confirm-text">
-                Box ontkoppelen? Je huis en instellingen blijven bewaard. Je kunt later een box koppelen.
+                {t('houseSheet.confirmRelease')}
               </p>
               <div className="room-row-actions">
                 <button className="btn btn-plain" onClick={() => setConfirmingRelease(false)} disabled={releasing}>
-                  Annuleren
+                  {t('common.cancel')}
                 </button>
                 <button className="btn btn-danger-text" onClick={handleRelease} disabled={releasing}>
-                  Box ontkoppelen
+                  {t('houseSheet.release')}
                 </button>
               </div>
             </div>
           ) : (
             <div>
               <button className="btn btn-danger-text" onClick={() => setConfirmingRelease(true)}>
-                Box ontkoppelen
+                {t('houseSheet.release')}
               </button>
             </div>
           )}
