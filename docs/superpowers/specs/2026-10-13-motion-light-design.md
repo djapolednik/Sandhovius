@@ -48,7 +48,7 @@ Migratie `backend/pb_migrations/<ts>_add_motion_lights.js`.
 |---|---|---|
 | `house` | relation → houses, cascadeDelete, verplicht | |
 | `sensor` | relation → devices, cascadeDelete, verplicht | sensor weg → regel weg |
-| `devices` | relation → devices (meervoud, 1–10), verplicht | lampen en stopcontacten; een verwijderd apparaat valt uit de lijst |
+| `devices` | relation → devices (meervoud, max 10), niet verplicht als veld | lampen en stopcontacten; een verwijderd apparaat valt uit de lijst. Als veld verplicht zou PocketBase het verwijderen van de laatste lamp weigeren; de regels eisen minstens één bij aanmaken en wijzigen (`@request.body.devices:length > 0`). Een bewegingslicht zonder lampen doet niets en zegt dat in de app. |
 | `only_dark` | bool | standaard aan |
 | `off_after` | number, verplicht, 1–60, geheel | minuten na de laatste beweging |
 | `enabled` | bool | |
@@ -70,8 +70,9 @@ Regels (zelfde patroon als `schedules` na `1790760000_house_members.js`):
 - Box-tak (zoals `1790710000_box_rules.js`): `list` / `view` op het eigen
   huis, `update` alleen `last_run` en `last_error`.
 
-De precieze filter voor "alle apparaten in dit huis" (een relatie met
-meerdere waarden) leggen we vast in de integratietest, niet in de spec.
+"Alle apparaten in dit huis": `@request.body.devices.gateway = @request.body.house`
+(zonder `?` moet elke waarde kloppen; `motion_lights_test.go` bewaakt dat,
+ook voor `devices+`). Migratie: `1790830000_motion_lights.js`.
 
 ## Agent
 
