@@ -155,27 +155,6 @@ html {
   }
 }
 
-/* Binnenkomst met View Transitions: het huis van het inlogscherm glijdt in
-   het huispaneel van Home (ViewTransition "house", klasse house-glide in
-   page.js); de rest vervaagt (de standaard root-overgang). Alleen zonder
-   minder-beweging, page.js start de overgang dan niet. */
-/* Rustig: een verplaatsing die zacht vertrekt en zacht aankomt (ease-in-out
-   i.p.v. --ease-out, dat meteen hard wegschiet), en Home vervaagt pas als
-   het huis al onderweg is. */
-::view-transition-group(.house-glide) {
-  animation-duration: 1100ms;
-  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-::view-transition-old(root) {
-  animation-duration: 500ms;
-}
-
-::view-transition-new(root) {
-  animation-duration: 800ms;
-  animation-delay: 300ms;
-}
-
 @keyframes app-arrive {
   from {
     opacity: 0;

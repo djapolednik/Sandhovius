@@ -256,22 +256,15 @@
 
   /* Na een geslaagde login gaan alle lampen aan, rustig raam voor raam
      (150ms uit elkaar, 900ms elk), het huis staat even helemaal aan, en
-     daarna verdwijnt het formulier (350ms). ARRIVE_MS in page.js (2100ms)
-     wacht hierop. Het huis blijft staan: dat glijdt daarna in het
-     huispaneel van Home (view transition, base.css). Zonder View
-     Transitions vervaagt het mee, zoals hiervoor. */
+     daarna verdwijnt het (350ms). ARRIVE_MS in page.js (2100ms)
+     wacht hierop. Het huis vervaagt mee; daarna komt Home binnen
+     (.arriving in base.css). */
   .is-arriving .login-window::before {
     animation: login-arrive-on 900ms var(--ease-lamp) calc(var(--i) * 150ms) both;
   }
 
-  .is-arriving .login-card {
+  .is-arriving .login-layout {
     animation: login-leave 350ms var(--ease-out) 1750ms both;
-  }
-
-  @supports not (view-transition-name: none) {
-    .is-arriving .login-layout {
-      animation: login-leave 350ms var(--ease-out) 1750ms both;
-    }
   }
 }
 

@@ -548,25 +548,6 @@
   min-width: 0;
 }
 
-/* ==================== Huis-paneel ==================== */
-
-.house-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.25rem 1.25rem 1.35rem;
-  container-type: inline-size;
-}
-
-/* De zin over het huis, direct onder de naam. */
-.house-summary {
-  margin: -0.6rem 0 0;
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  text-wrap: pretty;
-}
-
 /* Nog geen favorieten: een vriendelijke kaart in plaats van een
    instructieregel. Niets gloeit: er staat hier nog niets aan. */
 .home-welcome {
@@ -592,18 +573,6 @@
   line-height: 1.5;
   color: var(--text-secondary);
   text-wrap: pretty;
-}
-
-.house-name {
-  margin: 0;
-  /* Bij grote tekst: klein genoeg dat een straatnaam heel blijft. */
-  font-size: min(1.75rem, 13cqi);
-  text-wrap: balance;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  overflow-wrap: break-word;
-  hyphens: auto;
 }
 
 /* Rustig als alles werkt (zie ConnectionStatus): een regel, geen melding. */
@@ -853,12 +822,6 @@
   font-weight: 600;
   overflow-wrap: break-word;
   hyphens: auto;
-}
-
-/* "Ander huis": klein, links onder de naam, alleen met meer huizen. */
-.house-switch {
-  align-self: flex-start;
-  margin: -0.6rem 0 -0.4rem -0.75rem;
 }
 
 /* ==================== Scènes op Home ====================
