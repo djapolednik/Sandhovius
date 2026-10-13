@@ -131,7 +131,7 @@ func TestClaimWrongCodeAndUnknownSerialLookTheSame(t *testing.T) {
 	st2, o2 := p.claim(t, tok, map[string]any{"serial": "SH-NOPE", "code": "AAAA-AAAA-AAAA"})
 	b1, _ := json.Marshal(o1)
 	b2, _ := json.Marshal(o2)
-	if st1 != 400 || st2 != 400 || string(b1) != string(b2) || o1["message"] != "Deze code klopt niet" {
+	if st1 != 400 || st2 != 400 || string(b1) != string(b2) || o1["code"] != "invalid_code" {
 		t.Fatalf("verschillend: %d %s / %d %s", st1, b1, st2, b2)
 	}
 	t.Logf("400-body: %s", b1)
@@ -146,7 +146,7 @@ func TestClaimBoxWithoutHashCanNeverBeClaimed(t *testing.T) {
 	_, tok := verifiedUser(t, p, "claim@sandhovius.test")
 	for _, code := range []string{"", "----", "K7QM-2XRP-9DTW"} {
 		st, out := p.claim(t, tok, map[string]any{"serial": "SH-OLD", "code": code})
-		if st != 400 || out["message"] != "Deze code klopt niet" {
+		if st != 400 || out["code"] != "invalid_code" {
 			t.Fatalf("code %q: %d %v", code, st, out)
 		}
 	}
@@ -158,7 +158,7 @@ func TestClaimRequiresVerified(t *testing.T) {
 	p.create(t, "users", map[string]any{"email": "u@sandhovius.test", "password": boxPw, "passwordConfirm": boxPw})
 	tok := p.login(t, "users", "u@sandhovius.test", boxPw)
 	st, out := p.claim(t, tok, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW"})
-	if st != 403 || out["message"] != "Bevestig eerst je e-mailadres" {
+	if st != 403 || out["code"] != "email_not_verified" {
 		t.Fatalf("onbevestigd: %d %v", st, out)
 	}
 	t.Logf("403-body: %v", out)
@@ -187,7 +187,7 @@ func TestClaimAlreadyClaimed(t *testing.T) {
 	houseA := out["house"].(string)
 
 	st, out = p.claim(t, tokB, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW"})
-	if st != 409 || out["message"] != "Deze box is al gekoppeld" {
+	if st != 409 || out["code"] != "box_already_linked" {
 		t.Fatalf("claim B: %d %v", st, out)
 	}
 	t.Logf("409-body: %v", out)
@@ -247,11 +247,11 @@ func TestClaimRetryAfterSuccess(t *testing.T) {
 	// geen succes melden: zeggen waar de box zit.
 	other := p.create(t, "houses", map[string]any{"members": []string{uid}, "admins": []string{uid}, "name": "Zomerhuis"})
 	st, out = p.claim(t, tokA, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW", "replace_house": other})
-	if st != 409 || out["message"] != "Deze box hoort al bij Villa. Ontkoppel hem daar eerst" {
+	if st != 409 || out["code"] != "box_linked_elsewhere" || param(out, "house") != "Villa" {
 		t.Fatalf("opnieuw met ander eigen huis: %d %v, verwacht 409", st, out)
 	}
 	st, out = p.claim(t, tokB, body)
-	if st != 409 || out["message"] != "Deze box is al gekoppeld" {
+	if st != 409 || out["code"] != "box_already_linked" {
 		t.Fatalf("andere gebruiker: %d %v", st, out)
 	}
 	if p.boxRecord(t, id)["house"] != h {
@@ -463,7 +463,7 @@ func TestClaimWithoutKeyRefuses(t *testing.T) {
 	id := newCodedBox(t, p, "SH-C-1", "K7QM-2XRP-9DTW")
 	_, tok := verifiedUser(t, p, "a@sandhovius.test")
 	st, out := p.claim(t, tok, map[string]any{"serial": "SH-C-1", "code": "K7QM-2XRP-9DTW"})
-	if st != 503 || out["message"] != "Koppelen lukt nu niet. Probeer het later opnieuw" {
+	if st != 503 || out["code"] != "claim_unavailable" {
 		t.Fatalf("zonder sleutel: %d %v", st, out)
 	}
 	if p.boxRecord(t, id)["house"] != "" {

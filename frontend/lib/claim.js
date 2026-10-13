@@ -93,9 +93,7 @@ export function claimError(t, err) {
     case 400:
       return t('errors.codes.invalid_code')
     case 409:
-      // Overgang: een hook zonder code zei het in het Nederlands, soms met
-      // waar de box zit ("hoort al bij Villa").
-      return response.message || t('errors.codes.box_already_linked')
+      return t('errors.codes.box_already_linked')
     case 404:
       return t('errors.codes.house_not_found')
     case 429:

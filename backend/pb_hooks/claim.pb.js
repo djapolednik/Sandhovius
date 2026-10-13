@@ -16,11 +16,13 @@
 // Een handler in PocketBase ziet geen variabelen buiten zichzelf, dus de
 // helpers staan binnen de handlers.
 
-// Foutantwoorden hebben dezelfde vorm als die van PocketBase zelf:
-// {status, message, data}, zodat de PWA overal `message` kan tonen.
+// Foutantwoorden hebben de vorm van PocketBase zelf ({status, message,
+// data}) plus een code en params: de app maakt daar de zin van, in de taal
+// van de bewoner (errors.codes.<code> in frontend/messages). message is een
+// korte Engelse diagnose voor de ontwikkelaar en komt nooit op het scherm.
 
 routerAdd("POST", "/api/sandhovius/claim", (e) => {
-  const fail = (status, message) => e.json(status, { status: status, message: message, data: {} })
+  const fail = (r) => e.json(r.status, { status: r.status, code: r.code, params: r.params || {}, message: r.message, data: {} })
   const str = (v) => (typeof v === "string" ? v : "")
   // Afspraak: hoofdletters, spaties en "-" weg, O -> 0, I en L -> 1.
   const normalize = (s) => s.toUpperCase().replace(/[ -]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1")
@@ -28,11 +30,11 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
   const key = $os.getenv("CLAIM_CODE_KEY")
   if (!key) {
     console.error("[claim] CLAIM_CODE_KEY ontbreekt in env: koppelen kan niet")
-    return fail(503, "Koppelen lukt nu niet. Probeer het later opnieuw")
+    return fail({ status: 503, code: "claim_unavailable", message: "CLAIM_CODE_KEY missing" })
   }
 
   const user = $app.findRecordById("users", e.auth.id)
-  if (!user.verified()) return fail(403, "Bevestig eerst je e-mailadres")
+  if (!user.verified()) return fail({ status: 403, code: "email_not_verified", message: "email not verified" })
 
   const body = e.requestInfo().body || {}
   // Serienummers staan in hoofdletters; "sh-dev-0001" overtikken moet ook werken.
@@ -57,7 +59,7 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
     const given = code ? $security.hs256(code, key) : ""
     const same = $security.equal(stored || "x", given || "y")
     if (!box || !stored || !code || !same) {
-      result = { status: 400, message: "Deze code klopt niet" }
+      result = { status: 400, code: "invalid_code", message: "unknown serial or wrong code" }
       return
     }
 
@@ -68,7 +70,7 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
         house = txApp.findRecordById("houses", replaceHouse)
       } catch (_) {}
       if (!house || !house.getStringSlice("admins").includes(user.id)) {
-        result = { status: 404, message: "Huis niet gevonden" }
+        result = { status: 404, code: "house_not_found", message: "house not found" }
         return
       }
     }
@@ -86,13 +88,18 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
         // Wel een ander eigen huis als vervanging gekozen: er wordt niets
         // vervangen, dus geen succes melden maar zeggen waar de box zit.
         if (house && house.id !== linked.id) {
-          result = { status: 409, message: "Deze box hoort al bij " + linked.getString("name") + ". Ontkoppel hem daar eerst" }
+          result = {
+            status: 409,
+            code: "box_linked_elsewhere",
+            params: { house: linked.getString("name") },
+            message: "box is linked to another house of this user",
+          }
           return
         }
         result = { status: 200, house: linked.id }
         return
       }
-      result = { status: 409, message: "Deze box is al gekoppeld" }
+      result = { status: 409, code: "box_already_linked", message: "box is linked to someone else" }
       return
     }
 
@@ -117,12 +124,12 @@ routerAdd("POST", "/api/sandhovius/claim", (e) => {
     result = { status: 200, house: house.id }
   })
 
-  if (result.status !== 200) return fail(result.status, result.message)
+  if (result.status !== 200) return fail(result)
   return e.json(200, { house: result.house })
 }, $apis.requireAuth("users"))
 
 routerAdd("POST", "/api/sandhovius/release", (e) => {
-  const fail = (status, message) => e.json(status, { status: status, message: message, data: {} })
+  const fail = (r) => e.json(r.status, { status: r.status, code: r.code, params: r.params || {}, message: r.message, data: {} })
   const body = e.requestInfo().body || {}
   const houseId = typeof body.house === "string" ? body.house.trim() : ""
 
@@ -134,7 +141,7 @@ routerAdd("POST", "/api/sandhovius/release", (e) => {
     } catch (_) {}
     // Alleen een beheerder van het huis ontkoppelt.
     if (!house || !house.getStringSlice("admins").includes(e.auth.id)) {
-      result = { status: 404, message: "Huis niet gevonden" }
+      result = { status: 404, code: "house_not_found", message: "house not found" }
       return
     }
     const boxes = txApp.findAllRecords("boxes", $dbx.hashExp({ house: house.id }))
@@ -147,6 +154,6 @@ routerAdd("POST", "/api/sandhovius/release", (e) => {
     result = { status: 200, house: house.id }
   })
 
-  if (result.status !== 200) return fail(result.status, result.message)
+  if (result.status !== 200) return fail(result)
   return e.json(200, { house: result.house })
 }, $apis.requireAuth("users"))

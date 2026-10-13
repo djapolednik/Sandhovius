@@ -200,6 +200,13 @@ func (p *pb) do(t *testing.T, token, method, path string, body any) (int, map[st
 	return resp.StatusCode, out
 }
 
+// param leest een parameter van een foutcode uit een antwoord van onze
+// hooks ({code, params}); de app maakt daar de zin van.
+func param(out map[string]any, key string) any {
+	params, _ := out["params"].(map[string]any)
+	return params[key]
+}
+
 // login geeft een token. PocketBase zet met rateLimits aan ook standaardregels
 // aan (bv. *:auth: enkele requests per paar seconden per IP); bij 429 wachten
 // we kort en proberen opnieuw (max ~10 s), zodat fixtures achter elkaar kunnen

@@ -40,22 +40,13 @@ export function pickHouse(houses, selectedId) {
 // De huishouden-endpoints geven een code (errors.codes.<code>) voor wat je
 // kunt tonen ("Er moet minstens één beheerder blijven", "Deze uitnodiging is
 // verlopen"). Zonder code (een fout van PocketBase zelf, in het Engels) via
-// describeError, zodat er nooit PocketBase-tekst op het scherm komt.
-// Overgang: zolang een hook nog geen code stuurt, de oude Nederlandse
-// melding bij de statussen waar die van ons komt.
-const SHOWN_STATUSES = [409, 410]
-
+// describeError: de message van de server komt nooit op het scherm.
 export function householdError(t, what, err) {
-  const status = err?.status
   const response = err?.response || {}
-  const message = response.message || ''
   if (response.code && t.has(`errors.codes.${response.code}`)) {
     return t(`errors.codes.${response.code}`, response.params || {})
   }
-  if (SHOWN_STATUSES.includes(status) && message) return message
-  if (status === 403 && message.startsWith('Bevestig')) return message
-  if (status === 400 && message.startsWith('Al lid')) return message
-  if (status === 400 && response.data?.email) return t('errors.invalidEmail')
+  if (err?.status === 400 && response.data?.email) return t('errors.invalidEmail')
   return describeError(t, what, err)
 }
 

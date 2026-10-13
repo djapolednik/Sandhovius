@@ -350,9 +350,8 @@ func TestInviteRoleCheckDoesNotLeak(t *testing.T) {
 func TestInviteExistingMember(t *testing.T) {
 	p, w, _ := household(t)
 	st, out := invite(t, p, w.UserATok, w.UserA, w.HouseA, "A@Sandhovius.test", "member")
-	// PocketBase zet zelf een punt achter de melding van een hookfout
-	if st != 400 || out["message"] != "Al lid van dit huis." {
-		t.Errorf("lid uitnodigen: %d %v (verwacht 400 \"Al lid van dit huis.\")", st, out)
+	if st != 400 || out["code"] != "already_member" {
+		t.Errorf("lid uitnodigen: %d %v (verwacht 400 already_member)", st, out)
 	}
 }
 
@@ -426,10 +425,10 @@ func TestAcceptRules(t *testing.T) {
 	jan, janTok := verifiedUser(t, p, "jan@sandhovius.test")
 
 	id := mustInvite(t, p, w.UserATok, w.UserA, w.HouseA, "onbevestigd@sandhovius.test", "member")
-	if st, out := accept(t, p, otherTok, id); st != 404 || out["message"] != "Uitnodiging niet gevonden" {
+	if st, out := accept(t, p, otherTok, id); st != 404 || out["code"] != "invitation_not_found" {
 		t.Errorf("ander adres: %d %v (verwacht 404)", st, out)
 	}
-	if st, out := accept(t, p, unverTok, id); st != 403 || out["message"] != "Bevestig eerst je e-mailadres" {
+	if st, out := accept(t, p, unverTok, id); st != 403 || out["code"] != "email_not_verified" {
 		t.Errorf("onbevestigd: %d %v (verwacht 403)", st, out)
 	}
 
@@ -438,7 +437,7 @@ func TestAcceptRules(t *testing.T) {
 		map[string]any{"expires": "2020-01-01 00:00:00.000Z"}); st != 200 {
 		t.Fatalf("verlopen maken: %d %v", st, out)
 	}
-	if st, out := accept(t, p, janTok, id); st != 410 || out["message"] != "Deze uitnodiging is verlopen" {
+	if st, out := accept(t, p, janTok, id); st != 410 || out["code"] != "invitation_expired" {
 		t.Errorf("verlopen: %d %v (verwacht 410)", st, out)
 	}
 
@@ -534,7 +533,7 @@ func TestLastAdmin(t *testing.T) {
 	p, w, _ := household(t)
 	path := "/api/sandhovius/houses/" + w.HouseA + "/members/" + w.UserA
 	if st, out := p.do(t, w.UserATok, "PATCH", path, map[string]any{"role": "member"}); st != 409 ||
-		out["message"] != "Er moet minstens één beheerder blijven" {
+		out["code"] != "last_admin" {
 		t.Errorf("laatste beheerder degraderen: %d %v", st, out)
 	}
 	if st, out := p.do(t, w.UserATok, "DELETE", path, nil); st != 409 {

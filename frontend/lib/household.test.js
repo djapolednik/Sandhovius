@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { expiresText, householdError, isAdmin, isExpired, isHouseDataRefusal, lostHouses, pickHouse, roleLabel } from './household.js'
-import { INTL } from './messages.testkit.js'
+import { INTL, assertMessage } from './messages.testkit.js'
 
 const { t } = INTL.nl
 
@@ -40,27 +40,39 @@ test('pickHouse: gekozen huis, anders het eerste, anders niets', () => {
   assert.equal(pickHouse([], 'a'), undefined)
 })
 
-test('householdError: de code van de server eerst, in elke taal', () => {
-  const err = (status, message, extra = {}) => ({ status, response: { status, message, data: {}, ...extra } })
+test('householdError: de code van de server, in elke taal, nooit zijn message', () => {
+  const err = (status, extra = {}) => ({ status, response: { status, message: 'diagnose', data: {}, ...extra } })
   const quiet = console.error
   console.error = () => {}
   try {
-    // Zolang een hook nog geen code stuurt: de oude Nederlandse melding.
-    assert.equal(householdError(t, 'Rol wijzigen', err(409, 'Er moet minstens één beheerder blijven')), 'Er moet minstens één beheerder blijven')
-    assert.equal(householdError(t, 'Accepteren', err(410, 'Deze uitnodiging is verlopen')), 'Deze uitnodiging is verlopen')
-    assert.equal(householdError(t, 'Accepteren', err(403, 'Bevestig eerst je e-mailadres')), 'Bevestig eerst je e-mailadres')
-    assert.equal(householdError(t, 'Uitnodigen', err(400, 'Al lid van dit huis.')), 'Al lid van dit huis.')
+    assert.equal(householdError(t, 'Rol wijzigen', err(409, { code: 'last_admin' })), 'Er moet minstens één beheerder blijven')
+    assert.equal(householdError(INTL.en.t, 'Changing the role', err(409, { code: 'last_admin' })), 'There must be at least one admin')
+    assert.equal(householdError(t, 'Accepteren', err(410, { code: 'invitation_expired' })), 'Deze uitnodiging is verlopen')
+    assert.equal(householdError(t, 'Accepteren', err(403, { code: 'email_not_verified' })), 'Bevestig eerst je e-mailadres')
+    assert.equal(householdError(t, 'Uitnodigen', err(400, { code: 'already_member' })), 'Al lid van dit huis')
     assert.equal(
-      householdError(t, 'Uitnodigen', err(400, 'Failed to create record.', { data: { email: { code: 'validation_is_email' } } })),
+      householdError(t, 'Account verwijderen', err(409, { code: 'last_admin_of_house', params: { house: 'Villa' } })),
+      'Je bent de laatste beheerder van Villa. Maak eerst iemand anders beheerder.'
+    )
+    // Een veldfout van PocketBase zelf: geen code, wel data.email.
+    assert.equal(
+      householdError(t, 'Uitnodigen', err(400, { data: { email: { code: 'validation_is_email' } } })),
       'Vul een geldig e-mailadres in.'
     )
-    assert.match(householdError(t, 'Uitnodigen', err(400, 'Failed to create record.')), /^Uitnodigen is niet gelukt/)
-    assert.match(householdError(t, 'Verlaten', err(0, '')), /niet bereikbaar/)
-    // Een onbekende code valt terug op de status.
-    assert.match(householdError(INTL.en.t, 'Inviting', err(400, 'x', { code: 'no_such_code' })), /^Inviting didn’t work/)
+    assert.match(householdError(t, 'Uitnodigen', err(400)), /^Uitnodigen is niet gelukt/)
+    assert.match(householdError(t, 'Verlaten', err(0)), /niet bereikbaar/)
+    // Een onbekende code valt terug op de status, niet op message.
+    assert.match(householdError(INTL.en.t, 'Inviting', err(400, { code: 'no_such_code' })), /^Inviting didn’t work/)
   } finally {
     console.error = quiet
   }
+})
+
+test('elke code van de hooks heeft een tekst in elke taal', () => {
+  const codes = ['claim_unavailable', 'email_not_verified', 'invalid_code', 'house_not_found', 'box_linked_elsewhere',
+    'box_already_linked', 'already_member', 'invitation_not_found', 'member_not_found', 'invitation_expired',
+    'invalid_role', 'last_admin', 'last_admin_of_house']
+  codes.forEach((code) => assertMessage(`errors.codes.${code}`))
 })
 
 test('isHouseDataRefusal: een 4xx op huisdata, niet op inloggen of bij te veel verzoeken', () => {

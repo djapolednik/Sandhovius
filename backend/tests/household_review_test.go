@@ -16,7 +16,7 @@ func TestLastAdminCannotDeleteAccount(t *testing.T) {
 
 	// A is de enige beheerder van A (met een huisgenoot erbij)
 	st, out := p.do(t, w.UserATok, "DELETE", "/api/collections/users/records/"+w.UserA, nil)
-	if st != 409 || out["message"] != "Je bent de laatste beheerder van Huis A. Maak eerst iemand anders beheerder." {
+	if st != 409 || out["code"] != "last_admin_of_house" || param(out, "house") != "Huis A" {
 		t.Errorf("laatste beheerder verwijdert account: %d %v (verwacht 409)", st, out)
 	}
 	if _, admins := membersOf(t, p, w.HouseA); !hasID(admins, w.UserA) {

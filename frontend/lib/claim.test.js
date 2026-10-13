@@ -87,9 +87,8 @@ test('claimError: de code van de hook, anders per status', () => {
   assert.equal(claimError(INTL.en.t, err(409, { code: 'box_linked_elsewhere', params: { house: 'Villa' } })), 'This box already belongs to Villa. Unlink it there first')
   assert.equal(claimError(t, err(403)), 'Bevestig eerst je e-mailadres')
   assert.equal(claimError(t, err(400)), 'Deze code klopt niet')
-  // Overgang: een 409 zonder code toont de melding van de hook.
-  assert.equal(claimError(t, err(409, { message: 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst' })), 'Deze box hoort al bij Villa. Ontkoppel hem daar eerst')
-  assert.equal(claimError(t, err(409)), 'Deze box is al gekoppeld')
+  // Zonder code: per status, nooit de message van de server.
+  assert.equal(claimError(t, err(409, { message: 'box is linked to someone else' })), 'Deze box is al gekoppeld')
   assert.equal(claimError(t, err(404)), 'Dit huis is niet gevonden')
   assert.equal(claimError(t, err(429)), 'Te veel pogingen, probeer het over een minuut opnieuw')
   assert.equal(claimError(t, err(503)), 'Koppelen lukt nu niet. Probeer het later opnieuw')

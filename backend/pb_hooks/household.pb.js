@@ -10,7 +10,8 @@
 // - Wie geen lid of beheerder is, krijgt 404: of een huis of lid bestaat,
 //   blijft voor buitenstaanders onzichtbaar.
 // - E-mailadressen worden in kleine letters vergeleken en opgeslagen.
-// - Foutantwoorden {status, message, data}, zoals in claim.pb.js.
+// - Foutantwoorden {status, code, params, message, data}, zoals in
+//   claim.pb.js: de app vertaalt de code, message is Engelse diagnose.
 // Een handler in PocketBase ziet geen variabelen buiten zichzelf, dus de
 // helpers staan binnen de handlers.
 
@@ -29,8 +30,10 @@ onRecordCreateRequest((e) => {
   if (!house || !isUser || !house.getStringSlice("admins").includes(e.auth.id)) return e.next()
 
   const members = e.app.findRecordsByIds("users", Array.from(house.getStringSlice("members")))
+  // Geen BadRequestError: die kan geen code meegeven. Zonder e.next() wordt
+  // er niets aangemaakt.
   if (members.some((u) => u.email().toLowerCase() === email)) {
-    throw new BadRequestError("Al lid van dit huis")
+    return e.json(400, { status: 400, code: "already_member", params: {}, message: "already a member", data: {} })
   }
 
   const week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -94,7 +97,7 @@ routerAdd("GET", "/api/sandhovius/houses/{id}/members", (e) => {
     house = $app.findRecordById("houses", e.request.pathValue("id"))
   } catch (_) {}
   if (!house || !house.getStringSlice("members").includes(e.auth.id)) {
-    return e.json(404, { status: 404, message: "Huis niet gevonden", data: {} })
+    return e.json(404, { status: 404, code: "house_not_found", params: {}, message: "house not found", data: {} })
   }
   const admins = Array.from(house.getStringSlice("admins"))
   const items = $app.findRecordsByIds("users", Array.from(house.getStringSlice("members"))).map((u) => ({
@@ -123,16 +126,16 @@ routerAdd("POST", "/api/sandhovius/invitations/{id}/accept", (e) => {
       inv = txApp.findRecordById("invitations", id)
     } catch (_) {}
     if (!inv || inv.getString("email") !== user.email().toLowerCase()) {
-      result = { status: 404, message: "Uitnodiging niet gevonden" }
+      result = { status: 404, code: "invitation_not_found", message: "invitation not found" }
       return
     }
     if (!user.verified()) {
-      result = { status: 403, message: "Bevestig eerst je e-mailadres" }
+      result = { status: 403, code: "email_not_verified", message: "email not verified" }
       return
     }
     const expires = new Date(inv.getString("expires").replace(" ", "T"))
     if (!(expires.getTime() > Date.now())) {
-      result = { status: 410, message: "Deze uitnodiging is verlopen" }
+      result = { status: 410, code: "invitation_expired", message: "invitation expired" }
       return
     }
 
@@ -149,7 +152,7 @@ routerAdd("POST", "/api/sandhovius/invitations/{id}/accept", (e) => {
     result = { status: 200, house: house.id }
   })
 
-  if (result.status !== 200) return e.json(result.status, { status: result.status, message: result.message, data: {} })
+  if (result.status !== 200) return e.json(result.status, { status: result.status, code: result.code, params: result.params || {}, message: result.message, data: {} })
   return e.json(200, { house: result.house })
 }, $apis.requireAuth("users"))
 
@@ -168,20 +171,20 @@ routerAdd("PATCH", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
     } catch (_) {}
     const admins = house ? Array.from(house.getStringSlice("admins")) : []
     if (!house || !admins.includes(e.auth.id)) {
-      result = { status: 404, message: "Huis niet gevonden" }
+      result = { status: 404, code: "house_not_found", message: "house not found" }
       return
     }
     if (role !== "admin" && role !== "member") {
-      result = { status: 400, message: "Kies beheerder of huisgenoot" }
+      result = { status: 400, code: "invalid_role", message: "role must be admin or member" }
       return
     }
     if (!house.getStringSlice("members").includes(target)) {
-      result = { status: 404, message: "Lid niet gevonden" }
+      result = { status: 404, code: "member_not_found", message: "member not found" }
       return
     }
     const others = admins.filter((a) => a !== target)
     if (role === "member" && others.length === 0) {
-      result = { status: 409, message: "Er moet minstens één beheerder blijven" }
+      result = { status: 409, code: "last_admin", message: "a house needs at least one admin" }
       return
     }
     house.set("admins", role === "admin" ? others.concat([target]) : others)
@@ -189,7 +192,7 @@ routerAdd("PATCH", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
     result = { status: 200 }
   })
 
-  if (result.status !== 200) return e.json(result.status, { status: result.status, message: result.message, data: {} })
+  if (result.status !== 200) return e.json(result.status, { status: result.status, code: result.code, params: result.params || {}, message: result.message, data: {} })
   return e.json(200, { id: target, role: role })
 }, $apis.requireAuth("users"))
 
@@ -210,15 +213,15 @@ routerAdd("DELETE", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
     const admins = house ? Array.from(house.getStringSlice("admins")) : []
     const self = target === e.auth.id && members.includes(e.auth.id)
     if (!house || !(admins.includes(e.auth.id) || self)) {
-      result = { status: 404, message: "Huis niet gevonden" }
+      result = { status: 404, code: "house_not_found", message: "house not found" }
       return
     }
     if (!members.includes(target)) {
-      result = { status: 404, message: "Lid niet gevonden" }
+      result = { status: 404, code: "member_not_found", message: "member not found" }
       return
     }
     if (admins.includes(target) && admins.length === 1) {
-      result = { status: 409, message: "Er moet minstens één beheerder blijven" }
+      result = { status: 409, code: "last_admin", message: "a house needs at least one admin" }
       return
     }
     house.set("members", members.filter((m) => m !== target))
@@ -233,7 +236,7 @@ routerAdd("DELETE", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
     result = { status: 204 }
   })
 
-  if (result.status !== 204) return e.json(result.status, { status: result.status, message: result.message, data: {} })
+  if (result.status !== 204) return e.json(result.status, { status: result.status, code: result.code, params: result.params || {}, message: result.message, data: {} })
   return e.noContent(204)
 }, $apis.requireAuth("users"))
 
@@ -247,8 +250,13 @@ onRecordDeleteRequest((e) => {
   const houses = e.app.findRecordsByFilter("houses", "admins.id ?= {:id}", "", 0, 0, { id: id })
   const sole = houses.find((h) => h.getStringSlice("admins").length === 1)
   if (sole) {
-    const message = "Je bent de laatste beheerder van " + sole.getString("name") + ". Maak eerst iemand anders beheerder."
-    return e.json(409, { status: 409, message: message, data: {} })
+    return e.json(409, {
+      status: 409,
+      code: "last_admin_of_house",
+      params: { house: sole.getString("name") },
+      message: "user is the only admin of a house",
+      data: {},
+    })
   }
   return e.next()
 }, "users")
