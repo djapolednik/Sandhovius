@@ -1,6 +1,6 @@
 # Taal van de app — ontwerp
 
-Datum: 2026-10-13 · Status: ontwerp, nog niet gebouwd · Bouwt op: claim-flow
+Datum: 2026-10-13 · Status: stap 1 gebouwd (op `feat/app-language`), stap 2 en 3 nog niet · Bouwt op: claim-flow
 (`2026-10-06-claim-flow-design.md`, de mailtaal per account)
 
 ## Doel
@@ -16,7 +16,7 @@ werk in de componenten.
 |---|---|---|
 | Waar staat de taal? | `users.language` (`nl`, `en`), dezelfde als nu voor de mails | Eén instelling voor app en mail; geen schemawijziging. De taal reist mee naar een nieuw apparaat. |
 | Instelling | Opties → Account: **Taal** (Nederlands / English) vervangt "Taal van e-mails" | Twee talen (app en mail) uit elkaar laten lopen heeft geen nut voor deze gebruiker. |
-| Vóór het inloggen | Browsertaal (`navigator.languages`, alles wat met `en` begint → `en`, anders `nl`), onthouden in `localStorage` (`sandhovius-language`) | Login, `/bevestig`, `/wachtwoord`, `/uitnodiging` en `/koppel` hebben nog geen account. |
+| Vóór het inloggen | Browsertaal (`navigator.languages`: de eerste die `nl` of `en` is, anders `nl`), onthouden in `localStorage` (`sandhovius-language`) | Login, `/bevestig`, `/wachtwoord`, `/uitnodiging` en `/koppel` hebben nog geen account. |
 | Na het inloggen | De taal van het account wint en gaat naar `localStorage` | Een gedeelde telefoon of een nieuwe telefoon toont meteen jouw taal. |
 | Taal in de URL (`/en/...`) | Nee | Een geïnstalleerde app, geen site om te vinden; locale-routes maken `/koppel` en de QR-links ingewikkelder voor niets. |
 | Bibliotheek | `use-intl` (MIT; de kern van next-intl) | ICU-berichten met meervoud, getal- en datumopmaak, `useTranslations` in React en `createTranslator` daarbuiten. `next-intl` zelf brengt routing en een compiler mee (`@swc/core`, `@parcel/watcher`) die we niet gebruiken. Eigen woordenboek: meervoud en opmaak zelf bouwen. |
@@ -50,12 +50,15 @@ bent) en `localStorage`, en de app wisselt meteen (optimistisch, terug bij
 een fout, zoals de taalkeuze nu).
 
 **Pure helpers in `lib/`** (`houseSummary`, `attentionLine`, `homeLede`,
-`formatTemperature`, `describeCondition`, `formatSince`, relatieve tijd,
-`claimErrorMessage`, `householdError`, `describeError`, …) krijgen een
-vertaler mee (`t`, uit `createTranslator`) in plaats van een vaste zin. De
-`Intl`-opmaak die nu `nl-NL` vastzet (`connection.js`, `temperature.js`,
-`weather.js`, `relativeTime.js`) krijgt de locale mee. De tests draaien per
-helper in beide talen.
+`describeCondition`, `formatSince`, `claimErrorMessage`, `householdError`,
+`describeError`, …) geven een **sleutel** terug (plus de waarden, waar een
+zin die nodig heeft) in plaats van een vaste zin, en de component vertaalt
+hem: zoals `confirmFailure` al `'invalid'` gaf. Zo blijven de helpers zonder
+taal en de tests eenvoudig; `assertMessage` (`lib/messages.testkit.js`)
+controleert dat elke sleutel in beide talen bestaat. Alleen waar een helper
+zelf woorden aan elkaar zet, krijgt hij een vertaler mee (`createTranslator`).
+De `Intl`-opmaak die nu `nl-NL` vastzet (`connection.js`, `temperature.js`,
+`weather.js`, `relativeTime.js`) krijgt de locale mee.
 
 **Zonder flits:** Home toont al alleen de achtergrond tot de app weet of je
 ingelogd bent (`.app-boot`). De losse pagina's (`/bevestig`, `/wachtwoord`,
@@ -63,8 +66,9 @@ ingelogd bent (`.app-boot`). De losse pagina's (`/bevestig`, `/wachtwoord`,
 HTML, pas na het kiezen van de taal. Dat voorkomt dat een Engelse telefoon
 eerst Nederlands ziet en een hydration-mismatch.
 
-**Inloggen en aanmaken:** op de login een stille tekstknop met de andere taal
-("English" / "Nederlands"), Quiet Slate, onder "Account aanmaken". Het
+**Inloggen en aanmaken:** onderaan de login-kaart een stille tekstknop met de
+andere taal, in die taal zelf ("English" / "Nederlands", met `lang`), Quiet
+Slate en 500; ook tijdens het aanmaken. Het
 aanmaakformulier verliest het veld "Taal van e-mails": het nieuwe account
 krijgt de taal waarin je het formulier invult.
 
