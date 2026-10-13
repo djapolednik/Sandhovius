@@ -1293,6 +1293,53 @@
   gap: 0.4rem;
 }
 
+/* ==================== Bewegingslicht ====================
+   De sheet hergebruikt de rijen van de huiskeuze (vinkje bij wat gekozen
+   is): één sensor, en meerdere lampen. Onder elke naam de kamer. */
+.motion-choice {
+  margin: 0;
+}
+
+.motion-choice legend {
+  margin-bottom: 0.35rem;
+}
+
+.motion-choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.motion-choice-room {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.motion-empty {
+  margin: 0;
+}
+
+.motion-off-after {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.motion-off-after legend {
+  margin-bottom: 0.5rem;
+}
+
+/* De knop staat als laatste in het raster van kaarten, links bovenin zijn
+   cel, net als "Tijd toevoegen" in de scène-sheet. */
+.motion-add {
+  min-height: 44px;
+}
+
 /* ==================== Omlaag trekken om te verversen ====================
    Alleen in de geïnstalleerde app (zie PullToRefresh). Een klein rond
    paneel dat van boven je vinger volgt (--pull, zonder transitie tijdens

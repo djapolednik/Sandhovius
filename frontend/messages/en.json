@@ -275,7 +275,11 @@
       "changeRole": "Changing the role",
       "saveScene": "Saving the scene",
       "rename": "Renaming",
-      "changeRoom": "Changing the room"
+      "changeRoom": "Changing the room",
+      "saveMotionLight": "Saving the motion light",
+      "deleteMotionLight": "Deleting the motion light",
+      "motionOn": "Turning on the motion light for {name}",
+      "motionOff": "Turning off the motion light for {name}"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -548,5 +552,31 @@
     "text": "Your home keeps working; only the app got stuck. Reload it.",
     "reload": "Reload",
     "retry": "Try once more"
+  },
+  "motion": {
+    "summary": "{lamps}, off after {minutes, plural, one {# minute} other {# minutes}}",
+    "noLamps": "No lights yet",
+    "title": "On motion",
+    "hint": "Let the light come on when you walk in: choose a motion sensor and the lights to go with it.",
+    "add": "Add a motion light",
+    "onlyDark": "Only when it’s dark",
+    "sensorOffline": "Sensor offline",
+    "lastFailed": "Didn’t work last time",
+    "edit": "Edit motion light {name}",
+    "switchLabel": "Motion light {name} on",
+    "sheetNew": "New motion light",
+    "sheetEdit": "Edit motion light",
+    "sensor": "Sensor",
+    "noSensors": "Your motion sensor appears here as soon as it reports something for the first time.",
+    "lamps": "Lights and plugs",
+    "noSwitchables": "First add a light or plug.",
+    "onlyDarkHint": "Between sunset and sunrise, where your home is.",
+    "offAfter": "Off after",
+    "minutes": "{minutes, plural, one {# minute} other {# minutes}}",
+    "offAfterHint": "After the last motion. A light you switched on yourself is left on.",
+    "needSensor": "Choose a sensor.",
+    "needLamp": "Choose at least one light or plug.",
+    "confirmDelete": "Delete the motion light for {name}? Your lights and the sensor stay as they are.",
+    "delete": "Delete motion light"
   }
 }

@@ -275,7 +275,11 @@
       "changeRole": "Rol wijzigen",
       "saveScene": "Scène opslaan",
       "rename": "Naam wijzigen",
-      "changeRoom": "Kamer wijzigen"
+      "changeRoom": "Kamer wijzigen",
+      "saveMotionLight": "Bewegingslicht opslaan",
+      "deleteMotionLight": "Bewegingslicht verwijderen",
+      "motionOn": "Het bewegingslicht bij {name} aanzetten",
+      "motionOff": "Het bewegingslicht bij {name} uitzetten"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -548,5 +552,31 @@
     "text": "Je huis werkt gewoon door; alleen de app liep vast. Laad hem opnieuw.",
     "reload": "Opnieuw laden",
     "retry": "Nog een keer proberen"
+  },
+  "motion": {
+    "summary": "{lamps}, uit na {minutes, plural, one {# minuut} other {# minuten}}",
+    "noLamps": "Nog geen lampen",
+    "title": "Bij beweging",
+    "hint": "Laat het licht aangaan als je binnenkomt: kies een bewegingssensor en de lampen erbij.",
+    "add": "Bewegingslicht toevoegen",
+    "onlyDark": "Alleen als het donker is",
+    "sensorOffline": "Sensor offline",
+    "lastFailed": "De laatste keer niet gelukt",
+    "edit": "Bewegingslicht {name} wijzigen",
+    "switchLabel": "Bewegingslicht {name} aan",
+    "sheetNew": "Nieuw bewegingslicht",
+    "sheetEdit": "Bewegingslicht wijzigen",
+    "sensor": "Sensor",
+    "noSensors": "Je bewegingssensor verschijnt hier zodra hij voor het eerst iets meldt.",
+    "lamps": "Lampen en stopcontacten",
+    "noSwitchables": "Voeg eerst een lamp of stopcontact toe.",
+    "onlyDarkHint": "Tussen zonsondergang en zonsopkomst, waar je huis staat.",
+    "offAfter": "Uit na",
+    "minutes": "{minutes, plural, one {# minuut} other {# minuten}}",
+    "offAfterHint": "Na de laatste beweging. Een lamp die je zelf aandeed, laat het bewegingslicht aan.",
+    "needSensor": "Kies een sensor.",
+    "needLamp": "Kies minstens één lamp of stopcontact.",
+    "confirmDelete": "Bewegingslicht bij {name} verwijderen? Je lampen en de sensor blijven gewoon bestaan.",
+    "delete": "Bewegingslicht verwijderen"
   }
 }

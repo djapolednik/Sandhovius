@@ -45,6 +45,8 @@ import { isBatteryLow } from '../lib/battery'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
+import MotionLightSheet from '../components/MotionLightSheet'
+import { byRoom, motionSensors, switchableDevices } from '../lib/motionLights'
 
 // "Zondag 27 september", "Sunday 27 September"
 function formatToday(ms, locale) {
@@ -118,10 +120,13 @@ export default function Home() {
   const [invitations, setInvitations] = useState([])
   const [scenes, setScenes] = useState([])
   const [schedules, setSchedules] = useState([])
+  const [motionLights, setMotionLights] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
   const [sceneRunState, setSceneRunState] = useState({})
   // Open scène-sheet: 'new', een scène-ID, of null.
   const [editingScene, setEditingScene] = useState(null)
+  // null, 'new' of het id van het bewegingslicht in de sheet.
+  const [editingMotion, setEditingMotion] = useState(null)
   const [selectedRoomId, setSelectedRoomId] = useState('')
   // Deze telefoon ↔ Sandhovius: 'connecting' tot de eerste realtime-
   // verbinding staat, 'lost' zodra die wegvalt (de SDK herverbindt zelf).
@@ -326,6 +331,14 @@ export default function Home() {
             : [...prev.filter((s) => s.id !== e.record.id), e.record]
         )
       }),
+      // Ook hier schrijft de box last_run/last_error.
+      pb.collection('motion_lights').subscribe('*', (e) => {
+        setMotionLights((prev) =>
+          e.action === 'delete'
+            ? prev.filter((m) => m.id !== e.record.id)
+            : [...prev.filter((m) => m.id !== e.record.id), e.record]
+        )
+      }),
     ]
 
     subscriptions.forEach((subscription) =>
@@ -481,6 +494,7 @@ export default function Home() {
     setInvitations([])
     setScenes([])
     setSchedules([])
+    setMotionLights([])
     setSelectedRoomId('')
     setRealtimeLink('connecting')
     setLoaded(false)
@@ -502,7 +516,16 @@ export default function Home() {
   async function fetchAll() {
     setError('')
     try {
-      const [houseRecords, roomRecords, deviceRecords, sceneRecords, scheduleRecords, favoriteRecords, invitationRecords] = await Promise.all([
+      const [
+        houseRecords,
+        roomRecords,
+        deviceRecords,
+        sceneRecords,
+        scheduleRecords,
+        favoriteRecords,
+        invitationRecords,
+        motionRecords,
+      ] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
         pb.collection('devices').getFullList({ expand: 'device_state_via_device' }),
@@ -510,6 +533,7 @@ export default function Home() {
         pb.collection('schedules').getFullList({ sort: 'time' }),
         pb.collection('favorites').getFullList(),
         pb.collection('invitations').getFullList({ sort: '-created' }),
+        pb.collection('motion_lights').getFullList(),
       ])
       // Een huis dat er niet meer is en dat je niet zelf verliet: een ander
       // heeft je eruit gehaald. Rustig zeggen, en verder met het volgende huis.
@@ -524,6 +548,7 @@ export default function Home() {
       setDevices(deviceRecords)
       setScenes(sceneRecords)
       setSchedules(scheduleRecords)
+      setMotionLights(motionRecords)
       setFavorites(favoriteRecords)
       setInvitations(invitationRecords)
       setLoaded(true)
@@ -618,6 +643,15 @@ export default function Home() {
   )
   const devicesInHouse = devices.filter((device) => device.gateway === house?.id && !hiddenIds.includes(device.id))
   const scenesInHouse = scenes.filter((scene) => scene.house === house?.id && !hiddenIds.includes(scene.id))
+  const motionLightsInHouse = motionLights.filter((m) => m.house === house?.id)
+  // De sensoren die beweging melden, plus de sensor van het bewegingslicht
+  // dat je wijzigt (ook als hij nog niets meldde).
+  function sensorsForMotion(editing) {
+    const list = byRoom(motionSensors(devicesInHouse), roomsInHouse)
+    const current = motionLightsInHouse.find((m) => m.id === editing)?.sensor
+    const extra = devicesInHouse.find((d) => d.id === current && !list.some((s) => s.id === d.id))
+    return extra ? [...list, extra] : list
+  }
   const roomIds = roomsInHouse.map((room) => room.id)
   const unassignedDevices = devicesInHouse.filter((device) => !roomIds.includes(device.room))
 
@@ -1351,6 +1385,34 @@ export default function Home() {
     setSchedules((prev) => prev.filter((s) => s.id !== scheduleId))
   }
 
+  // Bewegingslichten: de box leest ze binnen een minuut (het snapshot).
+  async function saveMotionLight(id, fields) {
+    const record = id
+      ? await pb.collection('motion_lights').update(id, fields)
+      : await pb.collection('motion_lights').create({ ...fields, house: house.id, enabled: true })
+    setMotionLights((prev) => [...prev.filter((m) => m.id !== record.id), record])
+    return record
+  }
+
+  // De schakelaar op een kaart: meteen om, en terug als opslaan mislukt.
+  async function setMotionLightEnabled(rule, enabled) {
+    const flip = (value) => setMotionLights((prev) => prev.map((m) => (m.id === rule.id ? { ...m, enabled: value } : m)))
+    flip(enabled)
+    try {
+      await pb.collection('motion_lights').update(rule.id, { enabled }, { requestKey: null })
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      flip(!enabled)
+      const name = devices.find((d) => d.id === rule.sensor)?.name ?? ''
+      showToast(describeError(t, t(enabled ? 'errors.what.motionOn' : 'errors.what.motionOff', { name }), err), 'error')
+    }
+  }
+
+  async function deleteMotionLight(id) {
+    await pb.collection('motion_lights').delete(id)
+    setMotionLights((prev) => prev.filter((m) => m.id !== id))
+  }
+
   function deleteScene(sceneId) {
     const scene = scenes.find((s) => s.id === sceneId)
     deleteLater(
@@ -1784,6 +1846,10 @@ export default function Home() {
             onEdit={(scene) => setEditingScene(scene.id)}
             onCreate={() => setEditingScene('new')}
             onToggleSchedule={setScheduleEnabled}
+            motionLights={motionLightsInHouse}
+            deviceById={Object.fromEntries(devicesInHouse.map((d) => [d.id, d]))}
+            onEditMotion={(rule) => setEditingMotion(rule === 'new' ? 'new' : rule.id)}
+            onToggleMotion={setMotionLightEnabled}
           />
         )}
       </>
@@ -1992,6 +2058,19 @@ export default function Home() {
           onDeleteSchedule={deleteSchedule}
           onDelete={deleteScene}
           onClose={() => setEditingScene(null)}
+        />
+      )}
+
+      {editingMotion && (
+        <MotionLightSheet
+          key={editingMotion}
+          rule={editingMotion === 'new' ? null : motionLightsInHouse.find((m) => m.id === editingMotion)}
+          sensors={sensorsForMotion(editingMotion)}
+          switchables={byRoom(switchableDevices(devicesInHouse), roomsInHouse)}
+          roomNameById={roomNameById}
+          onSave={saveMotionLight}
+          onDelete={deleteMotionLight}
+          onClose={() => setEditingMotion(null)}
         />
       )}
 

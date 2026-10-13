@@ -2,9 +2,10 @@
 
 import { useIntl } from '../app/LanguageContext'
 import { cachedFormat } from '../lib/language'
-import { ArrowUpRightIcon, CheckIcon, ClockIcon, PlusIcon, ScenesIcon } from '../lib/icons'
+import { ArrowUpRightIcon, CheckIcon, ClockIcon, MotionIcon, PlusIcon, ScenesIcon } from '../lib/icons'
 import { describeDays, describeSchedules } from '../lib/schedules'
 import { describeLightStep } from '../lib/sceneChoices'
+import { describeMotionLight } from '../lib/motionLights'
 
 // "Leeslamp, Staande lamp en Thermostaat": wat een scène raakt, in woorden.
 function describeScene({ t, locale }, scene, deviceNameById) {
@@ -40,11 +41,20 @@ export default function ScenesView({
   onEdit,
   onCreate,
   onToggleSchedule,
+  motionLights = [],
+  deviceById = {},
+  onEditMotion,
+  onToggleMotion,
 }) {
   const intl = useIntl()
   const { t } = intl
+  // Bewegingslichten hebben geen scène nodig: ook zonder scènes staan ze er.
+  const motion = (
+    <MotionList motionLights={motionLights} deviceById={deviceById} onEdit={onEditMotion} onToggle={onToggleMotion} />
+  )
   if (scenes.length === 0) {
     return (
+      <>
       <section className="panel intro-panel" aria-labelledby="scenes-empty-title">
         <div className="intro-panel-icons" aria-hidden="true">
           <span className="device-icon">
@@ -60,6 +70,8 @@ export default function ScenesView({
           {t('scenes.create')}
         </button>
       </section>
+      {motion}
+      </>
     )
   }
 
@@ -122,6 +134,7 @@ export default function ScenesView({
         </li>
       </ul>
       <ScheduleList scenes={scenes} schedules={schedules} onEdit={onEdit} onToggleSchedule={onToggleSchedule} />
+      {motion}
     </>
   )
 }
@@ -184,6 +197,71 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
           })}
         </ul>
       )}
+    </section>
+  )
+}
+
+// Bewegingslichten: per regel een kaart in de stijl van de schema's, met de
+// sensor als titel (dat is wat je zoekt: "de gang"). Een instelling, dus de
+// schakelaar is Electric Blue en niets gloeit. Een tik opent de sheet.
+function MotionList({ motionLights, deviceById, onEdit, onToggle }) {
+  const intl = useIntl()
+  const { t } = intl
+  const names = Object.fromEntries(Object.values(deviceById).map((d) => [d.id, d.name]))
+  const rows = [...motionLights].sort((a, b) =>
+    (names[a.sensor] ?? '').localeCompare(names[b.sensor] ?? '', intl.locale)
+  )
+
+  return (
+    <section className="schedules-section" aria-labelledby="motion-heading">
+      <h2 id="motion-heading" className="section-heading">
+        {t('motion.title')}
+      </h2>
+      {rows.length === 0 && <p className="section-hint">{t('motion.hint')}</p>}
+      <ul className="schedule-list">
+        {rows.map((rule) => {
+          const sensor = deviceById[rule.sensor]
+          const name = sensor?.name ?? t('motion.sensor')
+          return (
+            <li key={rule.id} className={`panel schedule-card ${rule.enabled ? '' : 'schedule-card-off'}`}>
+              <button
+                type="button"
+                className="device-card-action"
+                aria-label={t('motion.edit', { name })}
+                onClick={() => onEdit(rule)}
+              />
+              <span className="device-icon" aria-hidden="true">
+                <MotionIcon width="22" height="22" />
+              </span>
+              <span className="schedule-card-text">
+                <span className="schedule-card-name">{name}</span>
+                <span className="schedule-card-days">{describeMotionLight(intl, rule, names)}</span>
+                {rule.only_dark && <span className="schedule-card-days">{t('motion.onlyDark')}</span>}
+                {rule.enabled && sensor && !sensor.online && (
+                  <span className="schedule-card-error">{t('motion.sensorOffline')}</span>
+                )}
+                {rule.enabled && rule.last_error && <span className="schedule-card-error">{t('motion.lastFailed')}</span>}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={rule.enabled}
+                aria-label={t('motion.switchLabel', { name })}
+                className={`switch switch-accent schedule-card-switch ${rule.enabled ? 'switch-on' : ''}`}
+                onClick={() => onToggle(rule, !rule.enabled)}
+              >
+                <span className="switch-thumb" />
+              </button>
+            </li>
+          )
+        })}
+        <li>
+          <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
+            <PlusIcon width="18" height="18" aria-hidden="true" />
+            {t('motion.add')}
+          </button>
+        </li>
+      </ul>
     </section>
   )
 }
