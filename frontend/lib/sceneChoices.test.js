@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { actionsFromChoices, choicesFromActions, currentPayload, describeLightStep } from './sceneChoices.js'
+import { INTL } from './messages.testkit.js'
 
 const dev = (id, type = 'light', state = null) => ({
   id,
@@ -94,10 +95,12 @@ test('currentPayload: null bij uit, onoff, unavailable en zonder state', () => {
 })
 
 test('describeLightStep', () => {
-  assert.equal(describeLightStep({ brightness_pct: 40, color_temp_kelvin: 2700 }), '40%, warm wit')
-  assert.equal(describeLightStep({ brightness_pct: 40, color_temp_kelvin: 5000 }), '40%, koel wit')
-  assert.equal(describeLightStep({ brightness_pct: 40, rgb_color: [1, 2, 3] }), '40%, kleur')
-  assert.equal(describeLightStep({ brightness_pct: 40 }), '40%')
-  assert.equal(describeLightStep({ rgb_color: [1, 2, 3] }), 'kleur')
-  assert.equal(describeLightStep({}), '')
+  const { t } = INTL.nl
+  assert.equal(describeLightStep(t, { brightness_pct: 40, color_temp_kelvin: 2700 }), '40%, warm wit')
+  assert.equal(describeLightStep(t, { brightness_pct: 40, color_temp_kelvin: 5000 }), '40%, koel wit')
+  assert.equal(describeLightStep(t, { brightness_pct: 40, rgb_color: [1, 2, 3] }), '40%, kleur')
+  assert.equal(describeLightStep(t, { brightness_pct: 40 }), '40%')
+  assert.equal(describeLightStep(t, { rgb_color: [1, 2, 3] }), 'kleur')
+  assert.equal(describeLightStep(t, {}), '')
+  assert.equal(describeLightStep(INTL.en.t, { brightness_pct: 40, color_temp_kelvin: 2700 }), '40%, warm white')
 })

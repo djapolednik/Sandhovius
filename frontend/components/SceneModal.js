@@ -1,11 +1,12 @@
 'use client'
 
-import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { formatTemperature } from '../lib/temperature'
-import { DAYS, describeDays } from '../lib/schedules'
+import { DAY_KEYS, dayNames, describeDays } from '../lib/schedules'
+import { useIntl } from '../app/LanguageContext'
+import { cachedFormat } from '../lib/language'
 import { actionsFromChoices, choicesFromActions, currentPayload, describeLightStep } from '../lib/sceneChoices'
 import { MinusIcon, PlusIcon, TrashIcon } from '../lib/icons'
 import { uid } from '../lib/uid'
@@ -32,16 +33,15 @@ function nextWholeHour() {
 }
 
 // "zondag 23:00": wanneer een schema voor het laatst liep.
-function formatRun(lastRun) {
-  return new Date(lastRun).toLocaleString('nl-NL', { weekday: 'long', hour: '2-digit', minute: '2-digit' })
+function formatRun(lastRun, locale) {
+  return cachedFormat(Intl.DateTimeFormat, locale, { weekday: 'long', hour: '2-digit', minute: '2-digit' }).format(
+    new Date(lastRun)
+  )
 }
 
-const MODES = [
-  { value: 'skip', label: 'Niet' },
-  { value: 'on', label: 'Aan' },
-  { value: 'off', label: 'Uit' },
-]
-const CURRENT_MODE = { value: 'current', label: 'Zoals nu' }
+// De woorden staan onder sceneSheet.modes.<value>.
+const MODES = ['skip', 'on', 'off']
+const CURRENT_MODE = 'current'
 
 // "Zoals nu" kan alleen bij een lamp die nu aan staat en dimt of kleurt, of
 // als de scène al een opgeslagen stand voor die lamp heeft.
@@ -63,7 +63,9 @@ export default function SceneModal({
   onDelete,
   onClose,
 }) {
-  const t = useTranslations()
+  const intl = useIntl()
+  const { t, locale } = intl
+  const days = dayNames(locale)
   const [name, setName] = useState(scene?.name ?? '')
   const [choices, setChoices] = useState(() => choicesFromActions(scene?.actions, devices))
   const [rows, setRows] = useState(() => rowsFromSchedules(schedules))
@@ -92,7 +94,7 @@ export default function SceneModal({
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { key: uid(), time: nextWholeHour(), days: DAYS.map((d) => d.key), enabled: true, dirty: true },
+      { key: uid(), time: nextWholeHour(), days: [...DAY_KEYS], enabled: true, dirty: true },
     ])
   }
 
@@ -104,11 +106,11 @@ export default function SceneModal({
   async function handleSubmit(e) {
     e.preventDefault()
     if (actions.length === 0) {
-      setError('Kies bij minstens één apparaat wat de scène doet.')
+      setError(t('sceneSheet.needAction'))
       return
     }
     if (rows.some((row) => row.days.length === 0)) {
-      setError('Kies bij elke tijd minstens één dag.')
+      setError(t('sceneSheet.needDays'))
       return
     }
     setSaving(true)
@@ -133,26 +135,26 @@ export default function SceneModal({
   }
 
   return (
-    <Modal title={scene ? 'Scène wijzigen' : 'Nieuwe scène'} onClose={onClose}>
+    <Modal title={scene ? t('sceneSheet.editTitle') : t('scenes.new')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="form-stack">
         <label className="form-field">
-          <span className="form-label">Naam</span>
+          <span className="form-label">{t('deviceSheet.name')}</span>
           <input
             className="input"
             type="text"
             value={name}
             maxLength={60}
-            placeholder="Bijv. Naar bed"
+            placeholder={t('sceneSheet.namePlaceholder')}
             onChange={(e) => setName(e.target.value)}
             required
           />
         </label>
 
         <div className="form-field">
-          <span className="form-label">Wat doet de scène?</span>
+          <span className="form-label">{t('sceneSheet.what')}</span>
           {devices.length === 0 ? (
             <p className="settings-hint" style={{ margin: 0 }}>
-              Voeg eerst een lamp, stopcontact of thermostaat toe.
+              {t('sceneSheet.noDevices')}
             </p>
           ) : (
             <ul className="scene-rows">
@@ -163,11 +165,11 @@ export default function SceneModal({
                   <li key={device.id} className="scene-row">
                     <span className="scene-row-name">
                       {device.name}
-                      <span className="scene-row-room">{roomNameById[device.room] ?? 'Geen kamer'}</span>
+                      <span className="scene-row-room">{roomNameById[device.room] ?? t('home.noRoom')}</span>
                     </span>
                     <fieldset className="segmented segmented-small">
-                      <legend className="visually-hidden">{device.name} in deze scène</legend>
-                      {modes.map(({ value, label }) => (
+                      <legend className="visually-hidden">{t('sceneSheet.deviceLegend', { name: device.name })}</legend>
+                      {modes.map((value) => (
                         <label
                           key={value}
                           className={`segmented-option ${choice.mode === value ? 'segmented-option-selected' : ''}`}
@@ -187,30 +189,30 @@ export default function SceneModal({
                               )
                             }
                           />
-                          {label}
+                          {t(`sceneSheet.modes.${value}`)}
                         </label>
                       ))}
                     </fieldset>
                     {choice.mode === 'current' && choice.payload && (
-                      <span className="scene-row-room">{describeLightStep(choice.payload)}</span>
+                      <span className="scene-row-room">{describeLightStep(t, choice.payload)}</span>
                     )}
                     {device.type === 'climate' && choice.mode === 'on' && (
                       <div className="scene-temperature">
                         <button
                           type="button"
                           className="climate-step"
-                          aria-label={`${device.name} kouder`}
+                          aria-label={t('sceneSheet.colder', { name: device.name })}
                           onClick={() => setChoice(device.id, { temperature: choice.temperature - TEMP_STEP })}
                         >
                           <MinusIcon width="20" height="20" />
                         </button>
                         <span className="scene-temperature-value" aria-live="polite">
-                          {formatTemperature(choice.temperature)}
+                          {formatTemperature(choice.temperature, locale)}
                         </span>
                         <button
                           type="button"
                           className="climate-step"
-                          aria-label={`${device.name} warmer`}
+                          aria-label={t('sceneSheet.warmer', { name: device.name })}
                           onClick={() => setChoice(device.id, { temperature: choice.temperature + TEMP_STEP })}
                         >
                           <PlusIcon width="20" height="20" />
@@ -224,14 +226,13 @@ export default function SceneModal({
           )}
           {missing > 0 && (
             <p className="settings-hint" style={{ margin: 0 }}>
-              {missing === 1 ? 'Eén apparaat' : `${missing} apparaten`} uit deze scène bestaat niet meer; dat valt eruit
-              als je opslaat.
+              {t('sceneSheet.missing', { count: missing })}
             </p>
           )}
         </div>
 
         <div className="form-field">
-          <span className="form-label">Vanzelf uitvoeren</span>
+          <span className="form-label">{t('scenes.schedulesTitle')}</span>
           {rows.length > 0 && (
             <ul className="schedule-rows">
               {rows.map((row) => (
@@ -241,7 +242,7 @@ export default function SceneModal({
                       className="input schedule-time"
                       type="time"
                       required
-                      aria-label="Tijd"
+                      aria-label={t('sceneSheet.time')}
                       value={row.time}
                       onChange={(e) => updateRow(row.key, { time: e.target.value })}
                     />
@@ -249,15 +250,15 @@ export default function SceneModal({
                       type="button"
                       role="switch"
                       aria-checked={row.enabled}
-                      aria-label={`Om ${row.time} vanzelf uitvoeren`}
+                      aria-label={t('sceneSheet.runAt', { time: row.time })}
                       className={`switch switch-accent ${row.enabled ? 'switch-on' : ''}`}
                       onClick={() => updateRow(row.key, { enabled: !row.enabled })}
                     >
                       <span className="switch-thumb" />
                     </button>
                   </div>
-                  <div className="schedule-days" role="group" aria-label={`Dagen voor ${row.time}`}>
-                    {DAYS.map((day) => {
+                  <div className="schedule-days" role="group" aria-label={t('sceneSheet.daysFor', { time: row.time })}>
+                    {days.map((day) => {
                       const on = row.days.includes(day.key)
                       return (
                         <button
@@ -279,12 +280,12 @@ export default function SceneModal({
                   </div>
                   <div className="schedule-row-bottom">
                     <span className="schedule-days-text">
-                      {row.days.length === 0 ? 'Kies minstens één dag' : describeDays(row.days)}
+                      {row.days.length === 0 ? t('sceneSheet.pickDay') : describeDays(intl, row.days)}
                     </span>
                     <button
                       type="button"
                       className="btn btn-icon btn-plain"
-                      aria-label={`Tijd ${row.time} verwijderen`}
+                      aria-label={t('sceneSheet.removeTime', { time: row.time })}
                       onClick={() => removeRow(row)}
                     >
                       <TrashIcon />
@@ -292,7 +293,7 @@ export default function SceneModal({
                   </div>
                   {row.lastError && row.lastRun && !row.dirty && (
                     <p className="error-banner" style={{ margin: 0 }}>
-                      Niet gelukt op {formatRun(row.lastRun)}. Kijk bij Let op of al je apparaten bereikbaar zijn.
+                      {t('sceneSheet.lastRunFailed', { when: formatRun(row.lastRun, locale) })}
                     </p>
                   )}
                 </li>
@@ -301,7 +302,7 @@ export default function SceneModal({
           )}
           <button type="button" className="btn btn-plain schedule-add" onClick={addRow}>
             <PlusIcon width="18" height="18" aria-hidden="true" />
-            Tijd toevoegen
+            {t('sceneSheet.addTime')}
           </button>
         </div>
 
@@ -312,7 +313,7 @@ export default function SceneModal({
         )}
 
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          {scene ? 'Opslaan' : 'Scène maken'}
+          {scene ? t('common.save') : t('scenes.create')}
         </button>
       </form>
 
@@ -321,10 +322,10 @@ export default function SceneModal({
           <div className="modal-divider" />
           {confirmingDelete ? (
             <div className="danger-zone">
-              <p className="danger-text">Scène “{scene.name}” verwijderen? Je apparaten blijven gewoon bestaan.</p>
+              <p className="danger-text">{t('sceneSheet.confirmDelete', { name: scene.name })}</p>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setConfirmingDelete(false)}>
-                  Annuleren
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="button"
@@ -334,14 +335,14 @@ export default function SceneModal({
                     onClose()
                   }}
                 >
-                  Verwijderen
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
           ) : (
             <button type="button" className="btn btn-danger-text" onClick={() => setConfirmingDelete(true)}>
               <TrashIcon />
-              Scène verwijderen
+              {t('sceneSheet.delete')}
             </button>
           )}
         </>

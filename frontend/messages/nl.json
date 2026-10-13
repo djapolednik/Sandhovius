@@ -190,7 +190,23 @@
     "title": "Scènes",
     "running": "{name} wordt uitgevoerd",
     "done": "{name} is klaar",
-    "run": "Scène {name} uitvoeren"
+    "run": "Scène {name} uitvoeren",
+    "noDevices": "Nog geen apparaten",
+    "andMore": "nog {count}",
+    "firstTitle": "Maak je eerste scène",
+    "firstText": "Met een scène zet je met één tik meerdere apparaten tegelijk goed, bijvoorbeeld “Naar bed”: alle lampen uit en de verwarming lager.",
+    "create": "Scène maken",
+    "runningShort": "Wordt uitgevoerd",
+    "doneShort": "Klaar",
+    "editLabel": "Scène {name} wijzigen",
+    "edit": "Wijzigen",
+    "new": "Nieuwe scène",
+    "schedulesTitle": "Vanzelf uitvoeren",
+    "schedulesHint": "Laat een scène vanzelf lopen, bijvoorbeeld elke werkdag om 07:00: kies Wijzigen bij een scène en dan Tijd toevoegen.",
+    "noDays": "Geen dagen gekozen",
+    "editSchedule": "{name} om {time} wijzigen",
+    "lastFailed": "De laatste keer niet gelukt",
+    "scheduleSwitch": "{name} om {time} vanzelf uitvoeren"
   },
   "nav": {
     "home": "Home",
@@ -288,7 +304,8 @@
     "retry": "Opnieuw proberen",
     "saved": "Opgeslagen",
     "cancel": "Annuleren",
-    "delete": "Verwijderen"
+    "delete": "Verwijderen",
+    "save": "Opslaan"
   },
   "toast": {
     "boxUnreachable": "Je Sandhovius-box is nu niet bereikbaar. Probeer het opnieuw zodra hij weer reageert.",
@@ -317,7 +334,14 @@
     "unassigned": "Overig",
     "add": "Toevoegen",
     "count": "{count, plural, one {# apparaat} other {# apparaten}}",
-    "empty": "Nog geen apparaten in deze kamer. Voeg er een toe met “Toevoegen”, of verplaats een apparaat hierheen via Details."
+    "empty": "Nog geen apparaten in deze kamer. Voeg er een toe met “Toevoegen”, of verplaats een apparaat hierheen via Details.",
+    "state": {
+      "empty": "Nog leeg",
+      "allOff": "Alles uit",
+      "allOn": "Alles aan",
+      "some": "{on} van {all} aan"
+    },
+    "switchLabel": "Lampen en stopcontacten in {room}"
   },
   "deviceSheet": {
     "setupFailed": "Het klaarzetten is niet gelukt.",
@@ -346,5 +370,44 @@
     "batteryPercent": "{percent}%",
     "lastUpdated": "Laatst bijgewerkt",
     "offlineNote": "Offline, dit is de laatst bekende stand."
+  },
+  "schedules": {
+    "everyDay": "Elke dag",
+    "weekdays": "Werkdagen",
+    "weekend": "Weekend",
+    "daysAt": "{days} om {time}",
+    "at": "Om {times}"
+  },
+  "light": {
+    "warmWhite": "warm wit",
+    "coolWhite": "koel wit",
+    "colour": "kleur"
+  },
+  "sceneSheet": {
+    "needAction": "Kies bij minstens één apparaat wat de scène doet.",
+    "needDays": "Kies bij elke tijd minstens één dag.",
+    "editTitle": "Scène wijzigen",
+    "namePlaceholder": "Bijv. Naar bed",
+    "what": "Wat doet de scène?",
+    "noDevices": "Voeg eerst een lamp, stopcontact of thermostaat toe.",
+    "deviceLegend": "{name} in deze scène",
+    "modes": {
+      "skip": "Niet",
+      "on": "Aan",
+      "off": "Uit",
+      "current": "Zoals nu"
+    },
+    "colder": "{name} kouder",
+    "warmer": "{name} warmer",
+    "missing": "{count, plural, one {Eén apparaat} other {# apparaten}} uit deze scène bestaat niet meer; dat valt eruit als je opslaat.",
+    "time": "Tijd",
+    "runAt": "Om {time} vanzelf uitvoeren",
+    "daysFor": "Dagen voor {time}",
+    "pickDay": "Kies minstens één dag",
+    "removeTime": "Tijd {time} verwijderen",
+    "lastRunFailed": "Niet gelukt op {when}. Kijk bij Let op of al je apparaten bereikbaar zijn.",
+    "addTime": "Tijd toevoegen",
+    "confirmDelete": "Scène “{name}” verwijderen? Je apparaten blijven gewoon bestaan.",
+    "delete": "Scène verwijderen"
   }
 }

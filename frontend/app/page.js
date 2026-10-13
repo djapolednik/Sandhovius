@@ -1747,7 +1747,7 @@ export default function Home() {
                 {selectedRoom.switchable.length > 0 && (
                   <div className="room-head-switch">
                     <span className="room-head-state" aria-hidden="true">
-                      {describeRoom(selectedRoom, houseReachable)}
+                      {describeRoom(t, selectedRoom, houseReachable)}
                     </span>
                     <RoomSwitch room={selectedRoom} canSwitch={houseReachable} onSwitch={switchRoom} />
                   </div>

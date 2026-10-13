@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'use-intl'
 import { ChevronRightIcon, LightbulbIcon, PlugIcon, RoomsIcon } from '../lib/icons'
 
 // rooms: [{ id, label, devices, switchable, on }] — switchable zijn de
@@ -8,20 +9,21 @@ import { ChevronRightIcon, LightbulbIcon, PlugIcon, RoomsIcon } from '../lib/ico
 
 // "2 van 3 aan", "Alles uit": hoe de kamer erbij staat, in woorden naast
 // de schakelaar (State Means State: nooit alleen de kleur).
-export function describeRoom(room, reachable) {
-  if (room.devices.length === 0) return 'Nog leeg'
-  if (room.switchable.length === 0) return room.devices.length === 1 ? '1 apparaat' : `${room.devices.length} apparaten`
-  if (!reachable) return 'Niet bereikbaar'
+export function describeRoom(t, room, reachable) {
+  if (room.devices.length === 0) return t('rooms.state.empty')
+  if (room.switchable.length === 0) return t('rooms.count', { count: room.devices.length })
+  if (!reachable) return t('device.unreachable')
   const on = room.on.length
   const all = room.switchable.length
-  if (on === 0) return 'Alles uit'
-  if (on === all) return all === 1 ? 'Aan' : 'Alles aan'
-  return `${on} van ${all} aan`
+  if (on === 0) return t('rooms.state.allOff')
+  if (on === all) return all === 1 ? t('device.on') : t('rooms.state.allOn')
+  return t('rooms.state.some', { on, all })
 }
 
 // Eén schakelaar voor de hele kamer: staat er iets aan, dan gaat alles uit;
 // anders gaat alles aan. Apparaatstand, dus Signal Green.
 export function RoomSwitch({ room, canSwitch, onSwitch }) {
+  const t = useTranslations()
   if (room.switchable.length === 0) return null
   const isOn = room.on.length > 0
   return (
@@ -29,7 +31,7 @@ export function RoomSwitch({ room, canSwitch, onSwitch }) {
       type="button"
       role="switch"
       aria-checked={isOn}
-      aria-label={`Lampen en stopcontacten in ${room.label}`}
+      aria-label={t('rooms.switchLabel', { room: room.label })}
       aria-disabled={canSwitch ? undefined : true}
       className={`switch room-switch ${isOn ? 'switch-on' : ''}`}
       onClick={() => canSwitch && onSwitch(room)}
@@ -61,8 +63,9 @@ function RoomIcon({ room, reachable }) {
 // schakelaar bedient de hele kamer zonder dat je hem hoeft te openen. Op
 // een telefoon staan hier de kamerpillen (zie RoomTabs).
 export default function RoomsPanel({ rooms, selectedId, onSelect, reachable, onSwitch }) {
+  const t = useTranslations()
   return (
-    <nav className="panel rooms-panel" aria-label="Kamers">
+    <nav className="panel rooms-panel" aria-label={t('nav.kamers')}>
       <ul className="rooms-panel-list">
         {rooms.map((room) => {
           const selected = room.id === selectedId
@@ -77,7 +80,7 @@ export default function RoomsPanel({ rooms, selectedId, onSelect, reachable, onS
                 <RoomIcon room={room} reachable={reachable} />
                 <span className="room-item-text">
                   <span className="room-item-name">{room.label}</span>
-                  <span className="room-item-meta">{describeRoom(room, reachable)}</span>
+                  <span className="room-item-meta">{describeRoom(t, room, reachable)}</span>
                 </span>
                 {/* Zegt dat de rij zelf een knop is, los van de schakelaar. */}
                 <ChevronRightIcon className="room-item-chevron" width="18" height="18" aria-hidden="true" />

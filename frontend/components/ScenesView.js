@@ -1,25 +1,28 @@
 'use client'
 
+import { useIntl } from '../app/LanguageContext'
+import { cachedFormat } from '../lib/language'
 import { ArrowUpRightIcon, CheckIcon, ClockIcon, PlusIcon, ScenesIcon } from '../lib/icons'
 import { describeDays, describeSchedules } from '../lib/schedules'
 import { describeLightStep } from '../lib/sceneChoices'
 
 // "Leeslamp, Staande lamp en Thermostaat": wat een scène raakt, in woorden.
-function describeScene(scene, deviceNameById) {
+function describeScene({ t, locale }, scene, deviceNameById) {
   const names = [
     ...new Set(
       (scene.actions ?? [])
         .filter((step) => deviceNameById[step.device])
         .map((step) => {
           const name = deviceNameById[step.device]
-          const detail = step.action === 'turn_on' ? describeLightStep(step.payload) : ''
+          const detail = step.action === 'turn_on' ? describeLightStep(t, step.payload) : ''
           return detail ? `${name} (${detail})` : name
         }),
     ),
   ]
-  if (names.length === 0) return 'Nog geen apparaten'
-  if (names.length <= 3) return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} en ${names.at(-1)}`
-  return `${names.slice(0, 2).join(', ')} en nog ${names.length - 2}`
+  if (names.length === 0) return t('scenes.noDevices')
+  const list = cachedFormat(Intl.ListFormat, locale, { type: 'conjunction' })
+  if (names.length <= 3) return list.format(names)
+  return list.format([...names.slice(0, 2), t('scenes.andMore', { count: names.length - 2 })])
 }
 
 // Het tabblad Scènes: één tegel per scène. Een tik voert hem uit (op de
@@ -38,6 +41,8 @@ export default function ScenesView({
   onCreate,
   onToggleSchedule,
 }) {
+  const intl = useIntl()
+  const { t } = intl
   if (scenes.length === 0) {
     return (
       <section className="panel intro-panel" aria-labelledby="scenes-empty-title">
@@ -47,15 +52,12 @@ export default function ScenesView({
           </span>
         </div>
         <h2 id="scenes-empty-title" className="intro-panel-title">
-          Maak je eerste scène
+          {t('scenes.firstTitle')}
         </h2>
-        <p className="intro-panel-text">
-          Met een scène zet je met één tik meerdere apparaten tegelijk goed, bijvoorbeeld “Naar bed”: alle lampen uit en
-          de verwarming lager.
-        </p>
+        <p className="intro-panel-text">{t('scenes.firstText')}</p>
         <button type="button" className="btn btn-primary" onClick={onCreate}>
           <PlusIcon width="20" height="20" aria-hidden="true" />
-          Scène maken
+          {t('scenes.create')}
         </button>
       </section>
     )
@@ -66,14 +68,14 @@ export default function ScenesView({
       <ul className="device-list scene-list">
         {scenes.map((scene) => {
           const state = runState[scene.id]
-          const when = describeSchedules(schedules.filter((s) => s.scene === scene.id))
+          const when = describeSchedules(intl, schedules.filter((s) => s.scene === scene.id))
           return (
             <li key={scene.id} className="device-cell">
               <div className={`panel tile scene-tile ${state ? `scene-${state}` : ''}`}>
                 <button
                   type="button"
                   className="device-card-action"
-                  aria-label={`Scène ${scene.name} uitvoeren`}
+                  aria-label={t('scenes.run', { name: scene.name })}
                   disabled={!canRun || state === 'running'}
                   onClick={() => onRun(scene)}
                 />
@@ -86,25 +88,25 @@ export default function ScenesView({
                   {state === 'running' ? (
                     <>
                       <span className="spinner spinner-inline" aria-hidden="true" />
-                      Wordt uitgevoerd
+                      {t('scenes.runningShort')}
                     </>
                   ) : state === 'done' ? (
                     <>
                       <CheckIcon width="16" height="16" aria-hidden="true" />
-                      Klaar
+                      {t('scenes.doneShort')}
                     </>
                   ) : (
-                    describeScene(scene, deviceNameById)
+                    describeScene(intl, scene, deviceNameById)
                   )}
                 </span>
                 <div className="tile-bottom">
                   <button
                     type="button"
                     className="details-chip"
-                    aria-label={`Scène ${scene.name} wijzigen`}
+                    aria-label={t('scenes.editLabel', { name: scene.name })}
                     onClick={() => onEdit(scene)}
                   >
-                    Wijzigen
+                    {t('scenes.edit')}
                     <ArrowUpRightIcon width="14" height="14" aria-hidden="true" />
                   </button>
                 </div>
@@ -115,7 +117,7 @@ export default function ScenesView({
         <li className="device-cell">
           <button type="button" className="panel tile scene-new" onClick={onCreate}>
             <PlusIcon width="24" height="24" aria-hidden="true" />
-            Nieuwe scène
+            {t('scenes.new')}
           </button>
         </li>
       </ul>
@@ -129,32 +131,31 @@ export default function ScenesView({
 // schakelaar. Dat is een instelling, geen apparaatstand: Electric Blue,
 // geen groen, en niets gloeit. Een tik op de kaart opent de scène.
 function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
+  const intl = useIntl()
+  const { t, locale } = intl
   const sceneById = Object.fromEntries(scenes.map((scene) => [scene.id, scene]))
   const rows = schedules
     .filter((schedule) => sceneById[schedule.scene])
-    .sort((a, b) => a.time.localeCompare(b.time) || sceneById[a.scene].name.localeCompare(sceneById[b.scene].name, 'nl'))
+    .sort((a, b) => a.time.localeCompare(b.time) || sceneById[a.scene].name.localeCompare(sceneById[b.scene].name, locale))
 
   return (
     <section className="schedules-section" aria-labelledby="schedules-heading">
       <h2 id="schedules-heading" className="section-heading">
-        Vanzelf uitvoeren
+        {t('scenes.schedulesTitle')}
       </h2>
       {rows.length === 0 ? (
-        <p className="section-hint">
-          Laat een scène vanzelf lopen, bijvoorbeeld elke werkdag om 07:00: kies Wijzigen bij een scène en dan Tijd
-          toevoegen.
-        </p>
+        <p className="section-hint">{t('scenes.schedulesHint')}</p>
       ) : (
         <ul className="schedule-list">
           {rows.map((schedule) => {
             const scene = sceneById[schedule.scene]
-            const days = describeDays(schedule.days ?? []) || 'Geen dagen gekozen'
+            const days = describeDays(intl, schedule.days ?? []) || t('scenes.noDays')
             return (
               <li key={schedule.id} className={`panel schedule-card ${schedule.enabled ? '' : 'schedule-card-off'}`}>
                 <button
                   type="button"
                   className="device-card-action"
-                  aria-label={`${scene.name} om ${schedule.time} wijzigen`}
+                  aria-label={t('scenes.editSchedule', { name: scene.name, time: schedule.time })}
                   onClick={() => onEdit(scene)}
                 />
                 <span className="device-icon" aria-hidden="true">
@@ -165,14 +166,14 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
                   <span className="schedule-card-name">{scene.name}</span>
                   <span className="schedule-card-days">{days}</span>
                   {schedule.enabled && schedule.last_error && (
-                    <span className="schedule-card-error">De laatste keer niet gelukt</span>
+                    <span className="schedule-card-error">{t('scenes.lastFailed')}</span>
                   )}
                 </span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={schedule.enabled}
-                  aria-label={`${scene.name} om ${schedule.time} vanzelf uitvoeren`}
+                  aria-label={t('scenes.scheduleSwitch', { name: scene.name, time: schedule.time })}
                   className={`switch switch-accent schedule-card-switch ${schedule.enabled ? 'switch-on' : ''}`}
                   onClick={() => onToggleSchedule(schedule, !schedule.enabled)}
                 >

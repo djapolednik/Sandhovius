@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useTranslations } from 'use-intl'
 import { useScrollEdges } from '../lib/useScrollEdges'
 
 // tabs: [{ id, label }]. Een strook die horizontaal scrolt als er meer
@@ -12,6 +13,7 @@ import { useScrollEdges } from '../lib/useScrollEdges'
 // knoppen die een filter kiezen, en zo hoort een schermlezer toch welke
 // kamer nu actief is.
 export default function RoomTabs({ tabs, selectedId, onSelect }) {
+  const t = useTranslations()
   const stripRef = useRef(null)
   const edges = useScrollEdges(stripRef, tabs.length)
 
@@ -24,7 +26,7 @@ export default function RoomTabs({ tabs, selectedId, onSelect }) {
     <nav
       ref={stripRef}
       className={`room-tabs ${edges}`}
-      aria-label="Kamers"
+      aria-label={t('nav.kamers')}
     >
       {tabs.map((tab) => (
         <button

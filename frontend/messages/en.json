@@ -190,7 +190,23 @@
     "title": "Scenes",
     "running": "{name} is running",
     "done": "{name} is done",
-    "run": "Run scene {name}"
+    "run": "Run scene {name}",
+    "noDevices": "No devices yet",
+    "andMore": "{count} more",
+    "firstTitle": "Create your first scene",
+    "firstText": "With a scene you set several devices at once with one tap, for example “Bedtime”: all lights off and the heating lower.",
+    "create": "Create a scene",
+    "runningShort": "Running",
+    "doneShort": "Done",
+    "editLabel": "Edit scene {name}",
+    "edit": "Edit",
+    "new": "New scene",
+    "schedulesTitle": "Run automatically",
+    "schedulesHint": "Let a scene run by itself, for example every weekday at 07:00: choose Edit on a scene and then Add a time.",
+    "noDays": "No days chosen",
+    "editSchedule": "Edit {name} at {time}",
+    "lastFailed": "Didn’t work last time",
+    "scheduleSwitch": "Run {name} automatically at {time}"
   },
   "nav": {
     "home": "Home",
@@ -288,7 +304,8 @@
     "retry": "Try again",
     "saved": "Saved",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "save": "Save"
   },
   "toast": {
     "boxUnreachable": "Your Sandhovius box can’t be reached right now. Try again once it responds.",
@@ -317,7 +334,14 @@
     "unassigned": "Other",
     "add": "Add",
     "count": "{count, plural, one {# device} other {# devices}}",
-    "empty": "No devices in this room yet. Add one with “Add”, or move a device here from its details."
+    "empty": "No devices in this room yet. Add one with “Add”, or move a device here from its details.",
+    "state": {
+      "empty": "Empty",
+      "allOff": "All off",
+      "allOn": "All on",
+      "some": "{on} of {all} on"
+    },
+    "switchLabel": "Lights and plugs in {room}"
   },
   "deviceSheet": {
     "setupFailed": "Setting it up didn’t work.",
@@ -346,5 +370,44 @@
     "batteryPercent": "{percent}%",
     "lastUpdated": "Last updated",
     "offlineNote": "Offline; this is the last known state."
+  },
+  "schedules": {
+    "everyDay": "Every day",
+    "weekdays": "Weekdays",
+    "weekend": "Weekend",
+    "daysAt": "{days} at {time}",
+    "at": "At {times}"
+  },
+  "light": {
+    "warmWhite": "warm white",
+    "coolWhite": "cool white",
+    "colour": "colour"
+  },
+  "sceneSheet": {
+    "needAction": "Choose what the scene does for at least one device.",
+    "needDays": "Choose at least one day for each time.",
+    "editTitle": "Edit scene",
+    "namePlaceholder": "E.g. Bedtime",
+    "what": "What does the scene do?",
+    "noDevices": "First add a light, plug or thermostat.",
+    "deviceLegend": "{name} in this scene",
+    "modes": {
+      "skip": "Skip",
+      "on": "On",
+      "off": "Off",
+      "current": "As now"
+    },
+    "colder": "{name} cooler",
+    "warmer": "{name} warmer",
+    "missing": "{count, plural, one {One device} other {# devices}} in this scene no longer {count, plural, one {exists} other {exist}}; {count, plural, one {it is} other {they are}} removed when you save.",
+    "time": "Time",
+    "runAt": "Run automatically at {time}",
+    "daysFor": "Days for {time}",
+    "pickDay": "Choose at least one day",
+    "removeTime": "Remove {time}",
+    "lastRunFailed": "Didn’t work on {when}. Check Needs attention to see whether all your devices can be reached.",
+    "addTime": "Add a time",
+    "confirmDelete": "Delete scene “{name}”? Your devices stay as they are.",
+    "delete": "Delete scene"
   }
 }

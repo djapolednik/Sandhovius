@@ -72,11 +72,11 @@ export function currentPayload(device) {
 }
 
 // "40%, warm wit", "40%, kleur": korte tekst bij een opgeslagen lampstand.
-export function describeLightStep(payload) {
+export function describeLightStep(t, payload) {
   const parts = []
   if (Number.isFinite(payload?.brightness_pct)) parts.push(`${payload.brightness_pct}%`)
   if (Number.isFinite(payload?.color_temp_kelvin)) {
-    parts.push(payload.color_temp_kelvin <= WARM_MAX_KELVIN ? 'warm wit' : 'koel wit')
-  } else if (Array.isArray(payload?.rgb_color)) parts.push('kleur')
+    parts.push(payload.color_temp_kelvin <= WARM_MAX_KELVIN ? t('light.warmWhite') : t('light.coolWhite'))
+  } else if (Array.isArray(payload?.rgb_color)) parts.push(t('light.colour'))
   return parts.join(', ')
 }
