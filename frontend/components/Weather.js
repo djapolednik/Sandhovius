@@ -25,35 +25,8 @@ function StaleNote({ updated }) {
   )
 }
 
-// Telefoon: een rustige regel in het huis-paneel.
-export function WeatherLine({ weather, updated, now }) {
-  const { label, icon } = describeCondition(weather.condition)
-  const today = upcomingDays(weather, now, 1)[0]
-  const stale = isWeatherStale(updated, now)
-
-  return (
-    <div className="weather-line">
-      <WeatherIcon kind={icon} className="weather-line-icon" aria-hidden="true" />
-      <div className="weather-line-text">
-        <p className="weather-line-now">
-          {label}
-          {weather.temperature != null && `, ${formatDegrees(weather.temperature)}`}
-        </p>
-        {stale ? (
-          <StaleNote updated={updated} />
-        ) : (
-          today?.low != null && (
-            <p className="weather-line-meta">
-              Vandaag {formatDegrees(today.low)} tot {formatDegrees(today.high)}
-            </p>
-          )
-        )}
-      </div>
-    </div>
-  )
-}
-
-// Breed scherm: een eigen kaart onder het huis-paneel. Nu groot, dan de
+// Breed scherm: een eigen kaart links op Home (op de telefoon staat het weer
+// van nu in de regel onder de groet). Nu groot, dan de
 // komende uren als strook en de komende dagen met een temperatuurbalk: van
 // de laagste tot de hoogste temperatuur, op de schaal van de hele week.
 export function WeatherCard({ weather, updated, now }) {

@@ -950,36 +950,9 @@
 
 /* ==================== Weer ====================
    Bijzaak: vult Home, maar zegt niets over het huis zelf. Niets gloeit
-   (ook de zon niet) en het zegt altijd hoe oud het is. Telefoon: een
-   regel in het huis-paneel. Breed: een kaart onder het huis-paneel. */
-.weather-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin-top: -0.25rem;
-}
-
-.weather-line-icon {
-  flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--text-secondary);
-}
-
-.weather-line-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.weather-line-now {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.weather-line-meta,
+   (ook de zon niet) en het zegt altijd hoe oud het is. Telefoon: het weer
+   van nu in de regel onder de groet (lib/home homeLede). Breed: een kaart
+   links op Home. */
 .weather-source {
   margin: 0;
   font-size: 0.9rem;
@@ -998,10 +971,6 @@
 }
 
 @media (min-width: 900px) {
-  .weather-line {
-    display: none;
-  }
-
   .weather-card {
     display: flex;
     flex-direction: column;
