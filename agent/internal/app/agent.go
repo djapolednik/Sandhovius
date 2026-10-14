@@ -27,6 +27,10 @@ type Agent struct {
 	// motion: de bewegingslichten (motion_runner.go); nil in tests die hem
 	// niet nodig hebben.
 	motion *motionRunner
+	// zigbee: wat Zigbee2MQTT op het netwerk heeft (bridge/devices);
+	// pairing: koppelen vanuit de app (pairing_runner.go).
+	zigbee  *bridgeDirectory
+	pairing *pairingRunner
 
 	// gatewayID is het houses-record waaraan deze box gekoppeld is (leeg: geen huis). Alleen via house() en
 	// setHouse(): scheduler, hartslag en weer lezen het al terwijl de
@@ -70,7 +74,7 @@ type Agent struct {
 	cancel context.CancelFunc
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile, motionFile string) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile, motionFile, devicesFile string) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &Agent{
 		mqttClient:       mqttClient,
@@ -88,6 +92,8 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.onConnected = a.onPocketBaseConnected
 	a.devices = newDeviceCache(pbClient, a.house)
 	a.motion = newMotionRunner(motionFile, a.switchForMotion, a.reportMotionLight)
+	a.zigbee = newBridgeDirectory()
+	a.pairing = newPairingRunner(devicesFile, a.house, a.zigbee, mqttClient.Publish, pbClient, haClient, time.Now)
 	return a
 }
 
@@ -124,6 +130,8 @@ func (a *Agent) Start() error {
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
 	go a.listenForHouseChanges()
+	go a.listenForPairing()
+	go a.runPairingClock()
 	go a.runHeartbeat()
 	go a.ensureMQTT()
 	go a.runWeather()
@@ -223,6 +231,10 @@ func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 		return // device van een andere box
 	}
 	a.devices.applyEvent(event.EventType, device)
+	if event.EventType == "delete" {
+		a.pairing.onDeviceDeleted(device, len(a.devices.partsAt(device.Address)))
+		return
+	}
 
 	if event.EventType == "create" && device.EntityID == "" {
 		if err := a.provisionDeviceEntity(device); err != nil {
@@ -349,6 +361,18 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		return
 	}
 	if a.failIfExpired(cmd) {
+		return
+	}
+	// "identify": laten knipperen (detail-sheet), via Zigbee2MQTT.
+	if cmd.Action == "identify" {
+		if err := a.pairing.identify(*device); err != nil {
+			log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
+			a.failCommand(cmd.ID, err)
+			return
+		}
+		if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
+			log.Printf("[APP] Kon commando %s niet als 'sent' markeren: %v\n", cmd.ID, err)
+		}
 		return
 	}
 	// "provision": opnieuw klaarzetten na een mislukte eerste keer (knop
@@ -553,6 +577,14 @@ func (a *Agent) handleMQTTMessage(topic string, payload []byte) {
 		a.forwardZigbeeAvailability(avail)
 		return
 	}
+	if devices, ok := mqtt.ParseBridgeDevices(topic, payload); ok {
+		a.zigbee.update(devices)
+		return
+	}
+	if event, ok := mqtt.ParseBridgeEvent(topic, payload); ok {
+		a.pairing.onBridgeEvent(event)
+		return
+	}
 	if event, ok := mqtt.ParseZigbeeEvent(topic, payload); ok {
 		a.forwardZigbeeEvent(event)
 		return
@@ -568,53 +600,49 @@ func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
 	if err := a.history.Record(event.FriendlyName, event.State); err != nil {
 		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.FriendlyName, err)
 	}
+	// Zigbee2MQTT publiceert op de friendly name; de app kent het adres.
+	address, known := a.zigbee.address(event.FriendlyName)
 	// Bewegingslicht: vóór alles met PocketBase, dus ook zonder internet.
-	a.motion.onState(event.FriendlyName, event.State, time.Now())
+	if known {
+		a.motion.onState(zigbeeKey(address), event.State, time.Now())
+	}
 
 	if !a.registered.Load() {
 		return // geen huis: alleen de lokale geschiedenis
 	}
-
-	deviceID, found, err := a.devices.lookup(event.FriendlyName)
-	if err != nil {
-		log.Printf("[APP] Device-lookup mislukt voor %s: %v\n", event.FriendlyName, err)
-		return
-	}
-	if !found {
-		log.Printf("[APP] Onbekend device, genegeerd: %s\n", event.FriendlyName)
+	if !known {
+		log.Printf("[APP] Onbekend Zigbee-apparaat, genegeerd: %s\n", event.FriendlyName)
 		return
 	}
 
-	if err := a.pbClient.UpsertDeviceState(deviceID, event.State); err != nil {
-		log.Printf("[APP] PocketBase update mislukt voor %s: %v\n", event.FriendlyName, err)
-		return
-	}
-	log.Printf("[APP] PocketBase bijgewerkt (zigbee): %s -> %v\n", event.FriendlyName, event.State)
-
-	// Een device dat state stuurt is aantoonbaar online. Echt offline gaan
-	// gebeurt alleen via een expliciet availability-bericht, zie
-	// forwardZigbeeAvailability.
-	if err := a.pbClient.SetDeviceOnline(deviceID, true); err != nil {
-		log.Printf("[APP] Kon online-status niet bijwerken voor %s: %v\n", event.FriendlyName, err)
+	// Alleen delen zonder HA-entiteit (sensoren): een lamp of stekker krijgt
+	// zijn stand van Home Assistant, in het formaat dat de app leest.
+	for _, deviceID := range a.devices.zigbeeStateTargets(address) {
+		if err := a.pbClient.UpsertDeviceState(deviceID, event.State); err != nil {
+			log.Printf("[APP] PocketBase update mislukt voor %s: %v\n", event.FriendlyName, err)
+			continue
+		}
+		log.Printf("[APP] PocketBase bijgewerkt (zigbee): %s -> %v\n", event.FriendlyName, event.State)
+		// Een device dat state stuurt is aantoonbaar online. Echt offline
+		// gaan gebeurt alleen via een expliciet availability-bericht.
+		if err := a.pbClient.SetDeviceOnline(deviceID, true); err != nil {
+			log.Printf("[APP] Kon online-status niet bijwerken voor %s: %v\n", event.FriendlyName, err)
+		}
 	}
 }
 
 // forwardZigbeeAvailability verwerkt een expliciet Zigbee2MQTT
 // online/offline-signaal (zigbee2mqtt/<naam>/availability).
 func (a *Agent) forwardZigbeeAvailability(avail mqtt.ZigbeeAvailability) {
-	deviceID, found, err := a.devices.lookup(avail.FriendlyName)
-	if err != nil {
-		log.Printf("[APP] Device-lookup mislukt voor %s: %v\n", avail.FriendlyName, err)
+	address, known := a.zigbee.address(avail.FriendlyName)
+	if !known {
+		log.Printf("[APP] Onbekend Zigbee-apparaat, genegeerd: %s\n", avail.FriendlyName)
 		return
 	}
-	if !found {
-		log.Printf("[APP] Onbekend device, genegeerd: %s\n", avail.FriendlyName)
-		return
-	}
-
-	if err := a.pbClient.SetDeviceOnline(deviceID, avail.Online); err != nil {
-		log.Printf("[APP] Kon online-status niet bijwerken voor %s: %v\n", avail.FriendlyName, err)
-		return
+	for _, deviceID := range a.devices.partsAt(address) {
+		if err := a.pbClient.SetDeviceOnline(deviceID, avail.Online); err != nil {
+			log.Printf("[APP] Kon online-status niet bijwerken voor %s: %v\n", avail.FriendlyName, err)
+		}
 	}
 	log.Printf("[APP] Online-status bijgewerkt: %s -> online=%v\n", avail.FriendlyName, avail.Online)
 }

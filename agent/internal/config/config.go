@@ -32,6 +32,11 @@ type Config struct {
 		// een herstart zonder PocketBase lopen.
 		File string
 	}
+	Devices struct {
+		// File bewaart welke Zigbee-adressen de agent zelf toevoegde en de
+		// lopende koppelsessie (zie app/device_store.go).
+		File string
+	}
 	Motion struct {
 		// File bewaart welke bewegingslichten welke lamp aanzetten en tot
 		// wanneer, zodat een lamp ook na een herstart op tijd uitgaat.
@@ -58,6 +63,7 @@ func LoadConfig() (*Config, error) {
 	c.History.DBPath = env("HISTORY_DB_PATH", "/data/history.db")
 	c.Schedules.File = env("SCHEDULES_FILE", "/data/schedules.json")
 	c.Motion.File = env("MOTION_FILE", "/data/motion.json")
+	c.Devices.File = env("DEVICES_FILE", "/data/devices.json")
 	c.History.RetentionDays = 30
 	if n, err := strconv.Atoi(os.Getenv("HISTORY_RETENTION_DAYS")); err == nil && n > 0 {
 		c.History.RetentionDays = n

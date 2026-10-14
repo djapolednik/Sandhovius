@@ -96,6 +96,11 @@ func (r *motionRunner) applyLocked(snap *scheduleSnapshot) {
 		if d.EntityID != "" {
 			r.byEntity[d.EntityID] = id
 		}
+		// een Zigbee-sensor heeft geen HA-entiteit; zijn stand komt binnen
+		// op adres (forwardZigbeeEvent)
+		if d.Source == "zigbee" && d.Address != "" && d.EntityID == "" {
+			r.byEntity[zigbeeKey(d.Address)] = id
+		}
 	}
 	r.sensors = map[string]bool{}
 	r.lamps = map[string]bool{}

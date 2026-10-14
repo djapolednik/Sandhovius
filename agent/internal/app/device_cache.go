@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"sort"
 	"sync"
 
 	"sandhovius/local-agent/internal/pocketbase"
@@ -20,6 +21,9 @@ type deviceCache struct {
 
 	mu       sync.RWMutex
 	byEntity map[string]string
+	// zigbee: de Zigbee-devices op id, om ze op adres te vinden (een
+	// meervoudig apparaat heeft meer devices met hetzelfde adres).
+	zigbee map[string]pocketbase.Device
 }
 
 func newDeviceCache(pb *pocketbase.Client, house func() string) *deviceCache {
@@ -27,7 +31,39 @@ func newDeviceCache(pb *pocketbase.Client, house func() string) *deviceCache {
 		pb:       pb,
 		house:    house,
 		byEntity: make(map[string]string),
+		zigbee:   make(map[string]pocketbase.Device),
 	}
+}
+
+// partsAt: de device-id's op een Zigbee-adres, gesorteerd.
+func (d *deviceCache) partsAt(address string) []string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	out := []string{}
+	for id, dev := range d.zigbee {
+		if dev.Address == address {
+			out = append(out, id)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// zigbeeStateTargets: de devices op een adres die hun stand uit het
+// Zigbee2MQTT-bericht krijgen. Een deel met een HA-entiteit (lamp, stekker,
+// thermostaat) krijgt hem van Home Assistant, in het formaat dat de app voor
+// bediening leest; alleen een sensor heeft geen entiteit.
+func (d *deviceCache) zigbeeStateTargets(address string) []string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	out := []string{}
+	for id, dev := range d.zigbee {
+		if dev.Address == address && dev.EntityID == "" {
+			out = append(out, id)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // refresh herlaadt de cache en geeft de opgehaalde devices terug, zodat de
@@ -43,7 +79,11 @@ func (d *deviceCache) refresh() ([]pocketbase.Device, error) {
 	}
 
 	byEntity := make(map[string]string, len(devices))
+	zigbee := make(map[string]pocketbase.Device)
 	for _, dev := range devices {
+		if dev.Source == "zigbee" && dev.Address != "" {
+			zigbee[dev.ID] = dev
+		}
 		if dev.EntityID == "" {
 			continue
 		}
@@ -52,6 +92,7 @@ func (d *deviceCache) refresh() ([]pocketbase.Device, error) {
 
 	d.mu.Lock()
 	d.byEntity = byEntity
+	d.zigbee = zigbee
 	d.mu.Unlock()
 	return devices, nil
 }
@@ -64,6 +105,7 @@ func (d *deviceCache) clear() {
 	}
 	d.mu.Lock()
 	d.byEntity = make(map[string]string)
+	d.zigbee = make(map[string]pocketbase.Device)
 	d.mu.Unlock()
 }
 
@@ -97,6 +139,10 @@ func (d *deviceCache) applyEvent(action string, device pocketbase.Device) {
 	}
 	if action != "delete" && device.EntityID != "" {
 		d.byEntity[device.EntityID] = device.ID
+	}
+	delete(d.zigbee, device.ID)
+	if action != "delete" && device.Source == "zigbee" && device.Address != "" {
+		d.zigbee[device.ID] = device
 	}
 }
 

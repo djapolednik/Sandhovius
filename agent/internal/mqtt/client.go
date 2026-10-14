@@ -1,8 +1,11 @@
 package mqtt
 
 import (
+	"encoding/json"
+	"errors"
 	"log"
 	"sync"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -90,6 +93,26 @@ func (c *Client) resubscribeAll(client mqtt.Client) {
 			log.Printf("[MQTT] Kon topic %s niet opnieuw abonneren: %v\n", topic, err)
 		}
 	}
+}
+
+// Publish stuurt een bericht (QoS 1, niet retained); payload wordt JSON,
+// behalve []byte.
+func (c *Client) Publish(topic string, payload any) error {
+	if c == nil || c.mqttClient == nil {
+		return errors.New("mqtt: niet verbonden")
+	}
+	raw, ok := payload.([]byte)
+	if !ok {
+		var err error
+		if raw, err = json.Marshal(payload); err != nil {
+			return err
+		}
+	}
+	token := c.mqttClient.Publish(topic, 1, false, raw)
+	if !token.WaitTimeout(5 * time.Second) {
+		return errors.New("mqtt: publish duurde te lang")
+	}
+	return token.Error()
 }
 
 func (c *Client) Disconnect(quiesce uint) {

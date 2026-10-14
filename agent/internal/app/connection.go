@@ -42,6 +42,9 @@ func (a *Agent) onPocketBaseConnected() {
 	a.reconcileDeviceStates()
 
 	a.catchUpPendingCommands()
+
+	// Een koppelsessie van vóór een herstart: opruimen.
+	a.pairing.recover()
 }
 
 // retryWithBackoff probeert attempt tot het lukt, met een wachttijd die
