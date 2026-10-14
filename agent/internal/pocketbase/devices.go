@@ -71,22 +71,6 @@ func (c *Client) GetDevice(deviceID string) (*Device, error) {
 	return &device, nil
 }
 
-// SetDeviceEntityID links a device to a newly-provisioned Home Assistant
-// entity. Used right after auto-provisioning a helper for a device that was
-// created from the Sandhovius UI without an entity_id.
-func (c *Client) SetDeviceEntityID(deviceID, entityID string) error {
-	err := c.doAuthed(
-		"PATCH",
-		"/api/collections/devices/records/"+deviceID,
-		map[string]any{"entity_id": entityID},
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("pocketbase: set device %s entity_id: %w", deviceID, err)
-	}
-	return nil
-}
-
 // SetDeviceOnline updates a device's online flag.
 func (c *Client) SetDeviceOnline(deviceID string, online bool) error {
 	err := c.doAuthed(

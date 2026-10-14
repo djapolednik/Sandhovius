@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,6 +32,8 @@ type Agent struct {
 	// pairing: koppelen vanuit de app (pairing_runner.go).
 	zigbee  *bridgeDirectory
 	pairing *pairingRunner
+	// helpersFlag: vlagbestand na het eenmalig opruimen van de helpers
+	helpersFlag string
 
 	// gatewayID is het houses-record waaraan deze box gekoppeld is (leeg: geen huis). Alleen via house() en
 	// setHouse(): scheduler, hartslag en weer lezen het al terwijl de
@@ -95,6 +98,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.zigbee = newBridgeDirectory()
 	a.pairing = newPairingRunner(devicesFile, a.house, a.zigbee, mqttClient.Publish, pbClient, haClient, time.Now)
 	a.pairing.inApp = a.devices.addresses
+	a.helpersFlag = filepath.Join(filepath.Dir(devicesFile), "helpers_removed")
 	return a
 }
 
@@ -125,6 +129,11 @@ func (a *Agent) Start() error {
 		return err
 	}
 	go a.listenToHAEvents()
+	go func() {
+		if err := removeHelpersOnce(a.helpersFlag, a.haClient.DeleteHelpers); err != nil {
+			log.Printf("[APP] %v (volgende start opnieuw)\n", err)
+		}
+	}()
 	go a.runMotionClock()
 
 	go a.runPocketBase()
@@ -237,13 +246,6 @@ func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 		return
 	}
 
-	if event.EventType == "create" && device.EntityID == "" {
-		if err := a.provisionDeviceEntity(device); err != nil {
-			log.Printf("[APP] Kon device %s niet klaarzetten: %v\n", device.ID, err)
-		}
-		return
-	}
-
 	a.deviceNamesMu.Lock()
 	previousName, seen := a.deviceNames[device.ID]
 	a.deviceNames[device.ID] = device.Name
@@ -261,54 +263,6 @@ func (a *Agent) handleDeviceEvent(event pocketbase.DeviceEvent) {
 		return
 	}
 	log.Printf("[APP] HA-naam bijgewerkt: %s -> %q\n", device.EntityID, device.Name)
-}
-
-// provisionDeviceEntity maakt automatisch een passende Home Assistant
-// helper-entity aan voor een device dat vanuit de Sandhovius-UI is
-// toegevoegd zonder zelf een entity_id op te geven — niemand hoeft dus
-// zelf iets in Home Assistant te configureren.
-//
-// light/switch/climate krijgen een input_boolean (aan/uit-relais). Voor
-// climate is dat een simpele schakelaar, geen volledige thermostaat met
-// eigen meetwaarden — dat vraagt om een generic_thermostat-platform met
-// een gekoppelde sensor (zie configuration.yaml), wat hier niet
-// automatisch wordt opgezet. sensor krijgt een input_number.
-func (a *Agent) provisionDeviceEntity(device pocketbase.Device) error {
-	var entityID string
-	var err error
-
-	if device.Type == "sensor" {
-		entityID, err = a.haClient.CreateInputNumber(device.Name)
-	} else {
-		entityID, err = a.haClient.CreateInputBoolean(device.Name)
-	}
-	if err != nil {
-		return fmt.Errorf("HA-entity aanmaken: %w", err)
-	}
-
-	if err := a.pbClient.SetDeviceEntityID(device.ID, entityID); err != nil {
-		return fmt.Errorf("entity_id opslaan: %w", err)
-	}
-
-	a.deviceNamesMu.Lock()
-	a.deviceNames[device.ID] = device.Name
-	a.deviceNamesMu.Unlock()
-
-	// Zorgt dat de nieuwe entity_id meteen in de lookup-cache zit, i.p.v.
-	// te wachten op de eerstvolgende lookup-miss-refresh.
-	if _, err := a.devices.refresh(); err != nil {
-		log.Printf("[APP] Kon device-cache niet verversen na provisioning: %v\n", err)
-	}
-
-	log.Printf("[APP] HA-entity aangemaakt voor device %s: %s\n", device.ID, entityID)
-
-	// HA meldt de eerste stand van een nieuwe helper al tijdens het
-	// aanmaken — vóórdat hierboven de entity_id is opgeslagen. Dat event is
-	// dus als "onbekend device" genegeerd, en er komt pas een volgende als
-	// de stand verandert: het device zou op "offline" blijven hangen.
-	// Daarom de stand nu zelf ophalen.
-	a.syncEntityState(entityID)
-	return nil
 }
 
 // syncEntityState haalt de actuele stand van één entity op bij Home
@@ -374,24 +328,6 @@ func (a *Agent) handleCommand(cmd pocketbase.Command) {
 		if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
 			log.Printf("[APP] Kon commando %s niet als 'sent' markeren: %v\n", cmd.ID, err)
 		}
-		return
-	}
-	// "provision": opnieuw klaarzetten na een mislukte eerste keer (knop
-	// "Opnieuw proberen" in de app). Heeft het device inmiddels al een
-	// entity_id, dan is er niets meer te doen.
-	if cmd.Action == "provision" {
-		if device.EntityID == "" {
-			if err := a.provisionDeviceEntity(*device); err != nil {
-				log.Printf("[APP] Commando %s mislukt: %v\n", cmd.ID, err)
-				a.failCommand(cmd.ID, err)
-				return
-			}
-		}
-		if err := a.pbClient.MarkCommandSent(cmd.ID); err != nil {
-			log.Printf("[APP] Kon commando %s niet als 'sent' markeren: %v\n", cmd.ID, err)
-			return
-		}
-		log.Printf("[APP] Device %s opnieuw klaargezet (commando %s)\n", device.ID, cmd.ID)
 		return
 	}
 

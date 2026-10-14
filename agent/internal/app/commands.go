@@ -18,13 +18,10 @@ const commandMaxAge = 2 * time.Minute
 const pocketbaseTime = "2006-01-02 15:04:05.000Z"
 
 // commandExpired zegt of een openstaand commando te oud is om nog uit te
-// voeren. Klaarzetten (provision) is niet tijdgevoelig en verloopt nooit.
+// voeren.
 // Zonder leesbare created-tijd (records van vóór die migratie) geldt een
 // commando als verlopen: dan weten we niet hoe oud het is.
 func commandExpired(cmd pocketbase.Command, now time.Time) bool {
-	if cmd.Action == "provision" {
-		return false
-	}
 	created, err := time.Parse(pocketbaseTime, cmd.Created)
 	if err != nil {
 		created, err = time.Parse(time.RFC3339, cmd.Created)

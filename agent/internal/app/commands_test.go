@@ -20,7 +20,7 @@ func TestCommandExpired(t *testing.T) {
 		{"serverklok loopt voor", pocketbase.Command{Action: "turn_on", Created: "2026-10-06 19:10:05.000Z"}, false},
 		{"zonder created (van vóór de migratie)", pocketbase.Command{Action: "turn_on"}, true},
 		{"onleesbaar", pocketbase.Command{Action: "turn_on", Created: "gisteren"}, true},
-		{"provision verloopt nooit", pocketbase.Command{Action: "provision", Created: "2026-10-01 08:00:00.000Z"}, false},
+		{"knipperen verloopt ook", pocketbase.Command{Action: "identify", Created: "2026-10-06 18:00:00.000Z"}, true},
 		{"scène verloopt ook", pocketbase.Command{Action: "run_scene", Created: "2026-10-06 18:00:00.000Z"}, true},
 	}
 	for _, c := range cases {
