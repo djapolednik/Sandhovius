@@ -98,6 +98,8 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.zigbee = newBridgeDirectory()
 	a.pairing = newPairingRunner(devicesFile, a.house, a.zigbee, mqttClient.Publish, pbClient, haClient, time.Now)
 	a.pairing.inApp = a.devices.addresses
+	// in een eigen goroutine: HA en PocketBase, niet onder het slot van de runner
+	a.pairing.afterAdd = func(entity string) { go a.syncEntityState(entity) }
 	a.helpersFlag = filepath.Join(filepath.Dir(devicesFile), "helpers_removed")
 	return a
 }

@@ -260,6 +260,9 @@ func (r *pairingRunner) onHueCandidateLocked(c pocketbase.PairingCandidate) {
 		return
 	}
 	r.pb.UpdatePairingCandidate(c.ID, map[string]any{"status": "added", "device": dev.ID})
+	if r.afterAdd != nil {
+		r.afterAdd(part.entity)
+	}
 	log.Printf("[KOPPELEN] Hue-lamp %q toegevoegd\n", name)
 }
 

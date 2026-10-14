@@ -85,6 +85,9 @@ type pairingRunner struct {
 	hue     *hueSession
 	hueHost string
 	inApp   func(source string) map[string]bool
+	// afterAdd haalt de stand van een net toegevoegd device op (agent:
+	// syncEntityState), anders staat de tegel op "Onbekend" tot hij verandert.
+	afterAdd func(entityID string)
 }
 
 func newPairingRunner(storePath string, house func() string, dir *bridgeDirectory, publish func(string, any) error,
@@ -295,6 +298,9 @@ func (r *pairingRunner) addLocked(c pocketbase.PairingCandidate, cp candidatePar
 		return
 	}
 	r.pb.UpdatePairingCandidate(c.ID, map[string]any{"status": "added", "device": dev.ID})
+	if entity != "" && r.afterAdd != nil {
+		r.afterAdd(entity)
+	}
 	r.session.engine.added(cp.address, cp.part.Endpoint)
 	r.store.addOwned(cp.address)
 	r.saveLocked()

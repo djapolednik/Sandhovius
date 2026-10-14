@@ -223,6 +223,29 @@ func TestAddCreatesDevice(t *testing.T) {
 	}
 }
 
+// Na toevoegen meteen de stand ophalen, anders zegt de tegel "Onbekend" tot
+// de lamp de volgende keer verandert.
+func TestAddFetchesState(t *testing.T) {
+	fx := newPairingFixture(t)
+	var synced []string
+	fx.r.afterAdd = func(entity string) { synced = append(synced, entity) }
+	fx.start("light")
+	fx.join(t, "0x1", "ikea_bulb_ws")
+	fx.haKnows("0x1", "light.gang")
+	fx.add("c1")
+	if !reflect.DeepEqual(synced, []string{"light.gang"}) {
+		t.Errorf("stand opgehaald voor %v", synced)
+	}
+
+	hue := hueLinked(t)
+	synced = nil
+	hue.r.afterAdd = func(entity string) { synced = append(synced, entity) }
+	hue.r.onCandidate(pocketbase.PairingCandidate{ID: hueCandidateID(hue, "lamp1"), Session: "s1", Status: "found", Add: true})
+	if !reflect.DeepEqual(synced, []string{"light.woonkamer"}) {
+		t.Errorf("Hue: stand opgehaald voor %v", synced)
+	}
+}
+
 // Review Focus 4: dubbel tikken op Toevoegen.
 func TestAddTwiceCreatesOneDevice(t *testing.T) {
 	fx := newPairingFixture(t)
