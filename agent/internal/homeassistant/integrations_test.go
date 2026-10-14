@@ -26,6 +26,77 @@ func TestHasIntegration(t *testing.T) {
 	}
 }
 
+func TestListFlows(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" || r.URL.Path != "/api/config/config_entries/flow" {
+			t.Errorf("onverwacht verzoek: %s %s", r.Method, r.URL.Path)
+		}
+		w.Write([]byte(`[{"flow_id":"f1","handler":"hue","step_id":"link","context":{"source":"zeroconf"}},
+		  {"flow_id":"f2","handler":"met","step_id":"user"}]`))
+	}))
+	defer srv.Close()
+	flows, err := NewClient("ws://x", srv.URL, "tok").ListFlows()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []Flow{{FlowID: "f1", Handler: "hue", StepID: "link"}, {FlowID: "f2", Handler: "met", StepID: "user"}}
+	if len(flows) != 2 || flows[0] != want[0] || flows[1] != want[1] {
+		t.Errorf("flows = %+v", flows)
+	}
+}
+
+func TestSubmitFlowReturnsErrors(t *testing.T) {
+	var submitted map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/config/config_entries/flow/f1" {
+			t.Errorf("onverwacht pad %s", r.URL.Path)
+		}
+		json.NewDecoder(r.Body).Decode(&submitted)
+		w.Write([]byte(`{"type":"form","flow_id":"f1","step_id":"link","errors":{"base":"register_failed"}}`))
+	}))
+	defer srv.Close()
+	res, err := NewClient("ws://x", srv.URL, "tok").SubmitFlow("f1", map[string]any{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Type != "form" || res.StepID != "link" || res.Errors["base"] != "register_failed" {
+		t.Errorf("resultaat = %+v", res)
+	}
+	if submitted == nil {
+		t.Error("geen body verstuurd")
+	}
+}
+
+func TestStartFlowCreateEntry(t *testing.T) {
+	var started map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewDecoder(r.Body).Decode(&started)
+		w.Write([]byte(`{"type":"create_entry","flow_id":"f1","result":{"entry_id":"e1","domain":"hue"}}`))
+	}))
+	defer srv.Close()
+	res, err := NewClient("ws://x", srv.URL, "tok").StartFlow("hue", map[string]any{"host": "192.168.1.20"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if started["handler"] != "hue" || started["host"] != "192.168.1.20" {
+		t.Errorf("start = %v", started)
+	}
+	if res.Type != "create_entry" || res.EntryID != "e1" {
+		t.Errorf("resultaat = %+v", res)
+	}
+}
+
+func TestConfigEntryIDs(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`[{"entry_id":"e1","domain":"hue"},{"entry_id":"e2","domain":"mqtt"},{"entry_id":"e3","domain":"hue"}]`))
+	}))
+	defer srv.Close()
+	ids, err := NewClient("ws://x", srv.URL, "tok").ConfigEntryIDs("hue")
+	if err != nil || len(ids) != 2 || ids[0] != "e1" || ids[1] != "e3" {
+		t.Errorf("ids = %v, err %v", ids, err)
+	}
+}
+
 func TestAddMQTTSendsBrokerAndPort(t *testing.T) {
 	var started map[string]any
 	var submitted map[string]any

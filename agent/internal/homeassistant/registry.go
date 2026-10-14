@@ -1,7 +1,9 @@
 package homeassistant
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -60,6 +62,152 @@ func (c *Client) dialAuthed() (*websocket.Conn, error) {
 	}
 
 	return conn, nil
+}
+
+// wsResult is het antwoord op één websocket-commando.
+type wsResult struct {
+	Success bool            `json:"success"`
+	Error   *resultError    `json:"error"`
+	Result  json.RawMessage `json:"result"`
+}
+
+// wsCall stuurt één commando over een open verbinding en geeft het result
+// terug. id moet per verbinding oplopen.
+func wsCall(conn *websocket.Conn, id int, command map[string]any) (json.RawMessage, error) {
+	msg := map[string]any{"id": id}
+	for k, v := range command {
+		msg[k] = v
+	}
+	if err := conn.WriteJSON(msg); err != nil {
+		return nil, fmt.Errorf("send %v: %w", command["type"], err)
+	}
+	var res wsResult
+	if err := conn.ReadJSON(&res); err != nil {
+		return nil, fmt.Errorf("read %v: %w", command["type"], err)
+	}
+	if !res.Success {
+		if res.Error != nil {
+			return nil, fmt.Errorf("%v failed: %s (%s)", command["type"], res.Error.Message, res.Error.Code)
+		}
+		return nil, fmt.Errorf("%v failed", command["type"])
+	}
+	return res.Result, nil
+}
+
+// wsList doet één list-commando op een eigen verbinding en leest het result
+// in out.
+func (c *Client) wsList(kind string, out any) error {
+	conn, err := c.dialAuthed()
+	if err != nil {
+		return fmt.Errorf("ha: %s: %w", kind, err)
+	}
+	defer conn.Close()
+	raw, err := wsCall(conn, 1, map[string]any{"type": kind})
+	if err != nil {
+		return fmt.Errorf("ha: %w", err)
+	}
+	if err := json.Unmarshal(raw, out); err != nil {
+		return fmt.Errorf("ha: decode %s: %w", kind, err)
+	}
+	return nil
+}
+
+// RegistryDevice is een apparaat uit HA's device-registry. Een apparaat van
+// Zigbee2MQTT heeft identifier ["mqtt", "zigbee2mqtt_<ieee>"].
+type RegistryDevice struct {
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Model         string     `json:"model"`
+	Manufacturer  string     `json:"manufacturer"`
+	Identifiers   [][]string `json:"identifiers"`
+	ConfigEntries []string   `json:"config_entries"`
+}
+
+// RegistryEntity is een entiteit uit HA's entity-registry.
+type RegistryEntity struct {
+	EntityID string `json:"entity_id"`
+	DeviceID string `json:"device_id"`
+	Platform string `json:"platform"`
+}
+
+// ListDevices geeft HA's device-registry.
+func (c *Client) ListDevices() ([]RegistryDevice, error) {
+	var devs []RegistryDevice
+	if err := c.wsList("config/device_registry/list", &devs); err != nil {
+		return nil, err
+	}
+	return devs, nil
+}
+
+// ListEntities geeft HA's entity-registry.
+func (c *Client) ListEntities() ([]RegistryEntity, error) {
+	var ents []RegistryEntity
+	if err := c.wsList("config/entity_registry/list", &ents); err != nil {
+		return nil, err
+	}
+	return ents, nil
+}
+
+// ZigbeeEntity zoekt de HA-entiteit van een Zigbee2MQTT-apparaat (op
+// IEEE-adres) in een domein (light, switch, climate). Bij een endpoint
+// ("l1") eindigt de entity_id op "_l1", zoals Zigbee2MQTT ze noemt.
+func ZigbeeEntity(devs []RegistryDevice, ents []RegistryEntity, ieee, domain, endpoint string) (string, bool) {
+	deviceID := ""
+	for _, d := range devs {
+		for _, ident := range d.Identifiers {
+			for _, v := range ident {
+				if v == "zigbee2mqtt_"+ieee {
+					deviceID = d.ID
+				}
+			}
+		}
+	}
+	if deviceID == "" {
+		return "", false
+	}
+	for _, e := range ents {
+		if e.DeviceID != deviceID || !strings.HasPrefix(e.EntityID, domain+".") {
+			continue
+		}
+		if endpoint == "" || strings.HasSuffix(e.EntityID, "_"+endpoint) {
+			return e.EntityID, true
+		}
+	}
+	return "", false
+}
+
+// DeleteHelpers verwijdert alle input_boolean- en input_number-helpers: de
+// virtuele apparaten van vóór het koppelen. Op de box maakt niemand anders
+// zulke helpers. Geeft het aantal verwijderde terug.
+func (c *Client) DeleteHelpers() (int, error) {
+	conn, err := c.dialAuthed()
+	if err != nil {
+		return 0, fmt.Errorf("ha: delete helpers: %w", err)
+	}
+	defer conn.Close()
+
+	id, deleted := 0, 0
+	for _, domain := range []string{"input_boolean", "input_number"} {
+		id++
+		raw, err := wsCall(conn, id, map[string]any{"type": domain + "/list"})
+		if err != nil {
+			return deleted, fmt.Errorf("ha: %w", err)
+		}
+		var helpers []struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(raw, &helpers); err != nil {
+			return deleted, fmt.Errorf("ha: decode %s/list: %w", domain, err)
+		}
+		for _, h := range helpers {
+			id++
+			if _, err := wsCall(conn, id, map[string]any{"type": domain + "/delete", domain + "_id": h.ID}); err != nil {
+				return deleted, fmt.Errorf("ha: %w", err)
+			}
+			deleted++
+		}
+	}
+	return deleted, nil
 }
 
 // RenameEntity sets an entity's friendly name in Home Assistant's entity
