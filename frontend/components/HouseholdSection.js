@@ -24,6 +24,7 @@ export default function HouseholdSection({
   loadMembers,
   onInvite,
   onChangeRole,
+  onSetCanEdit,
   onRemove,
   onRevoke,
 }) {
@@ -35,7 +36,7 @@ export default function HouseholdSection({
   const [confirmingLeave, setConfirmingLeave] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const membership = `${house.id}:${(house.members ?? []).join(',')}:${(house.admins ?? []).join(',')}`
+  const membership = `${house.id}:${(house.members ?? []).join(',')}:${(house.admins ?? []).join(',')}:${(house.operate_only ?? []).join(',')}`
 
   useEffect(() => {
     let cancelled = false
@@ -77,7 +78,8 @@ export default function HouseholdSection({
 
   // "Beheerder · Thuis": de rol, en of iemand thuis of weg is (presence).
   const memberText = (m) => {
-    const role = m.id === userId ? t('household.you', { role: roleLabel(t, m.role) }) : roleLabel(t, m.role)
+    const label = m.can_edit === false ? t('rights.operateOnlyRole', { role: roleLabel(t, m.role) }) : roleLabel(t, m.role)
+    const role = m.id === userId ? t('household.you', { role: label }) : label
     return `${role} · ${isHome(presence, m.id) ? t('presence.memberHome') : t('presence.memberAway')}`
   }
 
@@ -177,6 +179,7 @@ export default function HouseholdSection({
           houseName={house.name}
           isSelf={openMember.id === userId}
           onChangeRole={onChangeRole}
+          onSetCanEdit={onSetCanEdit}
           onRemove={onRemove}
           onClose={() => setOpenMember(null)}
         />

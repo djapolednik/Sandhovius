@@ -10,9 +10,11 @@ import { householdError } from '../lib/household'
 // zoals de detail-sheet) en uit het huis verwijderen, met bevestiging. De
 // server bewaakt dat er altijd een beheerder overblijft; die melding staat
 // dan hier.
-export default function MemberSheet({ member, houseName, isSelf, onChangeRole, onRemove, onClose }) {
+export default function MemberSheet({ member, houseName, isSelf, onChangeRole, onSetCanEdit, onRemove, onClose }) {
   const t = useTranslations()
   const [role, setRole] = useState(member.role)
+  // D1: mag automatiseringen en apparaten wijzigen. Een beheerder altijd.
+  const [canEdit, setCanEdit] = useState(member.can_edit !== false)
   const [busy, setBusy] = useState(false)
   const [confirmingRemove, setConfirmingRemove] = useState(false)
   const [error, setError] = useState('')
@@ -28,6 +30,21 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
     } catch (err) {
       setRole(previous)
       setError(householdError(t, t('errors.what.changeRole'), err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function toggleCanEdit() {
+    const next = !canEdit
+    setCanEdit(next)
+    setBusy(true)
+    setError('')
+    try {
+      await onSetCanEdit(member.id, next)
+    } catch (err) {
+      setCanEdit(!next)
+      setError(householdError(t, t('errors.what.rights'), err))
     } finally {
       setBusy(false)
     }
@@ -52,6 +69,29 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
         <span className="form-label">{t('household.role')}</span>
         <RoleChoice value={role} onChange={chooseRole} name={`role-${member.id}`} disabled={busy} />
       </div>
+
+      {role === 'admin' ? (
+        <p className="settings-hint rights-text">{t('rights.admin')}</p>
+      ) : (
+        <div className="rights">
+          <div className="settings-row">
+            <span id={`can-edit-${member.id}`}>{t('rights.canEdit')}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={canEdit}
+              aria-labelledby={`can-edit-${member.id}`}
+              className={`switch switch-accent ${canEdit ? 'switch-on' : ''}`}
+              disabled={busy}
+              onClick={toggleCanEdit}
+            >
+              <span className="switch-thumb" />
+            </button>
+          </div>
+          <p className="settings-hint rights-text">{t('rights.always')}</p>
+          <p className="settings-hint rights-text">{canEdit ? t('rights.edits') : t('rights.noEdits')}</p>
+        </div>
+      )}
 
       <div className="modal-divider" />
 

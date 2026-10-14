@@ -290,7 +290,8 @@
       "routineOff": "Routine {name} uitzetten",
       "presence": "Thuis of weg opslaan",
       "notifications": "Meldingen instellen",
-      "notifyRule": "Meld dit opslaan"
+      "notifyRule": "Meld dit opslaan",
+      "rights": "Rechten opslaan"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -313,7 +314,8 @@
       "invalid_shown_as": "Alleen een stopcontact kan als lamp worden getoond.",
       "zigbee_unavailable": "Zoeken lukt nu niet. Probeer het later opnieuw.",
       "invalid_adaptive": "Deze lamp kan zijn wittint niet veranderen.",
-      "invalid_automation": "{part, select, starter {Het begin van de routine} conditions {Een voorwaarde} actions {Een stap} other {Daarna uit}} klopt niet. Kies het opnieuw."
+      "invalid_automation": "{part, select, starter {Het begin van de routine} conditions {Een voorwaarde} actions {Een stap} other {Daarna uit}} klopt niet. Kies het opnieuw.",
+      "admin_can_edit": "Een beheerder mag altijd alles."
     }
   },
   "household": {
@@ -920,5 +922,15 @@
       "install": "Op een iPhone of iPad kunnen meldingen alleen als Sandhovius op je beginscherm staat: tik op Deel en dan op Zet op beginscherm.",
       "unsupported": "Deze browser kan geen meldingen ontvangen."
     }
+  },
+  "rights": {
+    "canEdit": "Mag automatiseringen en apparaten wijzigen",
+    "always": "Kan apparaten en scènes bedienen, en zijn eigen favorieten, thuis/weg en meldingen instellen.",
+    "edits": "Kan ook scènes, routines, schema's, kamers en apparaten wijzigen en apparaten koppelen.",
+    "noEdits": "Kan geen scènes, routines, schema's, kamers of apparaten wijzigen en niets koppelen. Zo blijft het huis zoals jij het inrichtte.",
+    "admin": "Een beheerder mag alles: ook huisgenoten, de huisnaam en de box beheren.",
+    "operateOnlyRole": "{role}, alleen bedienen",
+    "askAdmin": "Wijzigen kan een beheerder voor je aanzetten.",
+    "scenesHint": "Je kunt scènes uitvoeren. Scènes, routines en schema's wijzigen kan een beheerder voor je aanzetten."
   }
 }

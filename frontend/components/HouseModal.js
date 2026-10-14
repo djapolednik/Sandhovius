@@ -133,6 +133,8 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
 export default function HouseModal({
   house,
   isAdmin = false,
+  // D1: false = alleen bedienen; de kamers alleen als lijst.
+  canEdit = true,
   rooms,
   onRenameHouse,
   onAddRoom,
@@ -221,7 +223,14 @@ export default function HouseModal({
       <span className="form-label">{t('nav.kamers')}</span>
       {rooms.length > 0 && (
         <ul className="house-list" style={{ marginTop: '0.5rem' }}>
-          {rooms.map((room, index) => (
+          {rooms.map((room, index) =>
+            !canEdit ? (
+              <li key={room.id} className="room-list-item">
+                <div className="room-row">
+                  <span className="room-row-name">{room.name}</span>
+                </div>
+              </li>
+            ) : (
             <RoomRow
               key={room.id}
               room={room}
@@ -231,10 +240,13 @@ export default function HouseModal({
               onRename={onRenameRoom}
               onDelete={onDeleteRoom}
             />
-          ))}
+            )
+          )}
         </ul>
       )}
 
+      {!canEdit && <p className="settings-hint">{t('rights.askAdmin')}</p>}
+      {canEdit && (
       <form onSubmit={handleAddRoom} className="form-inline">
         <input
           className="input"
@@ -249,6 +261,7 @@ export default function HouseModal({
           {t('rooms.add')}
         </button>
       </form>
+      )}
 
       {isAdmin && house?.claimed_at && (
         <>

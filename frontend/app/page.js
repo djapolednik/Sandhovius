@@ -490,6 +490,13 @@ export default function Home() {
     await pb.send(`/api/sandhovius/houses/${house.id}/members/${memberId}`, { method: 'PATCH', body: { role } })
   }
 
+  async function setMemberCanEdit(memberId, canEditValue) {
+    await pb.send(`/api/sandhovius/houses/${house.id}/members/${memberId}`, {
+      method: 'PATCH',
+      body: { can_edit: canEditValue },
+    })
+  }
+
   // Jezelf verwijderen is het huis verlaten: daarna alles opnieuw ophalen
   // (het huis is weg) en naar Home, met het volgende huis of het lege scherm.
   async function removeMember(memberId) {
@@ -666,10 +673,14 @@ export default function Home() {
   const myInvitations = invitations.filter((i) => i.email === myEmail)
   const houseInvitations = house ? invitations.filter((i) => i.house === house.id && i.email !== myEmail) : []
   const presenceInHouse = presence.filter((p) => p.house === house?.id)
+  // D1: mag ik automatiseringen en apparaten wijzigen? Een beheerder altijd;
+  // een lid tenzij hij op "alleen bedienen" staat. PocketBase dwingt het af,
+  // de app laat de knoppen weg.
+  const canEdit = houseAdmin || !(house?.operate_only ?? []).includes(userId)
 
   // De leden met hun namen, voor thuis/weg en routines. Opnieuw zodra de
   // leden van het huis veranderen (realtime op houses).
-  const membership = house ? `${house.id}:${(house.members ?? []).join(',')}` : ''
+  const membership = house ? `${house.id}:${(house.members ?? []).join(',')}:${(house.operate_only ?? []).join(',')}` : ''
   useEffect(() => {
     if (!membership) return
     let cancelled = false
@@ -1906,11 +1917,13 @@ export default function Home() {
       <h2 id="first-device-title" className="intro-panel-title">
         {t('home.firstDevice.title')}
       </h2>
-      <p className="intro-panel-text">{t('home.firstDevice.text')}</p>
-      <button type="button" className="btn btn-primary" onClick={() => setAddDeviceOpen(true)}>
-        <PlusIcon width="20" height="20" aria-hidden="true" />
-        {t('nav.addDevice')}
-      </button>
+      <p className="intro-panel-text">{canEdit ? t('home.firstDevice.text') : t('rights.askAdmin')}</p>
+      {canEdit && (
+        <button type="button" className="btn btn-primary" onClick={() => setAddDeviceOpen(true)}>
+          <PlusIcon width="20" height="20" aria-hidden="true" />
+          {t('nav.addDevice')}
+        </button>
+      )}
     </section>
   )
 
@@ -1975,7 +1988,7 @@ export default function Home() {
   let content
   if (tab === 'kamers') {
     const count = devicesInSelectedRoom.length
-    header = <Header title={t('nav.kamers')} action={addDeviceButton} />
+    header = <Header title={t('nav.kamers')} action={canEdit ? addDeviceButton : null} />
     content = (
       <>
         {errorBanner}
@@ -2036,6 +2049,7 @@ export default function Home() {
         {skeleton}
         {loaded && house && (
           <ScenesView
+            canEdit={canEdit}
             scenes={scenesInHouse}
             schedules={schedules}
             deviceNameById={Object.fromEntries(devicesInHouse.map((d) => [d.id, d.name]))}
@@ -2089,6 +2103,7 @@ export default function Home() {
                 loadMembers={() => pb.send(`/api/sandhovius/houses/${house.id}/members`, { method: 'GET' })}
                 onInvite={inviteMember}
                 onChangeRole={changeMemberRole}
+                onSetCanEdit={setMemberCanEdit}
                 onRemove={removeMember}
                 onRevoke={(id) => deleteInvitation({ id })}
               />
@@ -2180,7 +2195,7 @@ export default function Home() {
                     runState={sceneRunState}
                     canRun={houseReachable}
                     onRun={runScene}
-                    onEdit={(scene) => setEditingScene(scene.id)}
+                    onEdit={(scene) => canEdit && setEditingScene(scene.id)}
                   />
                 )}
 
@@ -2249,12 +2264,13 @@ export default function Home() {
         </div>
       </div>
 
-      <BottomNav activeTab={tab} onSelect={selectTab} onAdd={house ? () => setAddDeviceOpen(true) : null} />
+      <BottomNav activeTab={tab} onSelect={selectTab} onAdd={house && canEdit ? () => setAddDeviceOpen(true) : null} />
 
       {houseModalOpen && (
         <HouseModal
           house={house}
           isAdmin={houseAdmin}
+          canEdit={canEdit}
           rooms={roomsInHouse}
           onRenameHouse={renameHouse}
           onAddRoom={addRoom}
@@ -2350,6 +2366,7 @@ export default function Home() {
 
       {settingsDevice && (
         <DeviceSettingsModal
+          canEdit={canEdit}
           key={settingsDevice.id}
           device={settingsDevice}
           rooms={roomsInHouse}

@@ -290,7 +290,8 @@
       "routineOff": "Turning routine {name} off",
       "presence": "Saving home or away",
       "notifications": "Setting up notifications",
-      "notifyRule": "Saving the notification"
+      "notifyRule": "Saving the notification",
+      "rights": "Saving permissions"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -313,7 +314,8 @@
       "invalid_shown_as": "Only a plug can be shown as a light.",
       "zigbee_unavailable": "Searching isn’t possible right now. Try again later.",
       "invalid_adaptive": "This lamp can’t change its white tone.",
-      "invalid_automation": "{part, select, starter {The start of the routine} conditions {A condition} actions {A step} other {Off afterwards}} isn't right. Choose it again."
+      "invalid_automation": "{part, select, starter {The start of the routine} conditions {A condition} actions {A step} other {Off afterwards}} isn't right. Choose it again.",
+      "admin_can_edit": "An admin can always do everything."
     }
   },
   "household": {
@@ -920,5 +922,15 @@
       "install": "On an iPhone or iPad, notifications only work when Sandhovius is on your home screen: tap Share, then Add to Home Screen.",
       "unsupported": "This browser can't receive notifications."
     }
+  },
+  "rights": {
+    "canEdit": "Can change automations and devices",
+    "always": "Can operate devices and scenes, and set their own favourites, home/away and notifications.",
+    "edits": "Can also change scenes, routines, schedules, rooms and devices, and pair devices.",
+    "noEdits": "Can't change scenes, routines, schedules, rooms or devices, or pair anything. That way the home stays the way you set it up.",
+    "admin": "An admin can do everything, including managing household members, the home's name and the box.",
+    "operateOnlyRole": "{role}, operate only",
+    "askAdmin": "An admin can let you change this.",
+    "scenesHint": "You can run scenes. An admin can let you change scenes, routines and schedules."
   }
 }

@@ -62,15 +62,18 @@ export default function ScenesView({
   routineNames = { devices: {}, scenes: {}, users: {} },
   onEditRoutine,
   onToggleRoutine,
+  // D1: false = alleen bedienen. Uitvoeren blijft; wijzigen, toevoegen en de
+  // schakelaars van schema's, routines en bewegingslicht vallen weg.
+  canEdit = true,
 }) {
   const intl = useIntl()
   const { t } = intl
   const routineList = (
-    <RoutineList routines={routines} names={routineNames} onEdit={onEditRoutine} onToggle={onToggleRoutine} />
+    <RoutineList routines={routines} names={routineNames} onEdit={onEditRoutine} onToggle={onToggleRoutine} canEdit={canEdit} />
   )
   // Bewegingslichten hebben geen scène nodig: ook zonder scènes staan ze er.
   const motion = (
-    <MotionList motionLights={motionLights} deviceById={deviceById} onEdit={onEditMotion} onToggle={onToggleMotion} />
+    <MotionList motionLights={motionLights} deviceById={deviceById} onEdit={onEditMotion} onToggle={onToggleMotion} canEdit={canEdit} />
   )
   if (scenes.length === 0) {
     return (
@@ -84,11 +87,13 @@ export default function ScenesView({
         <h2 id="scenes-empty-title" className="intro-panel-title">
           {t('scenes.firstTitle')}
         </h2>
-        <p className="intro-panel-text">{t('scenes.firstText')}</p>
-        <button type="button" className="btn btn-primary" onClick={onCreate}>
-          <PlusIcon width="20" height="20" aria-hidden="true" />
-          {t('scenes.create')}
-        </button>
+        <p className="intro-panel-text">{canEdit ? t('scenes.firstText') : t('rights.scenesHint')}</p>
+        {canEdit && (
+          <button type="button" className="btn btn-primary" onClick={onCreate}>
+            <PlusIcon width="20" height="20" aria-hidden="true" />
+            {t('scenes.create')}
+          </button>
+        )}
       </section>
       {routineList}
       {motion}
@@ -98,6 +103,7 @@ export default function ScenesView({
 
   return (
     <>
+      {!canEdit && <p className="section-hint rights-hint">{t('rights.scenesHint')}</p>}
       <ul className="device-list scene-list">
         {scenes.map((scene) => {
           const state = runState[scene.id]
@@ -133,29 +139,33 @@ export default function ScenesView({
                   )}
                 </span>
                 <div className="tile-bottom">
-                  <button
-                    type="button"
-                    className="details-chip"
-                    aria-label={t('scenes.editLabel', { name: scene.name })}
-                    onClick={() => onEdit(scene)}
-                  >
-                    {t('scenes.edit')}
-                    <ArrowUpRightIcon width="14" height="14" aria-hidden="true" />
-                  </button>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className="details-chip"
+                      aria-label={t('scenes.editLabel', { name: scene.name })}
+                      onClick={() => onEdit(scene)}
+                    >
+                      {t('scenes.edit')}
+                      <ArrowUpRightIcon width="14" height="14" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
               </div>
             </li>
           )
         })}
-        <li className="device-cell">
-          <button type="button" className="panel tile scene-new" onClick={onCreate}>
-            <PlusIcon width="24" height="24" aria-hidden="true" />
-            {t('scenes.new')}
-          </button>
-        </li>
+        {canEdit && (
+          <li className="device-cell">
+            <button type="button" className="panel tile scene-new" onClick={onCreate}>
+              <PlusIcon width="24" height="24" aria-hidden="true" />
+              {t('scenes.new')}
+            </button>
+          </li>
+        )}
       </ul>
       {routineList}
-      <ScheduleList scenes={scenes} schedules={schedules} onEdit={onEdit} onToggleSchedule={onToggleSchedule} />
+      <ScheduleList scenes={scenes} schedules={schedules} onEdit={onEdit} onToggleSchedule={onToggleSchedule} canEdit={canEdit} />
       {motion}
     </>
   )
@@ -165,7 +175,7 @@ export default function ScenesView({
 // met de tijd (het grootste woord), de scène en de dagen, en een
 // schakelaar. Dat is een instelling, geen apparaatstand: Electric Blue,
 // geen groen, en niets gloeit. Een tik op de kaart opent de scène.
-function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
+function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule, canEdit }) {
   const intl = useIntl()
   const { t, locale } = intl
   const sceneById = Object.fromEntries(scenes.map((scene) => [scene.id, scene]))
@@ -197,7 +207,7 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
             const when = scheduleWhen(intl, schedule)
             return (
               <li key={schedule.id} className={`panel schedule-card ${schedule.enabled ? '' : 'schedule-card-off'}`}>
-                <button
+                {canEdit && <button
                   type="button"
                   className="device-card-action"
                   aria-label={
@@ -206,7 +216,7 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
                       : t('scenes.editSchedule', { name: scene.name, time: schedule.time })
                   }
                   onClick={() => onEdit(scene)}
-                />
+                />}
                 <span className="device-icon" aria-hidden="true">
                   <ClockIcon width="22" height="22" />
                 </span>
@@ -231,6 +241,7 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
                       : t('scenes.scheduleSwitch', { name: scene.name, time: schedule.time })
                   }
                   className={`switch switch-accent schedule-card-switch ${schedule.enabled ? 'switch-on' : ''}`}
+                  disabled={!canEdit}
                   onClick={() => onToggleSchedule(schedule, !schedule.enabled)}
                 >
                   <span className="switch-thumb" />
@@ -247,7 +258,7 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
 // Bewegingslichten: per regel een kaart in de stijl van de schema's, met de
 // sensor als titel (dat is wat je zoekt: "de gang"). Een instelling, dus de
 // schakelaar is Electric Blue en niets gloeit. Een tik opent de sheet.
-function MotionList({ motionLights, deviceById, onEdit, onToggle }) {
+function MotionList({ motionLights, deviceById, onEdit, onToggle, canEdit }) {
   const intl = useIntl()
   const { t } = intl
   const names = Object.fromEntries(Object.values(deviceById).map((d) => [d.id, d.name]))
@@ -267,12 +278,12 @@ function MotionList({ motionLights, deviceById, onEdit, onToggle }) {
           const name = sensor?.name ?? t('motion.sensor')
           return (
             <li key={rule.id} className={`panel schedule-card ${rule.enabled ? '' : 'schedule-card-off'}`}>
-              <button
+              {canEdit && <button
                 type="button"
                 className="device-card-action"
                 aria-label={t('motion.edit', { name })}
                 onClick={() => onEdit(rule)}
-              />
+              />}
               <span className="device-icon" aria-hidden="true">
                 <MotionIcon width="22" height="22" />
               </span>
@@ -291,6 +302,7 @@ function MotionList({ motionLights, deviceById, onEdit, onToggle }) {
                 aria-checked={rule.enabled}
                 aria-label={t('motion.switchLabel', { name })}
                 className={`switch switch-accent schedule-card-switch ${rule.enabled ? 'switch-on' : ''}`}
+                disabled={!canEdit}
                 onClick={() => onToggle(rule, !rule.enabled)}
               >
                 <span className="switch-thumb" />
@@ -298,12 +310,14 @@ function MotionList({ motionLights, deviceById, onEdit, onToggle }) {
             </li>
           )
         })}
-        <li>
-          <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
-            <PlusIcon width="18" height="18" aria-hidden="true" />
-            {t('motion.add')}
-          </button>
-        </li>
+        {canEdit && (
+          <li>
+            <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
+              <PlusIcon width="18" height="18" aria-hidden="true" />
+              {t('motion.add')}
+            </button>
+          </li>
+        )}
       </ul>
     </section>
   )
@@ -324,7 +338,7 @@ function RoutineIcon({ starter }) {
 // Routines: per routine een kaart in de stijl van de schema's. De titel is
 // de eigen naam of de starter ("Als Voordeur opengaat"), daaronder de rest
 // van de zin. Een instelling: de schakelaar is Electric Blue, niets gloeit.
-function RoutineList({ routines, names, onEdit, onToggle }) {
+function RoutineList({ routines, names, onEdit, onToggle, canEdit }) {
   const intl = useIntl()
   const { t, locale } = intl
   const rows = routines
@@ -351,12 +365,12 @@ function RoutineList({ routines, names, onEdit, onToggle }) {
           const noLocation = routine.last_error === 'no_location'
           return (
             <li key={routine.id} className={`panel schedule-card ${routine.enabled ? '' : 'schedule-card-off'}`}>
-              <button
+              {canEdit && <button
                 type="button"
                 className="device-card-action"
                 aria-label={t('routines.edit', { name: title })}
                 onClick={() => onEdit(routine)}
-              />
+              />}
               <span className="device-icon" aria-hidden="true">
                 <RoutineIcon starter={routine.starter} />
               </span>
@@ -374,6 +388,7 @@ function RoutineList({ routines, names, onEdit, onToggle }) {
                 aria-checked={routine.enabled}
                 aria-label={t('routines.switchLabel', { name: title })}
                 className={`switch switch-accent schedule-card-switch ${routine.enabled ? 'switch-on' : ''}`}
+                disabled={!canEdit}
                 onClick={() => onToggle(routine, !routine.enabled)}
               >
                 <span className="switch-thumb" />
@@ -381,12 +396,14 @@ function RoutineList({ routines, names, onEdit, onToggle }) {
             </li>
           )
         })}
-        <li>
-          <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
-            <PlusIcon width="18" height="18" aria-hidden="true" />
-            {t('routines.add')}
-          </button>
-        </li>
+        {canEdit && (
+          <li>
+            <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
+              <PlusIcon width="18" height="18" aria-hidden="true" />
+              {t('routines.add')}
+            </button>
+          </li>
+        )}
       </ul>
     </section>
   )

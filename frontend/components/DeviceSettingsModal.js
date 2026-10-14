@@ -35,6 +35,9 @@ export default function DeviceSettingsModal({
   houseReachable = true,
   notifyRules = [],
   onSaveNotifyRule,
+  // D1: false = alleen bedienen. Naam, kamer, weergave, kleur volgt de dag en
+  // verwijderen staan dan vast; bedienen, favoriet en Meld dit blijven.
+  canEdit = true,
   onDelete,
   onClose,
 }) {
@@ -160,7 +163,7 @@ export default function DeviceSettingsModal({
       <div className="modal-divider" />
 
       {/* Kleur volgt de dag: alleen een lamp die zijn wittint kan veranderen. */}
-      {device.type === 'light' && device.capabilities?.includes('color_temp') && (
+      {canEdit && device.type === 'light' && device.capabilities?.includes('color_temp') && (
         <>
           <div className="settings-row">
             <span className="settings-row-text">
@@ -186,7 +189,7 @@ export default function DeviceSettingsModal({
         <NotifyRules device={device} rules={notifyRules} onSave={saveRule} />
       )}
 
-      {device.type === 'switch' && (
+      {canEdit && device.type === 'switch' && (
         <>
           <div className="settings-row">
             <span className="settings-row-text">
@@ -237,6 +240,7 @@ export default function DeviceSettingsModal({
             onChange={(e) => setName(e.target.value)}
             onBlur={commitName}
             enterKeyHint="done"
+            disabled={!canEdit}
           />
         </label>
 
@@ -245,6 +249,7 @@ export default function DeviceSettingsModal({
           <select
             className="input"
             value={device.room ?? ''}
+            disabled={!canEdit}
             onChange={(e) => save({ room: e.target.value || null }, t('errors.what.changeRoom'))}
           >
             <option value="">{t('home.noRoom')}</option>
@@ -256,6 +261,8 @@ export default function DeviceSettingsModal({
           </select>
         </label>
 
+        {!canEdit && <p className="settings-hint">{t('rights.askAdmin')}</p>}
+
         <p className="form-saved" role="status">
           {showSaved ? t('common.saved') : ''}
         </p>
@@ -263,28 +270,32 @@ export default function DeviceSettingsModal({
         {error && !confirmingDelete && <p className="error-banner">{error}</p>}
       </form>
 
-      <div className="modal-divider" />
+      {canEdit && (
+        <>
+          <div className="modal-divider" />
 
-      {confirmingDelete ? (
-        <div className="danger-zone">
-          <p className="danger-text">
-            {t('deviceSheet.confirmDelete', { name: device.name })}
-          </p>
-          {error && <p className="error-banner">{error}</p>}
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => setConfirmingDelete(false)} disabled={saving}>
-              {t('common.cancel')}
+          {confirmingDelete ? (
+            <div className="danger-zone">
+              <p className="danger-text">
+                {t('deviceSheet.confirmDelete', { name: device.name })}
+              </p>
+              {error && <p className="error-banner">{error}</p>}
+              <div className="form-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setConfirmingDelete(false)} disabled={saving}>
+                  {t('common.cancel')}
+                </button>
+                <button type="button" className="btn btn-danger" onClick={handleDelete} disabled={saving}>
+                  {t('common.delete')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-danger-text" onClick={() => setConfirmingDelete(true)} disabled={saving}>
+              <TrashIcon />
+              {t('deviceSheet.delete')}
             </button>
-            <button type="button" className="btn btn-danger" onClick={handleDelete} disabled={saving}>
-              {t('common.delete')}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button type="button" className="btn btn-danger-text" onClick={() => setConfirmingDelete(true)} disabled={saving}>
-          <TrashIcon />
-          {t('deviceSheet.delete')}
-        </button>
+          )}
+        </>
       )}
     </Modal>
   )

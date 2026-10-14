@@ -1384,6 +1384,18 @@
   min-height: 44px;
 }
 
+/* ==================== Rechten (D1) ====================
+   In de ledensheet: de schakelaar en in zinnen wat iemand kan. */
+.rights {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rights-text {
+  margin: 0;
+}
+
 /* ==================== Thuis of weg ====================
    Op Home onder de groet: je eigen stand (twee keuzes, accentblauw) en wie
    er verder thuis is. */
