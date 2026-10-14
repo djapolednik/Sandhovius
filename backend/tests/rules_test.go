@@ -217,6 +217,7 @@ func TestBoxWritesAllowedFields(t *testing.T) {
 		{"commands", w.CmdA, map[string]any{"error": "kapot"}},
 		{"schedules", w.SchedA, map[string]any{"last_run": when}},
 		{"schedules", w.SchedA, map[string]any{"last_error": "kapot"}},
+		{"schedules", w.SchedA, map[string]any{"next_run": when}},
 	}
 	for _, c := range patches {
 		status, out := p.do(t, w.BoxATok, "PATCH", "/api/collections/"+c.collection+"/records/"+c.id, c.body)
@@ -240,7 +241,7 @@ func TestBoxWritesAllowedFields(t *testing.T) {
 }
 
 // otherValueOverrides: velden met een patroon waarvoor een generieke waarde niet past.
-var otherValueOverrides = map[string]any{"schedules.time": "07:45"}
+var otherValueOverrides = map[string]any{"schedules.time": "07:45", "schedules.trigger": "sunset", "schedules.offset_min": 30}
 
 // allowedFields zijn de velden die een box mag schrijven (Global Constraints).
 var allowedFields = map[string][]string{
@@ -248,7 +249,7 @@ var allowedFields = map[string][]string{
 	"devices":      {"entity_id", "online", "source", "address", "endpoint", "capabilities", "model"},
 	"device_state": {"state", "updated_at"},
 	"commands":     {"status", "error"},
-	"schedules":    {"last_run", "last_error"},
+	"schedules":    {"last_run", "last_error", "next_run"},
 }
 
 func contains(list []string, s string) bool {
