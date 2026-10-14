@@ -2,10 +2,22 @@
 
 import { useIntl } from '../app/LanguageContext'
 import { cachedFormat } from '../lib/language'
-import { ArrowUpRightIcon, CheckIcon, ClockIcon, MotionIcon, PlusIcon, ScenesIcon } from '../lib/icons'
+import {
+  ArrowUpRightIcon,
+  CheckIcon,
+  ClockIcon,
+  DropIcon,
+  LightbulbIcon,
+  MotionIcon,
+  PlusIcon,
+  ScenesIcon,
+  ShieldIcon,
+  ThermometerIcon,
+} from '../lib/icons'
 import { describeDays, describeSchedules, isSun, scheduleSortKey, scheduleWhen } from '../lib/schedules'
 import { describeLightStep } from '../lib/sceneChoices'
 import { describeMotionLight } from '../lib/motionLights'
+import { describeAutomation, describeConditions, describeDoes, routineTitle } from '../lib/routines'
 
 // "Leeslamp, Staande lamp en Thermostaat": wat een scène raakt, in woorden.
 function describeScene({ t, locale }, scene, deviceNameById) {
@@ -45,9 +57,16 @@ export default function ScenesView({
   deviceById = {},
   onEditMotion,
   onToggleMotion,
+  routines = [],
+  routineNames = { devices: {}, scenes: {} },
+  onEditRoutine,
+  onToggleRoutine,
 }) {
   const intl = useIntl()
   const { t } = intl
+  const routineList = (
+    <RoutineList routines={routines} names={routineNames} onEdit={onEditRoutine} onToggle={onToggleRoutine} />
+  )
   // Bewegingslichten hebben geen scène nodig: ook zonder scènes staan ze er.
   const motion = (
     <MotionList motionLights={motionLights} deviceById={deviceById} onEdit={onEditMotion} onToggle={onToggleMotion} />
@@ -70,6 +89,7 @@ export default function ScenesView({
           {t('scenes.create')}
         </button>
       </section>
+      {routineList}
       {motion}
       </>
     )
@@ -133,6 +153,7 @@ export default function ScenesView({
           </button>
         </li>
       </ul>
+      {routineList}
       <ScheduleList scenes={scenes} schedules={schedules} onEdit={onEdit} onToggleSchedule={onToggleSchedule} />
       {motion}
     </>
@@ -280,6 +301,88 @@ function MotionList({ motionLights, deviceById, onEdit, onToggle }) {
           <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
             <PlusIcon width="18" height="18" aria-hidden="true" />
             {t('motion.add')}
+          </button>
+        </li>
+      </ul>
+    </section>
+  )
+}
+
+// Welk icoon bij een starter hoort: de klok, de lamp, of wat de sensor meet.
+function RoutineIcon({ starter }) {
+  const props = { width: 22, height: 22 }
+  if (starter?.kind === 'time' || starter?.kind === 'sun') return <ClockIcon {...props} />
+  if (starter?.kind === 'device') return <LightbulbIcon {...props} />
+  if (starter?.event === 'leak') return <DropIcon {...props} />
+  if (starter?.event === 'above' || starter?.event === 'below') return <ThermometerIcon {...props} />
+  if (['open', 'closed', 'smoke'].includes(starter?.event)) return <ShieldIcon {...props} />
+  return <MotionIcon {...props} />
+}
+
+// Routines: per routine een kaart in de stijl van de schema's. De titel is
+// de eigen naam of de starter ("Als Voordeur opengaat"), daaronder de rest
+// van de zin. Een instelling: de schakelaar is Electric Blue, niets gloeit.
+function RoutineList({ routines, names, onEdit, onToggle }) {
+  const intl = useIntl()
+  const { t, locale } = intl
+  const rows = routines
+    .map((routine) => ({ routine, title: routineTitle(intl, routine, names) }))
+    .sort((a, b) => a.title.localeCompare(b.title, locale))
+
+  return (
+    <section className="schedules-section" aria-labelledby="routines-heading">
+      <h2 id="routines-heading" className="section-heading">
+        {t('routines.title')}
+      </h2>
+      {rows.length === 0 && <p className="section-hint">{t('routines.hint')}</p>}
+      <ul className="schedule-list">
+        {rows.map(({ routine, title }) => {
+          const conditions = describeConditions(intl, routine.conditions)
+          const does = describeDoes(intl, routine, names)
+          // Met een eigen naam staat de hele zin eronder; anders is de
+          // starter de titel en volgt de rest.
+          const detail = routine.name?.trim()
+            ? describeAutomation(intl, routine, names)
+            : conditions
+              ? `${conditions.charAt(0).toLocaleUpperCase(locale)}${conditions.slice(1)}: ${does}`
+              : does.charAt(0).toLocaleUpperCase(locale) + does.slice(1)
+          const noLocation = routine.last_error === 'no_location'
+          return (
+            <li key={routine.id} className={`panel schedule-card ${routine.enabled ? '' : 'schedule-card-off'}`}>
+              <button
+                type="button"
+                className="device-card-action"
+                aria-label={t('routines.edit', { name: title })}
+                onClick={() => onEdit(routine)}
+              />
+              <span className="device-icon" aria-hidden="true">
+                <RoutineIcon starter={routine.starter} />
+              </span>
+              <span className="schedule-card-text">
+                <span className="schedule-card-name">{title}</span>
+                <span className="schedule-card-days">{detail}</span>
+                {routine.enabled && noLocation && <span className="schedule-card-error">{t('routines.noLocation')}</span>}
+                {routine.enabled && routine.last_error && !noLocation && (
+                  <span className="schedule-card-error">{t('routines.lastFailed')}</span>
+                )}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={routine.enabled}
+                aria-label={t('routines.switchLabel', { name: title })}
+                className={`switch switch-accent schedule-card-switch ${routine.enabled ? 'switch-on' : ''}`}
+                onClick={() => onToggle(routine, !routine.enabled)}
+              >
+                <span className="switch-thumb" />
+              </button>
+            </li>
+          )
+        })}
+        <li>
+          <button type="button" className="btn btn-plain schedule-add motion-add" onClick={() => onEdit('new')}>
+            <PlusIcon width="18" height="18" aria-hidden="true" />
+            {t('routines.add')}
           </button>
         </li>
       </ul>

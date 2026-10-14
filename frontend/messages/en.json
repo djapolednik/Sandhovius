@@ -283,7 +283,11 @@
       "motionOff": "Turning off the motion light for {name}",
       "shownAs": "Saving how it’s shown",
       "identify": "Making {name} blink",
-      "adaptive": "Saving colour follows the day"
+      "adaptive": "Saving colour follows the day",
+      "saveRoutine": "Saving the routine",
+      "deleteRoutine": "Deleting the routine",
+      "routineOn": "Turning routine {name} on",
+      "routineOff": "Turning routine {name} off"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -305,7 +309,8 @@
       "invalid_capabilities": "This device can’t do that.",
       "invalid_shown_as": "Only a plug can be shown as a light.",
       "zigbee_unavailable": "Searching isn’t possible right now. Try again later.",
-      "invalid_adaptive": "This lamp can’t change its white tone."
+      "invalid_adaptive": "This lamp can’t change its white tone.",
+      "invalid_automation": "{part, select, starter {The start of the routine} conditions {A condition} actions {A step} other {Off afterwards}} isn't right. Choose it again."
     }
   },
   "household": {
@@ -707,5 +712,134 @@
     "allClosed": "All closed",
     "lightsOff": "Lights off",
     "nav": "Overview by kind"
+  },
+  "routines": {
+    "title": "Routines",
+    "hint": "Let your home do things by itself. For example: when the front door opens and it's dark, the hall light turns on.",
+    "add": "Add a routine",
+    "edit": "Edit routine {name}",
+    "switchLabel": "Routine {name} on",
+    "lastFailed": "Last time it didn't fully work",
+    "noLocation": "The box doesn't know where your home is yet",
+    "sheetNew": "New routine",
+    "sheetEdit": "Edit routine",
+    "name": "Name",
+    "namePlaceholder": "Can stay empty",
+    "when": "When",
+    "onlyIf": "Only if",
+    "do": "Do",
+    "offAfter": "Off afterwards",
+    "offAfterHint": "Only what this routine turned on goes off again.",
+    "never": "Never",
+    "minutesShort": "{count} min",
+    "kinds": {
+      "time": "Time",
+      "device": "Device",
+      "sensor": "Sensor"
+    },
+    "timeKinds": {
+      "time": "Set time",
+      "sunrise": "Sunrise",
+      "sunset": "Sunset"
+    },
+    "toLegend": "When the device",
+    "to": {
+      "on": "Turns on",
+      "off": "Turns off"
+    },
+    "lamp": "Light or plug",
+    "sensor": "Sensor",
+    "eventLegend": "What the sensor reports",
+    "events": {
+      "motion": "Motion",
+      "no_motion": "No more motion",
+      "open": "Open",
+      "closed": "Closed",
+      "leak": "Leak",
+      "smoke": "Smoke",
+      "above": "Warmer than",
+      "below": "Colder than"
+    },
+    "temperature": "Temperature in degrees",
+    "noSensors": "A sensor shows up here once it has been added.",
+    "noSwitchables": "Add a light or plug first.",
+    "conditionDark": "It's dark",
+    "conditionDarkHint": "Between sunset and sunrise, where your home is.",
+    "conditionBetween": "Between two times",
+    "from": "From",
+    "until": "Until",
+    "conditionDays": "On certain days",
+    "actionTarget": "Device or scene for step {number}",
+    "actionMode": "What {name} does",
+    "modes": {
+      "turn_on": "On",
+      "turn_off": "Off"
+    },
+    "brightness": "Brightness of {name}",
+    "brightnessAsIs": "As last time",
+    "pick": "Choose…",
+    "devicesGroup": "Devices",
+    "scenesGroup": "Scenes",
+    "addAction": "Add an action",
+    "removeAction": "Remove step {number}",
+    "maxActions": "A routine has at most 10 steps.",
+    "tryNow": "Try it now",
+    "tryHint": "Runs the steps once, without waiting for the trigger.",
+    "trying": "Running…",
+    "tryDone": "Done",
+    "tryPartial": "Partly worked: {failed} didn't",
+    "confirmDelete": "Delete routine {name}? Your devices and scenes stay as they are.",
+    "delete": "Delete routine",
+    "unknownDevice": "a device that's gone",
+    "unknownScene": "a scene that's gone",
+    "untitled": "New routine",
+    "starterYet": "When …",
+    "nothingYet": "nothing yet",
+    "sentence": "{starter}: {does}.",
+    "offAfterPart": "{does}, off again after {minutes, plural, one {# minute} other {# minutes}}",
+    "starter": {
+      "device": {
+        "on": "When {name} turns on",
+        "off": "When {name} turns off"
+      },
+      "sensor": {
+        "motion": "When {name} detects motion",
+        "no_motion": "When {name} stops detecting motion",
+        "open": "When {name} opens",
+        "closed": "When {name} closes",
+        "leak": "When {name} detects a leak",
+        "smoke": "When {name} detects smoke",
+        "above": "When it gets warmer than {value} at {name}",
+        "below": "When it gets colder than {value} at {name}"
+      }
+    },
+    "condition": {
+      "only": "only {conditions}",
+      "dark": "when it's dark",
+      "between": "between {from} and {to}",
+      "weekdays": "on weekdays",
+      "weekend": "at the weekend",
+      "days": "on {days}"
+    },
+    "action": {
+      "on": "{name} on",
+      "onDetail": "{name} on ({detail})",
+      "off": "{name} off",
+      "scene": "scene {name}"
+    },
+    "missing": {
+      "starter": "Choose when the routine starts.",
+      "time": "Choose a time.",
+      "days": "Choose at least one day.",
+      "lamp": "Choose a light or plug.",
+      "to": "Choose whether the device turns on or off.",
+      "sensor": "Choose a sensor.",
+      "event": "Choose what the sensor reports.",
+      "temperature": "Choose a temperature between 0 and 40 degrees.",
+      "between": "Choose two different times.",
+      "condition": "The app doesn't know this condition.",
+      "action": "Choose at least one action under Do.",
+      "target": "Choose a device or scene for every step."
+    }
   }
 }

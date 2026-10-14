@@ -1384,6 +1384,124 @@
   min-height: 44px;
 }
 
+/* ==================== Routines ====================
+   De sheet bouwt een zin op: bovenaan de hele routine in woorden, dan Als,
+   Alleen als, Doe en Daarna uit, elk op Inset zoals de schema-rijen. */
+.routine-sentence {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.routine-part {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+}
+
+.routine-part-title {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+fieldset.routine-part > .routine-part-title {
+  float: left;
+  width: 100%;
+  margin-bottom: 0.6rem;
+}
+
+.routine-part .settings-row {
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.routine-part .settings-hint {
+  margin: 0;
+}
+
+/* Zes keuzes (sensor-gebeurtenissen, Daarna uit): twee rijen van drie op
+   een smalle telefoon, net als de zon-verschuivingen. */
+.routine-grid {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(3, 1fr);
+  border-radius: var(--radius-tile);
+}
+
+.routine-brightness {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(2, 1fr);
+  border-radius: var(--radius-tile);
+}
+
+.routine-between {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.routine-temperature .input {
+  width: 7.5rem;
+  background: var(--card-background);
+  font-variant-numeric: tabular-nums;
+}
+
+.routine-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.routine-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border-radius: var(--radius-tile);
+  background: var(--card-background);
+}
+
+.routine-action-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.routine-target {
+  flex: 1;
+  min-width: 0;
+}
+
+.routine-try {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+}
+
+.routine-try .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--card-background);
+}
+
+.routine-try-result {
+  flex: 1 1 12rem;
+}
+
 /* ==================== Omlaag trekken om te verversen ====================
    Alleen in de geïnstalleerde app (zie PullToRefresh). Een klein rond
    paneel dat van boven je vinger volgt (--pull, zonder transitie tijdens

@@ -51,7 +51,9 @@ import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons
 import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
 import MotionLightSheet from '../components/MotionLightSheet'
+import RoutineSheet from '../components/RoutineSheet'
 import { byRoom, motionSensors, switchableDevices } from '../lib/motionLights'
+import { routineSensors, routineTitle } from '../lib/routines'
 
 // "Zondag 27 september", "Sunday 27 September"
 function formatToday(ms, locale) {
@@ -123,12 +125,14 @@ export default function Home() {
   const [scenes, setScenes] = useState([])
   const [schedules, setSchedules] = useState([])
   const [motionLights, setMotionLights] = useState([])
+  const [routines, setRoutines] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
   const [sceneRunState, setSceneRunState] = useState({})
   // Open scène-sheet: 'new', een scène-ID, of null.
   const [editingScene, setEditingScene] = useState(null)
   // null, 'new' of het id van het bewegingslicht in de sheet.
   const [editingMotion, setEditingMotion] = useState(null)
+  const [editingRoutine, setEditingRoutine] = useState(null)
   const [selectedRoomId, setSelectedRoomId] = useState('')
   // Deze telefoon ↔ Sandhovius: 'connecting' tot de eerste realtime-
   // verbinding staat, 'lost' zodra die wegvalt (de SDK herverbindt zelf).
@@ -340,6 +344,14 @@ export default function Home() {
             : [...prev.filter((m) => m.id !== e.record.id), e.record]
         )
       }),
+      // En bij routines: last_run, last_error en next_run.
+      pb.collection('automations').subscribe('*', (e) => {
+        setRoutines((prev) =>
+          e.action === 'delete'
+            ? prev.filter((r) => r.id !== e.record.id)
+            : [...prev.filter((r) => r.id !== e.record.id), e.record]
+        )
+      }),
     ]
 
     subscriptions.forEach((subscription) =>
@@ -496,6 +508,7 @@ export default function Home() {
     setScenes([])
     setSchedules([])
     setMotionLights([])
+    setRoutines([])
     setSelectedRoomId('')
     setRealtimeLink('connecting')
     setLoaded(false)
@@ -526,6 +539,7 @@ export default function Home() {
         favoriteRecords,
         invitationRecords,
         motionRecords,
+        routineRecords,
       ] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
@@ -535,6 +549,7 @@ export default function Home() {
         pb.collection('favorites').getFullList(),
         pb.collection('invitations').getFullList({ sort: '-created' }),
         pb.collection('motion_lights').getFullList(),
+        pb.collection('automations').getFullList(),
       ])
       // Een huis dat er niet meer is en dat je niet zelf verliet: een ander
       // heeft je eruit gehaald. Rustig zeggen, en verder met het volgende huis.
@@ -550,6 +565,7 @@ export default function Home() {
       setScenes(sceneRecords)
       setSchedules(scheduleRecords)
       setMotionLights(motionRecords)
+      setRoutines(routineRecords)
       setFavorites(favoriteRecords)
       setInvitations(invitationRecords)
       setLoaded(true)
@@ -645,6 +661,11 @@ export default function Home() {
   const devicesInHouse = devices.filter((device) => device.gateway === house?.id && !hiddenIds.includes(device.id))
   const scenesInHouse = scenes.filter((scene) => scene.house === house?.id && !hiddenIds.includes(scene.id))
   const motionLightsInHouse = motionLights.filter((m) => m.house === house?.id)
+  const routinesInHouse = routines.filter((r) => r.house === house?.id)
+  const routineNames = {
+    devices: Object.fromEntries(devicesInHouse.map((d) => [d.id, d.name])),
+    scenes: Object.fromEntries(scenesInHouse.map((s) => [s.id, s.name])),
+  }
   // De sensoren die beweging melden, plus de sensor van het bewegingslicht
   // dat je wijzigt (ook als hij nog niets meldde).
   function sensorsForMotion(editing) {
@@ -1416,6 +1437,87 @@ export default function Home() {
     setMotionLights((prev) => prev.filter((m) => m.id !== id))
   }
 
+  // Routines: de box leest ze binnen een minuut (het snapshot).
+  async function saveRoutine(id, fields) {
+    const record = id
+      ? await pb.collection('automations').update(id, fields)
+      : await pb.collection('automations').create({ ...fields, house: house.id, enabled: true })
+    setRoutines((prev) => [...prev.filter((r) => r.id !== record.id), record])
+    return record
+  }
+
+  // De schakelaar op een kaart: meteen om, en terug als opslaan mislukt.
+  async function setRoutineEnabled(routine, enabled) {
+    const flip = (value) => setRoutines((prev) => prev.map((r) => (r.id === routine.id ? { ...r, enabled: value } : r)))
+    flip(enabled)
+    try {
+      await pb.collection('automations').update(routine.id, { enabled }, { requestKey: null })
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      flip(!enabled)
+      const name = routineTitle(intl, routine, routineNames)
+      showToast(describeError(t, t(enabled ? 'errors.what.routineOn' : 'errors.what.routineOff', { name }), err), 'error')
+    }
+  }
+
+  async function deleteRoutine(id) {
+    await pb.collection('automations').delete(id)
+    setRoutines((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  // Wacht tot de box een commando afhandelde: 'sent' of 'failed' (ook na
+  // COMMAND_GIVE_UP_MS zonder antwoord). Zonder meldingen: de sheet zegt
+  // zelf hoe het ging.
+  function commandOutcome(commandId) {
+    return new Promise((resolve) => {
+      let unsub
+      let finished = false
+      const finish = (status) => {
+        if (finished) return
+        finished = true
+        clearTimeout(timer)
+        unsub?.()
+        resolve(status)
+      }
+      const timer = setTimeout(() => finish('failed'), COMMAND_GIVE_UP_MS)
+      const settle = (record) => record.status !== 'pending' && finish(record.status)
+      pb.collection('commands')
+        .subscribe(commandId, (e) => settle(e.record))
+        .then((u) => {
+          unsub = u
+          if (finished) u()
+          return pb.collection('commands').getOne(commandId, { requestKey: null }).then(settle)
+        })
+        .catch(() => {})
+    })
+  }
+
+  // "Nu uitproberen": de stappen van een routine één keer, op volgorde, met
+  // de commando's die er al zijn (aan/uit met payload, run_scene). Geeft de
+  // namen terug van wat niet lukte.
+  async function tryRoutine(actions) {
+    const failed = []
+    for (const action of actions) {
+      const scene = action.kind === 'scene'
+      const name = scene ? routineNames.scenes[action.scene] : routineNames.devices[action.device]
+      try {
+        const fields = scene
+          ? { scene: action.scene, action: 'run_scene', status: 'pending' }
+          : { device: action.device, action: action.action, status: 'pending', ...(action.payload ? { payload: action.payload } : {}) }
+        const command = await pb.collection('commands').create(fields, { requestKey: null })
+        if ((await commandOutcome(command.id)) === 'failed') failed.push(name ?? '?')
+      } catch (err) {
+        if (isSessionExpired(err)) {
+          endExpiredSession()
+          return { failed }
+        }
+        console.error('[routine] uitproberen:', err)
+        failed.push(name ?? '?')
+      }
+    }
+    return { failed }
+  }
+
   function deleteScene(sceneId) {
     const scene = scenes.find((s) => s.id === sceneId)
     deleteLater(
@@ -1857,6 +1959,10 @@ export default function Home() {
             deviceById={Object.fromEntries(devicesInHouse.map((d) => [d.id, d]))}
             onEditMotion={(rule) => setEditingMotion(rule === 'new' ? 'new' : rule.id)}
             onToggleMotion={setMotionLightEnabled}
+            routines={routinesInHouse}
+            routineNames={routineNames}
+            onEditRoutine={(routine) => setEditingRoutine(routine === 'new' ? 'new' : routine.id)}
+            onToggleRoutine={setRoutineEnabled}
           />
         )}
       </>
@@ -2091,6 +2197,23 @@ export default function Home() {
           onSave={saveMotionLight}
           onDelete={deleteMotionLight}
           onClose={() => setEditingMotion(null)}
+        />
+      )}
+
+      {editingRoutine && (
+        <RoutineSheet
+          key={editingRoutine}
+          routine={editingRoutine === 'new' ? null : routinesInHouse.find((r) => r.id === editingRoutine)}
+          sensors={byRoom(routineSensors(devicesInHouse), roomsInHouse)}
+          switchables={byRoom(switchableDevices(devicesInHouse), roomsInHouse)}
+          scenes={scenesInHouse}
+          names={routineNames}
+          roomNameById={roomNameById}
+          canTry={houseReachable}
+          onSave={saveRoutine}
+          onDelete={deleteRoutine}
+          onTry={tryRoutine}
+          onClose={() => setEditingRoutine(null)}
         />
       )}
 

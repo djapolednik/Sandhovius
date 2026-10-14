@@ -283,7 +283,11 @@
       "motionOff": "Het bewegingslicht bij {name} uitzetten",
       "shownAs": "Weergave opslaan",
       "identify": "{name} laten knipperen",
-      "adaptive": "Kleur volgt de dag opslaan"
+      "adaptive": "Kleur volgt de dag opslaan",
+      "saveRoutine": "Routine opslaan",
+      "deleteRoutine": "Routine verwijderen",
+      "routineOn": "Routine {name} aanzetten",
+      "routineOff": "Routine {name} uitzetten"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -305,7 +309,8 @@
       "invalid_capabilities": "Dit apparaat kan dat niet.",
       "invalid_shown_as": "Alleen een stopcontact kan als lamp worden getoond.",
       "zigbee_unavailable": "Zoeken lukt nu niet. Probeer het later opnieuw.",
-      "invalid_adaptive": "Deze lamp kan zijn wittint niet veranderen."
+      "invalid_adaptive": "Deze lamp kan zijn wittint niet veranderen.",
+      "invalid_automation": "{part, select, starter {Het begin van de routine} conditions {Een voorwaarde} actions {Een stap} other {Daarna uit}} klopt niet. Kies het opnieuw."
     }
   },
   "household": {
@@ -707,5 +712,134 @@
     "allClosed": "Alles dicht",
     "lightsOff": "Licht uit",
     "nav": "Overzicht per soort"
+  },
+  "routines": {
+    "title": "Routines",
+    "hint": "Laat het huis zelf iets doen. Bijvoorbeeld: als de voordeur opengaat en het donker is, gaat de ganglamp aan.",
+    "add": "Routine toevoegen",
+    "edit": "Routine {name} wijzigen",
+    "switchLabel": "Routine {name} aan",
+    "lastFailed": "De laatste keer niet helemaal gelukt",
+    "noLocation": "De box weet nog niet waar je huis staat",
+    "sheetNew": "Nieuwe routine",
+    "sheetEdit": "Routine wijzigen",
+    "name": "Naam",
+    "namePlaceholder": "Mag leeg blijven",
+    "when": "Als",
+    "onlyIf": "Alleen als",
+    "do": "Doe",
+    "offAfter": "Daarna uit",
+    "offAfterHint": "Alleen wat deze routine zelf aanzette gaat weer uit.",
+    "never": "Nooit",
+    "minutesShort": "{count} min",
+    "kinds": {
+      "time": "Tijd",
+      "device": "Apparaat",
+      "sensor": "Sensor"
+    },
+    "timeKinds": {
+      "time": "Vaste tijd",
+      "sunrise": "Zonsopkomst",
+      "sunset": "Zonsondergang"
+    },
+    "toLegend": "Wanneer het apparaat",
+    "to": {
+      "on": "Aangaat",
+      "off": "Uitgaat"
+    },
+    "lamp": "Lamp of stopcontact",
+    "sensor": "Sensor",
+    "eventLegend": "Wat de sensor meldt",
+    "events": {
+      "motion": "Beweging",
+      "no_motion": "Geen beweging meer",
+      "open": "Open",
+      "closed": "Dicht",
+      "leak": "Lekkage",
+      "smoke": "Rook",
+      "above": "Warmer dan",
+      "below": "Kouder dan"
+    },
+    "temperature": "Temperatuur in graden",
+    "noSensors": "Een sensor verschijnt hier zodra hij is toegevoegd.",
+    "noSwitchables": "Voeg eerst een lamp of stopcontact toe.",
+    "conditionDark": "Het is donker",
+    "conditionDarkHint": "Tussen zonsondergang en zonsopkomst, waar je huis staat.",
+    "conditionBetween": "Tussen twee tijden",
+    "from": "Van",
+    "until": "Tot",
+    "conditionDays": "Op bepaalde dagen",
+    "actionTarget": "Apparaat of scène bij stap {number}",
+    "actionMode": "Wat {name} doet",
+    "modes": {
+      "turn_on": "Aan",
+      "turn_off": "Uit"
+    },
+    "brightness": "Helderheid van {name}",
+    "brightnessAsIs": "Zoals laatst",
+    "pick": "Kies…",
+    "devicesGroup": "Apparaten",
+    "scenesGroup": "Scènes",
+    "addAction": "Actie toevoegen",
+    "removeAction": "Stap {number} weghalen",
+    "maxActions": "Een routine heeft hooguit 10 stappen.",
+    "tryNow": "Nu uitproberen",
+    "tryHint": "Doet de stappen één keer, zonder te wachten op de starter.",
+    "trying": "Bezig…",
+    "tryDone": "Klaar",
+    "tryPartial": "Gedeeltelijk gelukt: {failed} niet",
+    "confirmDelete": "Routine {name} verwijderen? Je apparaten en scènes blijven gewoon bestaan.",
+    "delete": "Routine verwijderen",
+    "unknownDevice": "een apparaat dat weg is",
+    "unknownScene": "een scène die weg is",
+    "untitled": "Nieuwe routine",
+    "starterYet": "Als …",
+    "nothingYet": "nog niets",
+    "sentence": "{starter}: {does}.",
+    "offAfterPart": "{does}, na {minutes, plural, one {# minuut} other {# minuten}} weer uit",
+    "starter": {
+      "device": {
+        "on": "Als {name} aangaat",
+        "off": "Als {name} uitgaat"
+      },
+      "sensor": {
+        "motion": "Als {name} beweging ziet",
+        "no_motion": "Als {name} geen beweging meer ziet",
+        "open": "Als {name} opengaat",
+        "closed": "Als {name} dichtgaat",
+        "leak": "Als {name} lekkage meldt",
+        "smoke": "Als {name} rook meldt",
+        "above": "Als het bij {name} warmer wordt dan {value}",
+        "below": "Als het bij {name} kouder wordt dan {value}"
+      }
+    },
+    "condition": {
+      "only": "alleen {conditions}",
+      "dark": "als het donker is",
+      "between": "tussen {from} en {to}",
+      "weekdays": "op werkdagen",
+      "weekend": "in het weekend",
+      "days": "op {days}"
+    },
+    "action": {
+      "on": "{name} aan",
+      "onDetail": "{name} aan ({detail})",
+      "off": "{name} uit",
+      "scene": "scène {name}"
+    },
+    "missing": {
+      "starter": "Kies wanneer de routine begint.",
+      "time": "Kies een tijd.",
+      "days": "Kies minstens één dag.",
+      "lamp": "Kies een lamp of stopcontact.",
+      "to": "Kies of het apparaat aan- of uitgaat.",
+      "sensor": "Kies een sensor.",
+      "event": "Kies wat de sensor meldt.",
+      "temperature": "Kies een temperatuur tussen 0 en 40 graden.",
+      "between": "Kies twee verschillende tijden.",
+      "condition": "Deze voorwaarde kent de app niet.",
+      "action": "Kies minstens één actie bij Doe.",
+      "target": "Kies bij elke stap een apparaat of scène."
+    }
   }
 }
