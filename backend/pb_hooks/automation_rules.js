@@ -13,6 +13,11 @@ const SENSOR_EVENTS = {
   leak: "water_leak", smoke: "smoke", above: "temperature", below: "temperature",
 }
 const SWITCHABLE = ["light", "switch"]
+// Thuis/weg (B3): voor het hele huis, of per lid (dan met user).
+const PRESENCE_HOUSE_EVENTS = ["first_home", "all_away"]
+const PRESENCE_USER_EVENTS = ["arrives", "leaves"]
+const PRESENCE_HOUSE_STATES = ["someone_home", "nobody_home"]
+const PRESENCE_USER_STATES = ["home", "away"]
 
 function parse(record, field) {
   const raw = record.getString(field)
@@ -44,6 +49,18 @@ function check(e) {
       return null
     }
   }
+  // Een lid van dit huis (voor thuis/weg per persoon).
+  const isMember = (id) => {
+    if (typeof id !== "string" || id === "") return false
+    try {
+      return e.app.findRecordById("houses", house).getStringSlice("members").includes(id)
+    } catch (_) {
+      return false
+    }
+  }
+  const presenceOk = (houseValues, userValues, value, user) =>
+    (houseValues.includes(value) && (user === undefined || user === null || user === "")) ||
+    (userValues.includes(value) && isMember(user))
   const caps = (d) => {
     try {
       return JSON.parse(d.getString("capabilities")) || []
@@ -71,6 +88,8 @@ function check(e) {
     if (s.event === "above" || s.event === "below") {
       if (typeof s.value !== "number" || s.value < 0 || s.value > 40) return refuse("starter")
     }
+  } else if (s.kind === "presence") {
+    if (!presenceOk(PRESENCE_HOUSE_EVENTS, PRESENCE_USER_EVENTS, s.event, s.user)) return refuse("starter")
   } else {
     return refuse("starter")
   }
@@ -83,6 +102,7 @@ function check(e) {
     if (c.kind === "dark") continue
     if (c.kind === "between" && TIME.test(c.from || "") && TIME.test(c.to || "") && c.from !== c.to) continue
     if (c.kind === "days" && isDays(c.days)) continue
+    if (c.kind === "presence" && presenceOk(PRESENCE_HOUSE_STATES, PRESENCE_USER_STATES, c.state, c.user)) continue
     return refuse("conditions")
   }
 

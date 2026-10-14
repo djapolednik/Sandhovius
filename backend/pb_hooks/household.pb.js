@@ -233,6 +233,12 @@ routerAdd("DELETE", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
       house: house.id,
     })
     for (const f of favorites) txApp.delete(f)
+    // Thuis/weg van iemand die geen lid meer is telt niet meer mee.
+    const presence = txApp.findRecordsByFilter("presence", "user = {:user} && house = {:house}", "", 0, 0, {
+      user: target,
+      house: house.id,
+    })
+    for (const p of presence) txApp.delete(p)
     result = { status: 204 }
   })
 
