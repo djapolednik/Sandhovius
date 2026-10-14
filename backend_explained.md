@@ -121,6 +121,7 @@ het starten helemaal op.
 | `presence` | base | Thuis of weg per lid (B3) | `house`, `user` (alleen jezelf, vast na maken), `home`; uniek op (house, user); geen rij = thuis; lezen: leden en de box |
 | `push_subscriptions` | base | Meldingen: een aangemeld apparaat | `house`, `user` (alleen jezelf), `endpoint`, `p256dh`, `auth`, `key` (de `push_key` bij het aanmelden), `language`; uniek op (house, endpoint); de box leest en verwijdert (verlopen) |
 | `notification_rules` | base | Meld dit per sensor en lid | `house`, `user` (jezelf), `device`, `event` (`open`/`motion`), `nobody_home`, `from`/`to` (beide leeg = altijd), `enabled`; uniek op (user, device, event) |
+| `guests` | base | Gast met een einddatum (D2) | `house`, `user`, `until` (JJJJ-MM-DD), `ends`; uniek op (house, user); leden lezen, alleen hooks schrijven |
 | `automations` | base | Routines: als dit, alleen als, doe dat | `house`, `name` (max 80, leeg = de app maakt een zin), `enabled`, `starter` (JSON, één), `conditions` (JSON, max 5), `actions` (JSON, 1–10), `off_after` (0/1/5/15/30/60 min); box: `last_run`, `last_error`, `next_run` |
 
 Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
@@ -260,6 +261,13 @@ toont ze nooit, alleen óf er een fout is. Spec:
   schedules, automations, motion_lights, pairing_sessions en
   pairing_candidates hebben `<huis>.operate_only.id != @request.auth.id`
   erachter (zonder `?` = voor alle leden van de lijst; leeg = iedereen door).
+- **Gasten (D2)**: een uitnodiging met `until`/`ends` (create-hook: alleen
+  huisgenoot, einde binnen een jaar, anders `invalid_until`) maakt bij
+  accepteren een `guests`-record en zet de gast op alleen bedienen.
+  `guests.pb.js` draait elke minuut (`cronAdd`) en haalt wie voorbij `ends` is
+  uit het huis met `membership.js` (`removeMember`: leden, beheerders, alleen
+  bedienen, favorieten, thuis/weg, einddatum), dezelfde functie als
+  `DELETE …/members/{user}`.
 - **`household.pb.js`** ruimt bij verlaten of verwijderen ook de
   `presence`-rij van dat lid in dat huis op.
 - **`pairing.pb.js`** — zet `created_by` op de bewoner en weigert een tweede

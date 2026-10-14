@@ -164,7 +164,10 @@ automatiseringen en apparaten wijzigen**. Beheerders blijven beheerders. In de
 ledensheet als zinnen wat iemand wel en niet kan, met de reden. "Bedienen
 buiten huis" pas na fase 3.
 
-### D2. Gast met een einddatum
+### D2. Gast met een einddatum ✅ gebouwd 2026-10-14
+
+Gebouwd volgens `docs/superpowers/specs/2026-10-14-guests-design.md`.
+
 
 Een uitnodiging met **Tot en met** (oppas, logees) die daarna vanzelf
 verloopt. Hergebruikt `invitations` en `household.pb.js`; een cron-hook haalt
@@ -334,6 +337,6 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 ## Volgorde
 
 A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) ✅ → B2 ✅ (box offline
-met fase 3) → C1 (na fase 3) → D1 ✅ → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
+met fase 3) → C1 (na fase 3) → D1 ✅ → D2 ✅. K1 los, wanneer er een middag over is. A3, C2, E2 en
 F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.
