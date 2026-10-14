@@ -120,6 +120,14 @@ function check(e) {
       }
       continue
     }
+    // Een melding (B2): een korte tekst, aan leden van het huis (leeg = iedereen).
+    if (a.kind === "notify") {
+      const text = typeof a.text === "string" ? a.text.trim() : ""
+      const users = a.users ?? []
+      if (text === "" || text.length > 80 || !Array.isArray(users) || users.length > 20) return refuse("actions")
+      if (!users.every((u) => isMember(u))) return refuse("actions")
+      continue
+    }
     if (a.kind !== "device") return refuse("actions")
     const d = device(a.device)
     if (!d || !SWITCHABLE.includes(d.getString("type")) || !["turn_on", "turn_off"].includes(a.action)) {
