@@ -26,7 +26,10 @@ Besluiten die blijven gelden:
 - **QR / Matter-code:** pas met Matter; de QR-scanner van de claim-flow is dan
   herbruikbaar.
 
-### A1. Zon in schema's
+### A1. Zon in schema's ✅ gebouwd 2026-10-14
+
+Spec: `docs/superpowers/specs/2026-10-14-sun-schedules-design.md`. Het
+oorspronkelijke voorstel:
 
 "Bij zonsondergang", "30 min voor zonsopkomst" als alternatief voor een tijd.
 Staat al in `docs/status.md` als bewust uitgesteld.
@@ -295,7 +298,7 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 
 ## Volgorde
 
-A0 + A2 ✅ → A1 → F1 (na A1) → E1 → spec B1 → B1 → B3 (handmatig) → B2 (met
+A0 + A2 ✅ → A1 ✅ → F1 (na A1) → E1 → spec B1 → B1 → B3 (handmatig) → B2 (met
 fase 3) → C1 → D1 → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
 F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.

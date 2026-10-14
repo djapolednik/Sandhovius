@@ -116,7 +116,7 @@ het starten helemaal op.
 | `device_state` | base | **Huidige** stand per device (één rij, overschreven) | `device`, `state` (JSON), `updated_at` |
 | `commands` | base | Opdrachten van de app | `device` óf `scene`, `action`, `payload`, `status` (pending/sent/failed), `error`, `created`, `updated` |
 | `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
-| `schedules` | base | Schema's voor scènes | `house`, `scene`, `time` ("HH:MM"), `days`, `enabled`, `last_run`, `last_error` |
+| `schedules` | base | Schema's voor scènes | `house`, `scene`, `trigger` (`time`/`sunrise`/`sunset`), `time` ("HH:MM", leeg bij zon), `offset_min` (−120 … 120, negatief = ervoor), `days`, `enabled`; box: `last_run`, `last_error`, `next_run` |
 | `motion_lights` | base | Bewegingslicht: lampen aan bij beweging | `house`, `sensor`, `devices` (max 10), `only_dark`, `off_after` (1–60 min), `enabled`, `last_run`, `last_error` |
 
 Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
@@ -464,6 +464,16 @@ geen lamp meer aanzetten.
   Gemiste runs worden niet ingehaald. Tijden in `Europe/Amsterdam`. Zonder huis
   is de snapshot leeg, zodat een losgekoppelde box geen schema's van de vorige
   eigenaar draait.
+- **Zon in schema's** (`sun.go`, `home_location.go`; spec
+  `2026-10-14-sun-schedules-design.md`): de agent rekent zonsopkomst en
+  -ondergang zelf uit (NOAA, op ongeveer een minuut), met de thuislocatie uit
+  HA (`/api/config`, eens per uur, in de snapshot op schijf). Niet via
+  `sun.sun`: die kent alleen de *volgende* ondergang, dus "1 uur na
+  zonsondergang" zou wegvallen. Een zon-schema loopt op de berekende minuut
+  plus `offset_min`, ook als dat na middernacht valt (het hoort bij de dag van
+  de zon). De klok schrijft `next_run` als die verandert, of `last_error =
+  no_location` zonder locatie. `schedule_rules.js` bewaakt dat tijd en trigger
+  passen (`invalid_schedule_time`).
 - **Bewegingslicht** (`motion.go`, `motion_runner.go`, `motion_agent.go`; spec
   `2026-10-13-motion-light-design.md`): de regels reizen mee in hetzelfde
   snapshot. Elke stand van Zigbee2MQTT en HA gaat direct na de lokale

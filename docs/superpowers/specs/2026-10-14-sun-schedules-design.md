@@ -1,6 +1,6 @@
 # Zon in schema's
 
-Datum: 2026-10-14 · Status: ontwerp · Bouwt op: schema's
+Datum: 2026-10-14 · Status: gebouwd (2026-10-14) · Bouwt op: schema's
 (`2026-09-28-schedules-design.md`) · Roadmap:
 `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (A1)
 
@@ -83,8 +83,14 @@ verplicht en geldig bij `trigger = time`, leeg bij zon (foutcode
 - Met de hand: een zon-schema op een paar minuten van nu door de locatie in HA
   of de testklok te verzetten.
 
-## Open
+## Besloten na het ontwerp
 
-- **Moet de kaart de tijd van vandaag tonen** ("vandaag om 18:42")? Dan
-  schrijft de agent `next_run` mee (een extra veld, de agent schrijft het). Mooi
-  voor de bewoner, maar meer werk; zonder blijft het "bij zonsondergang".
+- **De tijd van vandaag: ja** (2026-10-14). De agent schrijft `next_run` als die
+  verandert (`nextRunUpdates`, één keer, niet elke minuut). De kaart in
+  Vanzelf uitvoeren toont die tijd als grootste woord en sorteert erop; de rij
+  in de scène-sheet zegt "Bij zonsondergang, vandaag om 18:47".
+- **Zelf rekenen: ja.** `sunTimes` zit binnen 2 minuten van de bibliotheek
+  astral voor Amsterdam (getest op zes data, ook de dagen van de zomer- en
+  wintertijd). De thuislocatie vraagt de agent eens per uur aan HA (na een
+  fout na 5 minuten) en bewaart hem in `/data/schedules.json`.
+- Een tijd-schema zonder `trigger` (oudere app) telt als `time`.
