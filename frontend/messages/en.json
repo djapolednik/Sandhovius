@@ -140,7 +140,9 @@
       "one": "{name}: {reason}",
       "many": "{count, plural, one {# device needs} other {# devices need}} attention",
       "title": "Needs attention",
-      "notices": "Notices"
+      "notices": "Notices",
+      "smoke": "smoke",
+      "leak": "leak"
     },
     "addBox": "Add a box",
     "noHouse": "There’s no home linked to your account yet. As soon as your Sandhovius box is linked to your account, your home will appear here.",
@@ -294,7 +296,13 @@
       "invitation_expired": "This invitation has expired",
       "invalid_role": "Choose admin or member",
       "last_admin": "There must be at least one admin",
-      "last_admin_of_house": "You’re the last admin of {house}. Make someone else an admin first."
+      "last_admin_of_house": "You’re the last admin of {house}. Make someone else an admin first.",
+      "session_open": "Someone in this home is already searching. Try again in a moment.",
+      "hue_not_found": "No Hue Bridge found. Is it switched on and connected to your router?",
+      "hue_button": "The bridge didn’t respond yet. Press the button and try again.",
+      "invalid_capabilities": "This device can’t do that.",
+      "invalid_shown_as": "Only a plug can be shown as a light.",
+      "zigbee_unavailable": "Searching isn’t possible right now. Try again later."
     }
   },
   "household": {
@@ -578,5 +586,63 @@
     "needLamp": "Choose at least one light or plug.",
     "confirmDelete": "Delete the motion light for {name}? Your lights and the sensor stay as they are.",
     "delete": "Delete motion light"
+  },
+  "pairing": {
+    "title": "Add a device",
+    "viaBrand": "Through a brand",
+    "brands": {
+      "hue": "Philips Hue"
+    },
+    "instructions": {
+      "light": "Turn the light on and off 5 times, one second each time.",
+      "switch": "Hold the button on the plug for 5 seconds.",
+      "sensor": "Press the button with a paperclip until the little light blinks.",
+      "climate": "The manual says how to pair it.",
+      "hue": "Press the button on your Hue Bridge."
+    },
+    "searching": "Searching, {time} left",
+    "searchLonger": "Search longer",
+    "mayTakeAWhile": "It can take a moment to appear in the list.",
+    "blink": "Make it blink",
+    "add": "Add",
+    "adding": "Adding…",
+    "unsupported": "We don’t know this device yet. We’ve disconnected it again.",
+    "notBlinking": "It doesn’t blink",
+    "notSeen": {
+      "light": "I don’t see my light",
+      "switch": "I don’t see my plug",
+      "sensor": "I don’t see my sensor",
+      "climate": "I don’t see my thermostat",
+      "hue": "I don’t see my light"
+    },
+    "help": {
+      "title": "What you can try",
+      "power": "Check that the device has power, or a full battery.",
+      "closer": "Move it closer to your Sandhovius box, or to a light or plug that always has power.",
+      "restart": "Switch it off and on again, and wait a minute.",
+      "reset": "Reset it to factory settings. The manual says how."
+    },
+    "nameAndRoom": "Name and room",
+    "done": {
+      "light": "{count, plural, one {Your light is ready} other {Your # lights are ready}}",
+      "switch": "{count, plural, one {Your plug is ready} other {Your # plugs are ready}}",
+      "sensor": "{count, plural, one {Your sensor is ready} other {Your # sensors are ready}}",
+      "climate": "{count, plural, one {Your thermostat is ready} other {Your # thermostats are ready}}",
+      "mixed": "{count, plural, one {Your device is ready} other {Your # devices are ready}}"
+    },
+    "addAnother": "Add another",
+    "buttonPressed": "I’ve pressed it",
+    "connecting": "Connecting to your Hue Bridge…",
+    "boxUnreachable": "You can add devices once your Sandhovius box responds again."
+  },
+  "sensors": {
+    "closed": "Closed",
+    "open": "Open",
+    "dry": "Dry",
+    "leak": "Leak",
+    "noSmoke": "No smoke",
+    "smoke": "Smoke",
+    "humidity": "{value}%",
+    "illuminance": "{value} lux"
   }
 }

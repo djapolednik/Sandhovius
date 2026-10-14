@@ -140,7 +140,9 @@
       "one": "{name}: {reason}",
       "many": "{count, plural, one {# apparaat vraagt} other {# apparaten vragen}} aandacht",
       "title": "Let op",
-      "notices": "Meldingen"
+      "notices": "Meldingen",
+      "smoke": "rook",
+      "leak": "lekkage"
     },
     "addBox": "Box toevoegen",
     "noHouse": "Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt je huis hier.",
@@ -294,7 +296,13 @@
       "invitation_expired": "Deze uitnodiging is verlopen",
       "invalid_role": "Kies beheerder of huisgenoot",
       "last_admin": "Er moet minstens één beheerder blijven",
-      "last_admin_of_house": "Je bent de laatste beheerder van {house}. Maak eerst iemand anders beheerder."
+      "last_admin_of_house": "Je bent de laatste beheerder van {house}. Maak eerst iemand anders beheerder.",
+      "session_open": "Er wordt in dit huis al gezocht. Probeer het zo opnieuw.",
+      "hue_not_found": "Geen Hue-bridge gevonden. Staat hij aan en zit hij aan je router?",
+      "hue_button": "De bridge reageerde nog niet. Druk op de knop en probeer het nog eens.",
+      "invalid_capabilities": "Dit apparaat kan dat niet.",
+      "invalid_shown_as": "Alleen een stopcontact kan als lamp worden getoond.",
+      "zigbee_unavailable": "Zoeken lukt nu niet. Probeer het later opnieuw."
     }
   },
   "household": {
@@ -578,5 +586,63 @@
     "needLamp": "Kies minstens één lamp of stopcontact.",
     "confirmDelete": "Bewegingslicht bij {name} verwijderen? Je lampen en de sensor blijven gewoon bestaan.",
     "delete": "Bewegingslicht verwijderen"
+  },
+  "pairing": {
+    "title": "Apparaat toevoegen",
+    "viaBrand": "Via een merk",
+    "brands": {
+      "hue": "Philips Hue"
+    },
+    "instructions": {
+      "light": "Zet de lamp 5 keer aan en uit, 1 seconde per keer.",
+      "switch": "Houd het knopje op het stopcontact 5 seconden ingedrukt.",
+      "sensor": "Druk het knopje in met een paperclip tot het lampje knippert.",
+      "climate": "Kijk in de handleiding hoe je hem koppelt.",
+      "hue": "Druk op de knop van je Hue-bridge."
+    },
+    "searching": "Zoeken, nog {time}",
+    "searchLonger": "Langer zoeken",
+    "mayTakeAWhile": "Het kan even duren voor hij in de lijst staat.",
+    "blink": "Laat knipperen",
+    "add": "Toevoegen",
+    "adding": "Bezig met toevoegen…",
+    "unsupported": "Dit apparaat kennen we nog niet. We hebben het weer losgekoppeld.",
+    "notBlinking": "Hij knippert niet",
+    "notSeen": {
+      "light": "Ik zie mijn lamp niet",
+      "switch": "Ik zie mijn stopcontact niet",
+      "sensor": "Ik zie mijn sensor niet",
+      "climate": "Ik zie mijn thermostaat niet",
+      "hue": "Ik zie mijn lamp niet"
+    },
+    "help": {
+      "title": "Wat kun je proberen?",
+      "power": "Kijk of het apparaat stroom heeft, of een volle batterij.",
+      "closer": "Zet het dichter bij je Sandhovius-box, of bij een lamp of stopcontact dat altijd stroom heeft.",
+      "restart": "Zet het uit en weer aan, en wacht een minuut.",
+      "reset": "Zet het terug naar de fabrieksinstellingen. In de handleiding staat hoe."
+    },
+    "nameAndRoom": "Naam en kamer",
+    "done": {
+      "light": "{count, plural, one {Je lamp is klaar} other {Je # lampen zijn klaar}}",
+      "switch": "{count, plural, one {Je stopcontact is klaar} other {Je # stopcontacten zijn klaar}}",
+      "sensor": "{count, plural, one {Je sensor is klaar} other {Je # sensoren zijn klaar}}",
+      "climate": "{count, plural, one {Je thermostaat is klaar} other {Je # thermostaten zijn klaar}}",
+      "mixed": "{count, plural, one {Je apparaat is klaar} other {Je # apparaten zijn klaar}}"
+    },
+    "addAnother": "Nog een toevoegen",
+    "buttonPressed": "Ik heb gedrukt",
+    "connecting": "Verbinden met je Hue-bridge…",
+    "boxUnreachable": "Toevoegen kan pas als je Sandhovius-box weer reageert."
+  },
+  "sensors": {
+    "closed": "Dicht",
+    "open": "Open",
+    "dry": "Droog",
+    "leak": "Lek",
+    "noSmoke": "Geen rook",
+    "smoke": "Rook",
+    "humidity": "{value}%",
+    "illuminance": "{value} lux"
   }
 }

@@ -31,6 +31,13 @@ test('houseSummary in het Engels: "and", een punt als decimaalteken', () => {
   assert.equal(houseSummary(en, { lightsOn: 0, plugsOn: 2, indoor: 20.5 }), '2 plugs on, 20.5° inside')
 })
 
+test('sortAttention: rook en lekkage boven alles', () => {
+  const items = [{ kind: 'battery' }, { kind: 'offline' }, { kind: 'leak' }, { kind: 'smoke' }]
+  assert.deepEqual(sortAttention(items).map((i) => i.kind), ['smoke', 'leak', 'offline', 'battery'])
+  assert.equal(attentionLine(nl, [{ kind: 'leak', device: { name: 'Keuken' } }]), 'Keuken: lekkage')
+  assert.equal(attentionLine(en, [{ kind: 'smoke', device: { name: 'Hall' } }]), 'Hall: smoke')
+})
+
 test('indoorTemperature: thermostaat eerst, anders een sensor', () => {
   const thermostat = { type: 'climate', state: { attributes: { current_temperature: 20.4 } } }
   const sensor = { type: 'sensor', state: { temperature: 18.2 } }

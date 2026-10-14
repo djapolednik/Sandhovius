@@ -65,7 +65,8 @@ export function homeLede({ t, locale }, { summary = null, weather = null, weathe
 // "Let op": eerst wat het zwaarst weegt. Een mislukt klaarzetten en een
 // apparaat dat offline is doen het niet; een bijna lege batterij nog wel.
 // Binnen een soort blijft de volgorde van de apparaten.
-const ATTENTION_ORDER = { setup: 0, offline: 1, battery: 2 }
+// Rook en lekkage gaan boven alles.
+const ATTENTION_ORDER = { smoke: 0, leak: 1, setup: 2, offline: 3, battery: 4 }
 
 export function sortAttention(items) {
   return [...items].sort((a, b) => ATTENTION_ORDER[a.kind] - ATTENTION_ORDER[b.kind])
