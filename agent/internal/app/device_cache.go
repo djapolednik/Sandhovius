@@ -21,8 +21,9 @@ type deviceCache struct {
 
 	mu       sync.RWMutex
 	byEntity map[string]string
-	// zigbee: de Zigbee-devices op id, om ze op adres te vinden (een
-	// meervoudig apparaat heeft meer devices met hetzelfde adres).
+	// zigbee: de devices met een adres (Zigbee en Hue) op id, om ze op adres
+	// te vinden (een meervoudig apparaat heeft meer devices met hetzelfde
+	// adres).
 	zigbee map[string]pocketbase.Device
 }
 
@@ -41,7 +42,7 @@ func (d *deviceCache) partsAt(address string) []string {
 	defer d.mu.RUnlock()
 	out := []string{}
 	for id, dev := range d.zigbee {
-		if dev.Address == address {
+		if dev.Source == "zigbee" && dev.Address == address {
 			out = append(out, id)
 		}
 	}
@@ -58,7 +59,7 @@ func (d *deviceCache) zigbeeStateTargets(address string) []string {
 	defer d.mu.RUnlock()
 	out := []string{}
 	for id, dev := range d.zigbee {
-		if dev.Address == address && dev.EntityID == "" {
+		if dev.Source == "zigbee" && dev.Address == address && dev.EntityID == "" {
 			out = append(out, id)
 		}
 	}
@@ -81,7 +82,7 @@ func (d *deviceCache) refresh() ([]pocketbase.Device, error) {
 	byEntity := make(map[string]string, len(devices))
 	zigbee := make(map[string]pocketbase.Device)
 	for _, dev := range devices {
-		if dev.Source == "zigbee" && dev.Address != "" {
+		if dev.Address != "" {
 			zigbee[dev.ID] = dev
 		}
 		if dev.EntityID == "" {
@@ -141,7 +142,7 @@ func (d *deviceCache) applyEvent(action string, device pocketbase.Device) {
 		d.byEntity[device.EntityID] = device.ID
 	}
 	delete(d.zigbee, device.ID)
-	if action != "delete" && device.Source == "zigbee" && device.Address != "" {
+	if action != "delete" && device.Address != "" {
 		d.zigbee[device.ID] = device
 	}
 }
@@ -172,4 +173,17 @@ func (d *deviceCache) lookup(entityID string) (deviceID string, found bool, err 
 	id, ok = d.byEntity[entityID]
 	d.mu.RUnlock()
 	return id, ok, nil
+}
+
+// addresses: de adressen van één bron (zigbee/hue) die in de app staan.
+func (d *deviceCache) addresses(source string) map[string]bool {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	out := map[string]bool{}
+	for _, dev := range d.zigbee {
+		if dev.Source == source {
+			out[dev.Address] = true
+		}
+	}
+	return out
 }

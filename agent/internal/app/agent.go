@@ -94,6 +94,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.motion = newMotionRunner(motionFile, a.switchForMotion, a.reportMotionLight)
 	a.zigbee = newBridgeDirectory()
 	a.pairing = newPairingRunner(devicesFile, a.house, a.zigbee, mqttClient.Publish, pbClient, haClient, time.Now)
+	a.pairing.inApp = a.devices.addresses
 	return a
 }
 
@@ -771,3 +772,6 @@ func (a *Agent) Stop() {
 		}
 	}
 }
+
+// SetHueBridgeHost: het adres van de Hue-bridge als HA hem niet zelf vindt.
+func (a *Agent) SetHueBridgeHost(host string) { a.pairing.hueHost = host }

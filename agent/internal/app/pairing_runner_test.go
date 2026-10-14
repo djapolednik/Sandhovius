@@ -29,6 +29,42 @@ type fakePairing struct {
 	open       []pocketbase.PairingSession
 	haDevs     []homeassistant.RegistryDevice
 	haEnts     []homeassistant.RegistryEntity
+
+	// Hue: config-entries, ontdekte flows, en de antwoorden op starten en
+	// indienen (op volgorde)
+	entries   []string
+	flows     []homeassistant.Flow
+	startRes  []homeassistant.FlowResult
+	submitRes []homeassistant.FlowResult
+	started   []map[string]any
+	submitted []map[string]any
+	modes     map[string][]any // entity → supported_color_modes
+	services  []string
+}
+
+func (f *fakePairing) ConfigEntryIDs(string) ([]string, error)  { return f.entries, nil }
+func (f *fakePairing) ListFlows() ([]homeassistant.Flow, error) { return f.flows, nil }
+func (f *fakePairing) StartFlow(handler string, data map[string]any) (homeassistant.FlowResult, error) {
+	f.started = append(f.started, map[string]any{"handler": handler})
+	res := f.startRes[0]
+	f.startRes = f.startRes[1:]
+	return res, nil
+}
+func (f *fakePairing) SubmitFlow(flowID string, data map[string]any) (homeassistant.FlowResult, error) {
+	data["flow"] = flowID
+	f.submitted = append(f.submitted, data)
+	res := f.submitRes[0]
+	f.submitRes = f.submitRes[1:]
+	return res, nil
+}
+func (f *fakePairing) GetState(entity string) (homeassistant.HAEvent, error) {
+	return homeassistant.HAEvent{EntityID: entity, State: "on",
+		Attributes: map[string]any{"supported_color_modes": f.modes[entity]}}, nil
+}
+func (f *fakePairing) CallService(domain, service, entity string, data map[string]any) error {
+	raw, _ := json.Marshal(data)
+	f.services = append(f.services, domain+"."+service+" "+entity+" "+string(raw))
+	return nil
 }
 
 func (f *fakePairing) publish(topic string, payload any) error {

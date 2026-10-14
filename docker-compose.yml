@@ -84,6 +84,9 @@ services:
       - POCKETBASE_URL=http://pocketbase:8090
       - HISTORY_DB_PATH=/data/history.db
       - HISTORY_RETENTION_DAYS=30
+      # Adres van de Hue-bridge (in .env) als HA hem niet zelf vindt: in dev
+      # op Windows ziet HA geen mDNS. Leeg = alleen een ontdekte bridge.
+      - HUE_BRIDGE_HOST=${HUE_BRIDGE_HOST:-}
       # Schema's ("23:00") zijn lokale tijd.
       - TZ=Europe/Amsterdam
     volumes:

@@ -32,6 +32,11 @@ type Config struct {
 		// een herstart zonder PocketBase lopen.
 		File string
 	}
+	Hue struct {
+		// BridgeHost: het adres van de Hue-bridge als HA hem niet zelf
+		// vindt (dev op Windows; op de box vindt HA hem via mDNS).
+		BridgeHost string
+	}
 	Devices struct {
 		// File bewaart welke Zigbee-adressen de agent zelf toevoegde en de
 		// lopende koppelsessie (zie app/device_store.go).
@@ -64,6 +69,7 @@ func LoadConfig() (*Config, error) {
 	c.Schedules.File = env("SCHEDULES_FILE", "/data/schedules.json")
 	c.Motion.File = env("MOTION_FILE", "/data/motion.json")
 	c.Devices.File = env("DEVICES_FILE", "/data/devices.json")
+	c.Hue.BridgeHost = os.Getenv("HUE_BRIDGE_HOST")
 	c.History.RetentionDays = 30
 	if n, err := strconv.Atoi(os.Getenv("HISTORY_RETENTION_DAYS")); err == nil && n > 0 {
 		c.History.RetentionDays = n

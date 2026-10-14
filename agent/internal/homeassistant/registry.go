@@ -128,6 +128,9 @@ type RegistryEntity struct {
 	EntityID string `json:"entity_id"`
 	DeviceID string `json:"device_id"`
 	Platform string `json:"platform"`
+	// DisabledBy is gezet als de entiteit uit staat (bijvoorbeeld de
+	// kamers en zones van een Hue-bridge, standaard uit in HA).
+	DisabledBy *string `json:"disabled_by"`
 }
 
 // ListDevices geeft HA's device-registry.

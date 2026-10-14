@@ -35,6 +35,13 @@ type pairingPB interface {
 type pairingHA interface {
 	ListDevices() ([]homeassistant.RegistryDevice, error)
 	ListEntities() ([]homeassistant.RegistryEntity, error)
+	// voor Hue (hue.go)
+	ConfigEntryIDs(domain string) ([]string, error)
+	ListFlows() ([]homeassistant.Flow, error)
+	StartFlow(handler string, data map[string]any) (homeassistant.FlowResult, error)
+	SubmitFlow(flowID string, data map[string]any) (homeassistant.FlowResult, error)
+	GetState(entityID string) (homeassistant.HAEvent, error)
+	CallService(domain, service, entityID string, data map[string]any) error
 }
 
 // runningSession is de Zigbee-koppelsessie die nu loopt.
@@ -71,6 +78,13 @@ type pairingRunner struct {
 	now       func() time.Time
 	sleep     func(time.Duration)
 	session   *runningSession
+
+	// Hue (hue.go): de lopende Hue-sessie, het adres van de bridge als HA
+	// hem niet zelf vindt (dev: HUE_BRIDGE_HOST), en welke Hue-apparaten al
+	// in de app staan.
+	hue     *hueSession
+	hueHost string
+	inApp   func(source string) map[string]bool
 }
 
 func newPairingRunner(storePath string, house func() string, dir *bridgeDirectory, publish func(string, any) error,
@@ -96,12 +110,16 @@ func (r *pairingRunner) saveLocked() {
 
 // onSession: een realtime-wijziging van een koppelsessie.
 func (r *pairingRunner) onSession(s pocketbase.PairingSession) {
-	if r == nil || s.House != r.house() || s.Kind == "hue" {
+	if r == nil || s.House != r.house() {
 		return
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := r.now()
+	if s.Kind == "hue" {
+		r.onHueSessionLocked(s, now)
+		return
+	}
 
 	switch {
 	case s.Status == "starting" && r.session == nil:
@@ -216,6 +234,10 @@ func (r *pairingRunner) onCandidate(c pocketbase.PairingCandidate) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if r.hue != nil && c.Session == r.hue.id {
+		r.onHueCandidateLocked(c)
+		return
+	}
 	s := r.session
 	if s == nil || c.Session != s.id {
 		return
@@ -315,6 +337,9 @@ func (r *pairingRunner) identify(dev pocketbase.Device) error {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if dev.Source == "hue" && dev.EntityID != "" {
+		return r.ha.CallService("light", "turn_on", dev.EntityID, map[string]any{"flash": "short"})
+	}
 	if dev.Source != "zigbee" || dev.Address == "" {
 		return fmt.Errorf("dit apparaat kan niet knipperen")
 	}
@@ -330,6 +355,9 @@ func (r *pairingRunner) tick() {
 	defer r.mu.Unlock()
 	if r.session != nil {
 		r.executeLocked(r.session.engine.tick(r.now()))
+	}
+	if r.hue != nil && !r.now().Before(r.hue.expires) {
+		r.closeHueLocked()
 	}
 }
 
@@ -364,7 +392,7 @@ func (r *pairingRunner) recover() {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.session != nil {
+	if r.session != nil || r.hue != nil {
 		return // loopt nog in dit proces; tick sluit hem
 	}
 	open, err := r.pb.ListOpenPairingSessions(r.house())
@@ -383,10 +411,9 @@ func (r *pairingRunner) recover() {
 			}
 		}
 	}
+	// ook een Hue-sessie: de flow van vóór de herstart is weg
 	for _, s := range open {
-		if s.Kind != "hue" {
-			r.pb.UpdatePairingSession(s.ID, map[string]any{"status": "closed"})
-		}
+		r.pb.UpdatePairingSession(s.ID, map[string]any{"status": "closed"})
 	}
 	r.saveLocked()
 	log.Println("[KOPPELEN] Sessie van vóór de herstart opgeruimd")

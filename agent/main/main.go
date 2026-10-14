@@ -56,6 +56,7 @@ func main() {
 	// 7. De Agent aanmaken
 	agent := app.New(mqttClient, haClient, pbClient, historyStore, cfg.Box.File, identity, cfg.History.RetentionDays, cfg.Schedules.File, cfg.Motion.File, cfg.Devices.File)
 	agent.SetVersion(version)
+	agent.SetHueBridgeHost(cfg.Hue.BridgeHost)
 
 	// 8. Start de agent
 	if err := agent.Start(); err != nil {
