@@ -18,12 +18,12 @@ import (
 )
 
 type Agent struct {
-	mqttClient    *mqtt.Client
-	haClient      *homeassistant.Client
+	mqttClient *mqtt.Client
+	haClient   *homeassistant.Client
 	// Thuislocatie voor zon-schema's (home_location.go).
-	locMu sync.Mutex
-	loc   *homeLocation
-	locAt time.Time
+	locMu         sync.Mutex
+	loc           *homeLocation
+	locAt         time.Time
 	pbClient      *pocketbase.Client
 	history       *history.Store
 	devices       *deviceCache
@@ -32,6 +32,8 @@ type Agent struct {
 	// motion: de bewegingslichten (motion_runner.go); nil in tests die hem
 	// niet nodig hebben.
 	motion *motionRunner
+	// Kleur volgt de dag (adaptive_agent.go).
+	adaptive *adaptiveRunner
 	// zigbee: wat Zigbee2MQTT op het netwerk heeft (bridge/devices);
 	// pairing: koppelen vanuit de app (pairing_runner.go).
 	zigbee  *bridgeDirectory
@@ -99,6 +101,9 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.onConnected = a.onPocketBaseConnected
 	a.devices = newDeviceCache(pbClient, a.house)
 	a.motion = newMotionRunner(motionFile, a.switchForMotion, a.reportMotionLight)
+	a.adaptive = newAdaptiveRunner(func(entity string, kelvin int) error {
+		return a.rawCallHA("light", "turn_on", entity, map[string]any{"color_temp_kelvin": kelvin})
+	})
 	a.zigbee = newBridgeDirectory()
 	a.pairing = newPairingRunner(devicesFile, a.house, a.zigbee, mqttClient.Publish, pbClient, haClient, time.Now)
 	a.pairing.inApp = a.devices.addresses
@@ -141,6 +146,7 @@ func (a *Agent) Start() error {
 		}
 	}()
 	go a.runMotionClock()
+	go a.runAdaptiveClock()
 
 	go a.runPocketBase()
 	go a.listenForCommands()
@@ -437,7 +443,21 @@ func (a *Agent) runSceneStep(house string, step pocketbase.SceneAction, lookup f
 }
 
 // callHA roept een Home Assistant-service aan; tests vervangen callService.
+// Kiest een commando of scène zelf een wittint of kleur voor een lamp, dan
+// pauzeert "kleur volgt de dag" voor die lamp tot hij uit gaat.
 func (a *Agent) callHA(domain, service, entityID string, data map[string]any) error {
+	if domain == "light" && service == "turn_on" {
+		_, kelvin := data["color_temp_kelvin"]
+		_, rgb := data["rgb_color"]
+		if kelvin || rgb {
+			a.adaptive.manual(entityID)
+		}
+	}
+	return a.rawCallHA(domain, service, entityID, data)
+}
+
+// rawCallHA: callHA zonder het pauzeren, voor "kleur volgt de dag" zelf.
+func (a *Agent) rawCallHA(domain, service, entityID string, data map[string]any) error {
 	if a.callService != nil {
 		return a.callService(domain, service, entityID, data)
 	}
@@ -660,8 +680,10 @@ func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
 	if err := a.history.Record(event.EntityID, state); err != nil {
 		log.Printf("[APP] Lokale geschiedenis schrijven mislukt voor %s: %v\n", event.EntityID, err)
 	}
-	// Bewegingslicht (ook sun.sun): vóór alles met PocketBase.
+	// Bewegingslicht (ook sun.sun) en kleur volgt de dag: vóór alles met
+	// PocketBase.
 	a.motion.onState(event.EntityID, state, time.Now())
+	a.adaptive.onState(event.EntityID, state, time.Now())
 
 	if !a.registered.Load() {
 		return // geen huis: alleen de lokale geschiedenis

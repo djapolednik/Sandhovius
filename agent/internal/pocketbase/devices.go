@@ -22,6 +22,8 @@ type Device struct {
 	Model        string   `json:"model"`
 	ShownAs      string   `json:"shown_as"`
 	Capabilities []string `json:"capabilities"`
+	// Adaptive: kleur volgt de dag (spec 2026-10-14-adaptive-light-design.md).
+	Adaptive bool `json:"adaptive"`
 }
 
 // NewDevice is wat de box na koppelen aanmaakt.

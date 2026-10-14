@@ -132,11 +132,15 @@ func (a *Agent) runScheduler() {
 	// De bewegingslichten uit het bestand gelden meteen, ook zonder
 	// PocketBase; daarna geeft elke geslaagde fetch ze opnieuw door.
 	a.motion.start(a.house(), loaded)
+	a.adaptive.apply(loaded)
 	s := &scheduler{
 		snap:  loaded,
 		fetch: a.fetchScheduleSnapshot,
 		run:   a.runSchedule,
-		fresh: a.motion.apply,
+		fresh: func(snap *scheduleSnapshot) {
+			a.motion.apply(snap)
+			a.adaptive.apply(snap)
+		},
 		nextRun: func(u scheduleUpdate) {
 			// Op de achtergrond: zonder internet mag het de klok niet ophouden.
 			go func() {
