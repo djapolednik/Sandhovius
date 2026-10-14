@@ -49,6 +49,24 @@ KINDS = {
         ],
         "state": {"contact": True, "battery": 90},
     },
+    # Een radiatorknop (Sonoff TRVZB, een deel van zijn exposes). Verwarming
+    # volgens model A: de knop regelt de kamer, de eigen thermostaat de ketel.
+    "trv": {
+        "type": "EndDevice", "model": "TRVZB", "vendor": "SONOFF",
+        "exposes": [
+            {"type": "climate", "features": [
+                {"type": "numeric", "name": "occupied_heating_setpoint", "property": "occupied_heating_setpoint"},
+                {"type": "numeric", "name": "local_temperature", "property": "local_temperature"},
+                {"type": "enum", "name": "system_mode", "property": "system_mode", "values": ["off", "auto", "heat"]},
+                {"type": "enum", "name": "running_state", "property": "running_state", "values": ["idle", "heat"]},
+            ]},
+            {"type": "numeric", "name": "battery", "property": "battery"},
+            {"type": "numeric", "name": "valve_opening_degree", "property": "valve_opening_degree"},
+            {"type": "numeric", "name": "linkquality", "property": "linkquality"},
+        ],
+        "state": {"system_mode": "heat", "occupied_heating_setpoint": 19, "local_temperature": 18.5,
+                  "running_state": "heat", "battery": 90, "valve_opening_degree": 100},
+    },
     "leak": {
         "type": "EndDevice", "model": "SJCGQ11LM", "vendor": "Aqara",
         "exposes": [
@@ -123,6 +141,21 @@ def discovery(device):
                 "state_on": "ON", "state_off": "OFF",
             }))
         return out
+    if device["kind"] == "trv":
+        # Alles via .../set met een JSON-sjabloon, zodat apply_set het oppakt.
+        return [(f"homeassistant/climate/{ieee}/climate/config", {
+            **base, "name": None, "unique_id": f"{ieee}_climate_zigbee2mqtt",
+            "current_temperature_topic": base["state_topic"],
+            "current_temperature_template": "{{ value_json.local_temperature }}",
+            "temperature_state_topic": base["state_topic"],
+            "temperature_state_template": "{{ value_json.occupied_heating_setpoint }}",
+            "temperature_command_topic": base["command_topic"],
+            "temperature_command_template": '{"occupied_heating_setpoint": {{ value }}}',
+            "mode_state_topic": base["state_topic"], "mode_state_template": "{{ value_json.system_mode }}",
+            "mode_command_topic": base["command_topic"],
+            "mode_command_template": '{"system_mode": "{{ value }}"}',
+            "modes": ["off", "auto", "heat"], "min_temp": 4, "max_temp": 35, "temp_step": 0.5,
+        })]
     return []
 
 

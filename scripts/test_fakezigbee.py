@@ -28,6 +28,16 @@ class DeviceTests(unittest.TestCase):
         self.assertTrue({"contact", "battery"} <= names("contact"))
         self.assertTrue({"water_leak", "battery"} <= names("leak"))
 
+    def test_radiatorknop_is_een_trvzb(self):
+        d = fz.make_device("trv", 4)
+        self.assertEqual(d["definition"]["model"], "TRVZB")
+        names = {e.get("name") for e in d["definition"]["exposes"]}
+        self.assertTrue({"valve_opening_degree", "battery"} <= names)
+        [(topic, config)] = fz.discovery(d)
+        self.assertEqual(topic, f"homeassistant/climate/{d['ieee_address']}/climate/config")
+        self.assertEqual(config["device"]["identifiers"], [f"zigbee2mqtt_{d['ieee_address']}"])
+        self.assertEqual(config["temperature_command_topic"], f"zigbee2mqtt/{d['friendly_name']}/set")
+
     def test_onbekende_soort(self):
         with self.assertRaises(ValueError):
             fz.make_device("koffiezetter", 1)
