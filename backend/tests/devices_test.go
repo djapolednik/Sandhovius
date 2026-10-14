@@ -100,6 +100,10 @@ func TestCapabilitiesVocabulary(t *testing.T) {
 	if st, out := p.do(t, w.BoxATok, "PATCH", path, map[string]any{"capabilities": []string{"onoff", "brightness"}}); st != 200 {
 		t.Errorf("box zet geldige mogelijkheden: %d %v", st, out)
 	}
+	// een radiatorknop (model A): valve hoort bij de woordenlijst
+	if st, out := p.do(t, w.BoxATok, "PATCH", path, map[string]any{"capabilities": []string{"heating", "valve", "temperature", "battery"}}); st != 200 {
+		t.Errorf("box zet een radiatorknop: %d %v", st, out)
+	}
 	for _, bad := range []any{[]string{"onoff", "laser"}, map[string]any{"onoff": true}, "onoff"} {
 		st, out := p.do(t, w.BoxATok, "PATCH", path, map[string]any{"capabilities": bad})
 		if st != 400 || out["code"] != "invalid_capabilities" {

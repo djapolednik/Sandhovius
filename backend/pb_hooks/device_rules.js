@@ -5,7 +5,7 @@
 // (spec 2026-10-14-device-pairing-design.md). De superuser (beheer, tests)
 // slaat de controle over.
 const CAPABILITIES = [
-  "onoff", "brightness", "color_temp", "color", "heating", "occupancy", "contact",
+  "onoff", "brightness", "color_temp", "color", "heating", "valve", "occupancy", "contact",
   "water_leak", "smoke", "temperature", "humidity", "illuminance", "battery",
 ]
 
