@@ -364,10 +364,11 @@
   "connection": {
     "lost": "<strong>Geen verbinding met Sandhovius.</strong> Je ziet de laatst bekende stand van je apparaten. We proberen het automatisch opnieuw.",
     "noBox": "<strong>Er is geen box aan dit huis gekoppeld.</strong> Tot er een box gekoppeld is, zie je de laatst bekende stand van je apparaten.",
-    "boxSilent": "<strong>Je Sandhovius-box reageert niet.</strong> Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.",
-    "boxSilentSince": "<strong>Je Sandhovius-box reageert niet sinds {since}.</strong> Controleer of de box stroom en internet heeft. Tot hij weer reageert zie je de laatst bekende stand.",
+    "boxSilent": "<strong>Je Sandhovius-box reageert niet.</strong> Zit de stekker erin en brandt het lampje op de box? Zit de netwerkkabel nog in je router? Tot hij weer reageert zie je de laatst bekende stand.",
+    "boxSilentSince": "<strong>Je Sandhovius-box reageert niet sinds {since}.</strong> Zit de stekker erin en brandt het lampje op de box? Zit de netwerkkabel nog in je router? Tot hij weer reageert zie je de laatst bekende stand.",
     "connecting": "Verbinden met je huis…",
-    "live": "Verbonden met je huis"
+    "live": "Verbonden met je huis",
+    "software": "Software bijgewerkt op {date}"
   },
   "refresh": {
     "refreshing": "Bijwerken…",

@@ -364,10 +364,11 @@
   "connection": {
     "lost": "<strong>No connection to Sandhovius.</strong> You’re seeing the last known state of your devices. We’ll keep trying.",
     "noBox": "<strong>No box is linked to this home.</strong> Until a box is linked, you’ll see the last known state of your devices.",
-    "boxSilent": "<strong>Your Sandhovius box isn’t responding.</strong> Check that the box has power and internet. Until it responds, you’ll see the last known state.",
-    "boxSilentSince": "<strong>Your Sandhovius box hasn’t responded since {since}.</strong> Check that the box has power and internet. Until it responds, you’ll see the last known state.",
+    "boxSilent": "<strong>Your Sandhovius box isn't responding.</strong> Is it plugged in, and is the light on the box on? Is the network cable still in your router? Until it responds you see the last known state.",
+    "boxSilentSince": "<strong>Your Sandhovius box hasn't responded since {since}.</strong> Is it plugged in, and is the light on the box on? Is the network cable still in your router? Until it responds you see the last known state.",
     "connecting": "Connecting to your home…",
-    "live": "Connected to your home"
+    "live": "Connected to your home",
+    "software": "Software updated on {date}"
   },
   "refresh": {
     "refreshing": "Updating…",

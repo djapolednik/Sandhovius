@@ -1,7 +1,7 @@
 'use client'
 
 import { useIntl } from '../app/LanguageContext'
-import { formatSince } from '../lib/connection'
+import { formatSince, softwareText } from '../lib/connection'
 import { CheckIcon } from '../lib/icons'
 
 // Eerlijk over de verbinding, in huiselijke woorden (PRODUCT.md, "Trust
@@ -54,10 +54,19 @@ export default function ConnectionStatus({ realtimeLink, house, now, problemsOnl
     )
   }
 
+  const software = softwareText({ t, locale }, house.softwareSince, now)
   return (
-    <p className="connection-status connection-status-live" role="status">
-      <CheckIcon width="14" height="14" aria-hidden="true" />
-      {t('connection.live')}
-    </p>
+    <>
+      <p className="connection-status connection-status-live" role="status">
+        <CheckIcon width="14" height="14" aria-hidden="true" />
+        {t('connection.live')}
+      </p>
+      {/* K1: de versie zelf is voor hulp op afstand; de bewoner leest de datum. */}
+      {software && (
+        <p className="connection-status connection-software" title={house.softwareVersion || undefined}>
+          {software}
+        </p>
+      )}
+    </>
   )
 }

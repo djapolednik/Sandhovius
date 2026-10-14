@@ -2086,7 +2086,13 @@ export default function Home() {
         {errorBanner}
         <SettingsView
           house={house}
-          connection={<ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />}
+          connection={
+            <ConnectionStatus
+              realtimeLink={realtimeLink}
+              house={{ ...houseLink, softwareSince: house?.box_version_since, softwareVersion: house?.box_version }}
+              now={now}
+            />
+          }
           isAdmin={houseAdmin}
           notifications={
             house && (

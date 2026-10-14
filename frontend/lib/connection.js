@@ -29,3 +29,15 @@ export function formatSince(ms, nowMs, locale) {
   const sameDay = new Date(ms).toDateString() === new Date(nowMs).toDateString()
   return cachedFormat(Intl.DateTimeFormat, locale, sameDay ? TIME : DATE_TIME).format(ms)
 }
+
+// "Software bijgewerkt op 14 oktober" (K1): wanneer de box voor het laatst een
+// andere versie meldde (houses.box_version_since). Leeg zonder datum; het
+// jaartal alleen als het niet dit jaar was. intl: { t, locale }.
+export function softwareText({ t, locale }, since, nowMs) {
+  if (!since) return ''
+  const at = new Date(String(since).replace(' ', 'T'))
+  if (Number.isNaN(at.getTime())) return ''
+  const sameYear = at.getFullYear() === new Date(nowMs).getFullYear()
+  const options = sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' }
+  return t('connection.software', { date: cachedFormat(Intl.DateTimeFormat, locale, options).format(at) })
+}
