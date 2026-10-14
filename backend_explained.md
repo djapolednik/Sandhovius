@@ -119,6 +119,8 @@ het starten helemaal op.
 | `schedules` | base | Schema's voor scènes | `house`, `scene`, `trigger` (`time`/`sunrise`/`sunset`), `time` ("HH:MM", leeg bij zon), `offset_min` (−120 … 120, negatief = ervoor), `days`, `enabled`; box: `last_run`, `last_error`, `next_run` |
 | `motion_lights` | base | Bewegingslicht: lampen aan bij beweging | `house`, `sensor`, `devices` (max 10), `only_dark`, `off_after` (1–60 min), `enabled`, `last_run`, `last_error` |
 | `presence` | base | Thuis of weg per lid (B3) | `house`, `user` (alleen jezelf, vast na maken), `home`; uniek op (house, user); geen rij = thuis; lezen: leden en de box |
+| `push_subscriptions` | base | Meldingen: een aangemeld apparaat | `house`, `user` (alleen jezelf), `endpoint`, `p256dh`, `auth`, `key` (de `push_key` bij het aanmelden), `language`; uniek op (house, endpoint); de box leest en verwijdert (verlopen) |
+| `notification_rules` | base | Meld dit per sensor en lid | `house`, `user` (jezelf), `device`, `event` (`open`/`motion`), `nobody_home`, `from`/`to` (beide leeg = altijd), `enabled`; uniek op (user, device, event) |
 | `automations` | base | Routines: als dit, alleen als, doe dat | `house`, `name` (max 80, leeg = de app maakt een zin), `enabled`, `starter` (JSON, één), `conditions` (JSON, max 5), `actions` (JSON, 1–10), `off_after` (0/1/5/15/30/60 min); box: `last_run`, `last_error`, `next_run` |
 
 Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
@@ -244,6 +246,13 @@ toont ze nooit, alleen óf er een fout is. Spec:
   `presence` met `all_away`/`first_home`, of `arrives`/`leaves` met een
   `user` die lid is; voorwaarde `presence` met `someone_home`/`nobody_home`,
   of `home`/`away` met een lid.
+- **`notifications.pb.js` + `notification_rules.js`** — Meld dit: de sensor
+  hoort bij het huis en kan de gebeurtenis meten (`contact` voor open,
+  `occupancy` voor beweging), van/tot allebei leeg of twee verschillende tijden
+  (`invalid_notification_rule`). Routines: de actie `notify` heeft een tekst van
+  1–80 tekens en `users` uit de leden (leeg = iedereen).
+- **`houses.push_key`** — alleen de box: de migratie zet een voorwaarde achter
+  de bestaande `updateRule` voor iedereen die geen box is.
 - **`household.pb.js`** ruimt bij verlaten of verwijderen ook de
   `presence`-rij van dat lid in dat huis op.
 - **`pairing.pb.js`** — zet `created_by` op de bewoner en weigert een tweede
@@ -540,6 +549,18 @@ geen lamp meer aanzetten.
   leden die er voor en na bij horen. Per lid wint de rij met de nieuwste
   `updated`, zodat een snapshot dat net vóór een realtime-melding werd
   opgehaald hem niet terugdraait.
+- **Meldingen** (`notify.go`; spec `2026-10-14-notifications-design.md`): de
+  box verstuurt Web Push zelf (webpush-go), alleen uitgaand. Bij de eerste start
+  maakt hij een VAPID-sleutelpaar in `/data/push.json` (0600, nooit in een log)
+  en na elke verbinding zet hij het publieke deel op `houses.push_key` als dat
+  anders is. Aanmeldingen en Meld dit-regels reizen mee in het snapshot. De
+  overgangen uit de routinemotor (`routineResult.Events`) gaan ook naar de
+  notifier: lek en rook aan iedereen (urgentie hoog, 24 uur bewaard), Meld dit
+  aan wie de regel heeft als niemand thuis (thuis/weg) en tussen kloppen,
+  hooguit eens per 10 minuten per regel; de routine-stap `notify` aan de
+  gekozen leden. Alleen aanmeldingen met de sleutel van nu; 404/410 van de
+  pushdienst = aanmelding opruimen. `PUSH_SUBJECT` is het contact in de
+  VAPID-token.
 - **Weer**: elk half uur uit HA (Met.no) naar `houses.weather`; alleen de box
   mag dat schrijven.
 

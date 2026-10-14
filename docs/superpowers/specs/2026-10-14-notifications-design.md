@@ -1,6 +1,6 @@
 # Meldingen
 
-Datum: 2026-10-14 · Status: besloten, in aanbouw · Bouwt op: routines
+Datum: 2026-10-14 · Status: gebouwd (2026-10-14; nog niet op een echte telefoon) · Bouwt op: routines
 (`2026-10-14-routines-design.md`), thuis of weg
 (`2026-10-14-presence-design.md`) · Roadmap:
 `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (B2)

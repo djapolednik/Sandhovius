@@ -91,7 +91,13 @@ editor met starters, voorwaarden en acties.
 - Lussen voorkomen: een routine die een apparaat schakelt dat zijn eigen
   starter is. Diepte- of tijdslimiet in de agent.
 
-### B2. Meldingen
+### B2. Meldingen ✅ gebouwd 2026-10-14
+
+Gebouwd volgens `docs/superpowers/specs/2026-10-14-notifications-design.md`:
+de box verstuurt (niet PocketBase), een sleutel per box, lek/rook altijd, Meld
+dit per sensor en huisgenoot, de routine-stap Stuur een melding. Box offline
+melden komt met fase 3.
+
 
 Actie "Stuur een melding" + vaste meldingen (lek, rook, box offline). Web Push
 (VAPID) vanuit PocketBase. Push loopt via de pushdienst van de browser,
@@ -319,7 +325,7 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 
 ## Volgorde
 
-A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) ✅ → B2 (met
-fase 3) → C1 → D1 → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
+A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) ✅ → B2 ✅ (box offline
+met fase 3) → C1 → D1 → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
 F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.
