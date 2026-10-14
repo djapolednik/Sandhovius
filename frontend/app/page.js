@@ -7,6 +7,7 @@ import Header from '../components/Header'
 import DeviceCard, { TOGGLEABLE_TYPES, isDeviceOn } from '../components/DeviceCard'
 import DeviceSettingsModal from '../components/DeviceSettingsModal'
 import HomeNotices from '../components/HomeNotices'
+import HomeCategories from '../components/HomeCategories'
 import ConnectionStatus from '../components/ConnectionStatus'
 import { WeatherCard } from '../components/Weather'
 import HomeScenes from '../components/HomeScenes'
@@ -43,6 +44,7 @@ import { greeting, homeLede, houseSummary, indoorTemperature, sortAttention } fr
 import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
 import { scheduleName } from '../lib/schedules'
+import { categorySummary } from '../lib/categories'
 import { displayType } from '../lib/devices'
 import { alarmKind } from '../lib/sensors'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
@@ -1006,6 +1008,15 @@ export default function Home() {
   // "Alles uit" bovenaan Home: elke lamp en elk stopcontact dat aan
   // staat. Hier wél een melding, want je ziet niet alle tegels tegelijk, en
   // met "Ongedaan maken" gaat precies hetzelfde rijtje weer aan.
+  // "Licht uit" in de Licht-sheet: alleen de lampen, met ongedaan maken.
+  async function turnLightsOff(list) {
+    if (list.length === 0 || !(await setSwitches(list, false))) return
+    showToast(t('toast.allOff', { count: list.length, name: list[0].name }), 'info', {
+      label: t('toast.undo'),
+      onClick: () => setSwitches(list, true),
+    })
+  }
+
   async function turnAllOff() {
     const list = devicesOn
     if (list.length === 0 || !(await setSwitches(list, false))) return
@@ -1625,6 +1636,10 @@ export default function Home() {
         ),
       })
     : null
+  // De knoppen op Home (Licht, Klimaat, Veiligheid, Water) met de stand
+  // erin. Zijn ze er, dan dragen zij de stand en zegt de regel onder de groet
+  // alleen nog het weer: één plek voor "2 lampen aan".
+  const categories = loaded && house ? categorySummary(intl, devicesInHouse, { known: houseReachable }) : []
   const userEmail = pb.authStore.record?.email
 
   const errorBanner = error && (
@@ -1889,7 +1904,11 @@ export default function Home() {
         subtitle={formatToday(now, locale)}
         lede={
           house
-            ? homeLede(intl, { summary, weather: house.weather, weatherStale: isWeatherStale(house.weather_updated, now) })
+            ? homeLede(intl, {
+                summary: categories.length > 0 ? null : summary,
+                weather: house.weather,
+                weatherStale: isWeatherStale(house.weather_updated, now),
+              })
             : null
         }
         action={
@@ -1931,6 +1950,15 @@ export default function Home() {
             {skeleton}
 
             {firstDevice}
+
+            {categories.length > 0 && (
+              <HomeCategories
+                categories={categories}
+                renderByRoom={renderByRoom}
+                canSwitch={houseReachable}
+                onLightsOff={turnLightsOff}
+              />
+            )}
 
             {loaded && house && devicesInHouse.length > 0 && (
               <div className="home-grid">

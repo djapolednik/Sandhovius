@@ -695,5 +695,17 @@
       "humidity": "Luchtvochtigheid",
       "illuminance": "Licht"
     }
+  },
+  "categories": {
+    "light": "Licht",
+    "climate": "Klimaat",
+    "security": "Veiligheid",
+    "water": "Water",
+    "lightsOn": "{count} aan",
+    "allOff": "Uit",
+    "open": "{count} open",
+    "allClosed": "Alles dicht",
+    "lightsOff": "Licht uit",
+    "nav": "Overzicht per soort"
   }
 }

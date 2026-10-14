@@ -695,5 +695,17 @@
       "humidity": "Humidity",
       "illuminance": "Light"
     }
+  },
+  "categories": {
+    "light": "Lights",
+    "climate": "Climate",
+    "security": "Safety",
+    "water": "Water",
+    "lightsOn": "{count} on",
+    "allOff": "Off",
+    "open": "{count} open",
+    "allClosed": "All closed",
+    "lightsOff": "Lights off",
+    "nav": "Overview by kind"
   }
 }
