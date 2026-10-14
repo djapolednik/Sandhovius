@@ -67,6 +67,27 @@ func (d *deviceCache) zigbeeStateTargets(address string) []string {
 	return out
 }
 
+// meteringTargets: de stekkers op een adres met vermogensmeting (C2). Hun
+// stand komt van Home Assistant, hun meting uit het Zigbee2MQTT-bericht.
+func (d *deviceCache) meteringTargets(address string) []string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	out := []string{}
+	for id, dev := range d.zigbee {
+		if dev.Source != "zigbee" || dev.Address != address {
+			continue
+		}
+		for _, c := range dev.Capabilities {
+			if c == "power" || c == "energy" {
+				out = append(out, id)
+				break
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 // refresh herlaadt de cache en geeft de opgehaalde devices terug, zodat de
 // agent bij het opstarten niet nog een keer hoeft te vragen.
 func (d *deviceCache) refresh() ([]pocketbase.Device, error) {

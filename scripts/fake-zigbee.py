@@ -13,7 +13,7 @@ in de app op zoeken tikte):
 
   mosquitto_pub -t fake/zigbee/join -m '{"kind":"light"}'
 
-Soorten: light, plug2 (dubbele stekker), trv (radiatorknop, Sonoff TRVZB), motion,
+Soorten: light, plug2 (dubbele stekker), plugpower (stekker met vermogensmeting), trv (radiatorknop, Sonoff TRVZB), motion,
 contact, leak. Een sensor iets
 laten melden: mosquitto_pub -t zigbee2mqtt/<adres> -m '{"water_leak":true}'.
 De apparaten blijven bewaard in scripts/.fake-zigbee.json.

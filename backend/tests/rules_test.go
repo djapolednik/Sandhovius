@@ -247,7 +247,7 @@ var otherValueOverrides = map[string]any{"schedules.time": "07:45", "schedules.t
 var allowedFields = map[string][]string{
 	"houses":       {"select", "weather", "weather_updated", "push_key"},
 	"devices":      {"entity_id", "online", "source", "address", "endpoint", "capabilities", "model"},
-	"device_state": {"state", "updated_at"},
+	"device_state": {"state", "updated_at", "metering"},
 	"commands":     {"status", "error"},
 	"schedules":    {"last_run", "last_error", "next_run"},
 }

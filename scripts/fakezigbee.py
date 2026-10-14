@@ -32,6 +32,18 @@ KINDS = {
         ],
         "state": {"state_l1": "OFF", "state_l2": "OFF"},
     },
+    # Een stekker met vermogensmeting (C2): power (W) en energy (kWh, oplopend).
+    # Meten laten melden: mosquitto_pub -t zigbee2mqtt/<adres> -m '{"power":120,"energy":3.42}'.
+    "plugpower": {
+        "type": "Router", "model": "TS011F_plug_1", "vendor": "Tuya",
+        "exposes": [
+            {"type": "switch", "features": [{"type": "binary", "name": "state", "property": "state"}]},
+            {"type": "numeric", "name": "power", "property": "power", "unit": "W"},
+            {"type": "numeric", "name": "energy", "property": "energy", "unit": "kWh"},
+            {"type": "numeric", "name": "linkquality", "property": "linkquality"},
+        ],
+        "state": {"state": "OFF", "power": 0, "energy": 0},
+    },
     "motion": {
         "type": "EndDevice", "model": "RTCGQ11LM", "vendor": "Aqara",
         "exposes": [
@@ -130,6 +142,13 @@ def discovery(device):
         return [(f"homeassistant/light/{ieee}/light/config", {
             **base, "name": None, "unique_id": f"{ieee}_light_zigbee2mqtt", "schema": "json",
             "brightness": True, "brightness_scale": 254, "supported_color_modes": ["color_temp"],
+        })]
+    if device["kind"] == "plugpower":
+        return [(f"homeassistant/switch/{ieee}/switch/config", {
+            **base, "name": None, "unique_id": f"{ieee}_switch_zigbee2mqtt",
+            "value_template": "{{ value_json.state }}",
+            "payload_on": '{"state": "ON"}', "payload_off": '{"state": "OFF"}',
+            "state_on": "ON", "state_off": "OFF",
         })]
     if device["kind"] == "plug2":
         out = []

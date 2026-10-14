@@ -7,7 +7,7 @@
 // slaat de controle over.
 const CAPABILITIES = [
   "onoff", "brightness", "color_temp", "color", "heating", "valve", "occupancy", "contact",
-  "water_leak", "smoke", "temperature", "humidity", "illuminance", "battery",
+  "water_leak", "smoke", "temperature", "humidity", "illuminance", "battery", "power", "energy",
 ]
 
 function check(e) {

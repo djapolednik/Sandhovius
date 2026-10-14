@@ -62,3 +62,21 @@ func (c *Client) findDeviceStateByDevice(deviceID string) (*DeviceState, error) 
 	}
 	return &resp.Items[0], nil
 }
+
+// UpsertDeviceMetering schrijft alleen de meting van een stekker
+// (device_state.metering, roadmap C2) en laat de stand van Home Assistant
+// staan. Zonder record maakt hij er één met een lege stand.
+func (c *Client) UpsertDeviceMetering(deviceID string, metering map[string]any) error {
+	c.upsertMu.Lock()
+	defer c.upsertMu.Unlock()
+
+	existing, err := c.findDeviceStateByDevice(deviceID)
+	if err != nil {
+		return fmt.Errorf("pocketbase: upsert metering for %s: %w", deviceID, err)
+	}
+	if existing != nil {
+		return c.doAuthed("PATCH", "/api/collections/device_state/records/"+existing.ID, map[string]any{"metering": metering}, nil)
+	}
+	return c.doAuthed("POST", "/api/collections/device_state/records",
+		map[string]any{"device": deviceID, "state": map[string]any{}, "metering": metering}, nil)
+}

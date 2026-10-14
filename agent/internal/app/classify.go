@@ -20,7 +20,7 @@ type Part struct {
 // backend/pb_hooks/device_rules.js), in deze volgorde.
 var capabilityOrder = []string{
 	"onoff", "brightness", "color_temp", "color", "heating", "valve", "occupancy", "contact",
-	"water_leak", "smoke", "temperature", "humidity", "illuminance", "battery",
+	"water_leak", "smoke", "temperature", "humidity", "illuminance", "battery", "power", "energy",
 }
 
 // sensorExposes: de namen van Zigbee2MQTT die als sensor tellen. Let op:
@@ -50,6 +50,9 @@ var lightFeatures = map[string]string{
 func classify(exposes []mqtt.Expose) []Part {
 	var parts []Part
 	sensor := map[string]bool{}
+	// metering: power (W) en energy (kWh, een oplopende teller) van een
+	// stekker met vermogensmeting (roadmap C2).
+	metering := map[string]bool{}
 	battery := false
 	valve := false
 	for _, e := range exposes {
@@ -82,6 +85,8 @@ func classify(exposes []mqtt.Expose) []Part {
 		default:
 			if e.Name == "battery" {
 				battery = true
+			} else if e.Name == "power" || e.Name == "energy" {
+				metering[e.Name] = true
 			} else if c, ok := sensorExposes[e.Name]; ok {
 				sensor[c] = true
 			}
@@ -94,6 +99,15 @@ func classify(exposes []mqtt.Expose) []Part {
 	if len(parts) == 0 {
 		return nil
 	}
+	// Het vermogen hoort bij het hele apparaat: alleen bij één stekkerdeel kan
+	// de app zeggen van welk deel het is.
+	if switches := countType(parts, "switch"); switches == 1 && len(metering) > 0 {
+		for i := range parts {
+			if parts[i].Type == "switch" {
+				parts[i].Capabilities = ordered(merge(parts[i].Capabilities, metering))
+			}
+		}
+	}
 	if battery {
 		for i := range parts {
 			parts[i].Capabilities = append(parts[i].Capabilities, "battery")
@@ -101,6 +115,27 @@ func classify(exposes []mqtt.Expose) []Part {
 	}
 	sort.SliceStable(parts, func(i, j int) bool { return parts[i].Endpoint < parts[j].Endpoint })
 	return parts
+}
+
+func countType(parts []Part, typ string) int {
+	n := 0
+	for _, p := range parts {
+		if p.Type == typ {
+			n++
+		}
+	}
+	return n
+}
+
+func merge(have []string, extra map[string]bool) map[string]bool {
+	out := map[string]bool{}
+	for _, c := range have {
+		out[c] = true
+	}
+	for c := range extra {
+		out[c] = true
+	}
+	return out
 }
 
 func ordered(set map[string]bool) []string {

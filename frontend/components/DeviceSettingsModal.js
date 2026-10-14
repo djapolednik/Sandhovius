@@ -11,6 +11,7 @@ import { useNow } from '../lib/useNow'
 import { temperatureColor } from '../lib/temperature'
 import { allReadings, readingText } from '../lib/sensors'
 import { SUMMARY_OPTIONAL, categoriesOf } from '../lib/categories'
+import { energyText, meteringOf, powerText } from '../lib/energy'
 import { isBatteryLow } from '../lib/battery'
 import { isDeviceOn } from './DeviceCard'
 import LightControls from './LightControls'
@@ -330,6 +331,8 @@ export default function DeviceSettingsModal({
 // in woorden.
 function DeviceStatus({ device }) {
   const t = useTranslations()
+  const intl = useIntl()
+  const metering = meteringOf(device)
   const state = device.expand?.device_state_via_device?.[0]?.state
   const known = typeof state?.state === 'string'
   const on = isDeviceOn(device.type, state)
@@ -346,6 +349,19 @@ function DeviceStatus({ device }) {
         <span className="form-label">{t('deviceSheet.stateLabel')}</span>
         <span className="reading-value">{value}</span>
       </div>
+      {/* C2: een stekker met vermogensmeting. */}
+      {metering && metering.power !== null && (
+        <div className="sensor-detail-row">
+          <span className="form-label">{t('energy.powerNow')}</span>
+          <span className="reading-value">{powerText(intl, metering.power)}</span>
+        </div>
+      )}
+      {metering && metering.energyToday !== null && (
+        <div className="sensor-detail-row">
+          <span className="form-label">{t('energy.today')}</span>
+          <span className="reading-value">{energyText(intl, metering.energyToday)}</span>
+        </div>
+      )}
       {/* Een radiatorknop warmt alleen als de eigen thermostaat de ketel
           aanzet (model A): dat zeggen we eerlijk. */}
       {device.capabilities?.includes('valve') && <p className="login-note">{t('deviceSheet.valveHint')}</p>}

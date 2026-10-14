@@ -963,5 +963,12 @@
     "operateOnlyRole": "{role}, operate only",
     "askAdmin": "An admin can let you change this.",
     "scenesHint": "You can run scenes. An admin can let you change scenes, routines and schedules."
+  },
+  "energy": {
+    "watts": "{value} W",
+    "kwh": "{value} kWh",
+    "powerNow": "Power now",
+    "today": "Used today",
+    "onWithPower": "On · {power}"
   }
 }

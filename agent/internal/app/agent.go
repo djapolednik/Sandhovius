@@ -38,6 +38,8 @@ type Agent struct {
 	routines *routineRunner
 	// pushKey: het publieke deel van de VAPID-sleutel; leeg = geen meldingen.
 	pushKey string
+	// energy: verbruik vandaag van stekkers met vermogensmeting (C2).
+	energy *energyTracker
 	// zigbee: wat Zigbee2MQTT op het netwerk heeft (bridge/devices);
 	// pairing: koppelen vanuit de app (pairing_runner.go).
 	zigbee  *bridgeDirectory
@@ -109,6 +111,7 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.routines.step = a.runSceneStep
 	a.routines.scene = a.executeScene
 	a.routines.report = a.reportRoutine
+	a.energy = newEnergyTracker(filepath.Join(filepath.Dir(motionFile), "energy.json"))
 	// Meldingen: een eigen sleutel per box, naast de andere bestanden in /data.
 	if keys, err := loadOrCreatePushKeys(filepath.Join(filepath.Dir(motionFile), "push.json")); err != nil {
 		log.Printf("[MELDING] Geen pushsleutel, meldingen staan uit: %v\n", err)
@@ -621,6 +624,18 @@ func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
 	if !known {
 		log.Printf("[APP] Onbekend Zigbee-apparaat, genegeerd: %s\n", event.FriendlyName)
 		return
+	}
+
+	// C2: de meting van een stekker in een eigen veld; zijn stand (aan/uit)
+	// komt van Home Assistant.
+	for _, deviceID := range a.devices.meteringTargets(address) {
+		metering, changed := a.energy.observe(deviceID, event.State, time.Now())
+		if !changed {
+			continue
+		}
+		if err := a.pbClient.UpsertDeviceMetering(deviceID, metering); err != nil {
+			log.Printf("[ENERGIE] Meting naar PocketBase mislukt voor %s: %v\n", event.FriendlyName, err)
+		}
 	}
 
 	// Alleen delen zonder HA-entiteit (sensoren): een lamp of stekker krijgt

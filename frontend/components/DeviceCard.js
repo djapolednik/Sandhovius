@@ -9,6 +9,7 @@ import { primaryReading, readingText } from '../lib/sensors'
 import { deviceTypeIcon } from '../lib/icons'
 import { glowFor, iconColorFor, lightStateText } from '../lib/light'
 import { useLongPress } from '../lib/longPress'
+import { meteringOf, powerText } from '../lib/energy'
 
 // Een thermostaat hoort hier bewust niet bij: een tik om "even te kijken"
 // mag nooit de verwarming uitzetten. Die kaart heeft zijn eigen −/+.
@@ -134,7 +135,16 @@ export default memo(function DeviceCard({
     stateText = isOnline ? value : t('device.lastKnown', { value, status: offlineText.toLocaleLowerCase(locale) })
   } else if (!isOnline) stateText = offlineText
   else if (state?.state === 'on' || state?.state === 'off') {
-    const base = shownType === 'light' ? lightStateText(t, state) : isOn ? t('device.on') : t('device.off')
+    // C2: een stekker met vermogensmeting zegt wat hij nu trekt ("Aan · 120 W").
+    const power = device.type === 'switch' && isOn ? meteringOf(device)?.power : null
+    const base =
+      shownType === 'light'
+        ? lightStateText(t, state)
+        : isOn
+          ? typeof power === 'number' && power > 0
+            ? t('energy.onWithPower', { power: powerText(intl, power) })
+            : t('device.on')
+          : t('device.off')
     stateText = base + (isPending ? '…' : '')
   }
   else stateText = t('device.unknown')

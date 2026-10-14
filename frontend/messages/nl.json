@@ -963,5 +963,12 @@
     "operateOnlyRole": "{role}, alleen bedienen",
     "askAdmin": "Wijzigen kan een beheerder voor je aanzetten.",
     "scenesHint": "Je kunt scènes uitvoeren. Scènes, routines en schema's wijzigen kan een beheerder voor je aanzetten."
+  },
+  "energy": {
+    "watts": "{value} W",
+    "kwh": "{value} kWh",
+    "powerNow": "Vermogen nu",
+    "today": "Vandaag verbruikt",
+    "onWithPower": "Aan · {power}"
   }
 }
