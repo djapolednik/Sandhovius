@@ -1,0 +1,8 @@
+[
+  {"type": "numeric", "name": "battery", "property": "battery", "unit": "%"},
+  {"type": "numeric", "name": "voltage", "property": "voltage", "unit": "mV"},
+  {"type": "numeric", "name": "device_temperature", "property": "device_temperature"},
+  {"type": "binary", "name": "occupancy", "property": "occupancy", "value_on": true, "value_off": false},
+  {"type": "numeric", "name": "illuminance", "property": "illuminance", "unit": "lx"},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]

@@ -1,0 +1,7 @@
+[
+  {"type": "numeric", "name": "battery", "property": "battery", "unit": "%"},
+  {"type": "binary", "name": "contact", "property": "contact", "value_on": false, "value_off": true},
+  {"type": "numeric", "name": "device_temperature", "property": "device_temperature"},
+  {"type": "numeric", "name": "voltage", "property": "voltage"},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]

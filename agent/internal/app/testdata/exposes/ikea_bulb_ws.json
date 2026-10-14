@@ -1,0 +1,10 @@
+[
+  {"type": "light", "features": [
+    {"type": "binary", "name": "state", "property": "state", "value_on": "ON", "value_off": "OFF"},
+    {"type": "numeric", "name": "brightness", "property": "brightness", "value_min": 0, "value_max": 254},
+    {"type": "numeric", "name": "color_temp", "property": "color_temp", "unit": "mired"},
+    {"type": "numeric", "name": "color_temp_startup", "property": "color_temp_startup"}
+  ]},
+  {"type": "enum", "name": "effect", "property": "effect", "values": ["blink", "breathe", "okay"]},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]

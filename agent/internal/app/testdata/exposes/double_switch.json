@@ -1,0 +1,8 @@
+[
+  {"type": "switch", "endpoint": "l2", "features": [
+    {"type": "binary", "name": "state", "property": "state_l2", "endpoint": "l2"}]},
+  {"type": "switch", "endpoint": "l1", "features": [
+    {"type": "binary", "name": "state", "property": "state_l1", "endpoint": "l1"}]},
+  {"type": "numeric", "name": "power", "property": "power", "unit": "W"},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]

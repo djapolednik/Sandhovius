@@ -1,0 +1,10 @@
+[
+  {"type": "climate", "features": [
+    {"type": "numeric", "name": "occupied_heating_setpoint", "property": "occupied_heating_setpoint"},
+    {"type": "numeric", "name": "local_temperature", "property": "local_temperature"},
+    {"type": "enum", "name": "system_mode", "property": "system_mode", "values": ["off", "heat"]}
+  ]},
+  {"type": "binary", "name": "child_lock", "property": "child_lock"},
+  {"type": "numeric", "name": "battery", "property": "battery", "unit": "%"},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]

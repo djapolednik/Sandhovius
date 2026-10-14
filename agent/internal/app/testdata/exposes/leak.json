@@ -1,0 +1,6 @@
+[
+  {"type": "binary", "name": "water_leak", "property": "water_leak", "value_on": true, "value_off": false},
+  {"type": "binary", "name": "battery_low", "property": "battery_low"},
+  {"type": "numeric", "name": "battery", "property": "battery", "unit": "%"},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]
