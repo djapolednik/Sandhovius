@@ -100,11 +100,14 @@ routerAdd("GET", "/api/sandhovius/houses/{id}/members", (e) => {
     return e.json(404, { status: 404, code: "house_not_found", params: {}, message: "house not found", data: {} })
   }
   const admins = Array.from(house.getStringSlice("admins"))
+  const operateOnly = Array.from(house.getStringSlice("operate_only"))
   const items = $app.findRecordsByIds("users", Array.from(house.getStringSlice("members"))).map((u) => ({
     id: u.id,
     name: u.getString("name"),
     email: u.email(),
     role: admins.includes(u.id) ? "admin" : "member",
+    // D1: mag automatiseringen en apparaten wijzigen (beheerders altijd).
+    can_edit: admins.includes(u.id) || !operateOnly.includes(u.id),
   }))
   const label = (m) => (m.name || m.email).toLowerCase()
   items.sort((a, b) =>
@@ -159,7 +162,9 @@ routerAdd("POST", "/api/sandhovius/invitations/{id}/accept", (e) => {
 // Rol van een lid wijzigen; alleen een beheerder van dit huis.
 routerAdd("PATCH", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
   const body = e.requestInfo().body || {}
+  // role ("admin"/"member") en/of can_edit (D1: mag wijzigen); minstens één.
   const role = body.role
+  const canEdit = body.can_edit
   const houseId = e.request.pathValue("id")
   const target = e.request.pathValue("user")
   let result = null
@@ -174,8 +179,10 @@ routerAdd("PATCH", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
       result = { status: 404, code: "house_not_found", message: "house not found" }
       return
     }
-    if (role !== "admin" && role !== "member") {
-      result = { status: 400, code: "invalid_role", message: "role must be admin or member" }
+    const hasRole = role !== undefined && role !== null
+    const hasCanEdit = canEdit !== undefined && canEdit !== null
+    if ((!hasRole && !hasCanEdit) || (hasRole && role !== "admin" && role !== "member") || (hasCanEdit && typeof canEdit !== "boolean")) {
+      result = { status: 400, code: "invalid_role", message: "role must be admin or member, can_edit a boolean" }
       return
     }
     if (!house.getStringSlice("members").includes(target)) {
@@ -187,13 +194,23 @@ routerAdd("PATCH", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
       result = { status: 409, code: "last_admin", message: "a house needs at least one admin" }
       return
     }
-    house.set("admins", role === "admin" ? others.concat([target]) : others)
+    const nextAdmins = !hasRole ? admins : role === "admin" ? others.concat([target]) : others
+    const isAdmin = nextAdmins.includes(target)
+    // Een beheerder mag altijd alles: die kun je niet op alleen bedienen zetten.
+    if (isAdmin && canEdit === false) {
+      result = { status: 409, code: "admin_can_edit", message: "an admin can always edit" }
+      return
+    }
+    const operateOnly = Array.from(house.getStringSlice("operate_only")).filter((u) => u !== target)
+    const restrict = !isAdmin && (hasCanEdit ? canEdit === false : house.getStringSlice("operate_only").includes(target))
+    house.set("admins", nextAdmins)
+    house.set("operate_only", restrict ? operateOnly.concat([target]) : operateOnly)
     txApp.save(house)
-    result = { status: 200 }
+    result = { status: 200, role: isAdmin ? "admin" : "member", canEdit: !restrict }
   })
 
   if (result.status !== 200) return e.json(result.status, { status: result.status, code: result.code, params: result.params || {}, message: result.message, data: {} })
-  return e.json(200, { id: target, role: role })
+  return e.json(200, { id: target, role: result.role, can_edit: result.canEdit })
 }, $apis.requireAuth("users"))
 
 // Lid verwijderen (beheerder) of het huis verlaten (jezelf). Je eigen
@@ -226,6 +243,7 @@ routerAdd("DELETE", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
     }
     house.set("members", members.filter((m) => m !== target))
     house.set("admins", admins.filter((a) => a !== target))
+    house.set("operate_only", Array.from(house.getStringSlice("operate_only")).filter((u) => u !== target))
     txApp.save(house)
 
     const favorites = txApp.findRecordsByFilter("favorites", "user = {:user} && device.gateway = {:house}", "", 0, 0, {
