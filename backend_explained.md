@@ -106,14 +106,14 @@ het starten helemaal op.
 |---|---|---|---|
 | `users` | auth | Bewoners; token geldt een jaar (de PWA verlengt het dagelijks, dus ingelogd tot je zelf uitlogt; wachtwoord wijzigen maakt alle tokens ongeldig) | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
 | `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen), `agent_version` + `reported_at` (alleen via `box.pb.js`) |
-| `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated`, `push_key` (box), `box_version` + `box_version_since` (via `box.pb.js`), `operate_only` (leden die alleen mogen bedienen; alleen via het leden-endpoint) |
+| `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated`, `push_key` (box), `box_version` + `box_version_since` (via `box.pb.js`), `climate_comfort`/`climate_eco`/`climate_sleep` (F2, 0 = standaard, `house_rules.pb.js`: 5–30° in halve graden; de box niet), `operate_only` (leden die alleen mogen bedienen; alleen via het leden-endpoint) |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
-| `devices` | base | Apparaten; alleen de box maakt ze (bij koppelen) | `gateway` (= huis), `name`, `room`, `shown_as` (bewoner: `light` of leeg, alleen bij `type = switch`); box: `type` (`light`/`switch`/`sensor`/`climate`), `source` (`zigbee`/`hue`), `address` (IEEE-adres of HA-device-id, nooit de naam), `endpoint` (`l1`, `l2` … bij een meervoudig apparaat), `entity_id` (HA-hoofdentiteit; leeg bij een sensor), `capabilities` (JSON, vaste woordenlijst), `model`, `online`; bewoner ook: `adaptive` (kleur volgt de dag, alleen bij `color_temp`) |
+| `devices` | base | Apparaten; alleen de box maakt ze (bij koppelen) | `gateway` (= huis), `name`, `room`, `shown_as` (bewoner: `light` of leeg, alleen bij `type = switch`); box: `type` (`light`/`switch`/`sensor`/`climate`), `source` (`zigbee`/`hue`), `address` (IEEE-adres of HA-device-id, nooit de naam), `endpoint` (`l1`, `l2` … bij een meervoudig apparaat), `entity_id` (HA-hoofdentiteit; leeg bij een sensor), `capabilities` (JSON, vaste woordenlijst), `model`, `online`; bewoner ook: `adaptive` (kleur volgt de dag, alleen bij `color_temp`), `summary_hidden` (E2: telt niet mee in de samenvatting) |
 | `pairing_sessions` | base | Een koppelsessie: de box zoekt | `house`, `kind` (`light`/`switch`/`sensor`/`climate`/`hue`), `status` (`starting`/`open`/`waiting_button`/`closed`/`failed`), `expires`, `error` (foutcode), `created_by`, `extend`, `button_pressed` |
 | `pairing_candidates` | base | Wat de box in een sessie vond | `session`, `address`, `endpoint`, `type`, `capabilities`, `model`, `source`, `status` (`interviewing`/`found`/`unsupported`/`adding`/`added`/`failed`), `identify` (teller: laten knipperen), `name`, `room`, `add`, `device` |
 | `favorites` | base | Favorieten op Home, per persoon | `user`, `device` (cascade), `order`; uniek op (user, device) |
 | `invitations` | base | Uitnodigingen voor een huis | `house` (cascade), `email` (kleine letters), `role` (`admin`/`member`), `invited_by`, `house_name`, `inviter_name`, `expires` (+7 dagen), `created`; uniek op (house, email) |
-| `device_state` | base | **Huidige** stand per device (één rij, overschreven) | `device`, `state` (JSON), `updated_at` |
+| `device_state` | base | **Huidige** stand per device (één rij, overschreven) | `device`, `state` (JSON), `updated_at`, `metering` (C2: `{power, energy_today, day}` van een stekker, apart van de stand) |
 | `commands` | base | Opdrachten van de app | `device` óf `scene`, `action`, `payload`, `status` (pending/sent/failed), `error`, `created`, `updated` |
 | `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
 | `schedules` | base | Schema's voor scènes | `house`, `scene`, `trigger` (`time`/`sunrise`/`sunset`), `time` ("HH:MM", leeg bij zon), `offset_min` (−120 … 120, negatief = ervoor), `days`, `enabled`; box: `last_run`, `last_error`, `next_run` |
@@ -576,6 +576,15 @@ geen lamp meer aanzetten.
   gekozen leden. Alleen aanmeldingen met de sleutel van nu; 404/410 van de
   pushdienst = aanmelding opruimen. `PUSH_SUBJECT` is het contact in de
   VAPID-token.
+- **Klimaatstanden** (F2): routine-actie `climate` (`preset`, `device` leeg =
+  alle thermostaten): per thermostaat `turn_on` en `set_temperature` met de
+  temperatuur van de stand uit het snapshot (`houses.climate_*`, 0 = 20/17/16).
+- **Energie** (`energy.go`, C2): een Zigbee2MQTT-bericht met `power`/`energy`
+  van een stekker gaat naar de energietracker: verbruik vandaag = teller nu
+  min de teller bij het begin van de dag (op schijf in `/data/energy.json`;
+  nieuwe dag of een gereset teller begint opnieuw). Alleen bij een andere
+  waarde schrijft de agent `device_state.metering` (`UpsertDeviceMetering`),
+  zonder de stand van Home Assistant te raken.
 - **Weer**: elk half uur uit HA (Met.no) naar `houses.weather`; alleen de box
   mag dat schrijven.
 

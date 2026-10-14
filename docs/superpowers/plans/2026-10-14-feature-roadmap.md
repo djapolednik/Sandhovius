@@ -49,7 +49,7 @@ Staat al in `docs/status.md` als bewust uitgesteld.
 Samen met A0: sensoren in woorden, lek en rook bovenaan Let op en altijd bij
 naam, batterij bijna leeg.
 
-### A3. Snelkoppelingen naar scènes
+### A3. Snelkoppelingen naar scènes ✅ gebouwd 2026-10-14
 
 Een PWA heeft geen widgets, wel `shortcuts` in het manifest (lang indrukken op
 het app-icoon). Alleen statisch, dus hooguit vaste items zoals "Alles uit".
@@ -145,7 +145,7 @@ fase 3 kiezen. Geschiedenis zien als aparte schakelaar per lid, een
 bewaartermijn (bijvoorbeeld 30 dagen) en **Geschiedenis wissen** voor
 beheerders.
 
-### C2. Energie
+### C2. Energie ✅ gebouwd 2026-10-14
 
 Stopcontacten met vermogensmeting (Zigbee) → verbruik per dag op de
 stopcontacttegel, later een overzicht. Pas als er zulke stekkers in het
@@ -192,7 +192,7 @@ alle apparaten van die soort, per kamer, met "Alles uit" voor licht.
   óf de knoppen dragen die tekst. Open vraag.
 - Maat: ~1 week.
 
-### E2. "Toon in de samenvatting" per apparaat
+### E2. "Toon in de samenvatting" per apparaat ✅ gebouwd 2026-10-14
 
 Een schakelaar in de detail-sheet (`devices.in_summary`, standaard aan), zodat
 de schuurlamp niet meetelt. Pas na E1 en als er vraag naar is.
@@ -215,7 +215,7 @@ koeler overdag.
 - Schema: `devices.adaptive` (bool). Na A1. Maat: 1–2 weken. Open vraag:
   standaard aan of uit voor nieuwe lampen.
 
-### F2. Klimaatstanden (Comfort / Eco / Slaap)
+### F2. Klimaatstanden (Comfort / Eco / Slaap) ✅ gebouwd 2026-10-14
 
 Drie benoemde standen als pillen onder de dial, bruikbaar in scènes en
 routines, met een omschrijving en een vergelijking ("2° lager dan Comfort").
@@ -338,6 +338,6 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 ## Volgorde
 
 A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) ✅ → B2 ✅ (box offline
-met fase 3) → C1 (na fase 3) → D1 ✅ → D2 ✅. K1 ✅. A3, C2, E2 en
-F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
+met fase 3) → C1 (na fase 3) → D1 ✅ → D2 ✅. K1 ✅. A3 ✅, C2 ✅, E2 ✅ en
+F2 ✅. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.
