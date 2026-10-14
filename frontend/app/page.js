@@ -53,6 +53,7 @@ import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
 import MotionLightSheet from '../components/MotionLightSheet'
 import RoutineSheet from '../components/RoutineSheet'
+import AddRoomSheet from '../components/AddRoomSheet'
 import PresenceBar from '../components/PresenceBar'
 import NotificationsSection from '../components/NotificationsSection'
 import { byRoom, motionSensors, switchableDevices } from '../lib/motionLights'
@@ -145,6 +146,7 @@ export default function Home() {
   // null, 'new' of het id van het bewegingslicht in de sheet.
   const [editingMotion, setEditingMotion] = useState(null)
   const [editingRoutine, setEditingRoutine] = useState(null)
+  const [addingRoom, setAddingRoom] = useState(false)
   const [selectedRoomId, setSelectedRoomId] = useState('')
   // Deze telefoon ↔ Sandhovius: 'connecting' tot de eerste realtime-
   // verbinding staat, 'lost' zodra die wegvalt (de SDK herverbindt zelf).
@@ -1445,6 +1447,7 @@ export default function Home() {
     const order = roomsInHouse.length
     const created = await pb.collection('rooms').create({ house: house.id, name, order })
     setRooms((prev) => [...prev, created])
+    return created
   }
 
   async function renameRoom(roomId, name) {
@@ -2047,15 +2050,11 @@ export default function Home() {
     )
   }
 
-  const addDeviceButton = house && (
-    <button
-      type="button"
-      className="btn btn-primary btn-add"
-      aria-label={t('nav.addDevice')}
-      onClick={() => setAddDeviceOpen(true)}
-    >
+  // Op de Kamers-tab voeg je kamers toe; een apparaat via de "+" onderin.
+  const addRoomButton = house && (
+    <button type="button" className="btn btn-primary btn-add" onClick={() => setAddingRoom(true)}>
       <PlusIcon width="20" height="20" aria-hidden="true" />
-      {t('rooms.add')}
+      {t('rooms.addRoom')}
     </button>
   )
 
@@ -2063,7 +2062,7 @@ export default function Home() {
   let content
   if (tab === 'kamers') {
     const count = devicesInSelectedRoom.length
-    header = <Header title={t('nav.kamers')} action={canEdit ? addDeviceButton : null} />
+    header = <Header title={t('nav.kamers')} action={canEdit ? addRoomButton : null} />
     content = (
       <>
         {errorBanner}
@@ -2402,6 +2401,16 @@ export default function Home() {
           onSave={saveMotionLight}
           onDelete={deleteMotionLight}
           onClose={() => setEditingMotion(null)}
+        />
+      )}
+
+      {addingRoom && (
+        <AddRoomSheet
+          onAdd={async (name) => {
+            const created = await addRoom(name)
+            selectRoom(created.id)
+          }}
+          onClose={() => setAddingRoom(false)}
         />
       )}
 

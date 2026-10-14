@@ -434,7 +434,8 @@
       "allOn": "All on",
       "some": "{on} of {all} on"
     },
-    "switchLabel": "Lights and plugs in {room}"
+    "switchLabel": "Lights and plugs in {room}",
+    "addRoom": "Add a room"
   },
   "deviceSheet": {
     "showOnHome": "Show on Home",

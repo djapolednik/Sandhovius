@@ -434,7 +434,8 @@
       "allOn": "Alles aan",
       "some": "{on} van {all} aan"
     },
-    "switchLabel": "Lampen en stopcontacten in {room}"
+    "switchLabel": "Lampen en stopcontacten in {room}",
+    "addRoom": "Kamer toevoegen"
   },
   "deviceSheet": {
     "showOnHome": "Op Home tonen",
