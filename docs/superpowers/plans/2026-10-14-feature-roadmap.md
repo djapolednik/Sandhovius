@@ -146,7 +146,13 @@ verlopen gasten weg. Na D1.
 
 ## Fase E — Home-scherm en overzicht
 
-### E1. Categorieknoppen met samenvatting
+### E1. Categorieknoppen met samenvatting ✅ gebouwd 2026-10-14
+
+Gebouwd als Licht, Klimaat, Veiligheid (deuren, ramen, rook) en Water.
+**Besloten:** de knoppen dragen de stand; de regel onder de groet zegt dan
+alleen nog het weer (één plek voor "2 lampen aan"). Op een telefoon twee
+kolommen, zodat een alarm nooit achter een scroll verdwijnt. Het
+oorspronkelijke voorstel:
 
 Onder de groetregel knoppen met de stand erin: "Licht · 3 aan", "Klimaat ·
 20,5°", "Beveiliging · 1 open", "Water · droog". Eén tik opent een sheet met
@@ -301,7 +307,7 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 
 ## Volgorde
 
-A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 → spec B1 → B1 → B3 (handmatig) → B2 (met
+A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → spec B1 → B1 → B3 (handmatig) → B2 (met
 fase 3) → C1 → D1 → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
 F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.
