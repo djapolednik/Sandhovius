@@ -257,7 +257,7 @@ Device icons are line icons in a neutral circle (`inset-mist` / `night-inset`, s
 
 ## Typography
 
-**Font:** Urbanist (OFL), self-hosted through `next/font` (no request to Google at runtime; it works without internet), falling back to the system stack. It is an open stand-in for Lufga from the brand sheet and can be swapped for Lufga with a license in `app/layout.js`.
+**Font:** Urbanist (OFL), self-hosted through `next/font` (no request to an external font service at runtime; it works without internet), falling back to the system stack. It is an open stand-in for Lufga from the brand sheet and can be swapped for Lufga with a license in `app/layout.js`.
 
 **Character:** Friendly and geometric, with round bowls and open shapes, calm at large sizes. One family carries everything. Hierarchy comes from size and a narrow weight range (400 to 700, mostly 500 and 600), with tighter tracking as size grows.
 

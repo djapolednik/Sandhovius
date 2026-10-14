@@ -14,7 +14,7 @@ gedimd warm licht maken. De app toont per lamp alleen wat die lamp kan.
 |---|---|---|
 | Wat een lamp kan | Helderheid, kleurtemperatuur én volledige kleur (RGB); per lamp alleen wat Home Assistant meldt (`supported_color_modes`) | Dekt gewone, warm/koel- en gekleurde lampen; een lamp zonder kleur krijgt geen kleurbediening. |
 | Waar bedienen | Detail-sheet (lang indrukken), met de stand op de tegel ("Aan · 60%") en een gloed in de echte kleur en sterkte | Tikken blijft aan/uit; tegels blijven klein (Home past op een laptop); geen schuif die je per ongeluk raakt bij scrollen. |
-| Scènes | Per lamp Aan / Uit / **Zoals nu** (huidige helderheid en kleur vastleggen) | Gangbaar (Hue, Apple Home); geen schuiven per lamp in de scène-sheet. |
+| Scènes | Per lamp Aan / Uit / **Zoals nu** (huidige helderheid en kleur vastleggen) | Gangbaar in smart-home-apps; geen schuiven per lamp in de scène-sheet. |
 | Commando | `turn_on` met een payload; geen nieuwe actie | Eén command-taal voor app en scènes; "Zoals nu" is gewoon een `turn_on` met payload. Een aparte `set_light` of de PWA rechtstreeks naar HA zijn afgewezen. |
 | Testen zonder hardware | Gesimuleerde Zigbee-lampen via MQTT-discovery (`scripts/fake-lights.py`) | Home Assistant ziet echte `light.*`-entities met dezelfde attributen als een Zigbee-lamp via Zigbee2MQTT; de code hoeft later niet te veranderen. |
 | MQTT in Home Assistant | De agent voegt de MQTT-integratie zelf toe als die ontbreekt (broker `mosquitto:1883`) | Nodig voor de testlampen én straks voor echte Zigbee-apparaten; zelfde aanpak als Met.no. |

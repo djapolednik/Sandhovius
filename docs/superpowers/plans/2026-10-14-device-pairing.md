@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Begin: `git switch main && git merge --ff-only docs/google-home-roadmap && git switch -c feat/device-pairing`. Kleine commits met de bestaande prefixen (`PocketBase:`, `Hooks:`, `Agent:`, `Scripts:`, `PWA:`, `Docs:`), zonder Co-Authored-By of "Generated with".
+- Begin: vanaf `main`: `git switch -c feat/device-pairing`. Kleine commits met de bestaande prefixen (`PocketBase:`, `Hooks:`, `Agent:`, `Scripts:`, `PWA:`, `Docs:`), zonder Co-Authored-By of "Generated with".
 - Vóór elke commit de relevante checks uit `CLAUDE.md`: `cd agent && go vet ./... && go test ./...`; `cd backend/tests && go test -tags integration ./...`; `cd frontend && npm run lint && node --test lib/*.test.js && npx next build`; `python -m unittest discover -s scripts -p "test_*.py"`.
 - PocketBase blijft 0.40.4. Geen nieuwe dependencies (Go stdlib, bestaande npm-pakketten, `paho-mqtt`).
 - `devices.source`: `zigbee` / `hue`. `devices.type`: `light` / `switch` / `sensor` / `climate`. `devices.shown_as`: leeg of `light`, alleen als `type = switch`.
@@ -366,7 +366,7 @@
 ### Task 14: Docs en eindcontrole
 
 **Files:**
-- Modify: `docs/status.md`, `docs/codebase.md`, `backend_explained.md`, `DESIGN.md` (toevoegen van een apparaat, Not-Broken-Yet in de koppellijst, Let op-volgorde, stekker als lamp), `docs/development.md` (`fake-zigbee.py` vervangt `fake-lights.py`, `HUE_BRIDGE_HOST`), `docs/superpowers/specs/2026-10-14-device-pairing-design.md` (status: gebouwd), `docs/superpowers/plans/2026-10-13-google-home-feature-roadmap.md` (A0 en A2 gebouwd)
+- Modify: `docs/status.md`, `docs/codebase.md`, `backend_explained.md`, `DESIGN.md` (toevoegen van een apparaat, Not-Broken-Yet in de koppellijst, Let op-volgorde, stekker als lamp), `docs/development.md` (`fake-zigbee.py` vervangt `fake-lights.py`, `HUE_BRIDGE_HOST`), `docs/superpowers/specs/2026-10-14-device-pairing-design.md` (status: gebouwd), `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (A0 en A2 gebouwd)
 
 - [ ] **Step 1: Write the docs.**
 - [ ] **Step 2: Run** alle checks uit Global Constraints → PASS.

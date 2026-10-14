@@ -4,7 +4,7 @@ Datum: 2026-10-14 · Status: gebouwd (2026-10-14; Hue nog niet met een echte bri
 (`2026-10-13-motion-light-design.md`, device-cache), huisgenoten
 (`2026-10-07-household-design.md`), box-identiteit
 (`2026-10-06-box-identity-design.md`) · Plan:
-`docs/superpowers/plans/2026-10-13-google-home-feature-roadmap.md` (A0 + A2)
+`docs/superpowers/plans/2026-10-14-feature-roadmap.md` (A0 + A2)
 
 ## Doel
 
@@ -36,7 +36,7 @@ batterij en sensorstanden (A2) en later de routines op leunen.
 |---|---|---|
 | Virtuele helpers | Weg, ook niet als verborgen demo-optie. Harde overgang: een migratie verwijdert ze | Een bewoner mag nooit per ongeluk een neplamp toevoegen. Er zijn nog geen kopers; het is alleen dev-data. Twee apparaatpaden onderhouden kost meer dan opnieuw koppelen. |
 | Wie maakt een device-record? | Alleen de box. Bewoners mogen geen device meer aanmaken | Anders geldt "geen neplamp" alleen in de UI. De box maakt het record als een bewoner een gevonden apparaat toevoegt. |
-| Eerst een soort kiezen | Ja: Lamp, Stekker, Sensor, Thermostaat, plus "Via een merk" | Zoals Google Home ("Pick a light to set up"). De soort bepaalt de uitleg om het apparaat in koppelstand te zetten. |
+| Eerst een soort kiezen | Ja: Lamp, Stekker, Sensor, Thermostaat, plus "Via een merk" | De soort bepaalt de uitleg om het apparaat in koppelstand te zetten. |
 | Filtert de soort? | Ja. Kies je Lamp, dan staan er alleen lampen in de lijst. Wat Zigbee2MQTT meldt bepaalt of iets een lamp is | Eenvoudig voor de bewoner. De keuze is de vraag, de melding is de waarheid. |
 | Ander apparaat in het venster | De agent haalt het meteen van het Zigbee-netwerk; aan het eind van de sessie ook elk gevonden apparaat dat niet is toegevoegd | Koppelen geldt voor het hele netwerk. Regel: **wat op het netwerk zit, staat in de app.** Geen onzichtbare apparaten die een plek innemen of "al gekoppeld" zeggen. |
 | Wat de agent nooit weghaalt | Apparaten die er vóór de sessie al waren, en Hue-lampen | Alleen wat in deze sessie binnenkwam en niet werd gekozen. Hue-lampen zitten op het netwerk van de bridge, niet op het onze. |
@@ -165,7 +165,7 @@ storing) nooit tot het leeghalen van het netwerk leiden.
    Hue-sessie biedt ze weer aan. Verwijderen in de app haalt een Hue-lamp
    niet van de bridge.
 
-De bridge mag tegelijk aan Google Home of de Hue-app hangen.
+De bridge mag tegelijk aan een andere app (bijvoorbeeld de Hue-app) hangen.
 
 ### Bestaande devices
 
@@ -265,8 +265,8 @@ Copy in `messages/nl.json` en `en.json`; foutcodes van de box als sleutels
 
 ## Verwarming: radiatorknoppen naast de eigen thermostaat (besloten 2026-10-14)
 
-**Model A:** de koper houdt zijn eigen wandthermostaat (Nest, Tado,
-Honeywell, …); die blijft de baas over de ketel. Sandhovius regelt per kamer
+**Model A:** de koper houdt zijn eigen wandthermostaat (welk merk
+ook); die blijft de baas over de ketel. Sandhovius regelt per kamer
 met Zigbee-radiatorknoppen (TRV's) en raakt de ketel niet aan.
 
 Waarom: een wandthermostaat vervangen is installateurswerk aan de ketel (230V
@@ -300,14 +300,6 @@ Gevolgen (gebouwd 2026-10-14):
   als een knop dat wil) hoort bij de routines (B1) en echte hardware; een
   OpenTherm-gateway via HA (lokaal wifi) kan dan een optie "via een merk"
   worden.
-
-Zo doen anderen het (uit kennis van die producten, niet nagemeten):
-**Google/Nest** vervangt de wandthermostaat (Nest stuurt de ketel; losse
-temperatuursensoren meten per kamer, maar verwarmen blijft één zone).
-**Tado en Netatmo** leveren thermostaat én knoppen en laten een knop de ketel
-aanzetten (model B). **Apple Home** (bijv. Eve Thermo) is model A: een knop is
-een los apparaat naast de eigen thermostaat. Wij beginnen als Apple; model B
-kan later bovenop de routines.
 
 ## Open
 

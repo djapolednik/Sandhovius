@@ -31,7 +31,7 @@ Method: dual-agent (A: design review · B: detector + browser evidence)
 
 ## Design Specificity Verdict
 
-**LLM assessment:** category-interchangeable. A centered card with a tinted icon circle, the name and a status word, under a navy app bar with a cyan accent and a login card on a gradient, is the Google Home / SmartThings / generic-SaaS default. The product's real proposition (local-first, private, a box in the house that keeps working without internet) is nowhere visible. "The Light Switch by the Door" (DESIGN.md) is not yet visible in the composition. The lamp icon is identical on and off.
+**LLM assessment:** category-interchangeable. A centered card with a tinted icon circle, the name and a status word, under a navy app bar with a cyan accent and a login card on a gradient, is the generic smart-home and SaaS default. The product's real proposition (local-first, private, a box in the house that keeps working without internet) is nowhere visible. "The Light Switch by the Door" (DESIGN.md) is not yet visible in the composition. The lamp icon is identical on and off.
 
 **Deterministic scan:** the CLI detector found 0 findings (`frontend/app`, `frontend/components`). The browser overlay (5 views) found 3 anti-patterns:
 - `ai-color-palette` on the login gradient (login.css:7): **true positive**, and it matches the design review's "generic SaaS login". DESIGN.md already marks it provisional.

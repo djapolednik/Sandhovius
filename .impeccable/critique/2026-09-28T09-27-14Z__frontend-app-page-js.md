@@ -29,7 +29,7 @@ Method: dual-agent (A: design review · B: detector). Browser inspection succeed
 | **Total** | | **28/40** | **Good** |
 
 ## Design Specificity Verdict
-~70% authored: lit tile as state, Staat aan, honest liveness, household Dutch. Generic: Nest-style dial, bento + Details chip, room chips. The thermostat breaks the North Star: heating off shows a solid Electric Blue "Uit" slab, the brightest thing on Home at night.
+~70% authored: lit tile as state, Staat aan, honest liveness, household Dutch. Generic: off-the-shelf thermostat dial, bento + Details chip, room chips. The thermostat breaks the North Star: heating off shows a solid Electric Blue "Uit" slab, the brightest thing on Home at night.
 Detector: CLI 0. Browser: text-occlusion x4 on dial spans (false positive: .dial-center has pointer-events:none so hit-testing returns the SVG) and radial-halo attributed to body (false positive: the lamp tile glow pseudo-element, dark only). The dark nav border/shadow finding from the last run is gone.
 
 ## Priority Issues
