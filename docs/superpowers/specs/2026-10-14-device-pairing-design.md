@@ -73,7 +73,7 @@ Een hook controleert `capabilities` (alleen woorden uit de lijst) en
 `shown_as`.
 
 **Woordenlijst `capabilities`:** `onoff`, `brightness`, `color_temp`,
-`color`, `heating`, `occupancy`, `contact`, `water_leak`, `smoke`,
+`color`, `heating`, `valve`, `occupancy`, `contact`, `water_leak`, `smoke`,
 `temperature`, `humidity`, `illuminance`, `battery`.
 
 ### `pairing_sessions` (nieuw)
@@ -277,25 +277,37 @@ thermostaat schakelt meestal alleen aan/uit (rendement omlaag); de winst
 die bewoners merken zit in warmte per kamer, en dat werkt naast elke
 thermostaat.
 
-Gevolgen (nog te bouwen):
+Gevolgen (gebouwd 2026-10-14):
 - **Eén ondersteund model eerst: Sonoff TRVZB** (goedkoop, goed ondersteund
   in Zigbee2MQTT, `climate` met `local_temperature`, kan een externe
   temperatuursensor gebruiken). Andere `climate`-apparaten, ook
-  Zigbee-wandthermostaten, blijven `unsupported` tot we ze testen. Eerst de
-  exposes van een echt exemplaar als testdata in `classify`.
+  Zigbee-wandthermostaten, blijven `unsupported` tot we ze testen
+  (`supportedClimate` in `classify.go`: een model erbij = testen + één regel).
+  Testdata: de exposes uit de definitie in zigbee-herdsman-converters
+  (`sonoff.ts`); nog nakijken tegen een echt exemplaar.
 - **Woord `valve`** in de woordenlijst `capabilities` (`device_rules.js`,
-  deze spec, `classify.go`): een kraan herken je aan `position` /
-  `pi_heating_demand`. Daarmee groepeert de app knoppen per kamer en zet hij
+  deze spec, `classify.go`): een kraan herken je aan `valve_opening_degree`
+  (TRVZB), `pi_heating_demand`, `position` of `valve_position`. Daarmee groepeert de app knoppen per kamer en zet hij
   een lege batterij in Let op.
 - **Copy:** de koppelsoort heet **Radiatorknop** i.p.v. "Thermostaat" (niemand
   verwacht dan zijn wandthermostaat te kunnen koppelen); onder de dial één
-  eerlijke regel: "Verwarmt als je thermostaat de ketel aanzet". Bekende
+  eerlijke regel in de detail-sheet: "Verwarmt als je eigen thermostaat de
+  ketel aanzet", en in de koppelsheet dat de eigen thermostaat de ketel
+  blijft aansturen. Bekende
   beperking van model A: een knop die warmte vraagt terwijl de woonkamer al
   warm is, krijgt die niet.
 - **Later, niet nu:** model B (Sandhovius vraagt zelf warmte aan de ketel
   als een knop dat wil) hoort bij de routines (B1) en echte hardware; een
   OpenTherm-gateway via HA (lokaal wifi) kan dan een optie "via een merk"
   worden.
+
+Zo doen anderen het (uit kennis van die producten, niet nagemeten):
+**Google/Nest** vervangt de wandthermostaat (Nest stuurt de ketel; losse
+temperatuursensoren meten per kamer, maar verwarmen blijft één zone).
+**Tado en Netatmo** leveren thermostaat én knoppen en laten een knop de ketel
+aanzetten (model B). **Apple Home** (bijv. Eve Thermo) is model A: een knop is
+een los apparaat naast de eigen thermostaat. Wij beginnen als Apple; model B
+kan later bovenop de routines.
 
 ## Open
 

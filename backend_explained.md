@@ -370,6 +370,10 @@ zijn huis via realtime (één SSE-verbinding, twee topics).
    `interviewing`; `device_interview` geslaagd → `classify(exposes)` → per
    endpoint een candidate `found`. Geen definitie → `unsupported`; een ander
    type dan de sessie → meteen `device/remove`, geen candidate.
+   Verwarming volgens model A: een `climate`-deel alleen voor een geteste
+   radiatorknop (`supportedClimate`, nu de Sonoff TRVZB, met het woord
+   `valve`); een wandthermostaat is `unsupported`, want de eigen thermostaat
+   blijft de ketel aansturen.
 2. **Kiezen:** `identify` omhoog → `effect: blink` (of `identify` als het
    apparaat dat kent; een stekker niet). `add` → de box zoekt de HA-entiteit
    van adres + endpoint (registry, identifier `zigbee2mqtt_<ieee>`), maakt het

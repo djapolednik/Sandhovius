@@ -16,7 +16,7 @@
 - Vóór elke commit de relevante checks uit `CLAUDE.md`: `cd agent && go vet ./... && go test ./...`; `cd backend/tests && go test -tags integration ./...`; `cd frontend && npm run lint && node --test lib/*.test.js && npx next build`; `python -m unittest discover -s scripts -p "test_*.py"`.
 - PocketBase blijft 0.40.4. Geen nieuwe dependencies (Go stdlib, bestaande npm-pakketten, `paho-mqtt`).
 - `devices.source`: `zigbee` / `hue`. `devices.type`: `light` / `switch` / `sensor` / `climate`. `devices.shown_as`: leeg of `light`, alleen als `type = switch`.
-- `capabilities`-woordenlijst, verbatim: `onoff`, `brightness`, `color_temp`, `color`, `heating`, `occupancy`, `contact`, `water_leak`, `smoke`, `temperature`, `humidity`, `illuminance`, `battery`.
+- `capabilities`-woordenlijst, verbatim: `onoff`, `brightness`, `color_temp`, `color`, `heating`, `valve`, `occupancy`, `contact`, `water_leak`, `smoke`, `temperature`, `humidity`, `illuminance`, `battery`.
 - `pairing_sessions.kind`: `light` / `switch` / `sensor` / `climate` / `hue`; `status`: `starting` / `open` / `waiting_button` / `closed` / `failed`. `pairing_candidates.status`: `interviewing` / `found` / `unsupported` / `adding` / `added` / `failed`.
 - Koppelen: `permit_join` `{"time": 240}`, sessie 4 minuten, één open sessie per huis. Sluiten: `{"time": 0}`.
 - Regel: **wat op het Zigbee-netwerk zit, staat in de app.** De agent haalt alleen adressen weg die in de lopende sessie binnenkwamen of die hij zelf toevoegde; nooit een onbekend adres; nooit Hue-lampen.

@@ -57,8 +57,8 @@ Tik in de app op "+", kies een soort en laat dan een apparaat binnenkomen
 docker exec sandhovius-mosquitto mosquitto_pub -t fake/zigbee/join -m '{"kind":"light"}'
 ```
 
-Soorten: `light`, `plug2` (dubbele stekker: twee delen), `motion`, `contact`,
-`leak`. Een ander soort dan de sessie verschijnt niet en gaat meteen van het
+Soorten: `light`, `plug2` (dubbele stekker: twee delen), `trv`
+(radiatorknop, Sonoff TRVZB), `motion`, `contact`, `leak`. Een ander soort dan de sessie verschijnt niet en gaat meteen van het
 netwerk; wat je niet toevoegt gaat bij het sluiten weg. In het agent-log:
 `[KOPPELEN]`. De nep-apparaten blijven bewaard in `scripts/.fake-zigbee.json`
 (niet in git). Een sensor iets laten melden:
