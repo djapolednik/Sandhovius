@@ -249,6 +249,8 @@ export default function PairingSheet({ pb, houseId, rooms, defaultRoomId = '', h
     body = (
       <div className="form-stack">
         {kind !== 'hue' && <p className="pairing-instruction">{t(instructionKey(kind))}</p>}
+        {/* Verwarming volgens model A: de knop naast de eigen thermostaat. */}
+        {kind === 'climate' && <p className="login-note">{t('pairing.valveNote')}</p>}
         <SearchLine session={session} />
         <ul className="pairing-list">
           {list.map((c) => (

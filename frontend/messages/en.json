@@ -100,7 +100,7 @@
       "light": "Light",
       "switch": "Plug",
       "sensor": "Sensor",
-      "climate": "Thermostat"
+      "climate": "Radiator valve"
     },
     "offline": "Offline",
     "unreachable": "Can’t be reached",
@@ -145,7 +145,7 @@
     "noHouse": "There’s no home linked to your account yet. As soon as your Sandhovius box is linked to your account, your home will appear here.",
     "firstDevice": {
       "title": "Add your first device",
-      "text": "A light, plug, sensor or thermostat. It appears on Home straight away, so you can control it with one tap."
+      "text": "A light, plug, sensor or radiator valve. It appears on Home straight away, so you can control it with one tap."
     },
     "noRoom": "No room",
     "allOff": "All off",
@@ -428,7 +428,8 @@
     "offlineNote": "Offline; this is the last known state.",
     "shownAsLight": "Show as a lamp",
     "shownAsLightHint": "For a plug with a lamp in it: a lamp tile that glows warm. It can’t be dimmed.",
-    "motionNow": "Motion right now"
+    "motionNow": "Motion right now",
+    "valveHint": "Heats when your own thermostat turns on the boiler."
   },
   "schedules": {
     "everyDay": "Every day",
@@ -466,7 +467,7 @@
     "editTitle": "Edit scene",
     "namePlaceholder": "E.g. Bedtime",
     "what": "What does the scene do?",
-    "noDevices": "First add a light, plug or thermostat.",
+    "noDevices": "First add a light, plug or radiator valve.",
     "deviceLegend": "{name} in this scene",
     "modes": {
       "skip": "Skip",
@@ -544,7 +545,7 @@
       "light": "E.g. Reading light",
       "switch": "E.g. TV plug",
       "sensor": "E.g. Hallway motion sensor",
-      "climate": "E.g. Living room thermostat"
+      "climate": "E.g. Living room radiator"
     }
   },
   "favoritesOrder": {
@@ -595,7 +596,7 @@
       "light": "Turn the light on and off 5 times, one second each time.",
       "switch": "Hold the button on the plug for 5 seconds.",
       "sensor": "Press the button with a paperclip until the little light blinks.",
-      "climate": "The manual says how to pair it.",
+      "climate": "Hold the button on the radiator valve until the pairing symbol flashes. The manual says how long.",
       "hue": "Press the button on your Hue Bridge."
     },
     "searching": "Searching, {time} left",
@@ -610,7 +611,7 @@
       "light": "I don’t see my light",
       "switch": "I don’t see my plug",
       "sensor": "I don’t see my sensor",
-      "climate": "I don’t see my thermostat",
+      "climate": "I don’t see my radiator valve",
       "hue": "I don’t see my light"
     },
     "help": {
@@ -625,7 +626,7 @@
       "light": "{count, plural, one {Your light is ready} other {Your # lights are ready}}",
       "switch": "{count, plural, one {Your plug is ready} other {Your # plugs are ready}}",
       "sensor": "{count, plural, one {Your sensor is ready} other {Your # sensors are ready}}",
-      "climate": "{count, plural, one {Your thermostat is ready} other {Your # thermostats are ready}}",
+      "climate": "{count, plural, one {Your radiator valve is ready} other {Your # radiator valves are ready}}",
       "mixed": "{count, plural, one {Your device is ready} other {Your # devices are ready}}"
     },
     "addAnother": "Add another",
@@ -635,7 +636,8 @@
     "stopped": "The search has stopped.",
     "searchAgain": "Search again",
     "part": "{type} {number}",
-    "ready": "Done"
+    "ready": "Done",
+    "valveNote": "Your own thermostat keeps controlling the boiler; the radiator valve sets the warmth in this room."
   },
   "sensors": {
     "closed": "Closed",

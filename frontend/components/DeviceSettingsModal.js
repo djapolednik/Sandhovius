@@ -265,10 +265,15 @@ function DeviceStatus({ device }) {
   else value = t(`deviceSheet.state.${word}`)
 
   return (
-    <div className="sensor-detail-row">
-      <span className="form-label">{t('deviceSheet.stateLabel')}</span>
-      <span className="reading-value">{value}</span>
-    </div>
+    <>
+      <div className="sensor-detail-row">
+        <span className="form-label">{t('deviceSheet.stateLabel')}</span>
+        <span className="reading-value">{value}</span>
+      </div>
+      {/* Een radiatorknop warmt alleen als de eigen thermostaat de ketel
+          aanzet (model A): dat zeggen we eerlijk. */}
+      {device.capabilities?.includes('valve') && <p className="login-note">{t('deviceSheet.valveHint')}</p>}
+    </>
   )
 }
 

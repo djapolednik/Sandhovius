@@ -100,7 +100,7 @@
       "light": "Lamp",
       "switch": "Stopcontact",
       "sensor": "Sensor",
-      "climate": "Thermostaat"
+      "climate": "Radiatorknop"
     },
     "offline": "Offline",
     "unreachable": "Niet bereikbaar",
@@ -145,7 +145,7 @@
     "noHouse": "Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt je huis hier.",
     "firstDevice": {
       "title": "Voeg je eerste apparaat toe",
-      "text": "Een lamp, stopcontact, sensor of thermostaat. Hij verschijnt meteen op Home, zodat je hem met één tik bedient."
+      "text": "Een lamp, stopcontact, sensor of radiatorknop. Hij verschijnt meteen op Home, zodat je hem met één tik bedient."
     },
     "noRoom": "Geen kamer",
     "allOff": "Alles uit",
@@ -428,7 +428,8 @@
     "offlineNote": "Offline, dit is de laatst bekende stand.",
     "shownAsLight": "Weergeven als lamp",
     "shownAsLightHint": "Voor een stopcontact met een lamp erin: een lamptegel die warm oplicht. Dimmen kan niet.",
-    "motionNow": "Er is nu beweging"
+    "motionNow": "Er is nu beweging",
+    "valveHint": "Verwarmt als je eigen thermostaat de ketel aanzet."
   },
   "schedules": {
     "everyDay": "Elke dag",
@@ -466,7 +467,7 @@
     "editTitle": "Scène wijzigen",
     "namePlaceholder": "Bijv. Naar bed",
     "what": "Wat doet de scène?",
-    "noDevices": "Voeg eerst een lamp, stopcontact of thermostaat toe.",
+    "noDevices": "Voeg eerst een lamp, stopcontact of radiatorknop toe.",
     "deviceLegend": "{name} in deze scène",
     "modes": {
       "skip": "Niet",
@@ -544,7 +545,7 @@
       "light": "Bijv. Leeslamp",
       "switch": "Bijv. Stopcontact tv",
       "sensor": "Bijv. Bewegingssensor gang",
-      "climate": "Bijv. Thermostaat woonkamer"
+      "climate": "Bijv. Radiator woonkamer"
     }
   },
   "favoritesOrder": {
@@ -595,7 +596,7 @@
       "light": "Zet de lamp 5 keer aan en uit, 1 seconde per keer.",
       "switch": "Houd het knopje op het stopcontact 5 seconden ingedrukt.",
       "sensor": "Druk het knopje in met een paperclip tot het lampje knippert.",
-      "climate": "Kijk in de handleiding hoe je hem koppelt.",
+      "climate": "Houd het knopje op de radiatorknop ingedrukt tot het koppelteken knippert. In de handleiding staat hoe lang.",
       "hue": "Druk op de knop van je Hue-bridge."
     },
     "searching": "Zoeken, nog {time}",
@@ -610,7 +611,7 @@
       "light": "Ik zie mijn lamp niet",
       "switch": "Ik zie mijn stopcontact niet",
       "sensor": "Ik zie mijn sensor niet",
-      "climate": "Ik zie mijn thermostaat niet",
+      "climate": "Ik zie mijn radiatorknop niet",
       "hue": "Ik zie mijn lamp niet"
     },
     "help": {
@@ -625,7 +626,7 @@
       "light": "{count, plural, one {Je lamp is klaar} other {Je # lampen zijn klaar}}",
       "switch": "{count, plural, one {Je stopcontact is klaar} other {Je # stopcontacten zijn klaar}}",
       "sensor": "{count, plural, one {Je sensor is klaar} other {Je # sensoren zijn klaar}}",
-      "climate": "{count, plural, one {Je thermostaat is klaar} other {Je # thermostaten zijn klaar}}",
+      "climate": "{count, plural, one {Je radiatorknop is klaar} other {Je # radiatorknoppen zijn klaar}}",
       "mixed": "{count, plural, one {Je apparaat is klaar} other {Je # apparaten zijn klaar}}"
     },
     "addAnother": "Nog een toevoegen",
@@ -635,7 +636,8 @@
     "stopped": "Het zoeken is gestopt.",
     "searchAgain": "Opnieuw zoeken",
     "part": "{type} {number}",
-    "ready": "Klaar"
+    "ready": "Klaar",
+    "valveNote": "Je eigen thermostaat blijft de ketel aansturen; de radiatorknop regelt de warmte in deze kamer."
   },
   "sensors": {
     "closed": "Dicht",

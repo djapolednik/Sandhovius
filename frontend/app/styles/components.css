@@ -389,6 +389,7 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
   min-height: 60px;
   padding: 0.55rem 0.75rem;
   border: 2px solid transparent;
@@ -402,7 +403,17 @@
     background-color 0.15s ease;
 }
 
+/* Lange soortnamen ("Radiatorknop") breken op een smalle telefoon netjes af
+   i.p.v. tegen de rand te lopen. */
+.type-tile-label {
+  min-width: 0;
+  text-align: start;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
 .type-tile-icon.device-icon {
+  flex: none;
   width: 38px;
   height: 38px;
   background: var(--card-background);
