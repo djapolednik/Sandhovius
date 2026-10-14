@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { PAIRING_KINDS, doneLine, instructionKey, secondsLeft, visibleCandidates } from './pairing.js'
+import { PAIRING_KINDS, doneLine, instructionKey, openSessionChoice, secondsLeft, visibleCandidates } from './pairing.js'
 import { INTL, assertMessage } from './messages.testkit.js'
 
 const { nl, en } = INTL
@@ -31,6 +31,14 @@ test('secondsLeft: tot de sessie dicht gaat, nooit negatief', () => {
   assert.equal(secondsLeft('2026-10-14 09:00:00.400Z', now), 1)
   assert.equal(secondsLeft('2026-10-14 08:59:00.000Z', now), 0)
   assert.equal(secondsLeft('', now), 0)
+})
+
+test('openSessionChoice: je eigen open sessie overnemen of vervangen, die van een ander niet', () => {
+  const mine = { id: 's1', kind: 'light', created_by: 'u1' }
+  assert.equal(openSessionChoice(mine, 'u1', 'light'), 'resume')
+  assert.equal(openSessionChoice(mine, 'u1', 'sensor'), 'replace')
+  assert.equal(openSessionChoice(mine, 'u2', 'light'), 'busy')
+  assert.equal(openSessionChoice(null, 'u1', 'light'), 'busy')
 })
 
 test('doneLine: per soort, en gemengd', () => {

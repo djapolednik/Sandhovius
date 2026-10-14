@@ -28,6 +28,14 @@ export function secondsLeft(expires, nowMs = Date.now()) {
   return Math.max(0, Math.ceil((end - nowMs) / 1000))
 }
 
+// Er staat al een sessie open in dit huis (de hook weigert een tweede). Is
+// het je eigen, bijvoorbeeld omdat de app werd gesloten terwijl je zocht,
+// dan neem je hem over (zelfde soort) of vervang je hem; van een ander niet.
+export function openSessionChoice(open, userId, kind) {
+  if (!open || open.created_by !== userId) return 'busy'
+  return open.kind === kind ? 'resume' : 'replace'
+}
+
 // "Je 3 lampen zijn klaar": per soort als alles van één soort is.
 export function doneLine({ t }, added) {
   const types = new Set(added.map((c) => c.type))

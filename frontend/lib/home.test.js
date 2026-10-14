@@ -60,10 +60,10 @@ test('homeLede: huis en buiten in één regel, zonder verouderd weer', () => {
 const item = (name, kind, battery) => ({ device: { id: name, name }, kind, battery })
 
 test('sortAttention: wat het niet doet eerst, de volgorde binnen een soort blijft', () => {
-  const items = [item('Sensor', 'battery', 12), item('Lamp A', 'offline'), item('Stekker', 'setup'), item('Lamp B', 'offline')]
+  const items = [item('Sensor', 'battery', 12), item('Lamp A', 'offline'), item('Keuken', 'leak'), item('Lamp B', 'offline')]
   assert.deepEqual(
     sortAttention(items).map((i) => i.device.name),
-    ['Stekker', 'Lamp A', 'Lamp B', 'Sensor']
+    ['Keuken', 'Lamp A', 'Lamp B', 'Sensor']
   )
   assert.equal(items[0].device.name, 'Sensor')
 })
@@ -73,6 +73,6 @@ test('attentionLine: één apparaat bij naam, meer als aantal', () => {
   assert.equal(attentionLine(nl, [item('Testlamp', 'offline')]), 'Testlamp: offline')
   assert.equal(attentionLine(nl, [item('Sensor', 'battery', 9)]), 'Sensor: batterij bijna leeg (9%)')
   assert.equal(attentionLine(nl, [item('A', 'offline'), item('B', 'battery', 9)]), '2 apparaten vragen aandacht')
-  assert.equal(attentionLine(en, [item('Plug', 'setup')]), 'Plug: setup didn’t work')
+  assert.equal(attentionLine(en, [item('Plug', 'offline')]), 'Plug: offline')
   assert.equal(attentionLine(en, [item('A', 'offline'), item('B', 'offline')]), '2 devices need attention')
 })

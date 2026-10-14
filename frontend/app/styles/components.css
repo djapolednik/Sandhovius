@@ -1744,3 +1744,124 @@
 .empty-state-invitations .invitation-list {
   margin-bottom: 0;
 }
+
+/* ==================== Koppelen (PairingSheet) ====================
+   Eén lijst met wat de box vindt: icoon, soort en model, en de acties. Geen
+   gloed: er brandt nog niets. */
+.pairing-instruction {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.pairing-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pairing-row {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+}
+
+.pairing-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pairing-row-main .device-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  background: var(--card-background);
+}
+
+.pairing-row-text {
+  display: grid;
+  min-width: 0;
+}
+
+.pairing-row-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.pairing-row-meta {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.pairing-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.pairing-form {
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.pairing-help-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.pairing-help {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+}
+
+.pairing-help ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.2rem;
+  line-height: 1.5;
+}
+
+.pairing-done {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.pairing-done-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+}
+
+/* Een tweede knop in een rij: het paneel als ondergrond, anders valt hij
+   weg tegen de rij; en nooit afbreken ("Laat knip-peren"). */
+.pairing-row .btn-secondary {
+  background: var(--card-background);
+}
+
+.pairing-row .btn {
+  white-space: nowrap;
+}
+
+/* Klaar: twee even brede knoppen. */
+.pairing-done-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}

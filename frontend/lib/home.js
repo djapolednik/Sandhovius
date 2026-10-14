@@ -62,11 +62,11 @@ export function homeLede({ t, locale }, { summary = null, weather = null, weathe
   return parts.length ? parts.join('. ') : null
 }
 
-// "Let op": eerst wat het zwaarst weegt. Een mislukt klaarzetten en een
-// apparaat dat offline is doen het niet; een bijna lege batterij nog wel.
+// "Let op": eerst wat het zwaarst weegt. Rook en lekkage zijn een alarm;
+// een apparaat dat offline is doet het niet; een bijna lege batterij nog wel.
 // Binnen een soort blijft de volgorde van de apparaten.
 // Rook en lekkage gaan boven alles.
-const ATTENTION_ORDER = { smoke: 0, leak: 1, setup: 2, offline: 3, battery: 4 }
+const ATTENTION_ORDER = { smoke: 0, leak: 1, offline: 2, battery: 3 }
 
 export function sortAttention(items) {
   return [...items].sort((a, b) => ATTENTION_ORDER[a.kind] - ATTENTION_ORDER[b.kind])

@@ -105,7 +105,6 @@
     "offline": "Offline",
     "unreachable": "Niet bereikbaar",
     "pairing": "Wordt klaargezet",
-    "setupFailed": "Niet klaargezet",
     "noReadings": "Geen metingen",
     "motion": "Beweging",
     "noMotion": "Geen beweging",
@@ -134,7 +133,6 @@
     "outside": "Buiten {condition}",
     "outsideWithTemperature": "Buiten {condition}, {temperature}",
     "attention": {
-      "setup": "klaarzetten is niet gelukt",
       "offline": "offline",
       "battery": "batterij bijna leeg ({percent}%)",
       "one": "{name}: {reason}",
@@ -255,7 +253,6 @@
       "saveOrder": "Volgorde opslaan",
       "deleteNamed": "{name} verwijderen",
       "addToHome": "Op Home zetten",
-      "provision": "{name} klaarzetten",
       "runScene": "„{name}” uitvoeren",
       "scheduleOn": "Het schema van {time} aanzetten",
       "scheduleOff": "Het schema van {time} uitzetten",
@@ -404,7 +401,6 @@
     "switchLabel": "Lampen en stopcontacten in {room}"
   },
   "deviceSheet": {
-    "setupFailed": "Het klaarzetten is niet gelukt.",
     "showOnHome": "Op Home tonen",
     "name": "Naam",
     "room": "Kamer",
@@ -541,7 +537,6 @@
   },
   "addDevice": {
     "what": "Wat voeg je toe?",
-    "saving": "Bezig met toevoegen…",
     "examples": {
       "light": "Bijv. Leeslamp",
       "switch": "Bijv. Stopcontact tv",
@@ -633,7 +628,11 @@
     "addAnother": "Nog een toevoegen",
     "buttonPressed": "Ik heb gedrukt",
     "connecting": "Verbinden met je Hue-bridge…",
-    "boxUnreachable": "Toevoegen kan pas als je Sandhovius-box weer reageert."
+    "boxUnreachable": "Toevoegen kan pas als je Sandhovius-box weer reageert.",
+    "stopped": "Het zoeken is gestopt.",
+    "searchAgain": "Opnieuw zoeken",
+    "part": "{type} {number}",
+    "ready": "Klaar"
   },
   "sensors": {
     "closed": "Dicht",
