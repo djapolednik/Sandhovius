@@ -1,6 +1,6 @@
 # Apparaten koppelen: echte apparaten zoeken en toevoegen
 
-Datum: 2026-10-14 · Status: ontwerp · Bouwt op: bewegingslicht
+Datum: 2026-10-14 · Status: gebouwd (2026-10-14; Hue nog niet met een echte bridge doorgelopen) · Bouwt op: bewegingslicht
 (`2026-10-13-motion-light-design.md`, device-cache), huisgenoten
 (`2026-10-07-household-design.md`), box-identiteit
 (`2026-10-06-box-identity-design.md`) · Plan:

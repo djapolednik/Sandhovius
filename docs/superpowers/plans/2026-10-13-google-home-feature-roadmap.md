@@ -35,7 +35,7 @@ Stand: 2026-10-13. Bron: Google Home 3.40.48.3 (Android, APKMirror-bundel van
 Toets: werkt het lokaal, snapt een niet-technische bewoner het, en kan het met
 HA + Zigbee2MQTT zonder nieuwe hardware? Afvallers staan onderaan.
 
-### Fase A0 — echte apparaten koppelen (eerst, fundament)
+### Fase A0 — echte apparaten koppelen (eerst, fundament) ✅ gebouwd 2026-10-14
 
 Nu maakt "+" een **virtuele helper** in HA (`input_boolean`/`input_number`,
 `provisionDeviceEntity` in `agent/internal/app/agent.go`); er wordt niets
@@ -118,7 +118,7 @@ alternatief voor een tijd. Staat al in `docs/status.md` als bewust uitgesteld.
 - Risico: zonder internet blijft `sun.sun` werken (lokale berekening), wel
   een thuislocatie nodig; die heeft HA al voor het weer.
 
-**A2. Batterij en sensorstanden in "Let op".** Zigbee2MQTT meldt `battery`;
+**A2. Batterij en sensorstanden in "Let op".** ✅ Gebouwd 2026-10-14, samen met A0 (spec `2026-10-14-device-pairing-design.md`). Zigbee2MQTT meldt `battery`;
 lekkage-, rook- en contactsensoren hebben een binaire stand.
 - Agent: batterij-attribuut meeschrijven in `device_state`.
 - PWA: "Batterij bijna leeg" (onder ~15 %) in `sortAttention`; sensortegels
@@ -403,7 +403,7 @@ later apart.
 
 ## Volgorde
 
-Spec apparaten (A0 + apparaatmodel + A2) → A0 → A2 → A1 → spec B1 → B1 →
+~~Spec apparaten (A0 + apparaatmodel + A2) → A0 → A2~~ (gebouwd) → A1 → spec B1 → B1 →
 B3 (handmatig) → B2 (met fase 3) → C1 → D1.
 A3 en C2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week:
 fase A ~3–4 weken, B1 ~4–6 weken, de rest volgt op fase 3.

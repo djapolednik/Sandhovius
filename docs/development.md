@@ -37,28 +37,47 @@ http://localhost:8090/_/ (superuser in `.env`, `POCKETBASE_ADMIN_*`: alleen
 voor PocketBase zelf en de scripts, de agent gebruikt ze niet meer) · PWA:
 http://localhost:3000 · Mailpit: http://localhost:8025
 
-## Gesimuleerde lampen
+## Apparaten koppelen zonder Zigbee-stick
 
-Voor dimmen en kleuren zonder echte lamp:
+`scripts/fake-zigbee.py` speelt Zigbee2MQTT na over MQTT: koppelen open/dicht
+(`bridge/request/permit_join`), `bridge/devices`, de events `device_joined` en
+`device_interview`, HA-discovery voor lampen en stekkers, `set` (ook
+`effect: blink`) en `device/remove`. De echte Zigbee2MQTT-container start
+zonder stick niet, dus ze zitten elkaar niet in de weg.
 
 ```bash
 pip install -r scripts/requirements.txt
-python scripts/fake-lights.py          # laat draaien; --host/--port als de broker elders staat
+python scripts/fake-zigbee.py          # laat draaien; --host/--port als de broker elders staat
 ```
 
-Het script meldt drie lampen aan via MQTT-discovery ("Testlamp dimbaar", "Testlamp wit", "Testlamp kleur"). Maak de drie devices aan in het PocketBase-beheer (http://localhost:8090/_/, collectie `devices`) met `type=light`, `gateway=<huis-id>`, `entity_id=light.testlamp_dimbaar`, `light.testlamp_wit` en `light.testlamp_kleur`, en een kamer (of laat ze staan als ze er al zijn). Toevoegen via de app werkt hier niet: dat maakt een `input_boolean`-helper aan, geen koppeling met een bestaande `light.*`. Opruimen: `python scripts/fake-lights.py --remove`, daarna de drie devices in het PocketBase-beheer (http://localhost:8090/_/) verwijderen.
-
-De MQTT-integratie van Home Assistant zet de agent zelf op (eenmalig bij de start, als HA hem nog niet heeft); die blijft staan, ook na `--remove`.
-
-### Bewegingslicht zonder sensor
-
-Een bewegingssensor is ook nep te maken, via het Zigbee-pad zoals een echte sensor meldt. Maak in het PocketBase-beheer een device met `type=sensor`, `gateway=<huis-id>` en `entity_id=test_beweging` (dan maakt de agent geen helper aan), en meld beweging:
+Tik in de app op "+", kies een soort en laat dan een apparaat binnenkomen
+(alleen terwijl koppelen openstaat):
 
 ```bash
-docker exec sandhovius-mosquitto mosquitto_pub -t zigbee2mqtt/test_beweging -m '{"occupancy":true}'
+docker exec sandhovius-mosquitto mosquitto_pub -t fake/zigbee/join -m '{"kind":"light"}'
 ```
 
-Pas daarna staat de sensor in de sheet (alleen sensoren die ooit beweging meldden). Een bewegingslicht geldt op de box binnen een minuut (het snapshot); `{"occupancy":false}` laat de klok lopen. Kies een virtuele lamp (een `input_boolean`), geen echte. In het log: `[BEWEGING]`. Opruimen: het bewegingslicht en het device verwijderen.
+Soorten: `light`, `plug2` (dubbele stekker: twee delen), `motion`, `contact`,
+`leak`. Een ander soort dan de sessie verschijnt niet en gaat meteen van het
+netwerk; wat je niet toevoegt gaat bij het sluiten weg. In het agent-log:
+`[KOPPELEN]`. De nep-apparaten blijven bewaard in `scripts/.fake-zigbee.json`
+(niet in git). Een sensor iets laten melden:
+
+```bash
+docker exec sandhovius-mosquitto mosquitto_pub -t zigbee2mqtt/<adres> -m '{"water_leak":true}'
+```
+
+Lekkage en rook staan dan bovenaan Home (Let op), `{"occupancy":true}` zet een
+bewegingslicht aan. Opruimen: het device in de app verwijderen; de agent haalt
+het dan van het (nep-)netwerk.
+
+**Philips Hue:** op de box vindt HA de bridge zelf (mDNS, `network_mode:
+host`). In dev zet je het adres in `.env` (`HUE_BRIDGE_HOST=192.168.…`) en
+herstart je de agent. Een Hue-sessie schakelt **echte lampen** (Laat
+knipperen): vooraf zeggen, en daarna de lamp terugzetten.
+
+De MQTT-integratie van Home Assistant zet de agent zelf op (eenmalig bij de
+start, als HA hem nog niet heeft).
 
 ## Valkuilen
 

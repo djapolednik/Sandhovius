@@ -17,7 +17,7 @@ Ontwerpkeuzes in detail: `docs/superpowers/specs/`.
 5. [De Go Agent: opbouw](#5-de-go-agent-opbouw)
 6. [Box-identiteit en het huis van de box](#6-box-identiteit-en-het-huis-van-de-box)
 7. [Starten en herstellen zonder PocketBase](#7-starten-en-herstellen-zonder-pocketbase)
-8. [Datastroom: device → PocketBase](#8-datastroom-device--pocketbase)
+8. [Datastroom: device → PocketBase](#8-datastroom-device--pocketbase) en [koppelen](#8b-koppelen-een-echt-apparaat-toevoegen)
 9. [Online/offline en de hartslag](#9-onlineoffline-en-de-hartslag)
 10. [Lokale geschiedenis (SQLite)](#10-lokale-geschiedenis-sqlite)
 11. [Het commandopad: PocketBase → device](#11-het-commandopad-pocketbase--device)
@@ -73,8 +73,8 @@ Twee dingen zijn bewust dubbel, voor betrouwbaarheid:
 | Service | Image | Rol |
 |---|---|---|
 | `mosquitto` | `eclipse-mosquitto:2` | MQTT-broker tussen Zigbee2MQTT en de agent |
-| `homeassistant` | `ghcr.io/home-assistant/home-assistant:stable` | State management; apparaten uit de app worden HA-helpers (`input_boolean`/`input_number`) |
-| `zigbee2mqtt` | `koenkk/zigbee2mqtt:latest` | Zigbee-radio ↔ MQTT (vereist een echte USB-coordinator; in dev afwezig) |
+| `homeassistant` | `ghcr.io/home-assistant/home-assistant:stable` | State management en bediening; Zigbee-apparaten via MQTT-discovery van Zigbee2MQTT, Philips Hue via de lokale `hue`-integratie |
+| `zigbee2mqtt` | `koenkk/zigbee2mqtt:latest` | Zigbee-radio ↔ MQTT (vereist een echte USB-coordinator; in dev afwezig, dan `scripts/fake-zigbee.py`) |
 | `agent` | eigen build (`agent/Dockerfile`) | De Go Local Agent |
 | `pocketbase` | `ghcr.io/muchobien/pocketbase:0.40.4` | Database, auth, realtime API, hooks. **Vastgepind**: de beveiliging leunt op gedrag dat tests op 0.40.4 vastleggen |
 | `mailpit` | `axllent/mailpit:v1.21.8` | Vangt alle mail in dev op; zichtbaar op http://localhost:8025 |
@@ -108,7 +108,9 @@ het starten helemaal op.
 | `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen), `agent_version` + `reported_at` (alleen via `box.pb.js`) |
 | `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
-| `devices` | base | Apparaten | `gateway` (= huis), `entity_id`, `name`, `type`, `online`, `room` |
+| `devices` | base | Apparaten; alleen de box maakt ze (bij koppelen) | `gateway` (= huis), `name`, `room`, `shown_as` (bewoner: `light` of leeg, alleen bij `type = switch`); box: `type` (`light`/`switch`/`sensor`/`climate`), `source` (`zigbee`/`hue`), `address` (IEEE-adres of HA-device-id, nooit de naam), `endpoint` (`l1`, `l2` … bij een meervoudig apparaat), `entity_id` (HA-hoofdentiteit; leeg bij een sensor), `capabilities` (JSON, vaste woordenlijst), `model`, `online` |
+| `pairing_sessions` | base | Een koppelsessie: de box zoekt | `house`, `kind` (`light`/`switch`/`sensor`/`climate`/`hue`), `status` (`starting`/`open`/`waiting_button`/`closed`/`failed`), `expires`, `error` (foutcode), `created_by`, `extend`, `button_pressed` |
+| `pairing_candidates` | base | Wat de box in een sessie vond | `session`, `address`, `endpoint`, `type`, `capabilities`, `model`, `source`, `status` (`interviewing`/`found`/`unsupported`/`adding`/`added`/`failed`), `identify` (teller: laten knipperen), `name`, `room`, `add`, `device` |
 | `favorites` | base | Favorieten op Home, per persoon | `user`, `device` (cascade), `order`; uniek op (user, device) |
 | `invitations` | base | Uitnodigingen voor een huis | `house` (cascade), `email` (kleine letters), `role` (`admin`/`member`), `invited_by`, `house_name`, `inviter_name`, `expires` (+7 dagen), `created`; uniek op (house, email) |
 | `device_state` | base | **Huidige** stand per device (één rij, overschreven) | `device`, `state` (JSON), `updated_at` |
@@ -162,8 +164,12 @@ box:     @request.auth.collectionName = "boxes" && @request.auth.house != ""
 - De box-tak eist een huis; zonder huis ziet en schrijft een box niets (hij
   draait dan alleen lokaal).
 - Een box mag alleen de velden schrijven die de agent nodig heeft (bijv. bij
-  `devices` alleen `entity_id` en `online`; bij `commands` alleen `status` en
-  `error`). Een integratietest probeert elk ander veld, ook velden die later
+  `devices` de identiteit, mogelijkheden en `online`, nooit `name`, `room` of
+  `shown_as`; bij `commands` alleen `status` en `error`). Andersom mag een
+  bewoner geen device aanmaken en geen box-veld zetten: "geen neplamp" geldt
+  in de regels, niet alleen in de UI. Bij koppelen schrijft een lid alleen
+  `status = closed`, `extend` en `button_pressed` op de sessie, en `identify`,
+  `name`, `room` (uit hetzelfde huis) en `add` op een candidate. Een integratietest probeert elk ander veld, ook velden die later
   bijkomen.
 - Realtime volgt dezelfde regels: een box krijgt alleen events van zijn eigen
   huis, een bewoner alleen van zijn eigen huizen.
@@ -223,6 +229,14 @@ toont ze nooit, alleen óf er een fout is. Spec:
     beheerder: 409 `last_admin_of_house` met `params.house`). Verlaten ruimt je
     favorieten in dat huis op.
 
+- **`devices.pb.js` + `device_rules.js`** — `capabilities` alleen woorden uit
+  de woordenlijst (`invalid_capabilities`), `shown_as` alleen bij een stekker
+  (`invalid_shown_as`). De regels kunnen niet in JSON kijken; daarom een hook.
+- **`pairing.pb.js`** — zet `created_by` op de bewoner en weigert een tweede
+  open sessie in hetzelfde huis (400 `session_open`): twee telefoons die
+  tegelijk zoeken zouden elkaars vondsten zien of weghalen. De app neemt een
+  eigen open sessie van daarnet over (zelfde soort) of sluit hem.
+
 ### Rate limits
 
 Aan sinds de box-identiteit, per IP: PocketBase-standaarden (`*:auth` 2 per
@@ -250,14 +264,18 @@ agent/
     ├── box/              — /data/box.json lezen en het huis bijwerken (atomisch, 0600)
     ├── config/           — omgevingsvariabelen (BOX_FILE, SCHEDULES_FILE, …)
     ├── mqtt/             — MQTT-transport + Zigbee2MQTT-parsing
-    ├── homeassistant/    — websocket (events), REST (services, state), registry (helpers), weer
+    ├── homeassistant/    — websocket (events), REST (services, state), registry (entiteit bij een Zigbee-adres), config-flows, weer
     ├── pocketbase/       — REST-client, inloggen als box, realtime (SSE), per collectie een bestand
     ├── history/          — lokale SQLite-geschiedenis
     └── app/              — de orkestratie
         ├── agent.go          start/stop, HA- en MQTT-events, commando's, hartslag
         ├── connection.go     verbindingslus met backoff + herstelstap
         ├── house.go          huis uit het box-record: realtime + controle elke 5 minuten
-        ├── device_cache.go   entity_id → device-id, alleen van het eigen huis
+        ├── device_cache.go   entity_id/adres → device-id, alleen van het eigen huis
+        ├── pairing.go + pairing_runner.go   de koppelmotor (puur) en de I/O eromheen (§8b)
+        ├── classify.go       Zigbee2MQTT-exposes → type, endpoints, mogelijkheden
+        ├── bridge_directory.go + device_store.go   naam → adres; zelf toegevoegde adressen op schijf
+        ├── hue.go            Philips Hue via de HA-config-flow
         ├── commands.go       verlopen en claimen van commando's
         ├── scheduler.go + schedule_store.go   schema-klok en snapshot op schijf
         └── weather.go        weer uit HA naar houses.weather
@@ -319,7 +337,11 @@ ingelogd is, zodat er nooit een anoniem abonnement ontstaat.
 geparsed (`homeassistant/event.go`), naar `forwardHAEvent`.
 
 **Pad B — Zigbee2MQTT**: `zigbee2mqtt/<naam>` (stand) en
-`…/availability` (online/offline), naar `forwardZigbeeEvent`.
+`…/availability` (online/offline), naar `forwardZigbeeEvent`. De naam wordt
+eerst een IEEE-adres (uit het retained `zigbee2mqtt/bridge/devices`); de app
+kent alleen het adres, want een naam verandert bij hernoemen of opnieuw
+koppelen. Pad B schrijft alleen de stand van delen zonder HA-entiteit
+(sensoren); een lamp of stekker krijgt zijn stand van HA, per endpoint.
 
 Waarom beide: HA is de instabielste schakel; zonder Pad B zou Zigbee-tracking
 stilvallen als HA herstart. De prijs (soms dubbel schrijven, twee
@@ -335,6 +357,42 @@ Beide doen daarna:
    verwijderde device wijst), onbekende entity's negeren, `device_state` upserten en
    `online` bijwerken. Het HA-pad slaat een stand over die ouder is dan de
    laatst doorgestuurde (zie §3, `last_updated`).
+
+## 8b. Koppelen: een echt apparaat toevoegen
+
+Spec: `docs/superpowers/specs/2026-10-14-device-pairing-design.md`. De app
+opent een `pairing_sessions`-record; de box volgt sessies en candidates van
+zijn huis via realtime (één SSE-verbinding, twee topics).
+
+1. **Zigbee:** sessie `starting` → `bridge/request/permit_join {"time": 240}`
+   → `open` met `expires` (4 minuten, "Langer zoeken" zet een nieuwe).
+   `device_joined` van een adres dat er vóór de sessie niet was → candidate
+   `interviewing`; `device_interview` geslaagd → `classify(exposes)` → per
+   endpoint een candidate `found`. Geen definitie → `unsupported`; een ander
+   type dan de sessie → meteen `device/remove`, geen candidate.
+2. **Kiezen:** `identify` omhoog → `effect: blink` (of `identify` als het
+   apparaat dat kent; een stekker niet). `add` → de box zoekt de HA-entiteit
+   van adres + endpoint (registry, identifier `zigbee2mqtt_<ieee>`), maakt het
+   device, zet de candidate op `added` en haalt meteen de stand op.
+3. **Dicht** (verlopen, de app sluit, of de box herstart midden in een
+   sessie): `permit_join {"time": 0}` en elk adres uit deze sessie zonder
+   toegevoegd deel van het netwerk. Regel: **wat op het netwerk zit, staat in
+   de app.**
+4. **Hue:** de box zoekt een ontdekte `hue`-flow in HA (of start er een met
+   `HUE_BRIDGE_HOST`) → `waiting_button` → de bewoner drukt op de bridge en
+   tikt "Ik heb gedrukt" → de box rondt de link-stap af → elke lamp van de
+   bridge die nog niet in de app staat wordt een candidate. Hue-lampen haalt
+   de box nooit ergens weg.
+
+**Wat de box nooit weghaalt:** een adres dat hij niet kent. Hij haalt alleen
+weg wat in deze sessie binnenkwam, of wat hij zelf toevoegde en waarvan het
+laatste device-record werd verwijderd (`/data/devices.json`). Zo kan een halve
+lijst uit PocketBase (een storing) nooit het netwerk leeghalen. Een dubbele
+stekker gaat pas van het netwerk als beide delen weg zijn.
+
+**De oude virtuele helpers** (`input_boolean`/`input_number`) zijn weg: een
+migratie verwijderde alle dev-devices (harde overgang) en de agent haalt bij
+de eerste start de helpers eenmalig uit HA (vlag in `/data`).
 
 ---
 
@@ -374,10 +432,11 @@ app maakt record  →  commands (pending)  →  agent (realtime SSE)  →  HA-se
 2. De agent hoort het realtime, of bij het inhalen na een (her)start.
 3. Controles, in volgorde: is het device/de scène van **dit** huis (anders
    negeren — dat is een commando voor een andere box); is het **verlopen**
-   (ouder dan 2 minuten, behalve `provision`; dan `failed` "verlopen")? Elk
+   (ouder dan 2 minuten; dan `failed` "verlopen")? Elk
    commando wordt maar één keer opgepakt, ook als realtime en inhalen hetzelfde
    zien.
-4. Uitvoeren via HA's domein-agnostische `homeassistant.turn_on/turn_off/toggle`
+4. `identify` (Laat knipperen in de detail-sheet) gaat via Zigbee2MQTT of,
+   bij Hue, `light.turn_on` met `flash: short`. De rest gaat via HA's domein-agnostische `homeassistant.turn_on/turn_off/toggle`
    (of `climate.set_temperature`). Een `turn_on` met payload op een lamp
    (`brightness_pct`, `color_temp_kelvin`, `rgb_color`) gaat naar
    `light.turn_on`, na controle van de sleutels en waarden (`serviceCall` in
@@ -461,8 +520,10 @@ Gevonden door verbindingen echt te verbreken, niet in theorie:
   SMTP-provider en `APP_URL`, `trustedProxy` voor de rate limits, rate limits
   op aanmelden en mail opnieuw sturen, versleuteling van de PocketBase-
   instellingen (het SMTP-wachtwoord staat daar).
-- **Geen echte Zigbee-hardware getest**; Zigbee-paden zijn gesimuleerd met
-  `mosquitto_pub`.
+- **Geen echte Zigbee-hardware getest**; koppelen en de Zigbee-paden zijn
+  gesimuleerd met `scripts/fake-zigbee.py` en `mosquitto_pub`. Welke
+  Zigbee-thermostaten we ondersteunen staat nog open (`climate`-exposes
+  verschillen per merk).
 - **Geen direct Zigbee2MQTT `…/set`-commandopad**: commando's gaan via HA.
 - **Geen timeout-gebaseerde offline-detectie** voor devices (§9).
 - **Een dode realtime-verbinding** valt pas na ~3 minuten TCP-keepalive op; een
