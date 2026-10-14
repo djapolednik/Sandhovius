@@ -222,7 +222,10 @@
     "noDays": "No days chosen",
     "editSchedule": "Edit {name} at {time}",
     "lastFailed": "Didn’t work last time",
-    "scheduleSwitch": "Run {name} automatically at {time}"
+    "scheduleSwitch": "Run {name} automatically at {time}",
+    "noLocation": "Doesn’t know where your home is",
+    "editScheduleWhen": "Edit {name} {when}",
+    "scheduleSwitchWhen": "Run {name} {when} automatically"
   },
   "nav": {
     "home": "Home",
@@ -436,7 +439,22 @@
     "weekdays": "Weekdays",
     "weekend": "Weekend",
     "daysAt": "{days} at {time}",
-    "at": "At {times}"
+    "at": "At {times}",
+    "atTime": "at {time}",
+    "sunrise": "sunrise",
+    "sunset": "sunset",
+    "atSun": "at {sun}",
+    "beforeSun": "{duration} before {sun}",
+    "afterSun": "{duration} after {sun}",
+    "minutes": "{count, plural, one {# minute} other {# minutes}}",
+    "hours": "{count, plural, one {# hour} other {# hours}}",
+    "hoursMinutes": "{hours} and {minutes}",
+    "daysWhen": "{days} {when}",
+    "today": "today at {time}",
+    "tomorrow": "tomorrow at {time}",
+    "onDay": "{day} at {time}",
+    "minutesShort": "{count} min",
+    "hoursShort": "{count} h"
   },
   "light": {
     "warmWhite": "warm white",
@@ -486,7 +504,23 @@
     "lastRunFailed": "Didn’t work on {when}. Check Needs attention to see whether all your devices can be reached.",
     "addTime": "Add a time",
     "confirmDelete": "Delete scene “{name}”? Your devices stay as they are.",
-    "delete": "Delete scene"
+    "delete": "Delete scene",
+    "trigger": "When",
+    "triggers": {
+      "time": "Time",
+      "sunrise": "Sunrise",
+      "sunset": "Sunset"
+    },
+    "direction": "Before, at or after",
+    "directions": {
+      "before": "Before",
+      "at": "At",
+      "after": "After"
+    },
+    "offset": "How much earlier or later",
+    "noLocation": "Your box doesn’t know where your home is yet, so it can’t follow the sun.",
+    "runWhen": "Run {when} automatically",
+    "removeWhen": "Remove the schedule {when}"
   },
   "claim": {
     "tooMany": "Too many attempts, try again in a minute",

@@ -3,7 +3,7 @@
 import { useIntl } from '../app/LanguageContext'
 import { cachedFormat } from '../lib/language'
 import { ArrowUpRightIcon, CheckIcon, ClockIcon, MotionIcon, PlusIcon, ScenesIcon } from '../lib/icons'
-import { describeDays, describeSchedules } from '../lib/schedules'
+import { describeDays, describeSchedules, isSun, scheduleSortKey, scheduleWhen } from '../lib/schedules'
 import { describeLightStep } from '../lib/sceneChoices'
 import { describeMotionLight } from '../lib/motionLights'
 
@@ -149,7 +149,11 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
   const sceneById = Object.fromEntries(scenes.map((scene) => [scene.id, scene]))
   const rows = schedules
     .filter((schedule) => sceneById[schedule.scene])
-    .sort((a, b) => a.time.localeCompare(b.time) || sceneById[a.scene].name.localeCompare(sceneById[b.scene].name, locale))
+    .sort(
+      (a, b) =>
+        scheduleSortKey(a).localeCompare(scheduleSortKey(b)) ||
+        sceneById[a.scene].name.localeCompare(sceneById[b.scene].name, locale)
+    )
 
   return (
     <section className="schedules-section" aria-labelledby="schedules-heading">
@@ -163,22 +167,35 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
           {rows.map((schedule) => {
             const scene = sceneById[schedule.scene]
             const days = describeDays(intl, schedule.days ?? []) || t('scenes.noDays')
+            const sun = isSun(schedule)
+            // Een zon-schema: de tijd van vandaag als grootste woord (de box
+            // rekent hem uit), en eronder de zon in woorden.
+            const big = sun ? (schedule.next_run ? scheduleSortKey(schedule) : t(`sceneSheet.triggers.${schedule.trigger}`)) : schedule.time
+            const noLocation = sun && schedule.last_error === 'no_location'
+            const when = scheduleWhen(intl, schedule)
             return (
               <li key={schedule.id} className={`panel schedule-card ${schedule.enabled ? '' : 'schedule-card-off'}`}>
                 <button
                   type="button"
                   className="device-card-action"
-                  aria-label={t('scenes.editSchedule', { name: scene.name, time: schedule.time })}
+                  aria-label={
+                    sun
+                      ? t('scenes.editScheduleWhen', { name: scene.name, when })
+                      : t('scenes.editSchedule', { name: scene.name, time: schedule.time })
+                  }
                   onClick={() => onEdit(scene)}
                 />
                 <span className="device-icon" aria-hidden="true">
                   <ClockIcon width="22" height="22" />
                 </span>
                 <span className="schedule-card-text">
-                  <span className="schedule-card-time">{schedule.time}</span>
+                  <span className="schedule-card-time">{big}</span>
                   <span className="schedule-card-name">{scene.name}</span>
-                  <span className="schedule-card-days">{days}</span>
-                  {schedule.enabled && schedule.last_error && (
+                  <span className="schedule-card-days">
+                    {sun ? t('schedules.daysWhen', { days, when }) : days}
+                  </span>
+                  {schedule.enabled && noLocation && <span className="schedule-card-error">{t('scenes.noLocation')}</span>}
+                  {schedule.enabled && schedule.last_error && !noLocation && (
                     <span className="schedule-card-error">{t('scenes.lastFailed')}</span>
                   )}
                 </span>
@@ -186,7 +203,11 @@ function ScheduleList({ scenes, schedules, onEdit, onToggleSchedule }) {
                   type="button"
                   role="switch"
                   aria-checked={schedule.enabled}
-                  aria-label={t('scenes.scheduleSwitch', { name: scene.name, time: schedule.time })}
+                  aria-label={
+                    sun
+                      ? t('scenes.scheduleSwitchWhen', { name: scene.name, when })
+                      : t('scenes.scheduleSwitch', { name: scene.name, time: schedule.time })
+                  }
                   className={`switch switch-accent schedule-card-switch ${schedule.enabled ? 'switch-on' : ''}`}
                   onClick={() => onToggleSchedule(schedule, !schedule.enabled)}
                 >

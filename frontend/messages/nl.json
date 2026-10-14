@@ -222,7 +222,10 @@
     "noDays": "Geen dagen gekozen",
     "editSchedule": "{name} om {time} wijzigen",
     "lastFailed": "De laatste keer niet gelukt",
-    "scheduleSwitch": "{name} om {time} vanzelf uitvoeren"
+    "scheduleSwitch": "{name} om {time} vanzelf uitvoeren",
+    "noLocation": "Weet niet waar je huis staat",
+    "editScheduleWhen": "{name} {when} wijzigen",
+    "scheduleSwitchWhen": "{name} {when} vanzelf uitvoeren"
   },
   "nav": {
     "home": "Home",
@@ -436,7 +439,22 @@
     "weekdays": "Werkdagen",
     "weekend": "Weekend",
     "daysAt": "{days} om {time}",
-    "at": "Om {times}"
+    "at": "Om {times}",
+    "atTime": "om {time}",
+    "sunrise": "zonsopkomst",
+    "sunset": "zonsondergang",
+    "atSun": "bij {sun}",
+    "beforeSun": "{duration} voor {sun}",
+    "afterSun": "{duration} na {sun}",
+    "minutes": "{count, plural, one {# minuut} other {# minuten}}",
+    "hours": "{count, plural, one {# uur} other {# uur}}",
+    "hoursMinutes": "{hours} en {minutes}",
+    "daysWhen": "{days} {when}",
+    "today": "vandaag om {time}",
+    "tomorrow": "morgen om {time}",
+    "onDay": "{day} om {time}",
+    "minutesShort": "{count} min",
+    "hoursShort": "{count} uur"
   },
   "light": {
     "warmWhite": "warm wit",
@@ -486,7 +504,23 @@
     "lastRunFailed": "Niet gelukt op {when}. Kijk bij Let op of al je apparaten bereikbaar zijn.",
     "addTime": "Tijd toevoegen",
     "confirmDelete": "Scène “{name}” verwijderen? Je apparaten blijven gewoon bestaan.",
-    "delete": "Scène verwijderen"
+    "delete": "Scène verwijderen",
+    "trigger": "Wanneer",
+    "triggers": {
+      "time": "Tijd",
+      "sunrise": "Zonsopkomst",
+      "sunset": "Zonsondergang"
+    },
+    "direction": "Voor, bij of na",
+    "directions": {
+      "before": "Voor",
+      "at": "Bij",
+      "after": "Na"
+    },
+    "offset": "Hoeveel eerder of later",
+    "noLocation": "Je box weet nog niet waar je huis staat, dus de zon kan hij niet volgen.",
+    "runWhen": "{when} vanzelf uitvoeren",
+    "removeWhen": "Het schema {when} verwijderen"
   },
   "claim": {
     "tooMany": "Te veel pogingen, probeer het over een minuut opnieuw",

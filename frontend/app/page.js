@@ -42,6 +42,7 @@ import { uid } from '../lib/uid'
 import { greeting, homeLede, houseSummary, indoorTemperature, sortAttention } from '../lib/home'
 import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
+import { scheduleName } from '../lib/schedules'
 import { displayType } from '../lib/devices'
 import { alarmKind } from '../lib/sensors'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
@@ -1337,7 +1338,16 @@ export default function Home() {
   }
 
   async function saveSchedule(sceneId, row) {
-    const fields = { time: row.time, days: row.days, enabled: row.enabled }
+    // Een zon-schema heeft geen tijd, een tijd-schema geen verschuiving
+    // (schedule_rules.js).
+    const sun = row.trigger === 'sunrise' || row.trigger === 'sunset'
+    const fields = {
+      trigger: row.trigger,
+      time: sun ? '' : row.time,
+      offset_min: sun ? row.offset : 0,
+      days: row.days,
+      enabled: row.enabled,
+    }
     const record = row.id
       ? await pb.collection('schedules').update(row.id, fields)
       : await pb.collection('schedules').create({ ...fields, house: house.id, scene: sceneId })
@@ -1356,7 +1366,7 @@ export default function Home() {
       if (isSessionExpired(err)) return endExpiredSession()
       flip(!enabled)
       showToast(
-        describeError(t, t(enabled ? 'errors.what.scheduleOn' : 'errors.what.scheduleOff', { time: schedule.time }), err),
+        describeError(t, t(enabled ? 'errors.what.scheduleOn' : 'errors.what.scheduleOff', { time: scheduleName(intl, schedule) }), err),
         'error'
       )
     }
