@@ -118,6 +118,7 @@ het starten helemaal op.
 | `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
 | `schedules` | base | Schema's voor scènes | `house`, `scene`, `trigger` (`time`/`sunrise`/`sunset`), `time` ("HH:MM", leeg bij zon), `offset_min` (−120 … 120, negatief = ervoor), `days`, `enabled`; box: `last_run`, `last_error`, `next_run` |
 | `motion_lights` | base | Bewegingslicht: lampen aan bij beweging | `house`, `sensor`, `devices` (max 10), `only_dark`, `off_after` (1–60 min), `enabled`, `last_run`, `last_error` |
+| `automations` | base | Routines: als dit, alleen als, doe dat | `house`, `name` (max 80, leeg = de app maakt een zin), `enabled`, `starter` (JSON, één), `conditions` (JSON, max 5), `actions` (JSON, 1–10), `off_after` (0/1/5/15/30/60 min); box: `last_run`, `last_error`, `next_run` |
 
 Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
 `devices` ← `device_state`/`commands`/`favorites`. Een box hoort bij hooguit één huis
@@ -232,6 +233,13 @@ toont ze nooit, alleen óf er een fout is. Spec:
 - **`devices.pb.js` + `device_rules.js`** — `capabilities` alleen woorden uit
   de woordenlijst (`invalid_capabilities`), `shown_as` alleen bij een stekker
   (`invalid_shown_as`). De regels kunnen niet in JSON kijken; daarom een hook.
+- **`automations.pb.js` + `automation_rules.js`** — de gesloten lijst van
+  routines: soorten starter, voorwaarde en actie, apparaten en scènes uit het
+  eigen huis, een sensor die de gebeurtenis kan meten (`contact` voor open),
+  alleen lampen en stopcontacten schakelen, grenzen (temperatuur 0–40°, max
+  10 acties, 5 voorwaarden). Fout: 400 `invalid_automation` met `params.part`
+  (`starter`/`conditions`/`actions`/`off_after`). De box en de superuser
+  slaan de controle over; de agent controleert zelf ook.
 - **`pairing.pb.js`** — zet `created_by` op de bewoner en weigert een tweede
   open sessie in hetzelfde huis (400 `session_open`): twee telefoons die
   tegelijk zoeken zouden elkaars vondsten zien of weghalen. De app neemt een
@@ -500,6 +508,23 @@ geen lamp meer aanzetten.
   tijd uitgaat. Schakelen gaat met de controles van een scène-stap;
   `last_run`/`last_error` best effort naar PocketBase. Een wijziging in de app
   geldt binnen een minuut (het snapshot).
+- **Routines** (`routine.go`, `routine_runner.go`; spec
+  `2026-10-14-routines-design.md`): de `automations` reizen mee in hetzelfde
+  snapshot. Een starter is een **overgang**: lamp uit → aan, geen beweging →
+  beweging, dicht → open (`contact` true = dicht), lek en rook alleen bij het
+  begin, een temperatuur die een grens passeert; een herhaalde melding van
+  dezelfde stand start niets. Tijd en zon via de minuuttik (dezelfde zon als
+  de schema's, `next_run` en `no_location` ook). Voorwaarden: donker (tussen
+  zonsondergang en -opkomst met `sunTimes`; zonder locatie telt het als
+  donker, zoals bij bewegingslicht), tussen twee tijden (ook over middernacht), dagen.
+  Acties op volgorde via de scène-stap en `executeScene`; mislukte stappen
+  houden de rest niet tegen en staan samen in `last_error`. Daarna uit zoals
+  bij bewegingslicht: alleen wat de routine zelf aanzette, eigendom en
+  uit-tijden in `/data/automations.json`. Lussen: een verandering die een
+  routine zelf veroorzaakte start 10 s lang geen andere routine, en elke
+  routine loopt hooguit één keer per minuut. **Nu uitproberen** in de app
+  stuurt de acties als gewone commando's (`turn_on`/`turn_off`, `run_scene`);
+  daar is geen agentcode voor.
 - **Weer**: elk half uur uit HA (Met.no) naar `houses.weather`; alleen de box
   mag dat schrijven.
 

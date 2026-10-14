@@ -1,6 +1,6 @@
 # Routines: als dit gebeurt, doe dat
 
-Datum: 2026-10-14 · Status: ontwerp, besloten · Bouwt op: schema's,
+Datum: 2026-10-14 · Status: gebouwd (2026-10-14; nog niet met echte sensoren) · Bouwt op: schema's,
 zon in schema's, bewegingslicht, kleur volgt de dag · Roadmap:
 `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (B1)
 
