@@ -29,22 +29,27 @@ type snapshotFile struct {
 	// Thuis of weg; ontbreekt in bestanden van vóór B3.
 	Members  []string              `json:"members,omitempty"`
 	Presence []pocketbase.Presence `json:"presence,omitempty"`
+	// Meldingen; ontbreken in bestanden van vóór B2.
+	Subscriptions []pocketbase.PushSubscription `json:"push_subscriptions,omitempty"`
+	NotifyRules   []pocketbase.NotificationRule `json:"notification_rules,omitempty"`
 }
 
 // saveSnapshot schrijft de snapshot atomisch (tijdelijk bestand + rename),
 // zodat een stroomstoring nooit een half bestand achterlaat.
 func saveSnapshot(path, house string, snap *scheduleSnapshot, now time.Time) error {
 	file := snapshotFile{
-		House:        house,
-		SavedAt:      now.Format(time.RFC3339),
-		Schedules:    snap.schedules,
-		Scenes:       make([]pocketbase.Scene, 0, len(snap.scenes)),
-		MotionLights: snap.motionLights,
-		Devices:      make([]pocketbase.Device, 0, len(snap.devices)),
-		Location:     snap.location,
-		Automations:  snap.automations,
-		Members:      snap.members,
-		Presence:     snap.presence,
+		House:         house,
+		SavedAt:       now.Format(time.RFC3339),
+		Schedules:     snap.schedules,
+		Scenes:        make([]pocketbase.Scene, 0, len(snap.scenes)),
+		MotionLights:  snap.motionLights,
+		Devices:       make([]pocketbase.Device, 0, len(snap.devices)),
+		Location:      snap.location,
+		Automations:   snap.automations,
+		Members:       snap.members,
+		Presence:      snap.presence,
+		Subscriptions: snap.subscriptions,
+		NotifyRules:   snap.notifyRules,
 	}
 	for _, scene := range snap.scenes {
 		file.Scenes = append(file.Scenes, scene)
@@ -84,14 +89,16 @@ func loadSnapshot(path, house string) (*scheduleSnapshot, error) {
 		return nil, nil
 	}
 	snap := &scheduleSnapshot{
-		schedules:    file.Schedules,
-		scenes:       make(map[string]pocketbase.Scene, len(file.Scenes)),
-		motionLights: file.MotionLights,
-		devices:      make(map[string]pocketbase.Device, len(file.Devices)),
-		location:     file.Location,
-		automations:  file.Automations,
-		members:      file.Members,
-		presence:     file.Presence,
+		schedules:     file.Schedules,
+		scenes:        make(map[string]pocketbase.Scene, len(file.Scenes)),
+		motionLights:  file.MotionLights,
+		devices:       make(map[string]pocketbase.Device, len(file.Devices)),
+		location:      file.Location,
+		automations:   file.Automations,
+		members:       file.Members,
+		presence:      file.Presence,
+		subscriptions: file.Subscriptions,
+		notifyRules:   file.NotifyRules,
 	}
 	for _, scene := range file.Scenes {
 		snap.scenes[scene.ID] = scene

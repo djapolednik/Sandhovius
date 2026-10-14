@@ -3,13 +3,16 @@ module sandhovius/local-agent
 go 1.26.5
 
 require (
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/gorilla/websocket v1.5.3
+	golang.org/x/crypto v0.42.0
 	modernc.org/sqlite v1.58.0
 )
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect

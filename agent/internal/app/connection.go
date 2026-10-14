@@ -42,6 +42,7 @@ func (a *Agent) onPocketBaseConnected() {
 	a.reconcileDeviceStates()
 
 	a.catchUpPendingCommands()
+	a.publishPushKey()
 
 	// Een koppelsessie van vóór een herstart: opruimen.
 	a.pairing.recover()
@@ -83,4 +84,23 @@ func (a *Agent) runPocketBase() {
 	log.Println("[APP] Verbonden met PocketBase")
 	a.applyHouse(record.House)
 	a.runHouseCheck()
+}
+
+// publishPushKey zet de publieke pushsleutel van deze box op het huis, als die
+// anders is (een nieuwe box, of een nieuw huis). De app meldt zich daarmee aan.
+func (a *Agent) publishPushKey() {
+	if a.pushKey == "" {
+		return
+	}
+	current, err := a.pbClient.HousePushKey(a.house())
+	if err != nil {
+		log.Printf("[MELDING] Pushsleutel op het huis lezen mislukt: %v\n", err)
+		return
+	}
+	if current == a.pushKey {
+		return
+	}
+	if err := a.pbClient.SetHousePushKey(a.house(), a.pushKey); err != nil {
+		log.Printf("[MELDING] Pushsleutel op het huis zetten mislukt: %v\n", err)
+	}
 }

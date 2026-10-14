@@ -56,6 +56,10 @@ type scheduleSnapshot struct {
 	// (spec 2026-10-14-presence-design.md).
 	members  []string
 	presence []pocketbase.Presence
+	// subscriptions en notifyRules: meldingen (spec
+	// 2026-10-14-notifications-design.md).
+	subscriptions []pocketbase.PushSubscription
+	notifyRules   []pocketbase.NotificationRule
 }
 
 func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
@@ -231,15 +235,25 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	subscriptions, err := a.pbClient.ListPushSubscriptions(house)
+	if err != nil {
+		return nil, err
+	}
+	notifyRules, err := a.pbClient.ListNotificationRules(house)
+	if err != nil {
+		return nil, err
+	}
 	snap := &scheduleSnapshot{
-		members:      members,
-		presence:     presence,
-		schedules:    schedules,
-		motionLights: motionLights,
-		location:     a.homeLocation(),
-		automations:  automations,
-		scenes:       make(map[string]pocketbase.Scene, len(scenes)),
-		devices:      make(map[string]pocketbase.Device, len(devices)),
+		subscriptions: subscriptions,
+		notifyRules:   notifyRules,
+		members:       members,
+		presence:      presence,
+		schedules:     schedules,
+		motionLights:  motionLights,
+		location:      a.homeLocation(),
+		automations:   automations,
+		scenes:        make(map[string]pocketbase.Scene, len(scenes)),
+		devices:       make(map[string]pocketbase.Device, len(devices)),
 	}
 	for _, scene := range scenes {
 		snap.scenes[scene.ID] = scene

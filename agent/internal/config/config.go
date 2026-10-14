@@ -32,6 +32,12 @@ type Config struct {
 		// een herstart zonder PocketBase lopen.
 		File string
 	}
+	Push struct {
+		// Subject: het contact in de VAPID-token van pushmeldingen (een
+		// mailadres of https-URL). Sommige pushdiensten weigeren zonder een
+		// echt adres; voor fase 3 een echt adres invullen.
+		Subject string
+	}
 	Hue struct {
 		// BridgeHost: het adres van de Hue-bridge als HA hem niet zelf
 		// vindt (dev op Windows; op de box vindt HA hem via mDNS).
@@ -70,6 +76,7 @@ func LoadConfig() (*Config, error) {
 	c.Motion.File = env("MOTION_FILE", "/data/motion.json")
 	c.Devices.File = env("DEVICES_FILE", "/data/devices.json")
 	c.Hue.BridgeHost = os.Getenv("HUE_BRIDGE_HOST")
+	c.Push.Subject = env("PUSH_SUBJECT", "noreply@sandhovius.local")
 	c.History.RetentionDays = 30
 	if n, err := strconv.Atoi(os.Getenv("HISTORY_RETENTION_DAYS")); err == nil && n > 0 {
 		c.History.RetentionDays = n

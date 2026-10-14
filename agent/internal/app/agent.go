@@ -36,6 +36,8 @@ type Agent struct {
 	adaptive *adaptiveRunner
 	// Routines (routine.go, routine_runner.go).
 	routines *routineRunner
+	// pushKey: het publieke deel van de VAPID-sleutel; leeg = geen meldingen.
+	pushKey string
 	// zigbee: wat Zigbee2MQTT op het netwerk heeft (bridge/devices);
 	// pairing: koppelen vanuit de app (pairing_runner.go).
 	zigbee  *bridgeDirectory
@@ -85,7 +87,7 @@ type Agent struct {
 	cancel context.CancelFunc
 }
 
-func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile, motionFile, devicesFile string) *Agent {
+func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pocketbase.Client, historyStore *history.Store, boxFile string, identity box.Identity, historyRetentionDays int, schedulesFile, motionFile, devicesFile, pushSubject string) *Agent {
 	ctx, cancel := context.WithCancel(context.Background())
 	a := &Agent{
 		mqttClient:       mqttClient,
@@ -107,6 +109,20 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.routines.step = a.runSceneStep
 	a.routines.scene = a.executeScene
 	a.routines.report = a.reportRoutine
+	// Meldingen: een eigen sleutel per box, naast de andere bestanden in /data.
+	if keys, err := loadOrCreatePushKeys(filepath.Join(filepath.Dir(motionFile), "push.json")); err != nil {
+		log.Printf("[MELDING] Geen pushsleutel, meldingen staan uit: %v\n", err)
+	} else {
+		sender := &pushSender{keys: keys, subject: pushSubject}
+		a.pushKey = keys.Public
+		a.routines.setPushKey(keys.Public)
+		a.routines.push = sender.send
+		a.routines.gone = func(id string) {
+			if err := pbClient.DeletePushSubscription(id); err != nil {
+				log.Printf("[MELDING] Verlopen aanmelding %s opruimen mislukt: %v\n", id, err)
+			}
+		}
+	}
 	a.adaptive = newAdaptiveRunner(func(entity string, kelvin int) error {
 		return a.rawCallHA("light", "turn_on", entity, map[string]any{"color_temp_kelvin": kelvin})
 	})

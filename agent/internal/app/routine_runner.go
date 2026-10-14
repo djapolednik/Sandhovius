@@ -36,6 +36,13 @@ type routineRunner struct {
 	step   func(house string, action pb.SceneAction, lookup func(string) (*pb.Device, error)) error
 	scene  func(scene pb.Scene, lookup func(string) (*pb.Device, error)) error
 	report func(routine string, err error)
+
+	// Meldingen (notify.go): push verstuurt één bericht (nil = meldingen
+	// uit), gone ruimt een aanmelding op die de pushdienst niet meer kent.
+	notifier *notifier
+	pushKey  string
+	push     func(m pushMessage) error
+	gone     func(subscription string)
 }
 
 type routineFile struct {
@@ -50,6 +57,7 @@ func newRoutineRunner(file string) *routineRunner {
 		scenes:   map[string]pb.Scene{},
 		byEntity: map[string]string{},
 		presence: map[string]pb.Presence{},
+		notifier: newNotifier(),
 		file:     file,
 	}
 }
@@ -81,6 +89,15 @@ func (r *routineRunner) apply(snap *scheduleSnapshot) {
 	r.execute(work)
 }
 
+// setPushKey: de publieke sleutel van deze box; alleen aanmeldingen met deze
+// sleutel krijgen meldingen.
+func (r *routineRunner) setPushKey(key string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.pushKey = key
+	r.notifier.key = key
+}
+
 // applyLocked: een nieuw snapshot. Thuis/weg kan daarin veranderd zijn (als
 // de realtime-melding gemist werd), dus er kan een routine uit komen.
 func (r *routineRunner) applyLocked(snap *scheduleSnapshot, now time.Time) routineResult {
@@ -102,6 +119,7 @@ func (r *routineRunner) applyLocked(snap *scheduleSnapshot, now time.Time) routi
 	}
 	r.engine.setRoutines(snap.automations)
 	r.engine.setLocation(snap.location)
+	r.notifier.set(r.pushKey, snap.subscriptions, snap.notifyRules)
 	r.members = snap.members
 	for _, row := range snap.presence {
 		r.mergePresenceLocked(row)
@@ -166,6 +184,9 @@ func (r *routineRunner) onState(entity string, state map[string]any, now time.Ti
 	res := r.engine.onDevice(id, state, now)
 	r.saveLocked()
 	work := r.prepareLocked(res)
+	if device, ok := r.devices[id]; ok && len(res.Events) > 0 {
+		work.messages = r.notifier.onDevice(device, res.Events, !r.engine.someoneHome(), now)
+	}
 	r.mu.Unlock()
 	r.execute(work)
 }
@@ -188,10 +209,53 @@ type routineWork struct {
 	house   string
 	devices map[string]pb.Device
 	scenes  map[string]pb.Scene
+	// messages: meldingen bij een gebeurtenis (lek, rook, Meld dit).
+	messages []pushMessage
+	// notify: per routine en per actie-index de berichten van "Stuur een
+	// melding", onder de lock bepaald.
+	notify map[string]map[int][]pushMessage
 }
 
 func (r *routineRunner) prepareLocked(res routineResult) routineWork {
-	return routineWork{res: res, house: r.house, devices: r.devices, scenes: r.scenes}
+	w := routineWork{res: res, house: r.house, devices: r.devices, scenes: r.scenes, notify: map[string]map[int][]pushMessage{}}
+	for _, run := range res.Runs {
+		for i, a := range run.Actions {
+			if a.Kind != "notify" {
+				continue
+			}
+			if w.notify[run.Routine] == nil {
+				w.notify[run.Routine] = map[int][]pushMessage{}
+			}
+			w.notify[run.Routine][i] = r.notifier.forRoutine(a.Text, a.Users)
+		}
+	}
+	return w
+}
+
+// sendAll verstuurt berichten; een verlopen aanmelding wordt opgeruimd. De
+// fout zegt hoeveel er niet lukten (nil als alles lukte of er niets was).
+func (r *routineRunner) sendAll(messages []pushMessage) error {
+	if r.push == nil || len(messages) == 0 {
+		return nil
+	}
+	failed := 0
+	for _, m := range messages {
+		err := r.push(m)
+		switch {
+		case errors.Is(err, errSubscriptionGone):
+			log.Printf("[MELDING] Aanmelding %s bestaat niet meer, opruimen\n", m.Sub.ID)
+			if r.gone != nil {
+				go r.gone(m.Sub.ID)
+			}
+		case err != nil:
+			failed++
+			log.Printf("[MELDING] Naar aanmelding %s mislukt: %v\n", m.Sub.ID, err)
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("%d van %d meldingen niet verstuurd", failed, len(messages))
+	}
+	return nil
 }
 
 // execute buiten de lock: een trage Home Assistant mag de event-stroom niet
@@ -205,11 +269,16 @@ func (r *routineRunner) execute(w routineWork) {
 		}
 		return &d, nil
 	}
+	if err := r.sendAll(w.messages); err != nil {
+		log.Printf("[MELDING] %v\n", err)
+	}
 	for _, run := range w.res.Runs {
 		var failures []error
-		for _, a := range run.Actions {
+		for i, a := range run.Actions {
 			var err error
 			switch a.Kind {
+			case "notify":
+				err = r.sendAll(w.notify[run.Routine][i])
 			case "device":
 				err = r.step(w.house, pb.SceneAction{Device: a.Device, Action: a.Action, Payload: a.Payload}, lookup)
 			case "scene":

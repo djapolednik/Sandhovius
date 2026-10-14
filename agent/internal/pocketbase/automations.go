@@ -53,13 +53,16 @@ type AutomationCondition struct {
 }
 
 // AutomationAction: kind "device" (Device, Action turn_on/turn_off, Payload
-// brightness_pct/color_temp_kelvin) of "scene" (Scene).
+// brightness_pct/color_temp_kelvin), "scene" (Scene) of "notify" (Text, Users).
 type AutomationAction struct {
 	Kind    string         `json:"kind"`
 	Device  string         `json:"device,omitempty"`
 	Action  string         `json:"action,omitempty"`
 	Payload map[string]any `json:"payload,omitempty"`
 	Scene   string         `json:"scene,omitempty"`
+	// Text en Users: kind "notify" (Stuur een melding; Users leeg = iedereen).
+	Text  string   `json:"text,omitempty"`
+	Users []string `json:"users,omitempty"`
 }
 
 type automationListResponse struct {

@@ -36,6 +36,9 @@ type routineOff struct {
 type routineResult struct {
 	Runs []routineRun
 	Offs []routineOff
+	// Events: wat er met het apparaat gebeurde (onDevice), voor meldingen:
+	// "open", "motion", "leak", "smoke", …
+	Events map[string]bool
 }
 
 // deviceSeen: de laatst bekende stand van een apparaat, voor overgangen.
@@ -156,7 +159,7 @@ func (e *routineEngine) onDevice(device string, state map[string]any, now time.T
 		s.temperature = floatPtr(v)
 	}
 
-	var res routineResult
+	res := routineResult{Events: happened}
 	if until, ok := e.quiet[device]; ok && now.Before(until) {
 		return res // een verandering door een routine: geen ketting
 	}
