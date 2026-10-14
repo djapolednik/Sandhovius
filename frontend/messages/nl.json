@@ -291,7 +291,8 @@
       "presence": "Thuis of weg opslaan",
       "notifications": "Meldingen instellen",
       "notifyRule": "Meld dit opslaan",
-      "rights": "Rechten opslaan"
+      "rights": "Rechten opslaan",
+      "inSummary": "Samenvatting opslaan"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -460,7 +461,9 @@
     "notifyHint": "Alleen voor jou, op de apparaten waar je meldingen aanzette.",
     "notifyNobodyHome": "Alleen als niemand thuis is",
     "notifyBetween": "Alleen tussen twee tijden",
-    "notifyAlways": "Lekkage en rook meldt Sandhovius altijd, aan iedereen die meldingen aanzette."
+    "notifyAlways": "Lekkage en rook meldt Sandhovius altijd, aan iedereen die meldingen aanzette.",
+    "inSummary": "Telt mee in de samenvatting",
+    "inSummaryHint": "In \"2 aan\" en de binnentemperatuur op Home. Zet uit voor bijvoorbeeld de schuurlamp."
   },
   "schedules": {
     "everyDay": "Elke dag",

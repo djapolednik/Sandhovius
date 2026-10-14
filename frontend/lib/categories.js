@@ -42,13 +42,20 @@ function stateFor({ t, locale }, key, devices) {
   return { state: leak ? t('sensors.leak') : t('sensors.dry'), alert: leak }
 }
 
+// E2: een apparaat kan uit de samenvatting (devices.summary_hidden, bv. de
+// schuurlamp). Het telt dan niet mee in Licht en Klimaat, maar blijft in de
+// lijst. Veiligheid en Water tellen altijd: een lek verstop je niet.
+export const SUMMARY_OPTIONAL = ['light', 'climate']
+export const countsInSummary = (device) => !device.summary_hidden
+
 // De knoppen voor Home, in vaste volgorde. known = false (box onbereikbaar):
 // wel de knoppen, geen stand.
 export function categorySummary(intl, devices, { known = true } = {}) {
   return CATEGORIES.map((key) => {
     const inCategory = devices.filter((device) => categoriesOf(device).includes(key))
     if (inCategory.length === 0) return null
-    const { state, alert } = known ? stateFor(intl, key, inCategory) : { state: '', alert: false }
+    const counted = SUMMARY_OPTIONAL.includes(key) ? inCategory.filter(countsInSummary) : inCategory
+    const { state, alert } = known ? stateFor(intl, key, counted) : { state: '', alert: false }
     return { key, label: intl.t(`categories.${key}`), state, alert, devices: inCategory }
   }).filter(Boolean)
 }

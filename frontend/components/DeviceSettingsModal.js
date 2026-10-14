@@ -10,6 +10,7 @@ import { useIntl } from '../app/LanguageContext'
 import { useNow } from '../lib/useNow'
 import { temperatureColor } from '../lib/temperature'
 import { allReadings, readingText } from '../lib/sensors'
+import { SUMMARY_OPTIONAL, categoriesOf } from '../lib/categories'
 import { isBatteryLow } from '../lib/battery'
 import { isDeviceOn } from './DeviceCard'
 import LightControls from './LightControls'
@@ -187,6 +188,29 @@ export default function DeviceSettingsModal({
 
       {device.type === 'sensor' && onSaveNotifyRule && (
         <NotifyRules device={device} rules={notifyRules} onSave={saveRule} />
+      )}
+
+      {/* E2: telt mee in "2 aan" en de binnentemperatuur op Home. */}
+      {canEdit && categoriesOf(device).some((key) => SUMMARY_OPTIONAL.includes(key)) && (
+        <>
+          <div className="settings-row">
+            <span className="settings-row-text">
+              <span id={`summary-${device.id}`}>{t('deviceSheet.inSummary')}</span>
+              <span className="settings-row-hint">{t('deviceSheet.inSummaryHint')}</span>
+            </span>
+            <button
+              type="button"
+              className={`switch switch-accent ${!device.summary_hidden ? 'switch-on' : ''}`}
+              role="switch"
+              aria-checked={!device.summary_hidden}
+              aria-labelledby={`summary-${device.id}`}
+              onClick={() => save({ summary_hidden: !device.summary_hidden }, t('errors.what.inSummary'))}
+            >
+              <span className="switch-thumb" />
+            </button>
+          </div>
+          <div className="modal-divider" />
+        </>
       )}
 
       {canEdit && device.type === 'switch' && (

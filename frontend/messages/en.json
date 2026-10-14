@@ -291,7 +291,8 @@
       "presence": "Saving home or away",
       "notifications": "Setting up notifications",
       "notifyRule": "Saving the notification",
-      "rights": "Saving permissions"
+      "rights": "Saving permissions",
+      "inSummary": "Saving the summary setting"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -460,7 +461,9 @@
     "notifyHint": "Just for you, on the devices where you turned notifications on.",
     "notifyNobodyHome": "Only when nobody is home",
     "notifyBetween": "Only between two times",
-    "notifyAlways": "Sandhovius always reports leaks and smoke to everyone who turned notifications on."
+    "notifyAlways": "Sandhovius always reports leaks and smoke to everyone who turned notifications on.",
+    "inSummary": "Counts in the summary",
+    "inSummaryHint": "In \"2 on\" and the indoor temperature on Home. Turn off for, say, the shed light."
   },
   "schedules": {
     "everyDay": "Every day",

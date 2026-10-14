@@ -44,7 +44,7 @@ import { greeting, homeLede, houseSummary, indoorTemperature, sortAttention } fr
 import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
 import { scheduleName } from '../lib/schedules'
-import { categorySummary } from '../lib/categories'
+import { categorySummary, countsInSummary } from '../lib/categories'
 import { displayType } from '../lib/devices'
 import { alarmKind } from '../lib/sensors'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
@@ -1837,13 +1837,17 @@ export default function Home() {
   // bereikbaar is; anders weten we niet wat er aan staat.
   const knowsState = loaded && houseReachable
   // Een stekker die als lamp staat telt als lamp ("2 lampen aan").
-  const lightsOn = knowsState ? devicesOn.filter((device) => displayType(device) === 'light').length : 0
+  // E2: wat uit de samenvatting is gehaald, telt hier niet mee.
+  const summaryOn = devicesOn.filter(countsInSummary)
+  const lightsOn = knowsState ? summaryOn.filter((device) => displayType(device) === 'light').length : 0
   const summary = knowsState
     ? houseSummary(intl, {
         lightsOn,
-        plugsOn: devicesOn.length - lightsOn,
+        plugsOn: summaryOn.length - lightsOn,
         indoor: indoorTemperature(
-          devicesInHouse.map((device) => ({ type: device.type, state: device.expand?.device_state_via_device?.[0]?.state }))
+          devicesInHouse
+            .filter(countsInSummary)
+            .map((device) => ({ type: device.type, state: device.expand?.device_state_via_device?.[0]?.state }))
         ),
       })
     : null

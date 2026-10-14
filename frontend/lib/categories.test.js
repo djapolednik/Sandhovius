@@ -55,3 +55,18 @@ test('categorySummary: rustig, alarm en onbekend', () => {
   assert.deepEqual(categorySummary(nl, house, { known: false }).map((c) => c.state), ['', '', '', ''])
   assert.equal(categorySummary(en, house)[0].state, '2 on')
 })
+
+test('categorySummary: wat uit de samenvatting is, telt niet bij Licht en Klimaat, wel bij Veiligheid en Water', () => {
+  const dev = (id, type, capabilities, state, extra = {}) => ({
+    id, name: id, type, capabilities, expand: { device_state_via_device: [{ state }] }, ...extra,
+  })
+  const devices = [
+    dev('lamp', 'light', ['onoff'], { state: 'on' }),
+    dev('schuur', 'light', ['onoff'], { state: 'on' }, { summary_hidden: true }),
+    dev('kast', 'sensor', ['water_leak'], { water_leak: true }, { summary_hidden: true }),
+  ]
+  const sum = Object.fromEntries(categorySummary(nl, devices).map((c) => [c.key, c]))
+  assert.equal(sum.light.state, '1 aan')
+  assert.equal(sum.light.devices.length, 2)
+  assert.equal(sum.water.alert, true)
+})
