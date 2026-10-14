@@ -27,3 +27,6 @@ sheets/
 
 # nep-Zigbee2MQTT (scripts/fake-zigbee.py): bewaarde nep-apparaten
 scripts/.fake-zigbee.json
+
+# Python-bytecode van de scripts en hun tests
+__pycache__/
