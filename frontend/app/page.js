@@ -52,8 +52,10 @@ import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
 import MotionLightSheet from '../components/MotionLightSheet'
 import RoutineSheet from '../components/RoutineSheet'
+import PresenceBar from '../components/PresenceBar'
 import { byRoom, motionSensors, switchableDevices } from '../lib/motionLights'
 import { routineSensors, routineTitle } from '../lib/routines'
+import { memberName } from '../lib/presence'
 
 // "Zondag 27 september", "Sunday 27 September"
 function formatToday(ms, locale) {
@@ -126,6 +128,10 @@ export default function Home() {
   const [schedules, setSchedules] = useState([])
   const [motionLights, setMotionLights] = useState([])
   const [routines, setRoutines] = useState([])
+  // Thuis of weg: de rijen van alle huizen, en de leden (met namen) van het
+  // gekozen huis.
+  const [presence, setPresence] = useState([])
+  const [houseMembers, setHouseMembers] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
   const [sceneRunState, setSceneRunState] = useState({})
   // Open scène-sheet: 'new', een scène-ID, of null.
@@ -344,6 +350,14 @@ export default function Home() {
             : [...prev.filter((m) => m.id !== e.record.id), e.record]
         )
       }),
+      // Thuis of weg van huisgenoten, live.
+      pb.collection('presence').subscribe('*', (e) => {
+        setPresence((prev) =>
+          e.action === 'delete'
+            ? prev.filter((p) => p.id !== e.record.id)
+            : [...prev.filter((p) => p.id !== e.record.id), e.record]
+        )
+      }),
       // En bij routines: last_run, last_error en next_run.
       pb.collection('automations').subscribe('*', (e) => {
         setRoutines((prev) =>
@@ -509,6 +523,8 @@ export default function Home() {
     setSchedules([])
     setMotionLights([])
     setRoutines([])
+    setPresence([])
+    setHouseMembers([])
     setSelectedRoomId('')
     setRealtimeLink('connecting')
     setLoaded(false)
@@ -540,6 +556,7 @@ export default function Home() {
         invitationRecords,
         motionRecords,
         routineRecords,
+        presenceRecords,
       ] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
@@ -550,6 +567,7 @@ export default function Home() {
         pb.collection('invitations').getFullList({ sort: '-created' }),
         pb.collection('motion_lights').getFullList(),
         pb.collection('automations').getFullList(),
+        pb.collection('presence').getFullList(),
       ])
       // Een huis dat er niet meer is en dat je niet zelf verliet: een ander
       // heeft je eruit gehaald. Rustig zeggen, en verder met het volgende huis.
@@ -566,6 +584,7 @@ export default function Home() {
       setSchedules(scheduleRecords)
       setMotionLights(motionRecords)
       setRoutines(routineRecords)
+      setPresence(presenceRecords)
       setFavorites(favoriteRecords)
       setInvitations(invitationRecords)
       setLoaded(true)
@@ -634,6 +653,41 @@ export default function Home() {
   const myEmail = (pb.authStore.record?.email || '').toLowerCase()
   const myInvitations = invitations.filter((i) => i.email === myEmail)
   const houseInvitations = house ? invitations.filter((i) => i.house === house.id && i.email !== myEmail) : []
+  const presenceInHouse = presence.filter((p) => p.house === house?.id)
+
+  // De leden met hun namen, voor thuis/weg en routines. Opnieuw zodra de
+  // leden van het huis veranderen (realtime op houses).
+  const membership = house ? `${house.id}:${(house.members ?? []).join(',')}` : ''
+  useEffect(() => {
+    if (!membership) return
+    let cancelled = false
+    const houseId = membership.split(':')[0]
+    pb.send(`/api/sandhovius/houses/${houseId}/members`, { method: 'GET' })
+      .then((res) => {
+        if (!cancelled) setHouseMembers(res.items ?? [])
+      })
+      .catch((err) => console.error('[presence] leden ophalen:', err))
+    return () => {
+      cancelled = true
+    }
+  }, [membership])
+
+  // Je eigen stand: meteen om, en terug als opslaan mislukt.
+  async function setMyPresence(home) {
+    const mine = presenceInHouse.find((p) => p.user === userId)
+    const temp = { id: mine?.id ?? 'pending', house: house.id, user: userId, home }
+    setPresence((prev) => [...prev.filter((p) => p !== mine), temp])
+    try {
+      const record = mine
+        ? await pb.collection('presence').update(mine.id, { home }, { requestKey: null })
+        : await pb.collection('presence').create({ house: house.id, user: userId, home }, { requestKey: null })
+      setPresence((prev) => [...prev.filter((p) => p !== temp && p.id !== record.id), record])
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      setPresence((prev) => [...prev.filter((p) => p !== temp), ...(mine ? [mine] : [])])
+      showToast(describeError(t, t('errors.what.presence'), err), 'error')
+    }
+  }
 
   function selectHouse(houseId) {
     setSelectedHouseId(houseId)
@@ -665,6 +719,7 @@ export default function Home() {
   const routineNames = {
     devices: Object.fromEntries(devicesInHouse.map((d) => [d.id, d.name])),
     scenes: Object.fromEntries(scenesInHouse.map((s) => [s.id, s.name])),
+    users: Object.fromEntries(houseMembers.map((m) => [m.id, memberName(m)])),
   }
   // De sensoren die beweging melden, plus de sensor van het bewegingslicht
   // dat je wijzigt (ook als hij nog niets meldde).
@@ -1983,6 +2038,7 @@ export default function Home() {
                 userId={userId}
                 admin={houseAdmin}
                 invitations={houseInvitations}
+                presence={presenceInHouse}
                 loadMembers={() => pb.send(`/api/sandhovius/houses/${house.id}/members`, { method: 'GET' })}
                 onInvite={inviteMember}
                 onChangeRole={changeMemberRole}
@@ -2034,6 +2090,9 @@ export default function Home() {
         {errorBanner}
         {noHouse}
         {house && invitationCards}
+        {loaded && house && userId && (
+          <PresenceBar me={userId} members={houseMembers} rows={presenceInHouse} onChange={setMyPresence} />
+        )}
         {house && (
           <HomeNotices
             realtimeLink={realtimeLink}
@@ -2209,6 +2268,7 @@ export default function Home() {
           scenes={scenesInHouse}
           names={routineNames}
           roomNameById={roomNameById}
+          members={houseMembers}
           canTry={houseReachable}
           onSave={saveRoutine}
           onDelete={deleteRoutine}

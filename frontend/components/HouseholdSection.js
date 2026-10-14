@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'use-intl'
+import { isHome } from '../lib/presence'
 import { useEffect, useState } from 'react'
 import InviteSheet from './InviteSheet'
 import MemberSheet from './MemberSheet'
@@ -19,6 +20,7 @@ export default function HouseholdSection({
   userId,
   admin,
   invitations,
+  presence = [],
   loadMembers,
   onInvite,
   onChangeRole,
@@ -73,7 +75,11 @@ export default function HouseholdSection({
     }
   }
 
-  const memberText = (m) => (m.id === userId ? t('household.you', { role: roleLabel(t, m.role) }) : roleLabel(t, m.role))
+  // "Beheerder · Thuis": de rol, en of iemand thuis of weg is (presence).
+  const memberText = (m) => {
+    const role = m.id === userId ? t('household.you', { role: roleLabel(t, m.role) }) : roleLabel(t, m.role)
+    return `${role} · ${isHome(presence, m.id) ? t('presence.memberHome') : t('presence.memberAway')}`
+  }
 
   return (
     <section className="panel settings-section" aria-labelledby="settings-household">

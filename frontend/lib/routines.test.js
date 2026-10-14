@@ -158,3 +158,37 @@ test('sensorEvents en routineSensors: naar wat de sensor kan', () => {
 test('OFF_AFTER_CHOICES: zoals de hook', () => {
   assert.deepEqual(OFF_AFTER_CHOICES, [0, 1, 5, 15, 30, 60])
 })
+
+test('thuis/weg: starters en voorwaarden in beide talen', () => {
+  const people = { ...names, users: { sanne: 'Sanne' } }
+  const r = (starter, conditions = []) => routine(starter, [on('hall')], { conditions })
+  assert.equal(describeAutomation(nl, r({ kind: 'presence', event: 'all_away' }), people), 'Als iedereen weg is: Ganglamp aan.')
+  assert.equal(describeAutomation(en, r({ kind: 'presence', event: 'first_home' }), people), 'When the first person gets home: Ganglamp on.')
+  assert.equal(
+    describeAutomation(nl, r({ kind: 'presence', event: 'arrives', user: 'sanne' }, [{ kind: 'presence', state: 'nobody_home' }]), people),
+    'Als Sanne thuiskomt, alleen als niemand thuis is: Ganglamp aan.'
+  )
+  assert.equal(
+    describeAutomation(en, r({ kind: 'presence', event: 'leaves', user: 'gone' }, [{ kind: 'presence', state: 'away', user: 'sanne' }]), people),
+    "When someone who's no longer in the household leaves, only when Sanne is away: Ganglamp on."
+  )
+})
+
+test('thuis/weg: wat mist en het record', () => {
+  const key = (r) => missingStep(r)?.key ?? null
+  assert.equal(key(routine({ kind: 'presence' }, [on('hall')])), 'routines.missing.presence')
+  assert.equal(key(routine({ kind: 'presence', event: 'arrives' }, [on('hall')])), 'routines.missing.person')
+  assert.equal(
+    key(routine({ kind: 'presence', event: 'all_away' }, [on('hall')], { conditions: [{ kind: 'presence', state: 'home' }] })),
+    'routines.missing.person'
+  )
+  assert.equal(key(routine({ kind: 'presence', event: 'all_away' }, [on('hall')])), null)
+  const record = routineRecord({
+    starter: { kind: 'presence', event: 'all_away', user: 'sanne' },
+    conditions: [{ kind: 'presence', state: 'someone_home', user: 'x' }, { kind: 'presence', state: 'away', user: 'sanne' }],
+    actions: [on('hall')],
+  })
+  assert.deepEqual(record.starter, { kind: 'presence', event: 'all_away' })
+  assert.deepEqual(record.conditions, [{ kind: 'presence', state: 'someone_home' }, { kind: 'presence', state: 'away', user: 'sanne' }])
+  for (const k of ['presence', 'person']) assertMessage(`routines.missing.${k}`)
+})

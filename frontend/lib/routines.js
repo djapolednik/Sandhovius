@@ -2,7 +2,7 @@
 // alleen als (voorwaarden), doe dat (acties), en eventueel daarna uit. De box
 // beslist en voert uit; de app bewerkt de routine en zegt hem als één zin,
 // dezelfde voor kaart, sheet en schermlezer. intl: { t, locale }.
-// names: { devices: { id: naam }, scenes: { id: naam } }.
+// names: { devices: { id: naam }, scenes: { id: naam }, users: { id: naam } }.
 import { cachedFormat } from './language.js'
 import { dayNames, describeDays, scheduleWhen } from './schedules.js'
 import { describeLightStep } from './sceneChoices.js'
@@ -11,7 +11,14 @@ import { formatTemperature } from './temperature.js'
 // De keuzes voor "Daarna uit", in minuten (0 = nooit). Zoals de hook.
 export const OFF_AFTER_CHOICES = [0, 1, 5, 15, 30, 60]
 export const MAX_ACTIONS = 10
-export const STARTER_KINDS = ['time', 'device', 'sensor']
+export const STARTER_KINDS = ['time', 'device', 'sensor', 'presence']
+
+// Thuis of weg (spec 2026-10-14-presence-design.md): voor het hele huis, of
+// per lid (dan met user). In de volgorde van de sheet.
+export const PRESENCE_EVENTS = ['all_away', 'first_home', 'arrives', 'leaves']
+export const PRESENCE_STATES = ['someone_home', 'nobody_home', 'home', 'away']
+const PER_PERSON = ['arrives', 'leaves', 'home', 'away']
+export const needsPerson = (value) => PER_PERSON.includes(value)
 
 // Welke mogelijkheid een sensor nodig heeft voor een gebeurtenis, in de
 // volgorde van de sheet. Zoals SENSOR_EVENTS in pb_hooks/automation_rules.js.
@@ -47,6 +54,10 @@ function deviceName({ t }, names, id) {
   return names?.devices?.[id] ?? t('routines.unknownDevice')
 }
 
+function userName({ t }, names, id) {
+  return names?.users?.[id] ?? t('routines.unknownPerson')
+}
+
 // "Als Voordeur opengaat", "Elke dag om 07:00", "Werkdagen bij zonsondergang".
 // Leeg als de starter nog niet af is.
 export function describeStarter(intl, starter, names) {
@@ -57,15 +68,23 @@ export function describeStarter(intl, starter, names) {
     const when = scheduleWhen(intl, { trigger: starter.event, offset_min: starter.offset_min ?? 0 })
     return t('schedules.daysWhen', { days: describeDays(intl, starter.days), when })
   }
+  if (starter.kind === 'presence') {
+    return t(`routines.starter.presence.${starter.event}`, { name: needsPerson(starter.event) ? userName(intl, names, starter.user) : '' })
+  }
   const name = deviceName(intl, names, starter.device)
   if (starter.kind === 'device') return t(`routines.starter.device.${starter.to}`, { name })
   const value = typeof starter.value === 'number' ? formatTemperature(starter.value, locale) : ''
   return t(`routines.starter.sensor.${starter.event}`, { name, value })
 }
 
-function describeCondition(intl, condition) {
+function describeCondition(intl, condition, names) {
   const { t, locale } = intl
   if (condition.kind === 'dark') return t('routines.condition.dark')
+  if (condition.kind === 'presence') {
+    return t(`routines.condition.presence.${condition.state}`, {
+      name: needsPerson(condition.state) ? userName(intl, names, condition.user) : '',
+    })
+  }
   if (condition.kind === 'between') return t('routines.condition.between', { from: condition.from, to: condition.to })
   const keys = dayNames(locale).filter((day) => condition.days.includes(day.key))
   const joined = keys.map((day) => day.key).join(' ')
@@ -75,8 +94,8 @@ function describeCondition(intl, condition) {
 }
 
 // "alleen als het donker is en tussen 22:00 en 06:00". Leeg zonder.
-export function describeConditions(intl, conditions) {
-  const parts = (conditions ?? []).filter((c) => !missingCondition(c)).map((c) => describeCondition(intl, c))
+export function describeConditions(intl, conditions, names) {
+  const parts = (conditions ?? []).filter((c) => !missingCondition(c)).map((c) => describeCondition(intl, c, names))
   if (parts.length === 0) return ''
   return intl.t('routines.condition.only', { conditions: list(intl.locale).format(parts) })
 }
@@ -107,7 +126,7 @@ export function describeDoes(intl, routine, names) {
 export function describeAutomation(intl, routine, names) {
   const { t, locale } = intl
   const starter = describeStarter(intl, routine.starter, names) || t('routines.starterYet')
-  const conditions = describeConditions(intl, routine.conditions)
+  const conditions = describeConditions(intl, routine.conditions, names)
   const sentence = t('routines.sentence', {
     starter: conditions ? `${starter}, ${conditions}` : starter,
     does: describeDoes(intl, routine, names),
@@ -128,6 +147,10 @@ function missingStarter(s) {
   if (s.kind === 'time') return !TIME.test(s.time ?? '') ? 'time' : hasDays(s.days) ? null : 'days'
   if (s.kind === 'sun') return hasDays(s.days) ? null : 'days'
   if (s.kind === 'device') return s.device ? (s.to ? null : 'to') : 'lamp'
+  if (s.kind === 'presence') {
+    if (!PRESENCE_EVENTS.includes(s.event)) return 'presence'
+    return needsPerson(s.event) && !s.user ? 'person' : null
+  }
   if (s.kind === 'sensor') {
     if (!s.device) return 'sensor'
     if (!SENSOR_EVENTS[s.event]) return 'event'
@@ -143,6 +166,10 @@ function missingCondition(c) {
   if (c.kind === 'dark') return null
   if (c.kind === 'between') return TIME.test(c.from ?? '') && TIME.test(c.to ?? '') && c.from !== c.to ? null : 'between'
   if (c.kind === 'days') return hasDays(c.days) ? null : 'days'
+  if (c.kind === 'presence') {
+    if (!PRESENCE_STATES.includes(c.state)) return 'condition'
+    return needsPerson(c.state) && !c.user ? 'person' : null
+  }
   return 'condition'
 }
 
@@ -175,15 +202,21 @@ export function routineRecord(draft) {
     time: () => ({ kind: 'time', time: s.time, days: s.days }),
     sun: () => ({ kind: 'sun', event: s.event, offset_min: s.offset_min ?? 0, days: s.days }),
     device: () => ({ kind: 'device', device: s.device, to: s.to }),
+    presence: () => (needsPerson(s.event) ? { kind: 'presence', event: s.event, user: s.user } : { kind: 'presence', event: s.event }),
     sensor: () => {
       const out = { kind: 'sensor', device: s.device, event: s.event }
       if (s.event === 'above' || s.event === 'below') out.value = s.value
       return out
     },
   }
-  const conditions = (draft.conditions ?? []).map((c) =>
-    c.kind === 'between' ? { kind: 'between', from: c.from, to: c.to } : c.kind === 'days' ? { kind: 'days', days: c.days } : { kind: c.kind }
-  )
+  const conditions = (draft.conditions ?? []).map((c) => {
+    if (c.kind === 'between') return { kind: 'between', from: c.from, to: c.to }
+    if (c.kind === 'days') return { kind: 'days', days: c.days }
+    if (c.kind === 'presence') {
+      return needsPerson(c.state) ? { kind: 'presence', state: c.state, user: c.user } : { kind: 'presence', state: c.state }
+    }
+    return { kind: c.kind }
+  })
   const actions = (draft.actions ?? []).map((a) => {
     if (a.kind === 'scene') return { kind: 'scene', scene: a.scene }
     const out = { kind: 'device', device: a.device, action: a.action }

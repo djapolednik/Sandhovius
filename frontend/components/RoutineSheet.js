@@ -8,13 +8,17 @@ import { DAY_KEYS, SUN_OFFSETS, dayNames, describeDays, offsetLabel } from '../l
 import {
   MAX_ACTIONS,
   OFF_AFTER_CHOICES,
+  PRESENCE_EVENTS,
+  PRESENCE_STATES,
   STARTER_KINDS,
   describeAutomation,
   missingStep,
+  needsPerson,
   routineRecord,
   sensorEvents,
 } from '../lib/routines'
 import { CheckIcon, PlusIcon, TrashIcon } from '../lib/icons'
+import { memberName } from '../lib/presence'
 import { uid } from '../lib/uid'
 
 const TIME_KINDS = ['time', 'sunrise', 'sunset']
@@ -37,8 +41,11 @@ function starterInput(s) {
     sensor: '',
     event: '',
     value: 20,
+    presenceEvent: 'all_away',
+    person: '',
   }
   if (!s?.kind) return input
+  if (s.kind === 'presence') return { ...input, kind: 'presence', presenceEvent: s.event, person: s.user ?? '' }
   if (s.kind === 'time') return { ...input, kind: 'time', time: s.time, days: s.days }
   if (s.kind === 'sun') return { ...input, kind: 'time', timeKind: s.event, offset: s.offset_min ?? 0, days: s.days }
   if (s.kind === 'device') return { ...input, kind: 'device', lamp: s.device, to: s.to }
@@ -53,6 +60,7 @@ function starterFrom(input) {
   }
   if (input.kind === 'device') return { kind: 'device', device: input.lamp, to: input.to }
   if (input.kind === 'sensor') return { kind: 'sensor', device: input.sensor, event: input.event, value: input.value }
+  if (input.kind === 'presence') return { kind: 'presence', event: input.presenceEvent, user: input.person }
   return {}
 }
 
@@ -62,6 +70,11 @@ function conditionsInput(conditions = []) {
     dark: Boolean(find('dark')),
     between: { on: Boolean(find('between')), from: find('between')?.from ?? '22:00', to: find('between')?.to ?? '06:00' },
     days: { on: Boolean(find('days')), days: find('days')?.days ?? [...WEEKDAYS] },
+    presence: {
+      on: Boolean(find('presence')),
+      state: find('presence')?.state ?? 'nobody_home',
+      person: find('presence')?.user ?? '',
+    },
   }
 }
 
@@ -70,6 +83,7 @@ function conditionsFrom(input) {
   if (input.dark) out.push({ kind: 'dark' })
   if (input.between.on) out.push({ kind: 'between', from: input.between.from, to: input.between.to })
   if (input.days.on) out.push({ kind: 'days', days: input.days.days })
+  if (input.presence.on) out.push({ kind: 'presence', state: input.presence.state, user: input.presence.person })
   return out
 }
 
@@ -131,9 +145,11 @@ function DayToggles({ label, days, onChange }) {
   )
 }
 
-// Een keuzelijst met kaartjes, zoals bij het bewegingslicht.
-function DeviceChoice({ legend, name, devices, value, roomNameById, empty, onChange }) {
+// Een keuzelijst met kaartjes, zoals bij het bewegingslicht. detail: de
+// regel onder de naam (standaard de kamer).
+function DeviceChoice({ legend, name, devices, value, roomNameById, empty, onChange, detail }) {
   const { t } = useIntl()
+  const sub = detail ?? ((d) => roomNameById[d.room] ?? t('home.noRoom'))
   return (
     <fieldset className="house-choice motion-choice">
       <legend className="form-label">{legend}</legend>
@@ -143,7 +159,7 @@ function DeviceChoice({ legend, name, devices, value, roomNameById, empty, onCha
           <input type="radio" name={name} className="visually-hidden" checked={value === d.id} onChange={() => onChange(d.id)} />
           <span className="motion-choice-text">
             <span>{d.name}</span>
-            <span className="motion-choice-room">{roomNameById[d.room] ?? t('home.noRoom')}</span>
+            {sub(d) && <span className="motion-choice-room">{sub(d)}</span>}
           </span>
           {value === d.id && <CheckIcon width="18" height="18" aria-hidden="true" />}
         </label>
@@ -185,6 +201,7 @@ export default function RoutineSheet({
   scenes,
   names,
   roomNameById,
+  members = [],
   canTry,
   onSave,
   onDelete,
@@ -222,6 +239,10 @@ export default function RoutineSheet({
   const sensor = sensors.find((s) => s.id === starter.sensor)
   const events = sensor ? sensorEvents(sensor) : []
   const switchableById = Object.fromEntries(switchables.map((d) => [d.id, d]))
+  // Huisgenoten als keuzelijst: de naam, en het e-mailadres eronder als er
+  // een naam is.
+  const people = members.map((m) => ({ id: m.id, name: memberName(m), email: m.name?.trim() ? m.email : '' }))
+  const personDetail = (p) => p.email
 
   function patchStarter(patch) {
     setError('')
@@ -428,6 +449,32 @@ export default function RoutineSheet({
               )}
             </>
           )}
+          {starter.kind === 'presence' && (
+            <>
+              <Segmented
+                legend={t('routines.presenceEventLegend')}
+                name="routine-presence-event"
+                className="routine-two"
+                options={PRESENCE_EVENTS}
+                value={starter.presenceEvent}
+                label={(event) => t(`routines.presenceEvents.${event}`)}
+                onChange={(presenceEvent) => patchStarter({ presenceEvent })}
+              />
+              {needsPerson(starter.presenceEvent) && (
+                <DeviceChoice
+                  legend={t('routines.person')}
+                  name="routine-person"
+                  devices={people}
+                  value={starter.person}
+                  roomNameById={{}}
+                  detail={personDetail}
+                  empty=""
+                  onChange={(person) => patchStarter({ person })}
+                />
+              )}
+              <p className="settings-hint">{t('routines.presenceHint')}</p>
+            </>
+          )}
         </section>
 
         <section className="routine-part" aria-labelledby="routine-only">
@@ -485,6 +532,37 @@ export default function RoutineSheet({
               days={conditions.days.days}
               onChange={(days) => patchConditions('days', { days })}
             />
+          )}
+          <SwitchRow
+            id="routine-presence"
+            label={t('routines.conditionPresence')}
+            checked={conditions.presence.on}
+            onChange={(on) => patchConditions('presence', { on })}
+          />
+          {conditions.presence.on && (
+            <>
+              <Segmented
+                legend={t('routines.presenceStateLegend')}
+                name="routine-presence-state"
+                className="routine-two"
+                options={PRESENCE_STATES}
+                value={conditions.presence.state}
+                label={(state) => t(`routines.presenceStates.${state}`)}
+                onChange={(state) => patchConditions('presence', { state })}
+              />
+              {needsPerson(conditions.presence.state) && (
+                <DeviceChoice
+                  legend={t('routines.person')}
+                  name="routine-condition-person"
+                  devices={people}
+                  value={conditions.presence.person}
+                  roomNameById={{}}
+                  detail={personDetail}
+                  empty=""
+                  onChange={(person) => patchConditions('presence', { person })}
+                />
+              )}
+            </>
           )}
         </section>
 

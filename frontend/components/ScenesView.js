@@ -7,6 +7,7 @@ import {
   CheckIcon,
   ClockIcon,
   DropIcon,
+  HomeIcon,
   LightbulbIcon,
   MotionIcon,
   PlusIcon,
@@ -58,7 +59,7 @@ export default function ScenesView({
   onEditMotion,
   onToggleMotion,
   routines = [],
-  routineNames = { devices: {}, scenes: {} },
+  routineNames = { devices: {}, scenes: {}, users: {} },
   onEditRoutine,
   onToggleRoutine,
 }) {
@@ -313,6 +314,7 @@ function RoutineIcon({ starter }) {
   const props = { width: 22, height: 22 }
   if (starter?.kind === 'time' || starter?.kind === 'sun') return <ClockIcon {...props} />
   if (starter?.kind === 'device') return <LightbulbIcon {...props} />
+  if (starter?.kind === 'presence') return <HomeIcon {...props} />
   if (starter?.event === 'leak') return <DropIcon {...props} />
   if (starter?.event === 'above' || starter?.event === 'below') return <ThermometerIcon {...props} />
   if (['open', 'closed', 'smoke'].includes(starter?.event)) return <ShieldIcon {...props} />
@@ -337,7 +339,7 @@ function RoutineList({ routines, names, onEdit, onToggle }) {
       {rows.length === 0 && <p className="section-hint">{t('routines.hint')}</p>}
       <ul className="schedule-list">
         {rows.map(({ routine, title }) => {
-          const conditions = describeConditions(intl, routine.conditions)
+          const conditions = describeConditions(intl, routine.conditions, names)
           const does = describeDoes(intl, routine, names)
           // Met een eigen naam staat de hele zin eronder; anders is de
           // starter de titel en volgt de rest.

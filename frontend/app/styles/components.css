@@ -1384,6 +1384,29 @@
   min-height: 44px;
 }
 
+/* ==================== Thuis of weg ====================
+   Op Home onder de groet: je eigen stand (twee keuzes, accentblauw) en wie
+   er verder thuis is. */
+.presence-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.presence-choice {
+  flex: 0 0 auto;
+  min-width: 11rem;
+  margin: 0;
+}
+
+.presence-line {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
 /* ==================== Routines ====================
    De sheet bouwt een zin op: bovenaan de hele routine in woorden, dan Als,
    Alleen als, Doe en Daarna uit, elk op Inset zoals de schema-rijen. */
@@ -1437,7 +1460,8 @@ fieldset.routine-part > .routine-part-title {
   border-radius: var(--radius-tile);
 }
 
-.routine-brightness {
+.routine-brightness,
+.routine-two {
   grid-auto-flow: row;
   grid-template-columns: repeat(2, 1fr);
   border-radius: var(--radius-tile);

@@ -287,7 +287,8 @@
       "saveRoutine": "Routine opslaan",
       "deleteRoutine": "Routine verwijderen",
       "routineOn": "Routine {name} aanzetten",
-      "routineOff": "Routine {name} uitzetten"
+      "routineOff": "Routine {name} uitzetten",
+      "presence": "Thuis of weg opslaan"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -735,7 +736,8 @@
     "kinds": {
       "time": "Tijd",
       "device": "Apparaat",
-      "sensor": "Sensor"
+      "sensor": "Sensor",
+      "presence": "Thuis/weg"
     },
     "timeKinds": {
       "time": "Vaste tijd",
@@ -811,6 +813,12 @@
         "smoke": "Als {name} rook meldt",
         "above": "Als het bij {name} warmer wordt dan {value}",
         "below": "Als het bij {name} kouder wordt dan {value}"
+      },
+      "presence": {
+        "all_away": "Als iedereen weg is",
+        "first_home": "Als de eerste thuiskomt",
+        "arrives": "Als {name} thuiskomt",
+        "leaves": "Als {name} weggaat"
       }
     },
     "condition": {
@@ -819,7 +827,13 @@
       "between": "tussen {from} en {to}",
       "weekdays": "op werkdagen",
       "weekend": "in het weekend",
-      "days": "op {days}"
+      "days": "op {days}",
+      "presence": {
+        "someone_home": "als er iemand thuis is",
+        "nobody_home": "als niemand thuis is",
+        "home": "als {name} thuis is",
+        "away": "als {name} weg is"
+      }
     },
     "action": {
       "on": "{name} aan",
@@ -839,7 +853,38 @@
       "between": "Kies twee verschillende tijden.",
       "condition": "Deze voorwaarde kent de app niet.",
       "action": "Kies minstens één actie bij Doe.",
-      "target": "Kies bij elke stap een apparaat of scène."
-    }
+      "target": "Kies bij elke stap een apparaat of scène.",
+      "presence": "Kies wanneer: iedereen weg, de eerste thuis, of iemand.",
+      "person": "Kies een huisgenoot."
+    },
+    "unknownPerson": "iemand die geen huisgenoot meer is",
+    "presenceEvents": {
+      "all_away": "Iedereen weg",
+      "first_home": "Eerste thuis",
+      "arrives": "Komt thuis",
+      "leaves": "Gaat weg"
+    },
+    "presenceEventLegend": "Wanneer",
+    "person": "Huisgenoot",
+    "conditionPresence": "Wie er thuis is",
+    "presenceStates": {
+      "someone_home": "Iemand thuis",
+      "nobody_home": "Niemand thuis",
+      "home": "Huisgenoot thuis",
+      "away": "Huisgenoot weg"
+    },
+    "presenceStateLegend": "Wie er thuis moet zijn",
+    "presenceHint": "Iedereen zet zichzelf op Thuis of Weg, op Home."
+  },
+  "presence": {
+    "home": "Thuis",
+    "away": "Weg",
+    "legend": "Ben je thuis of weg?",
+    "alsoHome": "{names} {count, plural, one {is} other {zijn}} ook thuis",
+    "nobodyElse": "Verder is niemand thuis",
+    "othersHome": "{names} {count, plural, one {is} other {zijn}} thuis",
+    "nobodyHome": "Niemand is thuis",
+    "memberHome": "Thuis",
+    "memberAway": "Weg"
   }
 }

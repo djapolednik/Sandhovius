@@ -287,7 +287,8 @@
       "saveRoutine": "Saving the routine",
       "deleteRoutine": "Deleting the routine",
       "routineOn": "Turning routine {name} on",
-      "routineOff": "Turning routine {name} off"
+      "routineOff": "Turning routine {name} off",
+      "presence": "Saving home or away"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -735,7 +736,8 @@
     "kinds": {
       "time": "Time",
       "device": "Device",
-      "sensor": "Sensor"
+      "sensor": "Sensor",
+      "presence": "Home/away"
     },
     "timeKinds": {
       "time": "Set time",
@@ -811,6 +813,12 @@
         "smoke": "When {name} detects smoke",
         "above": "When it gets warmer than {value} at {name}",
         "below": "When it gets colder than {value} at {name}"
+      },
+      "presence": {
+        "all_away": "When everyone is away",
+        "first_home": "When the first person gets home",
+        "arrives": "When {name} gets home",
+        "leaves": "When {name} leaves"
       }
     },
     "condition": {
@@ -819,7 +827,13 @@
       "between": "between {from} and {to}",
       "weekdays": "on weekdays",
       "weekend": "at the weekend",
-      "days": "on {days}"
+      "days": "on {days}",
+      "presence": {
+        "someone_home": "when someone is home",
+        "nobody_home": "when nobody is home",
+        "home": "when {name} is home",
+        "away": "when {name} is away"
+      }
     },
     "action": {
       "on": "{name} on",
@@ -839,7 +853,38 @@
       "between": "Choose two different times.",
       "condition": "The app doesn't know this condition.",
       "action": "Choose at least one action under Do.",
-      "target": "Choose a device or scene for every step."
-    }
+      "target": "Choose a device or scene for every step.",
+      "presence": "Choose when: everyone away, the first home, or someone.",
+      "person": "Choose a household member."
+    },
+    "unknownPerson": "someone who's no longer in the household",
+    "presenceEvents": {
+      "all_away": "Everyone away",
+      "first_home": "First home",
+      "arrives": "Gets home",
+      "leaves": "Leaves"
+    },
+    "presenceEventLegend": "When",
+    "person": "Household member",
+    "conditionPresence": "Who's home",
+    "presenceStates": {
+      "someone_home": "Someone home",
+      "nobody_home": "Nobody home",
+      "home": "Member home",
+      "away": "Member away"
+    },
+    "presenceStateLegend": "Who needs to be home",
+    "presenceHint": "Everyone sets themselves to Home or Away, on Home."
+  },
+  "presence": {
+    "home": "Home",
+    "away": "Away",
+    "legend": "Are you home or away?",
+    "alsoHome": "{names} {count, plural, one {is} other {are}} home too",
+    "nobodyElse": "Nobody else is home",
+    "othersHome": "{names} {count, plural, one {is} other {are}} home",
+    "nobodyHome": "Nobody is home",
+    "memberHome": "Home",
+    "memberAway": "Away"
   }
 }
