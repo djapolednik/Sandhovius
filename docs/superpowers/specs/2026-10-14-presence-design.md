@@ -1,6 +1,6 @@
 # Thuis of weg
 
-Datum: 2026-10-14 · Status: besloten, in aanbouw · Bouwt op: routines
+Datum: 2026-10-14 · Status: gebouwd (2026-10-14; nog niet met de echte agent) · Bouwt op: routines
 (`2026-10-14-routines-design.md`), huisgenoten
 (`2026-10-07-household-design.md`) · Roadmap:
 `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (B3)

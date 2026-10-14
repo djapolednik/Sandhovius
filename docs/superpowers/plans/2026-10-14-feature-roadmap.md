@@ -104,7 +104,13 @@ en lekkage altijd aan. De agent beslist lokaal of een gebeurtenis een melding
 waard is, PocketBase verstuurt alleen. Schema: `notification_rules` per
 apparaat en per lid (de één wil de voordeur, de ander niet).
 
-### B3. Aanwezigheid (Thuis/Weg)
+### B3. Aanwezigheid (Thuis/Weg) ✅ handmatig gebouwd 2026-10-14
+
+Gebouwd volgens `docs/superpowers/specs/2026-10-14-presence-design.md`: optie 1
+hieronder, met starters en voorwaarden voor het huis én per huisgenoot,
+standaard thuis, alleen je eigen stand, de knop op Home. Optie 2 (wifi) kan
+later dezelfde rij vullen.
+
 
 Een PWA kan geen telefoonlocatie op de achtergrond volgen. Haalbare opties,
 oplopend in moeite:
@@ -313,7 +319,7 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 
 ## Volgorde
 
-A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) → B2 (met
+A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) ✅ → B2 (met
 fase 3) → C1 → D1 → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
 F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.

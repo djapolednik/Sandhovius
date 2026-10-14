@@ -118,6 +118,7 @@ het starten helemaal op.
 | `scenes` | base | Scènes | `house`, `name`, `order`, `actions` (JSON) |
 | `schedules` | base | Schema's voor scènes | `house`, `scene`, `trigger` (`time`/`sunrise`/`sunset`), `time` ("HH:MM", leeg bij zon), `offset_min` (−120 … 120, negatief = ervoor), `days`, `enabled`; box: `last_run`, `last_error`, `next_run` |
 | `motion_lights` | base | Bewegingslicht: lampen aan bij beweging | `house`, `sensor`, `devices` (max 10), `only_dark`, `off_after` (1–60 min), `enabled`, `last_run`, `last_error` |
+| `presence` | base | Thuis of weg per lid (B3) | `house`, `user` (alleen jezelf, vast na maken), `home`; uniek op (house, user); geen rij = thuis; lezen: leden en de box |
 | `automations` | base | Routines: als dit, alleen als, doe dat | `house`, `name` (max 80, leeg = de app maakt een zin), `enabled`, `starter` (JSON, één), `conditions` (JSON, max 5), `actions` (JSON, 1–10), `off_after` (0/1/5/15/30/60 min); box: `last_run`, `last_error`, `next_run` |
 
 Relaties: `users` ↔ `houses` (via `members`/`admins`) ← `rooms`/`devices`/`scenes`/`schedules`;
@@ -239,7 +240,12 @@ toont ze nooit, alleen óf er een fout is. Spec:
   alleen lampen en stopcontacten schakelen, grenzen (temperatuur 0–40°, max
   10 acties, 5 voorwaarden). Fout: 400 `invalid_automation` met `params.part`
   (`starter`/`conditions`/`actions`/`off_after`). De box en de superuser
-  slaan de controle over; de agent controleert zelf ook.
+  slaan de controle over; de agent controleert zelf ook. Thuis/weg: starter
+  `presence` met `all_away`/`first_home`, of `arrives`/`leaves` met een
+  `user` die lid is; voorwaarde `presence` met `someone_home`/`nobody_home`,
+  of `home`/`away` met een lid.
+- **`household.pb.js`** ruimt bij verlaten of verwijderen ook de
+  `presence`-rij van dat lid in dat huis op.
 - **`pairing.pb.js`** — zet `created_by` op de bewoner en weigert een tweede
   open sessie in hetzelfde huis (400 `session_open`): twee telefoons die
   tegelijk zoeken zouden elkaars vondsten zien of weghalen. De app neemt een
@@ -525,6 +531,15 @@ geen lamp meer aanzetten.
   routine loopt hooguit één keer per minuut. **Nu uitproberen** in de app
   stuurt de acties als gewone commando's (`turn_on`/`turn_off`, `run_scene`);
   daar is geen agentcode voor.
+- **Thuis of weg** (spec `2026-10-14-presence-design.md`): de leden
+  (`houses.members`) en de `presence`-rijen reizen mee in het snapshot, en de
+  agent volgt `presence` realtime (thuiskomen telt binnen een seconde). De
+  motor houdt per lid thuis/weg bij, geen rij = thuis. De eerste stand na een
+  start is de uitgangssituatie; daarna starten overgangen (een lid komt thuis
+  of gaat weg, het aantal thuis van nul naar meer of naar nul), alleen over
+  leden die er voor en na bij horen. Per lid wint de rij met de nieuwste
+  `updated`, zodat een snapshot dat net vóór een realtime-melding werd
+  opgehaald hem niet terugdraait.
 - **Weer**: elk half uur uit HA (Met.no) naar `houses.weather`; alleen de box
   mag dat schrijven.
 
