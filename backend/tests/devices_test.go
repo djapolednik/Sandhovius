@@ -126,3 +126,26 @@ func TestIdentifyCommand(t *testing.T) {
 		t.Errorf("provision bestaat nog: %d %v", st, out)
 	}
 }
+
+// Kleur volgt de dag (spec 2026-10-14-adaptive-light-design.md): alleen een
+// lamp met kleurtemperatuur, en alleen de bewoner zet het.
+func TestAdaptiveOnlyWithColorTemp(t *testing.T) {
+	p := startPB(t)
+	w := fixture(t, p)
+	white := p.create(t, "devices", map[string]any{
+		"gateway": w.HouseA, "name": "Leeslamp", "type": "light", "entity_id": "light.lees",
+		"capabilities": []string{"onoff", "brightness", "color_temp"}})
+	if st, out := p.do(t, w.UserATok, "PATCH", devicesPath+"/"+white, map[string]any{"adaptive": true}); st != 200 {
+		t.Errorf("wit lamp volgt de dag: %d %v", st, out)
+	}
+	if st, out := p.do(t, w.UserATok, "PATCH", devicesPath+"/"+white, map[string]any{"adaptive": false}); st != 200 {
+		t.Errorf("weer uit: %d %v", st, out)
+	}
+	st, out := p.do(t, w.UserATok, "PATCH", devicesPath+"/"+w.DevA, map[string]any{"adaptive": true})
+	if st != 400 || out["code"] != "invalid_adaptive" {
+		t.Errorf("lamp zonder kleurtemperatuur: %d %v", st, out)
+	}
+	if st, out := p.do(t, w.BoxATok, "PATCH", devicesPath+"/"+white, map[string]any{"adaptive": true}); st < 400 {
+		t.Errorf("box zet adaptive: %d %v", st, out)
+	}
+}
