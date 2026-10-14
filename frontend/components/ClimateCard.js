@@ -4,6 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useIntl } from '../app/LanguageContext'
 import { formatTemperature } from '../lib/temperature'
 import { MinusIcon, PlusIcon } from '../lib/icons'
+import { PRESETS, compareText, presetAt } from '../lib/climate'
 
 const TEMP_STEP = 0.5
 // Zo lang na de laatste tik op −/+ gaat er pas een commando naar de box:
@@ -41,6 +42,8 @@ export default function ClimateCard({
   offlineText,
   onSetTemperature,
   onToggleHeating,
+  // F2: { comfort, eco, sleep } in graden (lib/climate). Zonder: geen pillen.
+  presets = null,
 }) {
   const { t, locale } = useIntl()
   const degrees = (celsius) => formatTemperature(celsius, locale)
@@ -98,6 +101,14 @@ export default function ClimateCard({
   // pas als hij aan staat ("Verwarming uit" staat er dan tussen).
   const canAdjust = isOn && isOnline && hasTarget && typeof onSetTemperature === 'function'
   const canSwitch = isOnline && typeof onToggleHeating === 'function'
+
+  const activePreset = presets ? presetAt(shownTarget, presets) : null
+
+  function choosePreset(preset) {
+    clearTimeout(commitTimer.current)
+    pendingRef.current = presets[preset]
+    commit()
+  }
 
   function adjust(delta) {
     // Vanaf de ref, niet vanaf de render: twee snelle tikken tussen twee
@@ -198,6 +209,35 @@ export default function ClimateCard({
 
         {hasTarget && stepButton(t('climate.warmer'), TEMP_STEP, !canAdjust || shownTarget >= maxTemp, PlusIcon)}
       </div>
+
+      {/* F2: de standen van het huis als pillen. Een tik zet het doel op die
+          stand, meteen (geen wachttijd zoals bij −/+). Een stand is een
+          instelling: accentblauw als het doel erbij past, niets gloeit. */}
+      {presets && hasTarget && (
+        <div className="climate-presets">
+          <div className="climate-preset-row" role="group" aria-label={t('climate.presetLegend')}>
+            {PRESETS.map((preset) => {
+              const active = activePreset === preset
+              return (
+                <button
+                  key={preset}
+                  type="button"
+                  className={`climate-preset ${active ? 'climate-preset-on' : ''}`}
+                  aria-pressed={active}
+                  disabled={!canAdjust}
+                  onClick={() => choosePreset(preset)}
+                >
+                  <span>{t(`climate.presets.${preset}`)}</span>
+                  <span className="climate-preset-temp">{degrees(presets[preset])}</span>
+                </button>
+              )
+            })}
+          </div>
+          {activePreset && activePreset !== 'comfort' && (
+            <p className="climate-preset-compare">{compareText({ t, locale }, activePreset, presets)}</p>
+          )}
+        </div>
+      )}
 
       {/* Eén schakelaar: aan of uit is apparaatstand, dus het "aan"-groen
           (zoals elke stand), geen blauw vlak. De status staat eronder, zodat

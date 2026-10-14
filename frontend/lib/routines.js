@@ -102,6 +102,11 @@ export function describeConditions(intl, conditions, names) {
 
 function describeAction(intl, action, names) {
   const { t, locale } = intl
+  if (action.kind === 'climate') {
+    const preset = t(`climate.presets.${action.preset}`)
+    if (!action.device) return t('routines.action.climateAll', { preset })
+    return t('routines.action.climate', { name: deviceName(intl, names, action.device), preset })
+  }
   if (action.kind === 'notify') {
     const users = action.users ?? []
     const to = users.length === 0 ? t('routines.everyone') : list(locale).format(users.map((u) => userName(intl, names, u)))
@@ -181,6 +186,10 @@ function missingCondition(c) {
 const notifyText = (a) => (a.text ?? '').trim()
 
 function missingAction(a, known) {
+  if (a.kind === 'climate') {
+    if (!['comfort', 'eco', 'sleep'].includes(a.preset)) return 'target'
+    return !a.device || !known || known.devices.has(a.device) ? null : 'target'
+  }
   if (a.kind === 'notify') return notifyText(a) && notifyText(a).length <= 80 ? null : 'text'
   if (a.kind === 'scene') return a.scene && (!known || known.scenes.has(a.scene)) ? null : 'target'
   return a.device && (!known || known.devices.has(a.device)) && a.action ? null : 'target'
@@ -228,6 +237,9 @@ export function routineRecord(draft) {
   })
   const actions = (draft.actions ?? []).map((a) => {
     if (a.kind === 'scene') return { kind: 'scene', scene: a.scene }
+    if (a.kind === 'climate') {
+      return a.device ? { kind: 'climate', preset: a.preset, device: a.device } : { kind: 'climate', preset: a.preset }
+    }
     if (a.kind === 'notify') {
       const users = a.users ?? []
       return users.length > 0 ? { kind: 'notify', text: notifyText(a), users } : { kind: 'notify', text: notifyText(a) }

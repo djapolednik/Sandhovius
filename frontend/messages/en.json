@@ -200,7 +200,17 @@
     "colder": "Cooler",
     "warmer": "Warmer",
     "now": "Now <value>{temperature}</value>",
-    "heating": "Heating"
+    "heating": "Heating",
+    "presets": {
+      "comfort": "Comfort",
+      "eco": "Eco",
+      "sleep": "Sleep"
+    },
+    "presetLower": "{degrees} lower than {comfort}",
+    "presetHigher": "{degrees} higher than {comfort}",
+    "presetSame": "As warm as {comfort}",
+    "presetLegend": "Heating mode",
+    "presetSet": "{name} to {preset}"
   },
   "scenes": {
     "title": "Scenes",
@@ -292,7 +302,8 @@
       "notifications": "Setting up notifications",
       "notifyRule": "Saving the notification",
       "rights": "Saving permissions",
-      "inSummary": "Saving the summary setting"
+      "inSummary": "Saving the summary setting",
+      "climatePresets": "Saving the heating mode"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -317,7 +328,8 @@
       "invalid_adaptive": "This lamp can’t change its white tone.",
       "invalid_automation": "{part, select, starter {The start of the routine} conditions {A condition} actions {A step} other {Off afterwards}} isn't right. Choose it again.",
       "admin_can_edit": "An admin can always do everything.",
-      "invalid_until": "Choose an end date from today up to a year ahead."
+      "invalid_until": "Choose an end date from today up to a year ahead.",
+      "invalid_climate_presets": "Choose a temperature between 5 and 30 degrees, in half degrees."
     }
   },
   "household": {
@@ -595,7 +607,11 @@
     "newRoomPlaceholder": "E.g. Bedroom",
     "confirmRelease": "Unlink the box? Your home and settings are kept. You can link a box later.",
     "release": "Unlink box",
-    "box": "Box"
+    "box": "Box",
+    "climatePresets": "Heating modes",
+    "climatePresetsHint": "For the buttons under each thermostat and for routines, like Eco when everyone is away.",
+    "colder": "{preset} colder",
+    "warmer": "{preset} warmer"
   },
   "changePassword": {
     "tooShort": "Choose a new password of at least {min} characters.",
@@ -862,7 +878,9 @@
       "onDetail": "{name} on ({detail})",
       "off": "{name} off",
       "scene": "scene {name}",
-      "notify": "notification “{text}” to {to}"
+      "notify": "notification “{text}” to {to}",
+      "climate": "{name} to {preset}",
+      "climateAll": "all thermostats to {preset}"
     },
     "missing": {
       "starter": "Choose when the routine starts.",
@@ -906,7 +924,10 @@
     "notifyPlaceholder": "For example: The front door is open",
     "notifyTo": "To whom",
     "notifyEveryone": "Nobody picked: everyone gets it.",
-    "notifyToHint": "Only people who turned notifications on get it."
+    "notifyToHint": "Only people who turned notifications on get it.",
+    "climateGroup": "Heating",
+    "climateAll": "All thermostats",
+    "climateLegend": "Mode for {name}"
   },
   "presence": {
     "home": "Home",

@@ -19,6 +19,7 @@ import {
 } from '../lib/routines'
 import { CheckIcon, PlusIcon, TrashIcon } from '../lib/icons'
 import { memberName } from '../lib/presence'
+import { PRESETS } from '../lib/climate'
 import { uid } from '../lib/uid'
 
 const TIME_KINDS = ['time', 'sunrise', 'sunset']
@@ -88,10 +89,21 @@ function conditionsFrom(input) {
 }
 
 // Een stap: target is "d:<id>" (apparaat), "s:<id>" (scène), "n:" (een
-// melding, met text en users), of leeg.
+// melding, met text en users), "c:" of "c:<id>" (een klimaatstand voor alle
+// thermostaten of één, met preset), of leeg.
 const rowFrom = (a) => ({
   key: uid(),
-  target: a.kind === 'notify' ? 'n:' : a.kind === 'scene' ? `s:${a.scene}` : a.device ? `d:${a.device}` : '',
+  target:
+    a.kind === 'climate'
+      ? `c:${a.device ?? ''}`
+      : a.kind === 'notify'
+        ? 'n:'
+        : a.kind === 'scene'
+          ? `s:${a.scene}`
+          : a.device
+            ? `d:${a.device}`
+            : '',
+  preset: a.preset ?? 'eco',
   action: a.action ?? 'turn_on',
   payload: a.payload ?? null,
   text: a.text ?? '',
@@ -100,6 +112,7 @@ const rowFrom = (a) => ({
 
 function actionFrom(row) {
   if (row.target === 'n:') return { kind: 'notify', text: row.text, users: row.users }
+  if (row.target.startsWith('c:')) return { kind: 'climate', preset: row.preset, device: row.target.slice(2) }
   if (row.target.startsWith('s:')) return { kind: 'scene', scene: row.target.slice(2) }
   const out = { kind: 'device', device: row.target.slice(2), action: row.action }
   if (row.action === 'turn_on' && row.payload) out.payload = row.payload
@@ -206,6 +219,8 @@ export default function RoutineSheet({
   names,
   roomNameById,
   members = [],
+  // F2: de thermostaten, voor de stap "Verwarming".
+  climates = [],
   canTry,
   onSave,
   onDelete,
@@ -233,7 +248,7 @@ export default function RoutineSheet({
     off_after: offAfter,
   }
   const known = {
-    devices: new Set([...switchables, ...sensors].map((d) => d.id)),
+    devices: new Set([...switchables, ...sensors, ...climates].map((d) => d.id)),
     scenes: new Set(scenes.map((s) => s.id)),
   }
   // Een lege stap telt als ontbrekend: "Kies bij elke stap…".
@@ -607,6 +622,16 @@ export default function RoutineSheet({
                             ))}
                           </optgroup>
                         )}
+                        {climates.length > 0 && (
+                          <optgroup label={t('routines.climateGroup')}>
+                            <option value="c:">{t('routines.climateAll')}</option>
+                            {climates.map((d) => (
+                              <option key={d.id} value={`c:${d.id}`}>
+                                {d.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
                         <optgroup label={t('routines.notifyGroup')}>
                           <option value="n:">{t('routines.notifyOption')}</option>
                         </optgroup>
@@ -631,6 +656,18 @@ export default function RoutineSheet({
                         value={row.action}
                         label={(mode) => t(`routines.modes.${mode}`)}
                         onChange={(action) => patchRow(row.key, { action })}
+                      />
+                    )}
+                    {row.target.startsWith('c:') && (
+                      <Segmented
+                        legend={t('routines.climateLegend', {
+                          name: row.target === 'c:' ? t('routines.climateAll') : names.devices[row.target.slice(2)] ?? '',
+                        })}
+                        name={`routine-preset-${row.key}`}
+                        options={PRESETS}
+                        value={row.preset}
+                        label={(p) => t(`climate.presets.${p}`)}
+                        onChange={(preset) => patchRow(row.key, { preset })}
                       />
                     )}
                     {row.target === 'n:' && (
@@ -733,7 +770,7 @@ export default function RoutineSheet({
                   : tryList.length === 0
                     ? t('routines.tryDone')
                     : t('routines.tryPartial', {
-                        failed: new Intl.ListFormat(intl.locale, { type: 'conjunction' }).format(tryList),
+                        failed: new Intl.ListFormat(intl.locale, { type: 'conjunction' }).format([...new Set(tryList)]),
                       })}
               </span>
             </div>

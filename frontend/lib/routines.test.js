@@ -214,3 +214,22 @@ test('melding als actie: zin, wat mist en het record', () => {
   ])
   assertMessage('routines.missing.text')
 })
+
+test('klimaatstand als actie: zin, wat mist en het record', () => {
+  const people = { ...names, devices: { ...names.devices, trv: 'Radiator slaapkamer' } }
+  const starter = { kind: 'presence', event: 'all_away' }
+  assert.equal(
+    describeAutomation(nl, routine(starter, [{ kind: 'climate', preset: 'eco' }]), people),
+    'Als iedereen weg is: alle thermostaten op Eco.'
+  )
+  assert.equal(
+    describeAutomation(en, routine(starter, [{ kind: 'climate', preset: 'sleep', device: 'trv' }]), people),
+    'When everyone is away: Radiator slaapkamer to Sleep.'
+  )
+  assert.equal(missingStep(routine(starter, [{ kind: 'climate' }]))?.key, 'routines.missing.target')
+  assert.equal(missingStep(routine(starter, [{ kind: 'climate', preset: 'eco', device: 'gone' }]), { devices: new Set(), scenes: new Set() })?.key, 'routines.missing.target')
+  assert.deepEqual(routineRecord({ starter, actions: [{ kind: 'climate', preset: 'eco', device: '' }, { kind: 'climate', preset: 'comfort', device: 'trv' }] }).actions, [
+    { kind: 'climate', preset: 'eco' },
+    { kind: 'climate', preset: 'comfort', device: 'trv' },
+  ])
+})

@@ -1438,6 +1438,81 @@
   margin: 0;
 }
 
+/* ==================== Klimaatstanden (F2) ====================
+   Pillen onder de dial: een instelling, dus accentblauw als het doel erbij
+   past; niets gloeit. */
+.climate-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.climate-preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.climate-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  min-height: 44px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.climate-preset-temp {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.climate-preset-on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.climate-preset-on .climate-preset-temp {
+  color: inherit;
+}
+
+.climate-preset:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.climate-preset-compare {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.climate-presets-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.climate-presets-editor .settings-hint {
+  margin: 0;
+}
+
+.climate-preset-edit {
+  align-items: center;
+}
+
 /* ==================== Routines ====================
    De sheet bouwt een zin op: bovenaan de hele routine in woorden, dan Als,
    Alleen als, Doe en Daarna uit, elk op Inset zoals de schema-rijen. */

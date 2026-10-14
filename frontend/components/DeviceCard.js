@@ -37,6 +37,8 @@ export default memo(function DeviceCard({
   onToggle,
   onSetTemperature,
   onOpenSettings,
+  // F2: klimaatstanden van het huis, voor de pillen onder de dial.
+  presets,
 }) {
   const intl = useIntl()
   const { t, locale } = intl
@@ -111,6 +113,7 @@ export default memo(function DeviceCard({
             offlineText={offlineText}
             onSetTemperature={(temperature) => onSetTemperature(device, temperature)}
             onToggleHeating={() => onToggle(device)}
+            presets={presets}
           />
         </div>
       </li>

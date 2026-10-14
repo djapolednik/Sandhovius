@@ -5,7 +5,10 @@ import { useState } from 'react'
 import Modal from './Modal'
 import { describeError } from '../lib/errors'
 import { claimError } from '../lib/claim'
-import { CheckIcon, CloseIcon, TrashIcon } from '../lib/icons'
+import { CheckIcon, CloseIcon, MinusIcon, PlusIcon, TrashIcon } from '../lib/icons'
+import { PRESETS, PRESET_MAX, PRESET_MIN, compareText, presetTemps } from '../lib/climate'
+import { formatTemperature } from '../lib/temperature'
+import { useIntl } from '../app/LanguageContext'
 import MoveButtons from './MoveButtons'
 
 function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
@@ -130,6 +133,58 @@ function RoomRow({ room, index, count, onMove, onRename, onDelete }) {
 
 // Huisnaam en box zijn alleen voor beheerders (isAdmin); kamers kan elk lid
 // inrichten.
+// F2: Comfort, Eco en Slaap met −/+ in halve graden; elke tik slaat op
+// (zoals de dial), met eronder de vergelijking met Comfort.
+function ClimatePresetsEditor({ house, onSave, onError }) {
+  const t = useTranslations()
+  const { locale } = useIntl()
+  const temps = presetTemps(house)
+  async function step(preset, delta) {
+    const next = Math.min(PRESET_MAX, Math.max(PRESET_MIN, temps[preset] + delta))
+    if (next === temps[preset]) return
+    try {
+      await onSave(preset, next)
+    } catch (err) {
+      onError(describeError(t, t('errors.what.climatePresets'), err))
+    }
+  }
+  return (
+    <div className="climate-presets-editor">
+      <span className="form-label">{t('houseSheet.climatePresets')}</span>
+      <p className="settings-hint">{t('houseSheet.climatePresetsHint')}</p>
+      {PRESETS.map((preset) => (
+        <div key={preset} className="settings-row climate-preset-edit">
+          <span className="settings-row-text">
+            <span>{t(`climate.presets.${preset}`)}</span>
+            {preset !== 'comfort' && <span className="settings-row-hint">{compareText({ t, locale }, preset, temps)}</span>}
+          </span>
+          <span className="scene-temperature">
+            <button
+              type="button"
+              className="climate-step"
+              aria-label={t('houseSheet.colder', { preset: t(`climate.presets.${preset}`) })}
+              onClick={() => step(preset, -0.5)}
+            >
+              <MinusIcon width="18" height="18" aria-hidden="true" />
+            </button>
+            <span className="scene-temperature-value" aria-live="polite">
+              {formatTemperature(temps[preset], locale)}
+            </span>
+            <button
+              type="button"
+              className="climate-step"
+              aria-label={t('houseSheet.warmer', { preset: t(`climate.presets.${preset}`) })}
+              onClick={() => step(preset, 0.5)}
+            >
+              <PlusIcon width="18" height="18" aria-hidden="true" />
+            </button>
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function HouseModal({
   house,
   isAdmin = false,
@@ -137,6 +192,9 @@ export default function HouseModal({
   canEdit = true,
   rooms,
   onRenameHouse,
+  // F2: de standen van de verwarming (alleen beheerder, alleen met thermostaten).
+  hasClimate = false,
+  onSaveClimatePreset,
   onAddRoom,
   onRenameRoom,
   onMoveRoom,
@@ -217,6 +275,13 @@ export default function HouseModal({
           </form>
 
           <div className="modal-divider" />
+
+          {hasClimate && onSaveClimatePreset && (
+            <>
+              <ClimatePresetsEditor house={house} onSave={onSaveClimatePreset} onError={setError} />
+              <div className="modal-divider" />
+            </>
+          )}
         </>
       )}
 

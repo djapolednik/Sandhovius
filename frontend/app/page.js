@@ -45,6 +45,7 @@ import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
 import { scheduleName } from '../lib/schedules'
 import { categorySummary, countsInSummary } from '../lib/categories'
+import { presetTemps } from '../lib/climate'
 import { displayType } from '../lib/devices'
 import { alarmKind } from '../lib/sensors'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
@@ -681,6 +682,13 @@ export default function Home() {
   const myInvitations = invitations.filter((i) => i.email === myEmail)
   const houseInvitations = house ? invitations.filter((i) => i.house === house.id && i.email !== myEmail) : []
   const presenceInHouse = presence.filter((p) => p.house === house?.id)
+  // F2: de standen van de verwarming; één object zolang ze niet veranderen,
+  // zodat de gememoiseerde kaarten niet her-renderen.
+  const climatePresets = useMemo(
+    () => presetTemps(house),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [house?.climate_comfort, house?.climate_eco, house?.climate_sleep]
+  )
   // D1: mag ik automatiseringen en apparaten wijzigen? Een beheerder altijd;
   // een lid tenzij hij op "alleen bedienen" staat. PocketBase dwingt het af,
   // de app laat de knoppen weg.
@@ -1198,10 +1206,15 @@ export default function Home() {
       return
     }
     const stateRecord = device.expand?.device_state_via_device?.[0]
+    // Een Zigbee-radiatorknop meldt zijn doel plat (occupied_heating_setpoint)
+    // en dat leest de kaart eerst: ook dat bijwerken, anders springt hij terug
+    // tot de knop antwoordt.
+    const flat = typeof stateRecord?.state?.occupied_heating_setpoint === 'number' ? { occupied_heating_setpoint: temperature } : {}
     const optimisticState = {
       ...stateRecord,
       state: {
         ...stateRecord?.state,
+        ...flat,
         attributes: { ...stateRecord?.state?.attributes, temperature },
       },
     }
@@ -1417,6 +1430,12 @@ export default function Home() {
     }
   }
 
+  // F2: één stand van de verwarming (alleen beheerders; house_rules.pb.js).
+  async function saveClimatePreset(preset, temperature) {
+    const updated = await pb.collection('houses').update(house.id, { [`climate_${preset}`]: temperature })
+    setHouses((prev) => prev.map((h) => (h.id === updated.id ? updated : h)))
+  }
+
   async function renameHouse(name) {
     const updated = await pb.collection('houses').update(house.id, { name })
     setHouses((prev) => prev.map((h) => (h.id === updated.id ? updated : h)))
@@ -1628,6 +1647,28 @@ export default function Home() {
     for (const action of actions) {
       // Een melding verstuurt alleen de box; die slaat uitproberen over.
       if (action.kind === 'notify') continue
+      // Een klimaatstand: per thermostaat aan en naar de temperatuur.
+      if (action.kind === 'climate') {
+        const targets = action.device ? [action.device] : devicesInHouse.filter((d) => d.type === 'climate').map((d) => d.id)
+        for (const device of targets) {
+          for (const fields of [
+            { device, action: 'turn_on', status: 'pending' },
+            { device, action: 'set_temperature', payload: { temperature: climatePresets[action.preset] }, status: 'pending' },
+          ]) {
+            try {
+              const command = await pb.collection('commands').create(fields, { requestKey: null })
+              if ((await commandOutcome(command.id)) === 'failed') failed.push(routineNames.devices[device] ?? '?')
+            } catch (err) {
+              if (isSessionExpired(err)) {
+                endExpiredSession()
+                return { failed }
+              }
+              failed.push(routineNames.devices[device] ?? '?')
+            }
+          }
+        }
+        continue
+      }
       const scene = action.kind === 'scene'
       const name = scene ? routineNames.scenes[action.scene] : routineNames.devices[action.device]
       try {
@@ -1968,6 +2009,7 @@ export default function Home() {
         key={device.id}
         device={device}
         houseReachable={houseReachable}
+        presets={climatePresets}
         {...cardHandlers}
       />
     )
@@ -2312,6 +2354,8 @@ export default function Home() {
           canEdit={canEdit}
           rooms={roomsInHouse}
           onRenameHouse={renameHouse}
+          hasClimate={devicesInHouse.some((d) => d.type === 'climate')}
+          onSaveClimatePreset={saveClimatePreset}
           onAddRoom={addRoom}
           onRenameRoom={renameRoom}
           onMoveRoom={moveRoom}
@@ -2371,6 +2415,7 @@ export default function Home() {
           names={routineNames}
           roomNameById={roomNameById}
           members={houseMembers}
+          climates={byRoom(devicesInHouse.filter((d) => d.type === 'climate'), roomsInHouse)}
           canTry={houseReachable}
           onSave={saveRoutine}
           onDelete={deleteRoutine}

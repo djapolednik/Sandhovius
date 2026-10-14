@@ -200,7 +200,17 @@
     "colder": "Kouder",
     "warmer": "Warmer",
     "now": "Nu <value>{temperature}</value>",
-    "heating": "Verwarming"
+    "heating": "Verwarming",
+    "presets": {
+      "comfort": "Comfort",
+      "eco": "Eco",
+      "sleep": "Slaap"
+    },
+    "presetLower": "{degrees} lager dan {comfort}",
+    "presetHigher": "{degrees} hoger dan {comfort}",
+    "presetSame": "Even warm als {comfort}",
+    "presetLegend": "Stand van de verwarming",
+    "presetSet": "{name} op {preset}"
   },
   "scenes": {
     "title": "Scènes",
@@ -292,7 +302,8 @@
       "notifications": "Meldingen instellen",
       "notifyRule": "Meld dit opslaan",
       "rights": "Rechten opslaan",
-      "inSummary": "Samenvatting opslaan"
+      "inSummary": "Samenvatting opslaan",
+      "climatePresets": "Stand van de verwarming opslaan"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -317,7 +328,8 @@
       "invalid_adaptive": "Deze lamp kan zijn wittint niet veranderen.",
       "invalid_automation": "{part, select, starter {Het begin van de routine} conditions {Een voorwaarde} actions {Een stap} other {Daarna uit}} klopt niet. Kies het opnieuw.",
       "admin_can_edit": "Een beheerder mag altijd alles.",
-      "invalid_until": "Kies een einddatum vanaf vandaag tot een jaar vooruit."
+      "invalid_until": "Kies een einddatum vanaf vandaag tot een jaar vooruit.",
+      "invalid_climate_presets": "Kies een temperatuur tussen 5 en 30 graden, in halve graden."
     }
   },
   "household": {
@@ -595,7 +607,11 @@
     "newRoomPlaceholder": "Bijv. Slaapkamer",
     "confirmRelease": "Box ontkoppelen? Je huis en instellingen blijven bewaard. Je kunt later een box koppelen.",
     "release": "Box ontkoppelen",
-    "box": "Box"
+    "box": "Box",
+    "climatePresets": "Standen van de verwarming",
+    "climatePresetsHint": "Voor de knoppen onder elke thermostaat en voor routines, zoals Eco als iedereen weg is.",
+    "colder": "{preset} kouder",
+    "warmer": "{preset} warmer"
   },
   "changePassword": {
     "tooShort": "Kies een nieuw wachtwoord van minstens {min} tekens.",
@@ -862,7 +878,9 @@
       "onDetail": "{name} aan ({detail})",
       "off": "{name} uit",
       "scene": "scène {name}",
-      "notify": "melding „{text}” aan {to}"
+      "notify": "melding „{text}” aan {to}",
+      "climate": "{name} op {preset}",
+      "climateAll": "alle thermostaten op {preset}"
     },
     "missing": {
       "starter": "Kies wanneer de routine begint.",
@@ -906,7 +924,10 @@
     "notifyPlaceholder": "Bijvoorbeeld: De voordeur is open",
     "notifyTo": "Aan wie",
     "notifyEveryone": "Niemand gekozen: iedereen krijgt hem.",
-    "notifyToHint": "Alleen wie meldingen aanzette krijgt hem."
+    "notifyToHint": "Alleen wie meldingen aanzette krijgt hem.",
+    "climateGroup": "Verwarming",
+    "climateAll": "Alle thermostaten",
+    "climateLegend": "Stand van {name}"
   },
   "presence": {
     "home": "Thuis",
