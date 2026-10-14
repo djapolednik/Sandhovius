@@ -53,7 +53,8 @@ type AutomationCondition struct {
 }
 
 // AutomationAction: kind "device" (Device, Action turn_on/turn_off, Payload
-// brightness_pct/color_temp_kelvin), "scene" (Scene) of "notify" (Text, Users).
+// brightness_pct/color_temp_kelvin), "scene" (Scene), "notify" (Text, Users)
+// of "climate" (Preset, Device).
 type AutomationAction struct {
 	Kind    string         `json:"kind"`
 	Device  string         `json:"device,omitempty"`
@@ -63,6 +64,9 @@ type AutomationAction struct {
 	// Text en Users: kind "notify" (Stuur een melding; Users leeg = iedereen).
 	Text  string   `json:"text,omitempty"`
 	Users []string `json:"users,omitempty"`
+	// Preset: kind "climate" (comfort/eco/sleep); Device leeg = alle
+	// thermostaten van het huis.
+	Preset string `json:"preset,omitempty"`
 }
 
 type automationListResponse struct {

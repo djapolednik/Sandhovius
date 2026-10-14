@@ -84,3 +84,20 @@ func (c *Client) SetHousePushKey(houseID, key string) error {
 	}
 	return nil
 }
+
+// ClimatePresets zijn de klimaatstanden van het huis (F2), in graden; 0 = de
+// standaard van de app (Comfort 20, Eco 17, Slaap 16).
+type ClimatePresets struct {
+	Comfort float64 `json:"climate_comfort"`
+	Eco     float64 `json:"climate_eco"`
+	Sleep   float64 `json:"climate_sleep"`
+}
+
+// HouseClimatePresets leest de klimaatstanden van het huis.
+func (c *Client) HouseClimatePresets(houseID string) (ClimatePresets, error) {
+	var presets ClimatePresets
+	if err := c.doAuthed("GET", "/api/collections/houses/records/"+url.PathEscape(houseID), nil, &presets); err != nil {
+		return ClimatePresets{}, fmt.Errorf("pocketbase: house climate presets: %w", err)
+	}
+	return presets, nil
+}

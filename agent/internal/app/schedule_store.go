@@ -32,6 +32,8 @@ type snapshotFile struct {
 	// Meldingen; ontbreken in bestanden van vóór B2.
 	Subscriptions []pocketbase.PushSubscription `json:"push_subscriptions,omitempty"`
 	NotifyRules   []pocketbase.NotificationRule `json:"notification_rules,omitempty"`
+	// Klimaatstanden; ontbreken in bestanden van vóór F2 (dan de standaard).
+	Climate pocketbase.ClimatePresets `json:"climate"`
 }
 
 // saveSnapshot schrijft de snapshot atomisch (tijdelijk bestand + rename),
@@ -50,6 +52,7 @@ func saveSnapshot(path, house string, snap *scheduleSnapshot, now time.Time) err
 		Presence:      snap.presence,
 		Subscriptions: snap.subscriptions,
 		NotifyRules:   snap.notifyRules,
+		Climate:       snap.climate,
 	}
 	for _, scene := range snap.scenes {
 		file.Scenes = append(file.Scenes, scene)
@@ -99,6 +102,7 @@ func loadSnapshot(path, house string) (*scheduleSnapshot, error) {
 		presence:      file.Presence,
 		subscriptions: file.Subscriptions,
 		notifyRules:   file.NotifyRules,
+		climate:       file.Climate,
 	}
 	for _, scene := range file.Scenes {
 		snap.scenes[scene.ID] = scene

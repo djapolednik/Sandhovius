@@ -23,6 +23,7 @@ type routineRunner struct {
 	house    string
 	devices  map[string]pb.Device // device-id → device
 	scenes   map[string]pb.Scene
+	climate  pb.ClimatePresets
 	byEntity map[string]string // entity_id of zigbee-sleutel → device-id
 	file     string
 	saved    string
@@ -119,6 +120,7 @@ func (r *routineRunner) applyLocked(snap *scheduleSnapshot, now time.Time) routi
 	}
 	r.engine.setRoutines(snap.automations)
 	r.engine.setLocation(snap.location)
+	r.climate = snap.climate
 	r.notifier.set(r.pushKey, snap.subscriptions, snap.notifyRules)
 	r.members = snap.members
 	for _, row := range snap.presence {
@@ -209,6 +211,7 @@ type routineWork struct {
 	house   string
 	devices map[string]pb.Device
 	scenes  map[string]pb.Scene
+	climate pb.ClimatePresets
 	// messages: meldingen bij een gebeurtenis (lek, rook, Meld dit).
 	messages []pushMessage
 	// notify: per routine en per actie-index de berichten van "Stuur een
@@ -217,7 +220,7 @@ type routineWork struct {
 }
 
 func (r *routineRunner) prepareLocked(res routineResult) routineWork {
-	w := routineWork{res: res, house: r.house, devices: r.devices, scenes: r.scenes, notify: map[string]map[int][]pushMessage{}}
+	w := routineWork{res: res, house: r.house, devices: r.devices, scenes: r.scenes, climate: r.climate, notify: map[string]map[int][]pushMessage{}}
 	for _, run := range res.Runs {
 		for i, a := range run.Actions {
 			if a.Kind != "notify" {
@@ -279,6 +282,8 @@ func (r *routineRunner) execute(w routineWork) {
 			switch a.Kind {
 			case "notify":
 				err = r.sendAll(w.notify[run.Routine][i])
+			case "climate":
+				err = r.climateStep(w, a, lookup)
 			case "device":
 				err = r.step(w.house, pb.SceneAction{Device: a.Device, Action: a.Action, Payload: a.Payload}, lookup)
 			case "scene":
@@ -465,4 +470,51 @@ func (a *Agent) syncRoutines() {
 		}
 		a.routines.onState(entity, map[string]any{"state": event.State, "attributes": event.Attributes}, time.Now())
 	}
+}
+
+// presetTemperature: de temperatuur van een klimaatstand (F2); 0 op het huis =
+// de standaard, dezelfde als in de app (lib/climate.js).
+func presetTemperature(p pb.ClimatePresets, preset string) (float64, bool) {
+	defaults := map[string]float64{"comfort": 20, "eco": 17, "sleep": 16}
+	set := map[string]float64{"comfort": p.Comfort, "eco": p.Eco, "sleep": p.Sleep}
+	d, ok := defaults[preset]
+	if !ok {
+		return 0, false
+	}
+	if v := set[preset]; v > 0 {
+		return v, true
+	}
+	return d, true
+}
+
+// climateStep: een klimaatstand op één thermostaat of op alle thermostaten van
+// het huis: aan en naar de temperatuur, zoals een scène met "aan". Fouten per
+// thermostaat samen, zodat de andere wel hun stand krijgen.
+func (r *routineRunner) climateStep(w routineWork, a pb.AutomationAction, lookup func(string) (*pb.Device, error)) error {
+	temperature, ok := presetTemperature(w.climate, a.Preset)
+	if !ok {
+		return fmt.Errorf("onbekende klimaatstand %q", a.Preset)
+	}
+	var targets []string
+	if a.Device != "" {
+		targets = []string{a.Device}
+	} else {
+		for id, d := range w.devices {
+			if d.Type == "climate" {
+				targets = append(targets, id)
+			}
+		}
+		slices.Sort(targets)
+	}
+	var failures []error
+	for _, id := range targets {
+		if err := r.step(w.house, pb.SceneAction{Device: id, Action: "turn_on"}, lookup); err != nil {
+			failures = append(failures, fmt.Errorf("%s: %w", id, err))
+			continue
+		}
+		if err := r.step(w.house, pb.SceneAction{Device: id, Action: "set_temperature", Payload: map[string]any{"temperature": temperature}}, lookup); err != nil {
+			failures = append(failures, fmt.Errorf("%s: %w", id, err))
+		}
+	}
+	return errors.Join(failures...)
 }

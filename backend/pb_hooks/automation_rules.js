@@ -120,6 +120,15 @@ function check(e) {
       }
       continue
     }
+    // Een klimaatstand (F2): één thermostaat van het huis, of leeg = alle.
+    if (a.kind === "climate") {
+      if (!["comfort", "eco", "sleep"].includes(a.preset)) return refuse("actions")
+      if (a.device !== undefined && a.device !== null && a.device !== "") {
+        const d = device(a.device)
+        if (!d || d.getString("type") !== "climate") return refuse("actions")
+      }
+      continue
+    }
     // Een melding (B2): een korte tekst, aan leden van het huis (leeg = iedereen).
     if (a.kind === "notify") {
       const text = typeof a.text === "string" ? a.text.trim() : ""

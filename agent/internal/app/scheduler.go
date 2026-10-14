@@ -60,6 +60,8 @@ type scheduleSnapshot struct {
 	// 2026-10-14-notifications-design.md).
 	subscriptions []pocketbase.PushSubscription
 	notifyRules   []pocketbase.NotificationRule
+	// climate: de klimaatstanden van het huis (F2).
+	climate pocketbase.ClimatePresets
 }
 
 func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
@@ -243,7 +245,12 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	climate, err := a.pbClient.HouseClimatePresets(house)
+	if err != nil {
+		return nil, err
+	}
 	snap := &scheduleSnapshot{
+		climate:       climate,
 		subscriptions: subscriptions,
 		notifyRules:   notifyRules,
 		members:       members,
