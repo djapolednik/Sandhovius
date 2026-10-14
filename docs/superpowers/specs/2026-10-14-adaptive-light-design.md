@@ -1,6 +1,6 @@
 # Kleur volgt de dag
 
-Datum: 2026-10-14 · Status: ontwerp · Bouwt op: zon in schema's
+Datum: 2026-10-14 · Status: gebouwd (2026-10-14; nog niet met een echte lamp) · Bouwt op: zon in schema's
 (`2026-10-14-sun-schedules-design.md`, `sun.go`), lampbediening
 (`2026-10-07-light-control-design.md`) · Roadmap:
 `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (F1)

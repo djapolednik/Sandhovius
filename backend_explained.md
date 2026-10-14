@@ -108,7 +108,7 @@ het starten helemaal op.
 | `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen), `agent_version` + `reported_at` (alleen via `box.pb.js`) |
 | `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
-| `devices` | base | Apparaten; alleen de box maakt ze (bij koppelen) | `gateway` (= huis), `name`, `room`, `shown_as` (bewoner: `light` of leeg, alleen bij `type = switch`); box: `type` (`light`/`switch`/`sensor`/`climate`), `source` (`zigbee`/`hue`), `address` (IEEE-adres of HA-device-id, nooit de naam), `endpoint` (`l1`, `l2` … bij een meervoudig apparaat), `entity_id` (HA-hoofdentiteit; leeg bij een sensor), `capabilities` (JSON, vaste woordenlijst), `model`, `online` |
+| `devices` | base | Apparaten; alleen de box maakt ze (bij koppelen) | `gateway` (= huis), `name`, `room`, `shown_as` (bewoner: `light` of leeg, alleen bij `type = switch`); box: `type` (`light`/`switch`/`sensor`/`climate`), `source` (`zigbee`/`hue`), `address` (IEEE-adres of HA-device-id, nooit de naam), `endpoint` (`l1`, `l2` … bij een meervoudig apparaat), `entity_id` (HA-hoofdentiteit; leeg bij een sensor), `capabilities` (JSON, vaste woordenlijst), `model`, `online`; bewoner ook: `adaptive` (kleur volgt de dag, alleen bij `color_temp`) |
 | `pairing_sessions` | base | Een koppelsessie: de box zoekt | `house`, `kind` (`light`/`switch`/`sensor`/`climate`/`hue`), `status` (`starting`/`open`/`waiting_button`/`closed`/`failed`), `expires`, `error` (foutcode), `created_by`, `extend`, `button_pressed` |
 | `pairing_candidates` | base | Wat de box in een sessie vond | `session`, `address`, `endpoint`, `type`, `capabilities`, `model`, `source`, `status` (`interviewing`/`found`/`unsupported`/`adding`/`added`/`failed`), `identify` (teller: laten knipperen), `name`, `room`, `add`, `device` |
 | `favorites` | base | Favorieten op Home, per persoon | `user`, `device` (cascade), `order`; uniek op (user, device) |
@@ -474,6 +474,17 @@ geen lamp meer aanzetten.
   de zon). De klok schrijft `next_run` als die verandert, of `last_error =
   no_location` zonder locatie. `schedule_rules.js` bewaakt dat tijd en trigger
   passen (`invalid_schedule_time`).
+- **Kleur volgt de dag** (`adaptive.go`, `adaptive_agent.go`; spec
+  `2026-10-14-adaptive-light-design.md`): voor lampen met `devices.adaptive`
+  rekent de agent elke minuut de wittint uit (2200 K 's nachts, 2700 K rond
+  zonsopkomst en -ondergang, 4000 K midden op de dag, met `sunTimes` en de
+  thuislocatie) en stuurt bij 50 K verschil `light.turn_on` met alleen
+  `color_temp_kelvin`. Een lamp die aangaat krijgt meteen de juiste wittint;
+  een lamp die uit staat nooit (turn_on zou hem aanzetten). Kiest iemand zelf
+  een wittint of kleur (een commando of scène met `color_temp_kelvin` of
+  `rgb_color`, via `callHA`; of een afstandsbediening: een andere kleurmodus of
+  meer dan 150 K afwijking na een minuut), dan pauzeert het tot de lamp uit
+  gaat. Het pauzeren staat alleen in het geheugen.
 - **Bewegingslicht** (`motion.go`, `motion_runner.go`, `motion_agent.go`; spec
   `2026-10-13-motion-light-design.md`): de regels reizen mee in hetzelfde
   snapshot. Elke stand van Zigbee2MQTT en HA gaat direct na de lokale
