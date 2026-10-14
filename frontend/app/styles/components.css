@@ -2193,23 +2193,3 @@ fieldset.routine-part > .routine-part-title {
 .settings-notifications .settings-hint {
   margin: 0;
 }
-
-/* Scènes: routines, schema's en bewegingslicht naast elkaar zodra er ruimte
-   is (telefoon één kolom, iPad twee, laptop drie), zodat ze de breedte vullen
-   in plaats van smal links te staan. Binnen een kolom vullen de kaarten de
-   kolom. */
-.automation-sections {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
-  gap: 1.75rem 1.25rem;
-  align-items: start;
-  margin-top: 1.75rem;
-}
-
-.automation-sections > .schedules-section {
-  margin-top: 0;
-}
-
-.automation-sections .schedule-list {
-  grid-template-columns: 1fr;
-}
