@@ -315,7 +315,8 @@
       "zigbee_unavailable": "Searching isn’t possible right now. Try again later.",
       "invalid_adaptive": "This lamp can’t change its white tone.",
       "invalid_automation": "{part, select, starter {The start of the routine} conditions {A condition} actions {A step} other {Off afterwards}} isn't right. Choose it again.",
-      "admin_can_edit": "An admin can always do everything."
+      "admin_can_edit": "An admin can always do everything.",
+      "invalid_until": "Choose an end date from today up to a year ahead."
     }
   },
   "household": {
@@ -343,7 +344,11 @@
     "expiresAfter": "The invitation expires after 7 days.",
     "send": "Send invitation",
     "confirmRemove": "Remove {name} from {house}? They’ll lose access to the home.",
-    "remove": "Remove from the home"
+    "remove": "Remove from the home",
+    "guestUntil": "Guest until {date}",
+    "asGuest": "As a guest, with an end date",
+    "guestDate": "Until",
+    "guestHint": "A guest can operate things but not change anything, and leaves the home automatically after that day."
   },
   "invitation": {
     "someone": "Someone",

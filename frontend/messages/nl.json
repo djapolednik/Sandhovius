@@ -315,7 +315,8 @@
       "zigbee_unavailable": "Zoeken lukt nu niet. Probeer het later opnieuw.",
       "invalid_adaptive": "Deze lamp kan zijn wittint niet veranderen.",
       "invalid_automation": "{part, select, starter {Het begin van de routine} conditions {Een voorwaarde} actions {Een stap} other {Daarna uit}} klopt niet. Kies het opnieuw.",
-      "admin_can_edit": "Een beheerder mag altijd alles."
+      "admin_can_edit": "Een beheerder mag altijd alles.",
+      "invalid_until": "Kies een einddatum vanaf vandaag tot een jaar vooruit."
     }
   },
   "household": {
@@ -343,7 +344,11 @@
     "expiresAfter": "De uitnodiging verloopt na 7 dagen.",
     "send": "Uitnodiging versturen",
     "confirmRemove": "{name} uit {house} verwijderen? Diegene verliest de toegang tot het huis.",
-    "remove": "Uit het huis verwijderen"
+    "remove": "Uit het huis verwijderen",
+    "guestUntil": "Gast tot en met {date}",
+    "asGuest": "Als gast, met een einddatum",
+    "guestDate": "Tot en met",
+    "guestHint": "Een gast kan bedienen maar niets wijzigen, en gaat na die dag vanzelf uit het huis."
   },
   "invitation": {
     "someone": "Iemand",

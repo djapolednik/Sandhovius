@@ -3,6 +3,7 @@
 // nodigt uit, wijzigt rollen, hernoemt het huis en koppelt de box.
 
 import { describeError } from './errors.js'
+import { cachedFormat } from './language.js'
 
 export function roleLabel(t, role) {
   return role === 'admin' ? t('household.roles.admin') : t('household.roles.member')
@@ -66,4 +67,33 @@ export function isHouseDataRefusal(url, status) {
 export function lostHouses(before, after, ignoreIds = []) {
   const still = new Set(after.map((h) => h.id))
   return before.filter((h) => !still.has(h.id) && !ignoreIds.includes(h.id))
+}
+
+// Gast met een einddatum (D2). until: "JJJJ-MM-DD", de laatste dag.
+
+// Het einde van die dag in de tijdzone van de telefoon, als PocketBase-datum:
+// tot en met betekent tot middernacht.
+export function guestEnds(until) {
+  const [y, m, d] = until.split('-').map(Number)
+  return new Date(y, m - 1, d, 23, 59, 59).toISOString().replace('T', ' ')
+}
+
+// "JJJJ-MM-DD" van een datum, in lokale tijd (voor <input type="date">).
+export function dateValue(date) {
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+// De keuzes in de uitnodiging: vanaf vandaag, hooguit een jaar vooruit.
+export function guestRange(now = new Date()) {
+  const max = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+  return { min: dateValue(now), max: dateValue(max) }
+}
+
+// "Gast tot en met 20 oktober" (dit jaar zonder jaartal). intl: { t, locale }.
+export function guestText({ t, locale }, until, now = new Date()) {
+  const [y, m, d] = until.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const options = y === now.getFullYear() ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' }
+  return t('household.guestUntil', { date: cachedFormat(Intl.DateTimeFormat, locale, options).format(date) })
 }

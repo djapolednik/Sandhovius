@@ -98,3 +98,15 @@ test('lostHouses: huizen die weg zijn, behalve die je zelf verliet', () => {
   assert.deepEqual(lostHouses([a], [a, b]), [])
   assert.deepEqual(lostHouses([], []), [])
 })
+
+test('gast: einde van de dag, bereik en tekst in beide talen', async () => {
+  const { guestEnds, guestRange, guestText, dateValue } = await import('./household.js')
+  const { INTL } = await import('./messages.testkit.js')
+  const ends = new Date(guestEnds('2026-10-20').replace(' ', 'T'))
+  assert.equal(dateValue(ends), '2026-10-20')
+  assert.equal(ends.getHours(), 23)
+  const now = new Date(2026, 9, 14)
+  assert.deepEqual(guestRange(now), { min: '2026-10-14', max: '2027-10-14' })
+  assert.equal(guestText(INTL.nl, '2026-10-20', now), 'Gast tot en met 20 oktober')
+  assert.equal(guestText(INTL.en, '2027-01-02', now), 'Guest until 2 January 2027')
+})

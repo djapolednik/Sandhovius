@@ -57,6 +57,7 @@ import NotificationsSection from '../components/NotificationsSection'
 import { byRoom, motionSensors, switchableDevices } from '../lib/motionLights'
 import { routineSensors, routineTitle } from '../lib/routines'
 import { memberName } from '../lib/presence'
+import { guestEnds } from '../lib/household'
 
 // "Zondag 27 september", "Sunday 27 September"
 function formatToday(ms, locale) {
@@ -480,8 +481,15 @@ export default function Home() {
     setInvitations((prev) => prev.filter((i) => i.id !== invitation.id))
   }
 
-  async function inviteMember(email, role) {
-    const created = await pb.collection('invitations').create({ house: house.id, email, role, invited_by: userId })
+  // until: "JJJJ-MM-DD" voor een gast (D2), anders leeg.
+  async function inviteMember(email, role, until = '') {
+    const created = await pb.collection('invitations').create({
+      house: house.id,
+      email,
+      role,
+      invited_by: userId,
+      ...(until ? { until, ends: guestEnds(until) } : {}),
+    })
     setInvitations((prev) => [created, ...prev.filter((i) => i.id !== created.id)])
     showToast(t('toast.invitationSent', { email: created.email }))
   }

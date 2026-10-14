@@ -5,7 +5,8 @@ import { isHome } from '../lib/presence'
 import { useEffect, useState } from 'react'
 import InviteSheet from './InviteSheet'
 import MemberSheet from './MemberSheet'
-import { expiresText, householdError, roleLabel } from '../lib/household'
+import { expiresText, guestText, householdError, roleLabel } from '../lib/household'
+import { useIntl } from '../app/LanguageContext'
 import { ChevronRightIcon } from '../lib/icons'
 
 // Opties → Huisgenoten: wie er in dit huis zit, met welke rol, en wie er
@@ -29,6 +30,7 @@ export default function HouseholdSection({
   onRevoke,
 }) {
   const t = useTranslations()
+  const intl = useIntl()
   const [members, setMembers] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [inviting, setInviting] = useState(false)
@@ -78,7 +80,8 @@ export default function HouseholdSection({
 
   // "Beheerder · Thuis": de rol, en of iemand thuis of weg is (presence).
   const memberText = (m) => {
-    const label = m.can_edit === false ? t('rights.operateOnlyRole', { role: roleLabel(t, m.role) }) : roleLabel(t, m.role)
+    const base = m.until ? guestText(intl, m.until) : roleLabel(t, m.role)
+    const label = m.can_edit === false ? t('rights.operateOnlyRole', { role: base }) : base
     const role = m.id === userId ? t('household.you', { role: label }) : label
     return `${role} · ${isHome(presence, m.id) ? t('presence.memberHome') : t('presence.memberAway')}`
   }

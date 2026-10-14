@@ -4,7 +4,8 @@ import { useTranslations } from 'use-intl'
 import { useState } from 'react'
 import Modal from './Modal'
 import RoleChoice from './RoleChoice'
-import { householdError } from '../lib/household'
+import { useIntl } from '../app/LanguageContext'
+import { guestText, householdError } from '../lib/household'
 
 // Eén lid van het huis, voor een beheerder: rol wijzigen (slaat zichzelf op,
 // zoals de detail-sheet) en uit het huis verwijderen, met bevestiging. De
@@ -12,6 +13,7 @@ import { householdError } from '../lib/household'
 // dan hier.
 export default function MemberSheet({ member, houseName, isSelf, onChangeRole, onSetCanEdit, onRemove, onClose }) {
   const t = useTranslations()
+  const intl = useIntl()
   const [role, setRole] = useState(member.role)
   // D1: mag automatiseringen en apparaten wijzigen. Een beheerder altijd.
   const [canEdit, setCanEdit] = useState(member.can_edit !== false)
@@ -65,6 +67,7 @@ export default function MemberSheet({ member, houseName, isSelf, onChangeRole, o
   return (
     <Modal title={name} onClose={onClose}>
       {member.name && <p className="member-sheet-email">{member.email}</p>}
+      {member.until && <p className="settings-hint">{guestText(intl, member.until)}</p>}
       <div className="form-field">
         <span className="form-label">{t('household.role')}</span>
         <RoleChoice value={role} onChange={chooseRole} name={`role-${member.id}`} disabled={busy} />
