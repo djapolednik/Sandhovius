@@ -26,7 +26,8 @@ type Automation struct {
 
 // AutomationStarter: kind "time" (Time, Days), "sun" (Event sunrise/sunset,
 // OffsetMin, Days), "device" (Device, To on/off) of "sensor" (Device, Event
-// motion/no_motion/open/closed/leak/smoke/above/below, Value bij above/below).
+// motion/no_motion/open/closed/leak/smoke/above/below, Value bij above/below)
+// of "presence" (Event all_away/first_home, of arrives/leaves met User).
 type AutomationStarter struct {
 	Kind      string   `json:"kind"`
 	Time      string   `json:"time,omitempty"`
@@ -36,15 +37,19 @@ type AutomationStarter struct {
 	Device    string   `json:"device,omitempty"`
 	To        string   `json:"to,omitempty"`
 	Value     float64  `json:"value,omitempty"`
+	User      string   `json:"user,omitempty"`
 }
 
 // AutomationCondition: kind "between" (From, To; mag over middernacht),
-// "dark" of "days" (Days).
+// "dark", "days" (Days) of "presence" (State someone_home/nobody_home, of
+// home/away met User).
 type AutomationCondition struct {
-	Kind string   `json:"kind"`
-	From string   `json:"from,omitempty"`
-	To   string   `json:"to,omitempty"`
-	Days []string `json:"days,omitempty"`
+	Kind  string   `json:"kind"`
+	From  string   `json:"from,omitempty"`
+	To    string   `json:"to,omitempty"`
+	Days  []string `json:"days,omitempty"`
+	State string   `json:"state,omitempty"`
+	User  string   `json:"user,omitempty"`
 }
 
 // AutomationAction: kind "device" (Device, Action turn_on/turn_off, Payload

@@ -54,6 +54,10 @@ type routineEngine struct {
 	quiet map[string]time.Time
 	// lastRun: routine → de minuut waarin hij liep (één keer per minuut).
 	lastRun map[string]string
+	// home: lid → thuis (spec 2026-10-14-presence-design.md). Geen rij =
+	// thuis. presenceKnown: de eerste stand is de uitgangssituatie.
+	home          map[string]bool
+	presenceKnown bool
 }
 
 func newRoutineEngine() *routineEngine {
@@ -63,6 +67,7 @@ func newRoutineEngine() *routineEngine {
 		owners:   map[string]map[string]time.Time{},
 		quiet:    map[string]time.Time{},
 		lastRun:  map[string]string{},
+		home:     map[string]bool{},
 	}
 }
 
@@ -176,6 +181,84 @@ func (e *routineEngine) onDevice(device string, state map[string]any, now time.T
 	return res
 }
 
+// setPresence: de leden en hun thuis/weg-rijen (snapshot of realtime). De
+// eerste keer is de uitgangssituatie; daarna starten overgangen: een lid komt
+// thuis of gaat weg, de eerste komt thuis, iedereen is weg. Alleen leden die
+// er voor en na bij horen tellen, zodat een nieuw of vertrokken lid geen
+// huis-gebeurtenis start.
+func (e *routineEngine) setPresence(members []string, rows []pb.Presence, now time.Time) routineResult {
+	next := make(map[string]bool, len(members))
+	for _, m := range members {
+		next[m] = true
+	}
+	for _, row := range rows {
+		if _, ok := next[row.User]; ok {
+			next[row.User] = row.Home
+		}
+	}
+	prev, known := e.home, e.presenceKnown
+	e.home, e.presenceKnown = next, true
+	var res routineResult
+	if !known {
+		return res
+	}
+	happened := map[string]bool{} // "arrives:<user>", "first_home", …
+	before, after := 0, 0
+	for user, home := range next {
+		was, ok := prev[user]
+		if !ok {
+			continue
+		}
+		if was {
+			before++
+		}
+		if home {
+			after++
+		}
+		if was != home {
+			happened[map[bool]string{true: "arrives:", false: "leaves:"}[home]+user] = true
+		}
+	}
+	if before > 0 && after == 0 {
+		happened["all_away"] = true
+	}
+	if before == 0 && after > 0 {
+		happened["first_home"] = true
+	}
+	for _, r := range e.sorted() {
+		st := r.Starter
+		if st.Kind != "presence" {
+			continue
+		}
+		key := st.Event
+		if st.User != "" {
+			key += ":" + st.User
+		}
+		if happened[key] {
+			e.run(r, now, &res)
+		}
+	}
+	return res
+}
+
+// isHome: thuis volgens de laatste stand; wie onbekend is telt als thuis.
+func (e *routineEngine) isHome(user string) bool {
+	home, ok := e.home[user]
+	return !ok || home
+}
+
+func (e *routineEngine) someoneHome() bool {
+	if len(e.home) == 0 {
+		return true // nog geen stand: iedereen thuis
+	}
+	for _, home := range e.home {
+		if home {
+			return true
+		}
+	}
+	return false
+}
+
 // tick: elke minuut. Routines op tijd of zon, en lampen waarvan de tijd om is.
 func (e *routineEngine) tick(now time.Time) routineResult {
 	var res routineResult
@@ -267,6 +350,21 @@ func (e *routineEngine) conditionsHold(r pb.Automation, now time.Time) bool {
 				inside = t >= c.From || t < c.To
 			}
 			if !inside {
+				return false
+			}
+		case "presence":
+			var ok bool
+			switch c.State {
+			case "someone_home":
+				ok = e.someoneHome()
+			case "nobody_home":
+				ok = !e.someoneHome()
+			case "home":
+				ok = e.isHome(c.User)
+			case "away":
+				ok = !e.isHome(c.User)
+			}
+			if !ok {
 				return false
 			}
 		default:

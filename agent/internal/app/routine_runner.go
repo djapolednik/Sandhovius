@@ -26,6 +26,10 @@ type routineRunner struct {
 	byEntity map[string]string // entity_id of zigbee-sleutel → device-id
 	file     string
 	saved    string
+	// members en presence (lid → rij): de stand voor thuis/weg, uit het
+	// snapshot en realtime samengevoegd (de nieuwste rij per lid wint).
+	members  []string
+	presence map[string]pb.Presence
 
 	// step voert één apparaatstap uit, scene een hele scène, report meldt
 	// het resultaat aan PocketBase. Functies, zodat tests zonder HA kunnen.
@@ -45,6 +49,7 @@ func newRoutineRunner(file string) *routineRunner {
 		devices:  map[string]pb.Device{},
 		scenes:   map[string]pb.Scene{},
 		byEntity: map[string]string{},
+		presence: map[string]pb.Presence{},
 		file:     file,
 	}
 }
@@ -58,7 +63,7 @@ func (r *routineRunner) start(house string, snap *scheduleSnapshot) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.house = house
-	r.applyLocked(snap)
+	r.applyLocked(snap, time.Now()) // de eerste stand start niets
 	if owners := r.loadLocked(house); owners != nil {
 		r.engine.restore(owners)
 	}
@@ -69,12 +74,16 @@ func (r *routineRunner) apply(snap *scheduleSnapshot) {
 		return
 	}
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.applyLocked(snap)
+	res := r.applyLocked(snap, time.Now())
 	r.saveLocked()
+	work := r.prepareLocked(res)
+	r.mu.Unlock()
+	r.execute(work)
 }
 
-func (r *routineRunner) applyLocked(snap *scheduleSnapshot) {
+// applyLocked: een nieuw snapshot. Thuis/weg kan daarin veranderd zijn (als
+// de realtime-melding gemist werd), dus er kan een routine uit komen.
+func (r *routineRunner) applyLocked(snap *scheduleSnapshot, now time.Time) routineResult {
 	if snap == nil {
 		snap = &scheduleSnapshot{}
 	}
@@ -93,6 +102,54 @@ func (r *routineRunner) applyLocked(snap *scheduleSnapshot) {
 	}
 	r.engine.setRoutines(snap.automations)
 	r.engine.setLocation(snap.location)
+	r.members = snap.members
+	for _, row := range snap.presence {
+		r.mergePresenceLocked(row)
+	}
+	for user := range r.presence {
+		if !slices.Contains(r.members, user) {
+			delete(r.presence, user)
+		}
+	}
+	return r.engine.setPresence(r.members, r.presenceRowsLocked(), now)
+}
+
+// mergePresenceLocked: een rij, tenzij er al een nieuwere is.
+func (r *routineRunner) mergePresenceLocked(row pb.Presence) {
+	if have, ok := r.presence[row.User]; ok && have.Updated > row.Updated {
+		return
+	}
+	r.presence[row.User] = row
+}
+
+func (r *routineRunner) presenceRowsLocked() []pb.Presence {
+	rows := make([]pb.Presence, 0, len(r.presence))
+	for _, row := range r.presence {
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+// onPresence: een realtime-melding op presence. Een verwijderde rij = thuis.
+func (r *routineRunner) onPresence(event pb.PresenceEvent, now time.Time) {
+	if r == nil {
+		return
+	}
+	row := event.Record
+	r.mu.Lock()
+	if row.House != r.house {
+		r.mu.Unlock()
+		return
+	}
+	if event.EventType == "delete" {
+		delete(r.presence, row.User)
+	} else {
+		r.mergePresenceLocked(row)
+	}
+	res := r.engine.setPresence(r.members, r.presenceRowsLocked(), now)
+	work := r.prepareLocked(res)
+	r.mu.Unlock()
+	r.execute(work)
 }
 
 // onState: een stand van HA (entity_id) of Zigbee2MQTT (zigbee-sleutel).

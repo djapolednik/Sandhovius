@@ -26,6 +26,9 @@ type snapshotFile struct {
 	Location *homeLocation `json:"location,omitempty"`
 	// Routines; ontbreekt in bestanden van vóór de routines.
 	Automations []pocketbase.Automation `json:"automations,omitempty"`
+	// Thuis of weg; ontbreekt in bestanden van vóór B3.
+	Members  []string              `json:"members,omitempty"`
+	Presence []pocketbase.Presence `json:"presence,omitempty"`
 }
 
 // saveSnapshot schrijft de snapshot atomisch (tijdelijk bestand + rename),
@@ -40,6 +43,8 @@ func saveSnapshot(path, house string, snap *scheduleSnapshot, now time.Time) err
 		Devices:      make([]pocketbase.Device, 0, len(snap.devices)),
 		Location:     snap.location,
 		Automations:  snap.automations,
+		Members:      snap.members,
+		Presence:     snap.presence,
 	}
 	for _, scene := range snap.scenes {
 		file.Scenes = append(file.Scenes, scene)
@@ -85,6 +90,8 @@ func loadSnapshot(path, house string) (*scheduleSnapshot, error) {
 		devices:      make(map[string]pocketbase.Device, len(file.Devices)),
 		location:     file.Location,
 		automations:  file.Automations,
+		members:      file.Members,
+		presence:     file.Presence,
 	}
 	for _, scene := range file.Scenes {
 		snap.scenes[scene.ID] = scene

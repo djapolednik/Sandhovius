@@ -52,6 +52,10 @@ type scheduleSnapshot struct {
 	location *homeLocation
 	// automations: de routines van dit huis (routine.go).
 	automations []pocketbase.Automation
+	// members en presence: wie er bij het huis hoort en wie thuis of weg is
+	// (spec 2026-10-14-presence-design.md).
+	members  []string
+	presence []pocketbase.Presence
 }
 
 func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
@@ -219,7 +223,17 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	members, err := a.pbClient.HouseMembers(house)
+	if err != nil {
+		return nil, err
+	}
+	presence, err := a.pbClient.ListPresence(house)
+	if err != nil {
+		return nil, err
+	}
 	snap := &scheduleSnapshot{
+		members:      members,
+		presence:     presence,
 		schedules:    schedules,
 		motionLights: motionLights,
 		location:     a.homeLocation(),

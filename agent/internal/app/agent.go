@@ -158,6 +158,7 @@ func (a *Agent) Start() error {
 	go a.runPocketBase()
 	go a.listenForCommands()
 	go a.listenForDeviceChanges()
+	go a.listenForPresence()
 	go a.listenForHouseChanges()
 	go a.listenForPairing()
 	go a.runPairingClock()
@@ -240,6 +241,26 @@ func (a *Agent) listenForDeviceChanges() {
 			return // Stop() is aangeroepen
 		}
 		log.Printf("[APP] Device-stream verbroken: %v — probeer over 5s opnieuw\n", err)
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-time.After(5 * time.Second):
+		}
+	}
+}
+
+// listenForPresence volgt thuis/weg realtime (spec
+// 2026-10-14-presence-design.md): thuiskomen telt binnen een seconde, niet
+// pas bij het snapshot van de volgende minuut. Dat snapshot is het vangnet.
+func (a *Agent) listenForPresence() {
+	for {
+		err := a.pbClient.SubscribePresence(a.ctx, func(event pocketbase.PresenceEvent) {
+			a.routines.onPresence(event, time.Now())
+		})
+		if a.ctx.Err() != nil {
+			return
+		}
+		log.Printf("[APP] Thuis/weg-stream verbroken: %v — probeer over 5s opnieuw\n", err)
 		select {
 		case <-a.ctx.Done():
 			return
