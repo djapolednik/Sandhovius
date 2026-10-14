@@ -34,6 +34,8 @@ type Agent struct {
 	motion *motionRunner
 	// Kleur volgt de dag (adaptive_agent.go).
 	adaptive *adaptiveRunner
+	// Routines (routine.go, routine_runner.go).
+	routines *routineRunner
 	// zigbee: wat Zigbee2MQTT op het netwerk heeft (bridge/devices);
 	// pairing: koppelen vanuit de app (pairing_runner.go).
 	zigbee  *bridgeDirectory
@@ -101,6 +103,10 @@ func New(mqttClient *mqtt.Client, haClient *homeassistant.Client, pbClient *pock
 	a.onConnected = a.onPocketBaseConnected
 	a.devices = newDeviceCache(pbClient, a.house)
 	a.motion = newMotionRunner(motionFile, a.switchForMotion, a.reportMotionLight)
+	a.routines = newRoutineRunner(filepath.Join(filepath.Dir(motionFile), "automations.json"))
+	a.routines.step = a.runSceneStep
+	a.routines.scene = a.executeScene
+	a.routines.report = a.reportRoutine
 	a.adaptive = newAdaptiveRunner(func(entity string, kelvin int) error {
 		return a.rawCallHA("light", "turn_on", entity, map[string]any{"color_temp_kelvin": kelvin})
 	})
@@ -147,6 +153,7 @@ func (a *Agent) Start() error {
 	}()
 	go a.runMotionClock()
 	go a.runAdaptiveClock()
+	go a.syncRoutines()
 
 	go a.runPocketBase()
 	go a.listenForCommands()
@@ -568,6 +575,7 @@ func (a *Agent) forwardZigbeeEvent(event mqtt.ZigbeeEvent) {
 	// Bewegingslicht: vóór alles met PocketBase, dus ook zonder internet.
 	if known {
 		a.motion.onState(zigbeeKey(address), event.State, time.Now())
+		a.routines.onState(zigbeeKey(address), event.State, time.Now())
 	}
 
 	if !a.registered.Load() {
@@ -684,6 +692,7 @@ func (a *Agent) forwardHAEvent(event homeassistant.HAEvent) {
 	// PocketBase.
 	a.motion.onState(event.EntityID, state, time.Now())
 	a.adaptive.onState(event.EntityID, state, time.Now())
+	a.routines.onState(event.EntityID, state, time.Now())
 
 	if !a.registered.Load() {
 		return // geen huis: alleen de lokale geschiedenis

@@ -1,0 +1,342 @@
+package app
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"slices"
+	"sync"
+	"time"
+
+	pb "sandhovius/local-agent/internal/pocketbase"
+)
+
+// routineRunner zet de routine-motor (routine.go) in de agent: standen uit de
+// event-stroom, de klok van de scheduler, uitvoeren via scène-stappen, en wie
+// welke lamp bezit op schijf. Alles komt uit het schema-snapshot, dus het
+// werkt zonder PocketBase. Een nil-runner doet niets.
+type routineRunner struct {
+	mu       sync.Mutex
+	engine   *routineEngine
+	house    string
+	devices  map[string]pb.Device // device-id → device
+	scenes   map[string]pb.Scene
+	byEntity map[string]string // entity_id of zigbee-sleutel → device-id
+	file     string
+	saved    string
+
+	// step voert één apparaatstap uit, scene een hele scène, report meldt
+	// het resultaat aan PocketBase. Functies, zodat tests zonder HA kunnen.
+	step   func(house string, action pb.SceneAction, lookup func(string) (*pb.Device, error)) error
+	scene  func(scene pb.Scene, lookup func(string) (*pb.Device, error)) error
+	report func(routine string, err error)
+}
+
+type routineFile struct {
+	House  string                          `json:"house"`
+	Owners map[string]map[string]time.Time `json:"owners"`
+}
+
+func newRoutineRunner(file string) *routineRunner {
+	return &routineRunner{
+		engine:   newRoutineEngine(),
+		devices:  map[string]pb.Device{},
+		scenes:   map[string]pb.Scene{},
+		byEntity: map[string]string{},
+		file:     file,
+	}
+}
+
+// start: bij het opstarten, met het snapshot uit het bestand (mag nil zijn),
+// en het eigenaarschap van vóór de herstart.
+func (r *routineRunner) start(house string, snap *scheduleSnapshot) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.house = house
+	r.applyLocked(snap)
+	if owners := r.loadLocked(house); owners != nil {
+		r.engine.restore(owners)
+	}
+}
+
+func (r *routineRunner) apply(snap *scheduleSnapshot) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.applyLocked(snap)
+	r.saveLocked()
+}
+
+func (r *routineRunner) applyLocked(snap *scheduleSnapshot) {
+	if snap == nil {
+		snap = &scheduleSnapshot{}
+	}
+	r.devices, r.scenes, r.byEntity = map[string]pb.Device{}, map[string]pb.Scene{}, map[string]string{}
+	for id, d := range snap.devices {
+		r.devices[id] = d
+		if d.EntityID != "" {
+			r.byEntity[d.EntityID] = id
+		}
+		if d.Source == "zigbee" && d.Address != "" && d.EntityID == "" {
+			r.byEntity[zigbeeKey(d.Address)] = id
+		}
+	}
+	for id, s := range snap.scenes {
+		r.scenes[id] = s
+	}
+	r.engine.setRoutines(snap.automations)
+	r.engine.setLocation(snap.location)
+}
+
+// onState: een stand van HA (entity_id) of Zigbee2MQTT (zigbee-sleutel).
+func (r *routineRunner) onState(entity string, state map[string]any, now time.Time) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	id, ok := r.byEntity[entity]
+	if !ok {
+		r.mu.Unlock()
+		return
+	}
+	res := r.engine.onDevice(id, state, now)
+	r.saveLocked()
+	work := r.prepareLocked(res)
+	r.mu.Unlock()
+	r.execute(work)
+}
+
+// tick: elke minuut, vanuit de scheduler.
+func (r *routineRunner) tick(now time.Time) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	res := r.engine.tick(now)
+	r.saveLocked()
+	work := r.prepareLocked(res)
+	r.mu.Unlock()
+	r.execute(work)
+}
+
+type routineWork struct {
+	res     routineResult
+	house   string
+	devices map[string]pb.Device
+	scenes  map[string]pb.Scene
+}
+
+func (r *routineRunner) prepareLocked(res routineResult) routineWork {
+	return routineWork{res: res, house: r.house, devices: r.devices, scenes: r.scenes}
+}
+
+// execute buiten de lock: een trage Home Assistant mag de event-stroom niet
+// ophouden. Een routine meldt "gedeeltelijk gelukt" als last_error zegt welke
+// stap niet lukte.
+func (r *routineRunner) execute(w routineWork) {
+	lookup := func(id string) (*pb.Device, error) {
+		d, ok := w.devices[id]
+		if !ok {
+			return nil, fmt.Errorf("apparaat bestaat niet (meer)")
+		}
+		return &d, nil
+	}
+	for _, run := range w.res.Runs {
+		var failures []error
+		for _, a := range run.Actions {
+			var err error
+			switch a.Kind {
+			case "device":
+				err = r.step(w.house, pb.SceneAction{Device: a.Device, Action: a.Action, Payload: a.Payload}, lookup)
+			case "scene":
+				scene, ok := w.scenes[a.Scene]
+				if !ok {
+					err = fmt.Errorf("scène bestaat niet (meer)")
+				} else {
+					err = r.scene(scene, lookup)
+				}
+			default:
+				err = fmt.Errorf("onbekende actie %q", a.Kind)
+			}
+			if err != nil {
+				failures = append(failures, fmt.Errorf("%s %s%s: %w", a.Kind, a.Device, a.Scene, err))
+			}
+		}
+		err := errors.Join(failures...)
+		if err != nil {
+			log.Printf("[ROUTINE] %s niet helemaal gelukt: %v\n", run.Routine, err)
+		} else {
+			log.Printf("[ROUTINE] %s uitgevoerd\n", run.Routine)
+		}
+		if r.report != nil {
+			r.report(run.Routine, err)
+		}
+	}
+	for _, off := range w.res.Offs {
+		err := r.step(w.house, pb.SceneAction{Device: off.Device, Action: "turn_off"}, lookup)
+		if err != nil {
+			log.Printf("[ROUTINE] %s uit (routine %s) mislukt: %v\n", off.Device, off.Routine, err)
+		} else {
+			log.Printf("[ROUTINE] %s uit (routine %s, daarna uit)\n", off.Device, off.Routine)
+		}
+	}
+}
+
+// entities: de apparaten waarvan de motor de stand moet weten (starters en
+// lampen met daarna uit), voor het afstemmen bij het opstarten.
+func (r *routineRunner) entities() []string {
+	if r == nil {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var out []string
+	add := func(id string) {
+		if d, ok := r.devices[id]; ok && d.EntityID != "" && !slices.Contains(out, d.EntityID) {
+			out = append(out, d.EntityID)
+		}
+	}
+	for _, rt := range r.engine.routines {
+		add(rt.Starter.Device)
+		for _, a := range rt.Actions {
+			add(a.Device)
+		}
+	}
+	return out
+}
+
+func (r *routineRunner) saveLocked() {
+	if r.file == "" || r.house == "" {
+		return
+	}
+	data, err := json.Marshal(routineFile{House: r.house, Owners: r.engine.owned()})
+	if err != nil || string(data) == r.saved {
+		return
+	}
+	tmp := r.file + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		log.Printf("[ROUTINE] Opslaan in %s mislukt: %v\n", tmp, err)
+		return
+	}
+	if err := os.Rename(tmp, r.file); err != nil {
+		log.Printf("[ROUTINE] Opslaan in %s mislukt: %v\n", r.file, err)
+		return
+	}
+	r.saved = string(data)
+}
+
+func (r *routineRunner) loadLocked(house string) map[string]map[string]time.Time {
+	if r.file == "" || house == "" {
+		return nil
+	}
+	data, err := os.ReadFile(r.file)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		log.Printf("[ROUTINE] %s lezen mislukt: %v\n", r.file, err)
+		return nil
+	}
+	var file routineFile
+	if err := json.Unmarshal(data, &file); err != nil || file.House != house {
+		return nil
+	}
+	return file.Owners
+}
+
+// routineNextRuns: voor routines op tijd of zon wat next_run (of de fout
+// no_location bij de zon) moet worden, als dat veranderde.
+func routineNextRuns(routines []pb.Automation, now time.Time, loc *homeLocation) []scheduleUpdate {
+	var out []scheduleUpdate
+	for _, rt := range routines {
+		if !rt.Enabled {
+			continue
+		}
+		var s pb.Schedule
+		switch rt.Starter.Kind {
+		case "sun":
+			s = starterSchedule(rt.Starter)
+		case "time":
+			s = pb.Schedule{Trigger: "time", Time: rt.Starter.Time, Days: rt.Starter.Days, Enabled: true}
+		default:
+			continue
+		}
+		s.ID, s.NextRun, s.LastError = rt.ID, rt.NextRun, rt.LastError
+		if s.Trigger == "time" {
+			next := ""
+			if at, ok := nextTimeRun(s, now); ok {
+				next = at.UTC().Format(pb.DateLayout)
+			}
+			if next != s.NextRun {
+				out = append(out, scheduleUpdate{ID: s.ID, NextRun: next})
+			}
+			continue
+		}
+		out = append(out, nextRunUpdates([]pb.Schedule{s}, now, loc)...)
+	}
+	return out
+}
+
+// nextTimeRun: de eerstvolgende keer na now dat een vaste tijd loopt.
+func nextTimeRun(s pb.Schedule, now time.Time) (time.Time, bool) {
+	for i := 0; i <= 7; i++ {
+		day := now.AddDate(0, 0, i)
+		at, err := time.ParseInLocation("2006-01-02 15:04", day.Format("2006-01-02")+" "+s.Time, now.Location())
+		if err == nil && at.After(now) && slices.Contains(s.Days, weekdayKeys[day.Weekday()]) {
+			return at, true
+		}
+	}
+	return time.Time{}, false
+}
+
+// routineMinute: de minuuttik van de scheduler. Routines op tijd of zon, lampen
+// waarvan de tijd om is, en next_run voor de app.
+func (a *Agent) routineMinute(snap *scheduleSnapshot, now time.Time) {
+	a.routines.tick(now)
+	for _, u := range routineNextRuns(snap.automations, now, snap.location) {
+		for i := range snap.automations {
+			if snap.automations[i].ID == u.ID {
+				snap.automations[i].NextRun = u.NextRun
+				if u.LastError != nil {
+					snap.automations[i].LastError = *u.LastError
+				}
+			}
+		}
+		go func(u scheduleUpdate) {
+			if err := a.pbClient.SetAutomationNextRun(u.ID, u.NextRun, u.LastError); err != nil {
+				log.Printf("[ROUTINE] Kon de volgende keer van %s niet opslaan: %v\n", u.ID, err)
+			}
+		}(u)
+	}
+}
+
+// reportRoutine meldt het resultaat aan PocketBase, op de achtergrond.
+func (a *Agent) reportRoutine(routine string, err error) {
+	now := time.Now()
+	go func() {
+		if markErr := a.pbClient.MarkAutomationRun(routine, now, err); markErr != nil {
+			log.Printf("[ROUTINE] Kon resultaat van %s niet opslaan: %v\n", routine, markErr)
+		}
+	}()
+}
+
+// syncRoutines: bij het opstarten de stand ophalen van de HA-apparaten waar
+// routines naar kijken, zodat de eerste melding daarna als overgang telt. Een
+// Zigbee-sensor zonder HA-entiteit leert zijn stand bij zijn eerste melding.
+func (a *Agent) syncRoutines() {
+	for _, entity := range a.routines.entities() {
+		event, err := a.haClient.GetState(entity)
+		if err != nil {
+			log.Printf("[ROUTINE] Stand van %s ophalen mislukt: %v\n", entity, err)
+			continue
+		}
+		a.routines.onState(entity, map[string]any{"state": event.State, "attributes": event.Attributes}, time.Now())
+	}
+}

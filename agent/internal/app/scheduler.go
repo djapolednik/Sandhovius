@@ -50,6 +50,8 @@ type scheduleSnapshot struct {
 	devices      map[string]pocketbase.Device
 	// location: waar het huis staat (HA), voor zon-schema's; nil = onbekend.
 	location *homeLocation
+	// automations: de routines van dit huis (routine.go).
+	automations []pocketbase.Automation
 }
 
 func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
@@ -69,6 +71,8 @@ type scheduler struct {
 	run   func(snap *scheduleSnapshot, s pocketbase.Schedule, now time.Time)
 	save  func(snap *scheduleSnapshot) error
 	fresh func(snap *scheduleSnapshot)
+	// minute krijgt elke minuut de tik, na de schema's (routines; mag nil zijn).
+	minute func(snap *scheduleSnapshot, now time.Time)
 	// nextRun schrijft next_run van een zon-schema (mag nil zijn).
 	nextRun    func(u scheduleUpdate)
 	snap       *scheduleSnapshot
@@ -105,6 +109,9 @@ func (s *scheduler) tick(now time.Time) {
 	for _, due := range dueSchedules(s.snap.schedules, now, s.snap.location) {
 		s.run(s.snap, due, now)
 	}
+	if s.minute != nil {
+		s.minute(s.snap, now)
+	}
 	// Zodat de app "vandaag om 18:42" kan zeggen. In de snapshot meteen
 	// bijwerken: de volgende tik schrijft het dan niet nog eens.
 	if s.nextRun != nil {
@@ -133,6 +140,7 @@ func (a *Agent) runScheduler() {
 	// PocketBase; daarna geeft elke geslaagde fetch ze opnieuw door.
 	a.motion.start(a.house(), loaded)
 	a.adaptive.apply(loaded)
+	a.routines.start(a.house(), loaded)
 	s := &scheduler{
 		snap:  loaded,
 		fetch: a.fetchScheduleSnapshot,
@@ -140,7 +148,9 @@ func (a *Agent) runScheduler() {
 		fresh: func(snap *scheduleSnapshot) {
 			a.motion.apply(snap)
 			a.adaptive.apply(snap)
+			a.routines.apply(snap)
 		},
+		minute: a.routineMinute,
 		nextRun: func(u scheduleUpdate) {
 			// Op de achtergrond: zonder internet mag het de klok niet ophouden.
 			go func() {
@@ -197,6 +207,10 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
+	automations, err := a.pbClient.ListAutomations(house)
+	if err != nil {
+		return nil, err
+	}
 	motionLights, err := a.pbClient.ListMotionLights(house)
 	if err != nil {
 		return nil, err
@@ -209,6 +223,7 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 		schedules:    schedules,
 		motionLights: motionLights,
 		location:     a.homeLocation(),
+		automations:  automations,
 		scenes:       make(map[string]pocketbase.Scene, len(scenes)),
 		devices:      make(map[string]pocketbase.Device, len(devices)),
 	}
