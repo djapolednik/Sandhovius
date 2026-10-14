@@ -263,13 +263,45 @@ Copy in `messages/nl.json` en `en.json`; foutcodes van de box als sleutels
   echte lampen in huis; vooraf zeggen), de nep-Zigbee voor de rest; met een
   stick later op de thuisserver.
 
+## Verwarming: radiatorknoppen naast de eigen thermostaat (besloten 2026-10-14)
+
+**Model A:** de koper houdt zijn eigen wandthermostaat (Nest, Tado,
+Honeywell, …); die blijft de baas over de ketel. Sandhovius regelt per kamer
+met Zigbee-radiatorknoppen (TRV's) en raakt de ketel niet aan.
+
+Waarom: een wandthermostaat vervangen is installateurswerk aan de ketel (230V
+of OpenTherm), niet plug-and-play; een fout in de verwarming is de duurste
+storing (koud huis), en zo blijft verwarmen werken als de box stuk is of
+herstart; Nederlandse ketels moduleren via OpenTherm en een Zigbee-wand-
+thermostaat schakelt meestal alleen aan/uit (rendement omlaag); de winst
+die bewoners merken zit in warmte per kamer, en dat werkt naast elke
+thermostaat.
+
+Gevolgen (nog te bouwen):
+- **Eén ondersteund model eerst: Sonoff TRVZB** (goedkoop, goed ondersteund
+  in Zigbee2MQTT, `climate` met `local_temperature`, kan een externe
+  temperatuursensor gebruiken). Andere `climate`-apparaten, ook
+  Zigbee-wandthermostaten, blijven `unsupported` tot we ze testen. Eerst de
+  exposes van een echt exemplaar als testdata in `classify`.
+- **Woord `valve`** in de woordenlijst `capabilities` (`device_rules.js`,
+  deze spec, `classify.go`): een kraan herken je aan `position` /
+  `pi_heating_demand`. Daarmee groepeert de app knoppen per kamer en zet hij
+  een lege batterij in Let op.
+- **Copy:** de koppelsoort heet **Radiatorknop** i.p.v. "Thermostaat" (niemand
+  verwacht dan zijn wandthermostaat te kunnen koppelen); onder de dial één
+  eerlijke regel: "Verwarmt als je thermostaat de ketel aanzet". Bekende
+  beperking van model A: een knop die warmte vraagt terwijl de woonkamer al
+  warm is, krijgt die niet.
+- **Later, niet nu:** model B (Sandhovius vraagt zelf warmte aan de ketel
+  als een knop dat wil) hoort bij de routines (B1) en echte hardware; een
+  OpenTherm-gateway via HA (lokaal wifi) kan dan een optie "via een merk"
+  worden.
+
 ## Open
 
 - Hoe de link-stap van de HA-Hue-flow zich precies gedraagt als de knop nog
   niet is ingedrukt (opnieuw indienen of een nieuwe flow); nakijken tegen de
   HA-versie op de box.
-- Welke Zigbee-thermostaten we ondersteunen: `climate`-exposes verschillen
-  sterk per merk. Eerst één bekend model; andere als `unsupported`.
 - `permit_join` via een specifieke router in plaats van het hele netwerk
   (Zigbee2MQTT kan dat) is mooier voor "dichter bij de lamp", maar pas als
   er echte huizen met bereikproblemen zijn.
