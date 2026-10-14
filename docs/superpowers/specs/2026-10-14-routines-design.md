@@ -1,6 +1,6 @@
 # Routines: als dit gebeurt, doe dat
 
-Datum: 2026-10-14 · Status: ontwerp (ter bespreking) · Bouwt op: schema's,
+Datum: 2026-10-14 · Status: ontwerp, besloten · Bouwt op: schema's,
 zon in schema's, bewegingslicht, kleur volgt de dag · Roadmap:
 `docs/superpowers/plans/2026-10-14-feature-roadmap.md` (B1)
 
@@ -89,17 +89,15 @@ tussen 0 en 40°). Foutcode `invalid_automation` met een `params.part`.
 - Een onvolledige stap zegt wat er mist ("Kies een sensor"); geen grijze
   Opslaan-knop zonder uitleg.
 
-## Ter bespreking
+## Besloten (2026-10-14)
 
-1. **Eén starter per routine?** Voorstel: ja. "Als de deur opengaat óf er
-   beweging is" worden twee routines. Simpeler te bouwen én te snappen.
-2. **Schema's en bewegingslicht:** voorstel: laten staan in v1 (ze werken en
-   zijn getest), en in een tweede stap omzetten naar routines met een
-   migratie, zodat er daarna één lijst is. Het alternatief (meteen omzetten)
-   maakt v1 groter en riskanter.
-3. **Daarna uit**: alleen voor wat de routine aanzette (voorstel), of altijd
-   alles uit wat in de acties staat?
-4. **Nu uitproberen** in v1, of later?
+1. **Eén starter per routine.** "Als de deur opengaat óf er beweging is"
+   worden twee routines.
+2. **Schema's en bewegingslicht blijven in v1** wat ze zijn; een tweede stap
+   zet ze met een migratie om naar routines.
+3. **Daarna uit** doet alleen uit wat de routine zelf aanzette (eigenaarschap
+   zoals bewegingslicht).
+4. **Nu uitproberen** zit in v1.
 
 ## Testen
 
