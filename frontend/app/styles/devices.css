@@ -314,14 +314,6 @@
   opacity: 0.45;
 }
 
-/* Net toegevoegd of (nog) niet klaargezet: een gestippelde rand, zoals
-   een plek die nog ingevuld wordt — geen storing, dus geen vervaging. */
-.card-pairing,
-[data-theme='dark'] .card-pairing {
-  border: 1px dashed var(--text-secondary);
-  box-shadow: none;
-}
-
 /* De spinner uit login.css, in de tekstkleur van de tegel. */
 .spinner-inline {
   width: 0.9rem;
@@ -365,24 +357,6 @@
   color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
-}
-
-/* Klaarzetten mislukt (detail-sheet): wat er is, en wat je kunt doen. */
-.setup-failed {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem 1rem;
-  padding: 0.75rem 0.75rem 0.75rem 1rem;
-  border-radius: var(--radius-tile);
-  background: var(--warning-bg);
-  color: var(--warning);
-}
-
-.setup-failed-text {
-  margin: 0;
-  font-weight: 600;
 }
 
 /* ==================== Thermostaat ====================

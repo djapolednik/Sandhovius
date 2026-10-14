@@ -12,7 +12,7 @@ import { WeatherCard } from '../components/Weather'
 import HomeScenes from '../components/HomeScenes'
 import PullToRefresh from '../components/PullToRefresh'
 import HouseModal from '../components/HouseModal'
-import AddDeviceModal from '../components/AddDeviceModal'
+import PairingSheet from '../components/PairingSheet'
 import ToastContainer from '../components/ToastContainer'
 import BottomNav, { TABS } from '../components/BottomNav'
 import RoomTabs from '../components/RoomTabs'
@@ -76,9 +76,6 @@ const pb = new PocketBase(defaultPocketbaseUrl(), new LocalAuthStore('pocketbase
 const SELECTED_ROOM_KEY = 'sandhovius-selected-room'
 // Wat Home laat zien: je favorieten of alles wat aan staat.
 const SELECTED_HOUSE_KEY = 'sandhovius-selected-house'
-// Zo lang mag het klaarzetten van een nieuw apparaat duren voordat de kaart
-// het niet meer "Wordt klaargezet" noemt (normaal: een paar seconden).
-const NEW_DEVICE_GRACE_MS = 2 * 60 * 1000
 // Een commando dat na zo lang nog niet is afgehandeld krijgt een "even
 // geduld"-melding; na de tweede grens geven we het op en tonen we weer de
 // echte stand.
@@ -168,7 +165,6 @@ export default function Home() {
   }, [])
   // Apparaten die je in deze sessie net toevoegde: hun kaart zegt "Wordt
   // klaargezet" i.p.v. "Offline" tot de box ze gekoppeld heeft.
-  const [newDeviceIds, setNewDeviceIds] = useState([])
   // Verwijderd, maar nog even terug te halen ("Ongedaan maken"): apparaten
   // en kamers die al uit beeld zijn, en pas na UNDO_MS echt weg gaan.
   const [hiddenIds, setHiddenIds] = useState([])
@@ -789,8 +785,6 @@ export default function Home() {
   const attention = houseReachable
     ? sortAttention(
         devicesInHouse.flatMap((device) => {
-          if (newDeviceIds.includes(device.id)) return []
-          if (!device.entity_id) return [{ device, kind: 'setup' }]
           if (!device.online) return [{ device, kind: 'offline' }]
           const battery = device.expand?.device_state_via_device?.[0]?.state?.battery
           if (isBatteryLow(battery)) return [{ device, kind: 'battery', battery }]
@@ -1225,32 +1219,18 @@ export default function Home() {
     )
   }
 
-  // Na toevoegen spring je naar de kamer van het nieuwe apparaat, zodat je
-  // zijn kaart ziet klaargezet worden. De realtime devices-subscription
-  // kan hem al binnen hebben gebracht: dan niet dubbel toevoegen.
-  async function createDevice(fields) {
-    // Zolang Home nog geen favorieten heeft, komt een nieuw apparaat daar
-    // meteen op te staan: je eerste lamp moet je direct kunnen aanzetten,
-    // niet eerst via Kamers opzoeken. De thermostaat staat er altijd al.
-    const favorite = fields.type !== 'climate' && favoriteDevices.length === 0
-    const created = await pb.collection('devices').create({ ...fields, gateway: house.id, online: false })
-    setDevices((prev) => (prev.some((d) => d.id === created.id) ? prev : [...prev, created]))
-    if (favorite) {
-      // Het apparaat bestaat al; lukt alleen de favoriet niet, dan staat het
-      // in zijn kamer en kun je het daar alsnog op Home zetten.
-      try {
-        await addFavorite(created.id)
-      } catch (err) {
-        showToast(describeError(t, t('errors.what.addToHome'), err), 'error')
-      }
+  // Een apparaat is gekoppeld (PairingSheet): de box maakte het device, de
+  // realtime devices-subscription brengt het binnen. Zolang Home nog geen
+  // favorieten heeft, komt het daar meteen op te staan: je eerste lamp moet
+  // je direct kunnen aanzetten. De thermostaat staat er altijd al.
+  // De sheet meldt elk apparaat één keer.
+  async function addedFromPairing(candidate) {
+    if (!candidate.device || candidate.type === 'climate' || favoriteDevices.length > 0) return
+    try {
+      await addFavorite(candidate.device)
+    } catch (err) {
+      showToast(describeError(t, t('errors.what.addToHome'), err), 'error')
     }
-    setNewDeviceIds((prev) => [...prev, created.id])
-    setTimeout(() => setNewDeviceIds((prev) => prev.filter((id) => id !== created.id)), NEW_DEVICE_GRACE_MS)
-    selectRoom(created.room || '__unassigned')
-    // Via "+" onderin kun je vanaf elk tabblad toevoegen. Komt het nieuwe
-    // apparaat niet op Home te staan, spring dan naar zijn kamer, zodat je
-    // het ziet klaargezet worden.
-    if (tab !== 'kamers' && !favorite) selectTab('kamers')
   }
 
   async function renameHouse(name) {
@@ -1287,27 +1267,6 @@ export default function Home() {
   // functies hierboven aanroept via de ref. Zo her-rendert een kaart alleen
   // als zijn eigen device, de kamers of zijn animatie-status verandert —
   // niet bij elke toast, modal of realtime-tik op de pagina.
-  // "Opnieuw proberen" bij een apparaat waarvan het klaarzetten mislukte:
-  // de agent maakt de Home Assistant-helper alsnog aan. De tegel staat
-  // intussen weer op "Wordt klaargezet" (isNew); lukt het niet, dan zegt
-  // watchCommand dat.
-  async function retrySetup(device) {
-    if (!houseReachable) {
-      showToast(t('toast.boxUnreachable'), 'error')
-      return
-    }
-    setNewDeviceIds((prev) => [...prev, device.id])
-    setTimeout(() => setNewDeviceIds((prev) => prev.filter((id) => id !== device.id)), NEW_DEVICE_GRACE_MS)
-    try {
-      const command = await pb.collection('commands').create({ device: device.id, action: 'provision', status: 'pending' })
-      watchCommand(command.id, device.name, device.id)
-    } catch (err) {
-      if (isSessionExpired(err)) return endExpiredSession()
-      setNewDeviceIds((prev) => prev.filter((id) => id !== device.id))
-      showToast(describeError(t, t('errors.what.provision', { name: device.name }), err), 'error')
-    }
-  }
-
   // Een scène uitvoeren: één commando, de box doet de rest (zie runScene in
   // de agent). De tegel zegt "Wordt uitgevoerd" tot de box klaar is, en
   // dan even "Klaar"; de apparaten zelf veranderen via de realtime stand.
@@ -1424,7 +1383,7 @@ export default function Home() {
   }
 
   const latest = useRef(null)
-  latest.current = { toggleDevice, setDeviceTemperature, retrySetup }
+  latest.current = { toggleDevice, setDeviceTemperature }
   const cardHandlers = useMemo(
     () => ({
       onToggle: (device) => latest.current.toggleDevice(device),
@@ -1722,7 +1681,6 @@ export default function Home() {
         key={device.id}
         device={device}
         houseReachable={houseReachable}
-        isNew={newDeviceIds.includes(device.id)}
         {...cardHandlers}
       />
     )
@@ -2087,10 +2045,13 @@ export default function Home() {
       )}
 
       {addDeviceOpen && (
-        <AddDeviceModal
+        <PairingSheet
+          pb={pb}
+          houseId={house.id}
           rooms={roomsInHouse}
           defaultRoomId={selectedRoomId === '__unassigned' ? '' : selectedRoomId}
-          onCreate={createDevice}
+          houseReachable={houseReachable}
+          onAdded={addedFromPairing}
           onClose={() => setAddDeviceOpen(false)}
         />
       )}
@@ -2107,12 +2068,6 @@ export default function Home() {
           onSetLight={setLight}
           houseReachable={houseReachable}
           onDelete={deleteDevice}
-          // Alleen als het klaarzetten mislukt is (niet: nog bezig).
-          onRetrySetup={
-            houseReachable && !settingsDevice.entity_id && !newDeviceIds.includes(settingsDevice.id)
-              ? retrySetup
-              : undefined
-          }
           onClose={() => setSettingsDeviceId(null)}
         />
       )}

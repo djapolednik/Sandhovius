@@ -33,7 +33,6 @@ export default function DeviceSettingsModal({
   onSetLight,
   houseReachable = true,
   onDelete,
-  onRetrySetup,
   onClose,
 }) {
   const t = useTranslations()
@@ -116,23 +115,7 @@ export default function DeviceSettingsModal({
 
   return (
     <Modal title={device.name} onClose={close}>
-      {onRetrySetup ? (
-        // Herstellen i.p.v. "verwijder en voeg opnieuw toe": de box probeert
-        // het gewoon nog een keer.
-        <div className="setup-failed">
-          <p className="setup-failed-text">{t('deviceSheet.setupFailed')}</p>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => {
-              onRetrySetup(device)
-              onClose()
-            }}
-          >
-            {t('common.retry')}
-          </button>
-        </div>
-      ) : device.type === 'sensor' ? (
+      {device.type === 'sensor' ? (
         <SensorReadings device={device} />
       ) : (
         <>

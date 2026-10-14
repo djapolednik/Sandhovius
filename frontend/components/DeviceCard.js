@@ -42,7 +42,6 @@ export function isDeviceOn(type, state) {
 export default memo(function DeviceCard({
   device,
   houseReachable = true,
-  isNew = false,
   onToggle,
   onSetTemperature,
   onOpenSettings,
@@ -57,18 +56,11 @@ export default memo(function DeviceCard({
   // hele box (dan zegt "Offline" per apparaat het verkeerde).
   const isOnline = !!device.online && houseReachable
   const offlineText = houseReachable ? t('device.offline') : t('device.unreachable')
-  // Net toegevoegd (isNew, zie page.js): de agent maakt er nog een Home
-  // Assistant-entity voor aan (entity_id leeg), of die heeft nog geen
-  // eerste stand gemeld. Dat is geen storing — "Offline" zou hier ten
-  // onrechte alarm slaan. Is hij niet nieuw en nog steeds niet klaargezet,
-  // dan is dat mislukt; de detail-sheet biedt dan "Opnieuw proberen".
-  const isPairing = isNew && houseReachable && !device.online && (!device.entity_id || !stateRecord)
-  const setupFailed = !isNew && houseReachable && !device.entity_id
   const isToggleable = TOGGLEABLE_TYPES.includes(device.type)
   const isOn = isDeviceOn(device.type, state)
   // Een offline apparaat kan geen commando ontvangen: niet doen alsof de
   // tik iets doet. Een sensor opent met een tik zijn details.
-  const canToggle = isToggleable && isOnline && !isPairing && !setupFailed
+  const canToggle = isToggleable && isOnline
   // Een lamp of stopcontact dat aan staat licht op: een gloed vanachter
   // het icoon (zie .card-lit) — warm voor een lamp, stroomblauw voor een
   // stopcontact. Alleen als we de stand zeker weten (online).
@@ -76,7 +68,7 @@ export default memo(function DeviceCard({
   // Getikt, maar de box heeft het nog niet bevestigd (zie _pending in
   // page.js): een voornemen, geen feit. Meestal duurt dat onder de seconde.
   const isPending = canToggle && !!device._pending
-  const opensDetails = setupFailed || (device.type === 'sensor' && !isPairing)
+  const opensDetails = device.type === 'sensor'
 
   // Ingedrukt houden opent de details, los van de korte tik die schakelt;
   // trekken of scrollen is geen ingedrukt houden (lib/longPress).
@@ -104,7 +96,7 @@ export default memo(function DeviceCard({
     return (
       <li className="device-cell device-cell-climate">
         <div
-          className={`panel tile-climate ${!isOnline && !isPairing ? 'card-offline' : ''}`}
+          className={`panel tile-climate ${!isOnline ? 'card-offline' : ''}`}
           onContextMenu={handleContextMenu}
         >
           {/* De naam is de knop naar de details: geen los tandwiel, wel
@@ -134,9 +126,7 @@ export default memo(function DeviceCard({
   let stateText
   let stateStyle
   const reading = device.type === 'sensor' ? describeReading(intl, state) : ''
-  if (isPairing) stateText = t('device.pairing')
-  else if (setupFailed) stateText = t('device.setupFailed')
-  else if (device.type === 'sensor') {
+  if (device.type === 'sensor') {
     const temperature = readTemperature(state)
     const occupancy = state?.occupancy ?? state?.motion
     let value = t('device.noReadings')
@@ -184,7 +174,7 @@ export default memo(function DeviceCard({
       <div
         className={`panel device-tile tile-${device.type} ${isClickable ? 'card-clickable' : ''} ${isLit ? 'card-lit' : ''} ${
           isPending ? 'card-pending' : ''
-        } ${!isOnline && !isPairing && !setupFailed ? 'card-offline' : ''} ${isPairing || setupFailed ? 'card-pairing' : ''}`}
+        } ${!isOnline ? 'card-offline' : ''}`}
         style={glowStyle}
         {...press.handlers}
         onContextMenu={handleContextMenu}
@@ -203,10 +193,9 @@ export default memo(function DeviceCard({
         <span className="tile-text">
           <span className="tile-name">{device.name}</span>
           <span
-            className={`tile-state ${isOn && canToggle ? 'tile-state-on' : ''} ${isPairing || setupFailed || !isOnline ? 'tile-state-quiet' : ''}`}
+            className={`tile-state ${isOn && canToggle ? 'tile-state-on' : ''} ${!isOnline ? 'tile-state-quiet' : ''}`}
             style={stateStyle}
           >
-            {isPairing && <span className="spinner spinner-inline" aria-hidden="true" />}
             {stateText}
           </span>
         </span>

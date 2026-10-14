@@ -105,7 +105,6 @@
     "offline": "Offline",
     "unreachable": "Can’t be reached",
     "pairing": "Being set up",
-    "setupFailed": "Not set up",
     "noReadings": "No readings",
     "motion": "Motion",
     "noMotion": "No motion",
@@ -134,7 +133,6 @@
     "outside": "Outside {condition}",
     "outsideWithTemperature": "Outside {condition}, {temperature}",
     "attention": {
-      "setup": "setup didn’t work",
       "offline": "offline",
       "battery": "battery nearly empty ({percent}%)",
       "one": "{name}: {reason}",
@@ -255,7 +253,6 @@
       "saveOrder": "Saving the order",
       "deleteNamed": "Deleting {name}",
       "addToHome": "Adding to Home",
-      "provision": "Setting up {name}",
       "runScene": "Running “{name}”",
       "scheduleOn": "Turning on the {time} schedule",
       "scheduleOff": "Turning off the {time} schedule",
@@ -404,7 +401,6 @@
     "switchLabel": "Lights and plugs in {room}"
   },
   "deviceSheet": {
-    "setupFailed": "Setting it up didn’t work.",
     "showOnHome": "Show on Home",
     "name": "Name",
     "room": "Room",
@@ -541,7 +537,6 @@
   },
   "addDevice": {
     "what": "What are you adding?",
-    "saving": "Adding…",
     "examples": {
       "light": "E.g. Reading light",
       "switch": "E.g. TV plug",
@@ -633,7 +628,11 @@
     "addAnother": "Add another",
     "buttonPressed": "I’ve pressed it",
     "connecting": "Connecting to your Hue Bridge…",
-    "boxUnreachable": "You can add devices once your Sandhovius box responds again."
+    "boxUnreachable": "You can add devices once your Sandhovius box responds again.",
+    "stopped": "The search has stopped.",
+    "searchAgain": "Search again",
+    "part": "{type} {number}",
+    "ready": "Done"
   },
   "sensors": {
     "closed": "Closed",
