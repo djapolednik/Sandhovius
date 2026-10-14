@@ -408,7 +408,8 @@
     "labelRoom": "Kamer “{name}”",
     "labelScene": "Scène “{name}”",
     "aDevice": "Apparaat",
-    "sceneIncomplete": "“{name}” is niet helemaal gelukt. Kijk bij Let op of al je apparaten bereikbaar zijn."
+    "sceneIncomplete": "“{name}” is niet helemaal gelukt. Kijk bij Let op of al je apparaten bereikbaar zijn.",
+    "nothingOn": "Er stond niets aan."
   },
   "rooms": {
     "unassigned": "Overig",

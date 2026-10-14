@@ -911,6 +911,27 @@ export default function Home() {
       device.online &&
       isDeviceOn(device.type, device.expand?.device_state_via_device?.[0]?.state)
   )
+
+  // A3: de snelkoppeling "Alles uit" op het app-icoon (manifest shortcuts)
+  // opent /?do=all-off. Eén keer uitvoeren zodra het huis er is, en de
+  // parameter meteen weghalen: herladen zet niet nog eens alles uit.
+  const shortcutDone = useRef(false)
+  useEffect(() => {
+    if (shortcutDone.current || !loaded || !house) return
+    if (new URLSearchParams(window.location.search).get('do') !== 'all-off') return
+    shortcutDone.current = true
+    window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+    if (!houseReachable) {
+      showToast(t('toast.boxUnreachable'), 'error')
+      return
+    }
+    if (devicesOn.length === 0) {
+      showToast(t('toast.nothingOn'))
+      return
+    }
+    turnAllOff()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, house?.id, houseReachable])
   // "Let op" bovenaan Home (HomeNotices): wat de bewoner zelf moet
   // oplossen, op één plek i.p.v. verspreid over tegels in verschillende
   // kamers. Alleen als de box bereikbaar is: anders is álles onbekend en zegt de

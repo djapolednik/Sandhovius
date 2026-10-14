@@ -18,5 +18,12 @@ export default function manifest() {
       // maskable (Android knipt het rond of afgerond bij).
       { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
+    // Lang indrukken op het app-icoon (Android, desktop): vaste
+    // snelkoppelingen, want een PWA kan geen eigen scènes in het menu zetten.
+    // page.js voert ?do=all-off één keer uit.
+    shortcuts: [
+      { name: 'Alles uit', short_name: 'Alles uit', url: '/?do=all-off', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
+      { name: 'Scènes', short_name: 'Scènes', url: '/#scenes', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
+    ],
   }
 }

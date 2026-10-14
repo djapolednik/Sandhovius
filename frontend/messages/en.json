@@ -408,7 +408,8 @@
     "labelRoom": "Room “{name}”",
     "labelScene": "Scene “{name}”",
     "aDevice": "Device",
-    "sceneIncomplete": "“{name}” didn’t fully work. Check Needs attention to see whether all your devices can be reached."
+    "sceneIncomplete": "“{name}” didn’t fully work. Check Needs attention to see whether all your devices can be reached.",
+    "nothingOn": "Nothing was on."
   },
   "rooms": {
     "unassigned": "Other",
