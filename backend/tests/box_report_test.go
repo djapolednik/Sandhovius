@@ -48,3 +48,32 @@ func TestUserCannotReportVersion(t *testing.T) {
 		t.Errorf("zonder login: %d, verwacht 401", st)
 	}
 }
+
+// K1: de versie komt ook op het huis, met wanneer hij veranderde; bewoners
+// lezen hem maar schrijven hem niet.
+func TestBoxVersionOnHouse(t *testing.T) {
+	p := startPB(t)
+	w := fixture(t, p)
+	report := func(v string) {
+		t.Helper()
+		if st, out := p.do(t, w.BoxATok, "POST", "/api/sandhovius/box/report", map[string]any{"agent_version": v}); st != 204 {
+			t.Fatalf("report %s: %d %v", v, st, out)
+		}
+	}
+	report("v1.4.2")
+	h := p.houseRecord(t, w.HouseA)
+	since, _ := h["box_version_since"].(string)
+	if h["box_version"] != "v1.4.2" || since == "" {
+		t.Fatalf("versie op het huis: %v %v", h["box_version"], h["box_version_since"])
+	}
+	report("v1.4.2") // zelfde versie: de datum blijft
+	if p.houseRecord(t, w.HouseA)["box_version_since"] != since {
+		t.Errorf("datum veranderde zonder nieuwe versie")
+	}
+	if st, _ := p.do(t, w.UserATok, "PATCH", "/api/collections/houses/records/"+w.HouseA, map[string]any{"box_version": "nep"}); st < 400 {
+		t.Errorf("bewoner zet box_version: %d", st)
+	}
+	if st, out := p.do(t, w.UserATok, "GET", "/api/collections/houses/records/"+w.HouseA, nil); st != 200 || out["box_version"] != "v1.4.2" {
+		t.Errorf("bewoner leest de versie: %d %v", st, out["box_version"])
+	}
+}

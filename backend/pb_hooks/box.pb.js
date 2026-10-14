@@ -1,5 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
-// Een box meldt zich: agentversie en tijdstip op zijn eigen record. De box
+// Een box meldt zich: agentversie en tijdstip op zijn eigen record, en de
+// versie op zijn huis (K1). De box
 // mag zijn record niet zelf bijwerken (dan kon hij zijn huis zetten); deze
 // route schrijft alleen deze twee velden, en alleen voor de ingelogde box.
 
@@ -14,5 +15,21 @@ routerAdd("POST", "/api/sandhovius/box/report", (e) => {
   box.set("agent_version", version)
   box.set("reported_at", new DateTime())
   $app.save(box)
+
+  // K1: de versie ook op het huis, met wanneer hij veranderde, voor de
+  // bewoner ("Software bijgewerkt op …"). Alleen bij een andere versie.
+  const houseId = box.getString("house")
+  if (houseId !== "") {
+    try {
+      const house = $app.findRecordById("houses", houseId)
+      if (house.getString("box_version") !== version) {
+        house.set("box_version", version)
+        house.set("box_version_since", new DateTime())
+        $app.save(house)
+      }
+    } catch (err) {
+      $app.logger().error("boxversie op het huis zetten mislukt", "house", houseId, "error", String(err))
+    }
+  }
   return e.noContent(204)
 }, $apis.requireAuth("boxes"))
