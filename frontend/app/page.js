@@ -42,6 +42,8 @@ import { uid } from '../lib/uid'
 import { greeting, homeLede, houseSummary, indoorTemperature, sortAttention } from '../lib/home'
 import { isWeatherStale } from '../lib/weather'
 import { isBatteryLow } from '../lib/battery'
+import { displayType } from '../lib/devices'
+import { alarmKind } from '../lib/sensors'
 import { LightbulbIcon, PlusIcon, PowerIcon, deviceTypeIcon } from '../lib/icons'
 import ScenesView from '../components/ScenesView'
 import SceneModal from '../components/SceneModal'
@@ -785,8 +787,13 @@ export default function Home() {
   const attention = houseReachable
     ? sortAttention(
         devicesInHouse.flatMap((device) => {
+          const state = device.expand?.device_state_via_device?.[0]?.state
+          // Rook of lekkage gaat boven alles, ook boven offline: de laatste
+          // melding van een sensor die daarna wegviel is nog steeds een alarm.
+          const alarm = alarmKind(device, state)
+          if (alarm) return [{ device, kind: alarm }]
           if (!device.online) return [{ device, kind: 'offline' }]
-          const battery = device.expand?.device_state_via_device?.[0]?.state?.battery
+          const battery = state?.battery
           if (isBatteryLow(battery)) return [{ device, kind: 'battery', battery }]
           return []
         })
@@ -883,6 +890,22 @@ export default function Home() {
   // tik; geen melding bij succes, de lamp zelf is de bevestiging. De
   // sheet stuurt hooguit één per 400 ms (lib/light throttle), dus elk
   // commando krijgt zijn eigen requestKey: de SDK annuleert er anders één.
+  // Laat knipperen (detail-sheet): welke lamp is dit? Eén commando; de lamp
+  // zelf is de bevestiging, alleen mislukken geeft een melding.
+  async function identifyDevice(device) {
+    if (!houseReachable) {
+      showToast(t('toast.boxUnreachable'), 'error')
+      return
+    }
+    try {
+      const command = await pb.collection('commands').create({ device: device.id, action: 'identify', status: 'pending' })
+      watchCommand(command.id, device.name, null)
+    } catch (err) {
+      if (isSessionExpired(err)) return endExpiredSession()
+      showToast(describeError(t, t('errors.what.identify', { name: device.name }), err), 'error')
+    }
+  }
+
   async function setLight(device, payload) {
     if (!houseReachable) {
       showToast(t('toast.boxUnreachable'), 'error')
@@ -1581,7 +1604,8 @@ export default function Home() {
   // De zin onder de groet ("2 lampen aan, binnen 20,5°"). Alleen als de box
   // bereikbaar is; anders weten we niet wat er aan staat.
   const knowsState = loaded && houseReachable
-  const lightsOn = knowsState ? devicesOn.filter((device) => device.type === 'light').length : 0
+  // Een stekker die als lamp staat telt als lamp ("2 lampen aan").
+  const lightsOn = knowsState ? devicesOn.filter((device) => displayType(device) === 'light').length : 0
   const summary = knowsState
     ? houseSummary(intl, {
         lightsOn,
@@ -2066,6 +2090,7 @@ export default function Home() {
           favorite={!!favoriteFor(favorites, settingsDevice.id)}
           onToggleFavorite={toggleFavorite}
           onSetLight={setLight}
+          onIdentify={identifyDevice}
           houseReachable={houseReachable}
           onDelete={deleteDevice}
           onClose={() => setSettingsDeviceId(null)}

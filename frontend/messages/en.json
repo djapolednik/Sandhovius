@@ -108,8 +108,6 @@
     "noReadings": "No readings",
     "motion": "Motion",
     "noMotion": "No motion",
-    "motionNow": "motion right now",
-    "noMotionNow": "no motion",
     "unknown": "Unknown",
     "lastKnown": "{value}, {status}",
     "details": "Details of {name}",
@@ -140,7 +138,8 @@
       "title": "Needs attention",
       "notices": "Notices",
       "smoke": "smoke",
-      "leak": "leak"
+      "leak": "leak",
+      "oneAndMore": "{name}: {reason}, and {count, plural, one {# more device} other {# more devices}}"
     },
     "addBox": "Add a box",
     "noHouse": "There’s no home linked to your account yet. As soon as your Sandhovius box is linked to your account, your home will appear here.",
@@ -278,7 +277,9 @@
       "saveMotionLight": "Saving the motion light",
       "deleteMotionLight": "Deleting the motion light",
       "motionOn": "Turning on the motion light for {name}",
-      "motionOff": "Turning off the motion light for {name}"
+      "motionOff": "Turning off the motion light for {name}",
+      "shownAs": "Saving how it’s shown",
+      "identify": "Making {name} blink"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -420,12 +421,14 @@
       "heatingOn": "Offline, heating last on",
       "heatingOff": "Offline, heating last off"
     },
-    "motionNow": "Motion right now",
     "battery": "Battery",
     "batteryLow": "Nearly empty ({percent}%)",
     "batteryPercent": "{percent}%",
     "lastUpdated": "Last updated",
-    "offlineNote": "Offline; this is the last known state."
+    "offlineNote": "Offline; this is the last known state.",
+    "shownAsLight": "Show as a lamp",
+    "shownAsLightHint": "For a plug with a lamp in it: a lamp tile that glows warm. It can’t be dimmed.",
+    "motionNow": "Motion right now"
   },
   "schedules": {
     "everyDay": "Every day",
@@ -642,6 +645,15 @@
     "noSmoke": "No smoke",
     "smoke": "Smoke",
     "humidity": "{value}%",
-    "illuminance": "{value} lux"
+    "illuminance": "{value} lux",
+    "labels": {
+      "contact": "Door or window",
+      "water_leak": "Leak",
+      "smoke": "Smoke alarm",
+      "occupancy": "Motion",
+      "temperature": "Temperature",
+      "humidity": "Humidity",
+      "illuminance": "Light"
+    }
   }
 }

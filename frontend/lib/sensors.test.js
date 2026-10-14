@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { READING_ORDER, alarmKind, primaryReading, readingText } from './sensors.js'
+import { READING_ORDER, alarmKind, allReadings, primaryReading, readingText } from './sensors.js'
 import { INTL } from './messages.testkit.js'
 
 const { nl, en } = INTL
@@ -48,4 +48,20 @@ test('alarmKind: rook en lekkage', () => {
   // een stand zonder de mogelijkheid telt niet (een lamp met een vreemd veld)
   assert.equal(alarmKind({ capabilities: ['onoff'] }, { smoke: true }), null)
   assert.equal(alarmKind({}, null), null)
+})
+
+test('allReadings: alles wat de sensor meet, in de volgorde van de tegel, zonder batterij', () => {
+  assert.deepEqual(
+    allReadings(['occupancy', 'illuminance', 'temperature', 'battery'], { illuminance: 12, occupancy: false, battery: 70 }),
+    [
+      { capability: 'occupancy', value: false },
+      { capability: 'illuminance', value: 12 },
+    ]
+  )
+  // een sensor van vóór de mogelijkheden: alles wat in de stand staat
+  assert.deepEqual(allReadings(undefined, { temperature: 20, motion: true }), [
+    { capability: 'occupancy', value: true },
+    { capability: 'temperature', value: 20 },
+  ])
+  assert.deepEqual(allReadings(['contact'], null), [])
 })

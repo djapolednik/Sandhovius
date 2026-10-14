@@ -108,8 +108,6 @@
     "noReadings": "Geen metingen",
     "motion": "Beweging",
     "noMotion": "Geen beweging",
-    "motionNow": "er is nu beweging",
-    "noMotionNow": "geen beweging",
     "unknown": "Onbekend",
     "lastKnown": "{value}, {status}",
     "details": "Details van {name}",
@@ -140,7 +138,8 @@
       "title": "Let op",
       "notices": "Meldingen",
       "smoke": "rook",
-      "leak": "lekkage"
+      "leak": "lekkage",
+      "oneAndMore": "{name}: {reason}, en nog {count, plural, one {# apparaat} other {# apparaten}}"
     },
     "addBox": "Box toevoegen",
     "noHouse": "Er is nog geen huis aan je account gekoppeld. Zodra je Sandhovius-box aan je account gekoppeld is, verschijnt je huis hier.",
@@ -278,7 +277,9 @@
       "saveMotionLight": "Bewegingslicht opslaan",
       "deleteMotionLight": "Bewegingslicht verwijderen",
       "motionOn": "Het bewegingslicht bij {name} aanzetten",
-      "motionOff": "Het bewegingslicht bij {name} uitzetten"
+      "motionOff": "Het bewegingslicht bij {name} uitzetten",
+      "shownAs": "Weergave opslaan",
+      "identify": "{name} laten knipperen"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -420,12 +421,14 @@
       "heatingOn": "Offline, laatst verwarming aan",
       "heatingOff": "Offline, laatst verwarming uit"
     },
-    "motionNow": "Er is nu beweging",
     "battery": "Batterij",
     "batteryLow": "Bijna leeg ({percent}%)",
     "batteryPercent": "{percent}%",
     "lastUpdated": "Laatst bijgewerkt",
-    "offlineNote": "Offline, dit is de laatst bekende stand."
+    "offlineNote": "Offline, dit is de laatst bekende stand.",
+    "shownAsLight": "Weergeven als lamp",
+    "shownAsLightHint": "Voor een stopcontact met een lamp erin: een lamptegel die warm oplicht. Dimmen kan niet.",
+    "motionNow": "Er is nu beweging"
   },
   "schedules": {
     "everyDay": "Elke dag",
@@ -642,6 +645,15 @@
     "noSmoke": "Geen rook",
     "smoke": "Rook",
     "humidity": "{value}%",
-    "illuminance": "{value} lux"
+    "illuminance": "{value} lux",
+    "labels": {
+      "contact": "Deur of raam",
+      "water_leak": "Lekkage",
+      "smoke": "Rookmelder",
+      "occupancy": "Beweging",
+      "temperature": "Temperatuur",
+      "humidity": "Luchtvochtigheid",
+      "illuminance": "Licht"
+    }
   }
 }

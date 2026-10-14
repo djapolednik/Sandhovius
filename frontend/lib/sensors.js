@@ -31,6 +31,17 @@ export function primaryReading(capabilities, state) {
   return null
 }
 
+// Alles wat de sensor meet, voor de detail-sheet: in de volgorde van de
+// tegel, zonder batterij (die heeft een eigen regel). Zonder mogelijkheden
+// alles wat in de stand staat.
+export function allReadings(capabilities, state) {
+  if (!state) return []
+  const caps = Array.isArray(capabilities) ? capabilities : READING_ORDER
+  return READING_ORDER.filter((capability) => caps.includes(capability))
+    .map((capability) => ({ capability, value: valueOf(state, capability) }))
+    .filter((reading) => reading.value != null)
+}
+
 const WORDS = {
   contact: ['sensors.closed', 'sensors.open'],
   water_leak: ['sensors.leak', 'sensors.dry'],

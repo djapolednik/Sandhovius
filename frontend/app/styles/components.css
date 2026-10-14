@@ -164,6 +164,19 @@
   font-weight: 500;
 }
 
+/* Een schakelaar met een korte uitleg eronder. */
+.settings-row-text {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.35rem 1rem 0.35rem 0;
+}
+
+.settings-row-hint {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
 /* ==================== Meldingen op de pagina ==================== */
 
 .error-banner {

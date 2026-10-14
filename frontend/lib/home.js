@@ -79,11 +79,16 @@ export function attentionReason({ t }, item) {
 }
 
 // De ene regel op Home: bij één apparaat wat er is, bij meer hoeveel.
-// "Testlamp: offline", "3 apparaten vragen aandacht"
+// Rook of lekkage blijft altijd bij naam staan: een alarm verdwijnt niet in
+// een aantal. "Testlamp: offline", "3 apparaten vragen aandacht",
+// "Gootsteenkastje: lekkage, en nog 1 apparaat". items: gesorteerd.
 export function attentionLine(intl, items) {
   if (items.length === 0) return null
-  if (items.length === 1) {
-    return intl.t('home.attention.one', { name: items[0].device.name, reason: attentionReason(intl, items[0]) })
-  }
+  const [first] = items
+  const one = { name: first.device.name, reason: attentionReason(intl, first) }
+  if (items.length === 1) return intl.t('home.attention.one', one)
+  if (ALARMS.has(first.kind)) return intl.t('home.attention.oneAndMore', { ...one, count: items.length - 1 })
   return intl.t('home.attention.many', { count: items.length })
 }
+
+const ALARMS = new Set(['smoke', 'leak'])

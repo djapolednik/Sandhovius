@@ -76,3 +76,9 @@ test('attentionLine: één apparaat bij naam, meer als aantal', () => {
   assert.equal(attentionLine(en, [item('Plug', 'offline')]), 'Plug: offline')
   assert.equal(attentionLine(en, [item('A', 'offline'), item('B', 'offline')]), '2 devices need attention')
 })
+
+test('attentionLine: rook of lekkage blijft bij naam staan, ook met meer meldingen', () => {
+  const items = sortAttention([item('Voordeur', 'battery', 12), item('Gootsteenkastje', 'leak')])
+  assert.equal(attentionLine(nl, items), 'Gootsteenkastje: lekkage, en nog 1 apparaat')
+  assert.equal(attentionLine(en, [item('Hall', 'smoke'), item('A', 'offline'), item('B', 'offline')]), 'Hall: smoke, and 2 more devices')
+})
