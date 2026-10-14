@@ -67,8 +67,9 @@ func TestResidentCannotMoveDeviceOrRoom(t *testing.T) {
 		t.Errorf("X maakt een device in A met een kamer van X: %d %v", st, out)
 	}
 	if st, out := p.do(t, xTok, "POST", "/api/collections/devices/records", map[string]any{
-		"gateway": w.HouseA, "entity_id": "light.m", "name": "m", "type": "light", "room": w.roomA}); st != 200 {
-		t.Errorf("X maakt een device in A met een kamer van A: %d %v", st, out)
+		"gateway": w.HouseA, "entity_id": "light.m", "name": "m", "type": "light", "room": w.roomA}); st < 400 {
+		// alleen de box maakt devices (na koppelen), zie devices_test.go
+		t.Errorf("X maakt zelf een device in A: %d %v", st, out)
 	}
 
 	// eigen kamer kiezen en weer leeg maken blijft mogen

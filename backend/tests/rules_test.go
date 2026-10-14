@@ -245,7 +245,7 @@ var otherValueOverrides = map[string]any{"schedules.time": "07:45"}
 // allowedFields zijn de velden die een box mag schrijven (Global Constraints).
 var allowedFields = map[string][]string{
 	"houses":       {"select", "weather", "weather_updated"},
-	"devices":      {"entity_id", "online"},
+	"devices":      {"entity_id", "online", "source", "address", "endpoint", "capabilities", "model"},
 	"device_state": {"state", "updated_at"},
 	"commands":     {"status", "error"},
 	"schedules":    {"last_run", "last_error"},
@@ -379,7 +379,8 @@ func TestBoxCannotCreateOrDelete(t *testing.T) {
 	w := fixture(t, p)
 	bodies := map[string]map[string]any{
 		"houses":   {"name": "Nep", "members": []string{w.UserA}, "admins": []string{w.UserA}},
-		"devices":  {"gateway": w.HouseA, "entity_id": "light.nep", "name": "nep", "type": "light"},
+		// devices: een box maakt na koppelen een device in zijn eigen huis; zie
+		// TestBoxCreatesDeviceInOwnHouse (devices_test.go)
 		"commands": {"device": w.DevA, "action": "turn_on", "status": "pending"},
 		"scenes":   {"house": w.HouseA, "name": "Nep", "order": 1, "actions": []any{}},
 		"schedules": {"house": w.HouseA, "scene": w.SceneA, "time": "08:00",
