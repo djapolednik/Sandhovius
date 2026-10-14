@@ -767,13 +767,15 @@
 
 /* Vanaf een iPad staand: twee kolommen panelen. Kolommen, geen raster: elk
    paneel houdt zijn eigen hoogte (Huis is hoger dan Weergave) en er ontstaan
-   geen gaten. De volgorde blijft die van de pagina, kolom voor kolom. */
+   geen gaten. De volgorde blijft die van de pagina, kolom voor kolom. Ze
+   vullen de hele (gecentreerde) container, zodat ze gelijk lopen met de
+   titel en de navigatie; een eigen max-breedte liet rechts een rand open. */
 @media (min-width: 48rem) {
   .settings-view {
     display: block;
     columns: 2;
     column-gap: 0.9rem;
-    max-width: 72rem;
+    max-width: none;
   }
 
   .settings-view > * {
@@ -2179,4 +2181,35 @@ fieldset.routine-part > .routine-part-title {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.55rem;
+}
+
+/* Meldingen: uitleg, knop en een eventuele fout als één rustige stapel,
+   met lucht tussen de tekst en de knop. */
+.settings-notifications {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.settings-notifications .settings-hint {
+  margin: 0;
+}
+
+/* Scènes: routines, schema's en bewegingslicht naast elkaar zodra er ruimte
+   is (telefoon één kolom, iPad twee, laptop drie), zodat ze de breedte vullen
+   in plaats van smal links te staan. Binnen een kolom vullen de kaarten de
+   kolom. */
+.automation-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: 1.75rem 1.25rem;
+  align-items: start;
+  margin-top: 1.75rem;
+}
+
+.automation-sections > .schedules-section {
+  margin-top: 0;
+}
+
+.automation-sections .schedule-list {
+  grid-template-columns: 1fr;
 }

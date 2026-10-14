@@ -101,26 +101,28 @@ export default function NotificationsSection({ house, userId, language, subscrip
       <h2 id="settings-notifications" className="settings-heading">
         {t('notifications.title')}
       </h2>
-      {state && (
-        <p className="settings-hint" role="status">
-          {t(`notifications.states.${state}`)}
-        </p>
-      )}
-      {state === 'off' && (
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={() => run(subscribe)}>
-          {t('notifications.turnOn')}
-        </button>
-      )}
-      {state === 'on' && (
-        <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => run(unsubscribe)}>
-          {t('notifications.turnOff')}
-        </button>
-      )}
-      {error && (
-        <p className="error-banner" role="alert">
-          {error}
-        </p>
-      )}
+      <div className="settings-notifications">
+        {state && (
+          <p className="settings-hint" role="status">
+            {t(`notifications.states.${state}`)}
+          </p>
+        )}
+        {state === 'off' && (
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={() => run(subscribe)}>
+            {t('notifications.turnOn')}
+          </button>
+        )}
+        {state === 'on' && (
+          <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => run(unsubscribe)}>
+            {t('notifications.turnOff')}
+          </button>
+        )}
+        {error && (
+          <p className="error-banner" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
     </section>
   )
 }

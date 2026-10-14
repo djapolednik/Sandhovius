@@ -95,8 +95,10 @@ export default function ScenesView({
           </button>
         )}
       </section>
-      {routineList}
-      {motion}
+      <div className="automation-sections">
+        {routineList}
+        {motion}
+      </div>
       </>
     )
   }
@@ -164,9 +166,12 @@ export default function ScenesView({
           </li>
         )}
       </ul>
-      {routineList}
-      <ScheduleList scenes={scenes} schedules={schedules} onEdit={onEdit} onToggleSchedule={onToggleSchedule} canEdit={canEdit} />
-      {motion}
+      {/* Routines, schema's en bewegingslicht naast elkaar op een breed scherm. */}
+      <div className="automation-sections">
+        {routineList}
+        <ScheduleList scenes={scenes} schedules={schedules} onEdit={onEdit} onToggleSchedule={onToggleSchedule} canEdit={canEdit} />
+        {motion}
+      </div>
     </>
   )
 }
