@@ -17,15 +17,23 @@ import (
 // schedules.days.
 var weekdayKeys = [...]string{"sun", "mon", "tue", "wed", "thu", "fri", "sat"}
 
-// dueSchedules geeft de schema's die in de minuut van now moeten lopen.
-// Vergelijkt op het lokale "15:04"-label: een tijd die door de zomertijd
-// niet bestaat, loopt die nacht dus niet.
-func dueSchedules(schedules []pocketbase.Schedule, now time.Time) []pocketbase.Schedule {
+// dueSchedules geeft de schema's die in de minuut van now moeten lopen. Een
+// tijd-schema vergelijkt op het lokale "15:04"-label: een tijd die door de
+// zomertijd niet bestaat, loopt die nacht dus niet. Een zon-schema loopt op
+// de berekende minuut (sun.go), en zonder locatie (loc nil) niet.
+func dueSchedules(schedules []pocketbase.Schedule, now time.Time, loc *homeLocation) []pocketbase.Schedule {
 	minute := now.Format("15:04")
 	day := weekdayKeys[now.Weekday()]
 	var due []pocketbase.Schedule
 	for _, s := range schedules {
-		if s.Enabled && s.Time == minute && slices.Contains(s.Days, day) {
+		if !s.Enabled {
+			continue
+		}
+		if isSunTrigger(s) {
+			if sunDue(s, now, loc) {
+				due = append(due, s)
+			}
+		} else if s.Time == minute && slices.Contains(s.Days, day) {
 			due = append(due, s)
 		}
 	}
@@ -40,6 +48,8 @@ type scheduleSnapshot struct {
 	scenes       map[string]pocketbase.Scene
 	motionLights []pocketbase.MotionLight
 	devices      map[string]pocketbase.Device
+	// location: waar het huis staat (HA), voor zon-schema's; nil = onbekend.
+	location *homeLocation
 }
 
 func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
@@ -55,10 +65,12 @@ func (s *scheduleSnapshot) lookupDevice(id string) (*pocketbase.Device, error) {
 // kunnen. save en fresh mogen nil zijn; fresh krijgt elke nieuwe snapshot
 // (de bewegingslichten).
 type scheduler struct {
-	fetch      func() (*scheduleSnapshot, error)
-	run        func(snap *scheduleSnapshot, s pocketbase.Schedule, now time.Time)
-	save       func(snap *scheduleSnapshot) error
-	fresh      func(snap *scheduleSnapshot)
+	fetch func() (*scheduleSnapshot, error)
+	run   func(snap *scheduleSnapshot, s pocketbase.Schedule, now time.Time)
+	save  func(snap *scheduleSnapshot) error
+	fresh func(snap *scheduleSnapshot)
+	// nextRun schrijft next_run van een zon-schema (mag nil zijn).
+	nextRun    func(u scheduleUpdate)
 	snap       *scheduleSnapshot
 	lastMinute string
 }
@@ -90,8 +102,23 @@ func (s *scheduler) tick(now time.Time) {
 	if s.snap == nil {
 		return
 	}
-	for _, due := range dueSchedules(s.snap.schedules, now) {
+	for _, due := range dueSchedules(s.snap.schedules, now, s.snap.location) {
 		s.run(s.snap, due, now)
+	}
+	// Zodat de app "vandaag om 18:42" kan zeggen. In de snapshot meteen
+	// bijwerken: de volgende tik schrijft het dan niet nog eens.
+	if s.nextRun != nil {
+		for _, u := range nextRunUpdates(s.snap.schedules, now, s.snap.location) {
+			s.nextRun(u)
+			for i := range s.snap.schedules {
+				if s.snap.schedules[i].ID == u.ID {
+					s.snap.schedules[i].NextRun = u.NextRun
+					if u.LastError != nil {
+						s.snap.schedules[i].LastError = *u.LastError
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -110,6 +137,14 @@ func (a *Agent) runScheduler() {
 		fetch: a.fetchScheduleSnapshot,
 		run:   a.runSchedule,
 		fresh: a.motion.apply,
+		nextRun: func(u scheduleUpdate) {
+			// Op de achtergrond: zonder internet mag het de klok niet ophouden.
+			go func() {
+				if err := a.pbClient.SetScheduleNextRun(u.ID, u.NextRun, u.LastError); err != nil {
+					log.Printf("[SCHEMA] Kon de volgende keer van schema %s niet opslaan: %v\n", u.ID, err)
+				}
+			}()
+		},
 		save: func(snap *scheduleSnapshot) error {
 			if a.house() == "" {
 				return nil // niets om te bewaren zonder huis
@@ -169,8 +204,9 @@ func (a *Agent) fetchScheduleSnapshot() (*scheduleSnapshot, error) {
 	snap := &scheduleSnapshot{
 		schedules:    schedules,
 		motionLights: motionLights,
-		scenes:    make(map[string]pocketbase.Scene, len(scenes)),
-		devices:   make(map[string]pocketbase.Device, len(devices)),
+		location:     a.homeLocation(),
+		scenes:       make(map[string]pocketbase.Scene, len(scenes)),
+		devices:      make(map[string]pocketbase.Device, len(devices)),
 	}
 	for _, scene := range scenes {
 		snap.scenes[scene.ID] = scene
@@ -192,10 +228,14 @@ func (a *Agent) runSchedule(snap *scheduleSnapshot, s pocketbase.Schedule, now t
 	} else {
 		err = a.executeScene(scene, snap.lookupDevice)
 	}
+	when := s.Time
+	if isSunTrigger(s) {
+		when = fmt.Sprintf("%s %+d min", s.Trigger, s.OffsetMin)
+	}
 	if err != nil {
-		log.Printf("[SCHEMA] Schema %s (%s) niet helemaal gelukt: %v\n", s.ID, s.Time, err)
+		log.Printf("[SCHEMA] Schema %s (%s) niet helemaal gelukt: %v\n", s.ID, when, err)
 	} else {
-		log.Printf("[SCHEMA] Scène %q uitgevoerd door schema %s (%s)\n", scene.Name, s.ID, s.Time)
+		log.Printf("[SCHEMA] Scène %q uitgevoerd door schema %s (%s)\n", scene.Name, s.ID, when)
 	}
 	go func() {
 		if markErr := a.pbClient.MarkScheduleRun(s.ID, now, err); markErr != nil {

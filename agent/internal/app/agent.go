@@ -20,6 +20,10 @@ import (
 type Agent struct {
 	mqttClient    *mqtt.Client
 	haClient      *homeassistant.Client
+	// Thuislocatie voor zon-schema's (home_location.go).
+	locMu sync.Mutex
+	loc   *homeLocation
+	locAt time.Time
 	pbClient      *pocketbase.Client
 	history       *history.Store
 	devices       *deviceCache

@@ -34,7 +34,7 @@ func (s *PairingSession) UnmarshalJSON(data []byte) error {
 	*s = PairingSession{ID: raw.ID, House: raw.House, Kind: raw.Kind, Status: raw.Status,
 		Extend: raw.Extend, ButtonPressed: raw.ButtonPressed}
 	if raw.Expires != "" {
-		t, err := time.Parse(pbDateLayout, raw.Expires)
+		t, err := time.Parse(DateLayout, raw.Expires)
 		if err != nil {
 			return fmt.Errorf("pocketbase: expires %q: %w", raw.Expires, err)
 		}

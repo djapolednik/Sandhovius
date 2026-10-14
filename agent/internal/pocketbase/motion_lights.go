@@ -45,7 +45,7 @@ func (c *Client) MarkMotionLightRun(id string, at time.Time, runErr error) error
 	err := c.doAuthed(
 		"PATCH",
 		"/api/collections/motion_lights/records/"+id,
-		map[string]any{"last_run": at.UTC().Format(pbDateLayout), "last_error": lastError},
+		map[string]any{"last_run": at.UTC().Format(DateLayout), "last_error": lastError},
 		nil,
 	)
 	if err != nil {

@@ -37,7 +37,7 @@ func TestDueSchedules(t *testing.T) {
 		{"uitgeschakeld", pocketbase.Schedule{ID: "d", Time: "23:00", Days: []string{"mon"}, Enabled: false}, false},
 	}
 	for _, c := range cases {
-		got := len(dueSchedules([]pocketbase.Schedule{c.s}, now)) == 1
+		got := len(dueSchedules([]pocketbase.Schedule{c.s}, now, nil)) == 1
 		if got != c.due {
 			t.Errorf("%s: due = %v, want %v", c.name, got, c.due)
 		}
@@ -52,7 +52,7 @@ func TestDueSchedulesSpringForward(t *testing.T) {
 	s := []pocketbase.Schedule{schedule("half3", "02:30", "sun"), schedule("halfvier", "03:30", "sun")}
 	start := time.Date(2027, 3, 28, 0, 0, 0, 0, loc)
 	for m := 0; m < 5*60; m++ {
-		for _, d := range dueSchedules(s, start.Add(time.Duration(m)*time.Minute)) {
+		for _, d := range dueSchedules(s, start.Add(time.Duration(m)*time.Minute), nil) {
 			count[d.ID]++
 		}
 	}

@@ -13,7 +13,7 @@ func (c *Client) SetHouseWeather(houseID string, weather any, at time.Time) erro
 	err := c.doAuthed(
 		"PATCH",
 		"/api/collections/houses/records/"+houseID,
-		map[string]any{"weather": weather, "weather_updated": at.UTC().Format(pbDateLayout)},
+		map[string]any{"weather": weather, "weather_updated": at.UTC().Format(DateLayout)},
 		nil,
 	)
 	if err != nil {

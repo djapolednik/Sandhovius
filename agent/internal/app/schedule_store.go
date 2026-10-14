@@ -22,18 +22,21 @@ type snapshotFile struct {
 	// Ontbreekt in bestanden van vóór de bewegingslichten: dan gewoon leeg.
 	MotionLights []pocketbase.MotionLight `json:"motion_lights"`
 	Devices      []pocketbase.Device      `json:"devices"`
+	// Waar het huis staat, voor zon-schema's als HA bij de start weg is.
+	Location *homeLocation `json:"location,omitempty"`
 }
 
 // saveSnapshot schrijft de snapshot atomisch (tijdelijk bestand + rename),
 // zodat een stroomstoring nooit een half bestand achterlaat.
 func saveSnapshot(path, house string, snap *scheduleSnapshot, now time.Time) error {
 	file := snapshotFile{
-		House:     house,
-		SavedAt:   now.Format(time.RFC3339),
+		House:        house,
+		SavedAt:      now.Format(time.RFC3339),
 		Schedules:    snap.schedules,
 		Scenes:       make([]pocketbase.Scene, 0, len(snap.scenes)),
 		MotionLights: snap.motionLights,
 		Devices:      make([]pocketbase.Device, 0, len(snap.devices)),
+		Location:     snap.location,
 	}
 	for _, scene := range snap.scenes {
 		file.Scenes = append(file.Scenes, scene)
@@ -77,6 +80,7 @@ func loadSnapshot(path, house string) (*scheduleSnapshot, error) {
 		scenes:       make(map[string]pocketbase.Scene, len(file.Scenes)),
 		motionLights: file.MotionLights,
 		devices:      make(map[string]pocketbase.Device, len(file.Devices)),
+		location:     file.Location,
 	}
 	for _, scene := range file.Scenes {
 		snap.scenes[scene.ID] = scene
@@ -105,5 +109,6 @@ func (a *Agent) loadScheduleSnapshot() *scheduleSnapshot {
 		return nil
 	}
 	log.Printf("[SCHEMA] %d schema's geladen uit %s\n", len(snap.schedules), a.schedulesFile)
+	a.rememberLocation(snap.location)
 	return snap
 }

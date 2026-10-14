@@ -214,3 +214,20 @@ func (c *Client) abortFlow(flowID string) {
 	}
 	resp.Body.Close()
 }
+
+// HomeLocation geeft de thuislocatie die in Home Assistant is ingesteld
+// (Instellingen → Systeem → Algemeen). ok is false als die niet is ingevuld
+// (0, 0).
+func (c *Client) HomeLocation() (lat, lon float64, ok bool, err error) {
+	var cfg struct {
+		Latitude  float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
+	}
+	if err := c.getJSON("/api/config", &cfg); err != nil {
+		return 0, 0, false, err
+	}
+	if cfg.Latitude == 0 && cfg.Longitude == 0 {
+		return 0, 0, false, nil
+	}
+	return cfg.Latitude, cfg.Longitude, true, nil
+}
