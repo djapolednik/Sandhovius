@@ -49,11 +49,11 @@ func TestHueEntityPrefersLight(t *testing.T) {
 
 func TestHueCapabilities(t *testing.T) {
 	cases := map[string][]string{
-		"[\"onoff\"]":                {"onoff"},
-		"[\"brightness\"]":           {"onoff", "brightness"},
-		"[\"color_temp\",\"xy\"]":    {"onoff", "brightness", "color_temp", "color"},
-		"[\"color_temp\"]":           {"onoff", "brightness", "color_temp"},
-		"[\"hs\",\"brightness\"]":    {"onoff", "brightness", "color"},
+		"[\"onoff\"]":             {"onoff"},
+		"[\"brightness\"]":        {"onoff", "brightness"},
+		"[\"color_temp\",\"xy\"]": {"onoff", "brightness", "color_temp", "color"},
+		"[\"color_temp\"]":        {"onoff", "brightness", "color_temp"},
+		"[\"hs\",\"brightness\"]": {"onoff", "brightness", "color"},
 	}
 	for modes, want := range cases {
 		var m []any
