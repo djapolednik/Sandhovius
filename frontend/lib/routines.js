@@ -101,7 +101,12 @@ export function describeConditions(intl, conditions, names) {
 }
 
 function describeAction(intl, action, names) {
-  const { t } = intl
+  const { t, locale } = intl
+  if (action.kind === 'notify') {
+    const users = action.users ?? []
+    const to = users.length === 0 ? t('routines.everyone') : list(locale).format(users.map((u) => userName(intl, names, u)))
+    return t('routines.action.notify', { text: action.text.trim(), to })
+  }
   if (action.kind === 'scene') return t('routines.action.scene', { name: names?.scenes?.[action.scene] ?? t('routines.unknownScene') })
   const name = deviceName(intl, names, action.device)
   if (action.action === 'turn_off') return t('routines.action.off', { name })
@@ -173,7 +178,10 @@ function missingCondition(c) {
   return 'condition'
 }
 
+const notifyText = (a) => (a.text ?? '').trim()
+
 function missingAction(a, known) {
+  if (a.kind === 'notify') return notifyText(a) && notifyText(a).length <= 80 ? null : 'text'
   if (a.kind === 'scene') return a.scene && (!known || known.scenes.has(a.scene)) ? null : 'target'
   return a.device && (!known || known.devices.has(a.device)) && a.action ? null : 'target'
 }
@@ -190,6 +198,7 @@ export function missingStep(routine, known) {
   }
   const actions = routine.actions ?? []
   if (actions.length === 0) return { part: 'actions', key: 'routines.missing.action' }
+  if (actions.some((a) => missingAction(a, known) === 'text')) return { part: 'actions', key: 'routines.missing.text' }
   if (actions.some((a) => missingAction(a, known))) return { part: 'actions', key: 'routines.missing.target' }
   return null
 }
@@ -219,6 +228,10 @@ export function routineRecord(draft) {
   })
   const actions = (draft.actions ?? []).map((a) => {
     if (a.kind === 'scene') return { kind: 'scene', scene: a.scene }
+    if (a.kind === 'notify') {
+      const users = a.users ?? []
+      return users.length > 0 ? { kind: 'notify', text: notifyText(a), users } : { kind: 'notify', text: notifyText(a) }
+    }
     const out = { kind: 'device', device: a.device, action: a.action }
     if (a.action === 'turn_on' && a.payload && Object.keys(a.payload).length > 0) out.payload = a.payload
     return out

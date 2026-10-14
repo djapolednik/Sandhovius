@@ -288,7 +288,9 @@
       "deleteRoutine": "Routine verwijderen",
       "routineOn": "Routine {name} aanzetten",
       "routineOff": "Routine {name} uitzetten",
-      "presence": "Thuis of weg opslaan"
+      "presence": "Thuis of weg opslaan",
+      "notifications": "Meldingen instellen",
+      "notifyRule": "Meld dit opslaan"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -442,7 +444,15 @@
     "motionNow": "Er is nu beweging",
     "valveHint": "Verwarmt als je eigen thermostaat de ketel aanzet.",
     "adaptive": "Kleur volgt de dag",
-    "adaptiveHint": "Warm ’s avonds, frisser overdag. Kies je zelf een kleur, dan stopt het tot de lamp uit gaat."
+    "adaptiveHint": "Warm ’s avonds, frisser overdag. Kies je zelf een kleur, dan stopt het tot de lamp uit gaat.",
+    "notify": {
+      "open": "Meld als hij opengaat",
+      "motion": "Meld beweging"
+    },
+    "notifyHint": "Alleen voor jou, op de apparaten waar je meldingen aanzette.",
+    "notifyNobodyHome": "Alleen als niemand thuis is",
+    "notifyBetween": "Alleen tussen twee tijden",
+    "notifyAlways": "Lekkage en rook meldt Sandhovius altijd, aan iedereen die meldingen aanzette."
   },
   "schedules": {
     "everyDay": "Elke dag",
@@ -839,7 +849,8 @@
       "on": "{name} aan",
       "onDetail": "{name} aan ({detail})",
       "off": "{name} uit",
-      "scene": "scène {name}"
+      "scene": "scène {name}",
+      "notify": "melding „{text}” aan {to}"
     },
     "missing": {
       "starter": "Kies wanneer de routine begint.",
@@ -855,7 +866,8 @@
       "action": "Kies minstens één actie bij Doe.",
       "target": "Kies bij elke stap een apparaat of scène.",
       "presence": "Kies wanneer: iedereen weg, de eerste thuis, of iemand.",
-      "person": "Kies een huisgenoot."
+      "person": "Kies een huisgenoot.",
+      "text": "Schrijf de tekst van de melding (hooguit 80 tekens)."
     },
     "unknownPerson": "iemand die geen huisgenoot meer is",
     "presenceEvents": {
@@ -874,7 +886,15 @@
       "away": "Huisgenoot weg"
     },
     "presenceStateLegend": "Wie er thuis moet zijn",
-    "presenceHint": "Iedereen zet zichzelf op Thuis of Weg, op Home."
+    "presenceHint": "Iedereen zet zichzelf op Thuis of Weg, op Home.",
+    "everyone": "iedereen",
+    "notifyGroup": "Melding",
+    "notifyOption": "Stuur een melding",
+    "notifyText": "Tekst van de melding",
+    "notifyPlaceholder": "Bijvoorbeeld: De voordeur is open",
+    "notifyTo": "Aan wie",
+    "notifyEveryone": "Niemand gekozen: iedereen krijgt hem.",
+    "notifyToHint": "Alleen wie meldingen aanzette krijgt hem."
   },
   "presence": {
     "home": "Thuis",
@@ -886,5 +906,19 @@
     "nobodyHome": "Niemand is thuis",
     "memberHome": "Thuis",
     "memberAway": "Weg"
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "turnOn": "Meldingen aanzetten op dit apparaat",
+    "turnOff": "Uitzetten op dit apparaat",
+    "states": {
+      "on": "Aan op dit apparaat. Lekkage en rook meldt Sandhovius altijd; wat je verder wilt weten zet je aan bij een sensor of in een routine.",
+      "off": "Krijg een melding bij lekkage, rook, of wat je zelf kiest, ook als de app dicht is.",
+      "stale": "Je box is vervangen. Dit apparaat wordt opnieuw aangemeld…",
+      "denied": "Meldingen zijn geweigerd voor deze app. Zet ze aan in de instellingen van je browser of telefoon.",
+      "noKey": "Je box heeft nog geen afzender voor meldingen. Dat regelt hij zodra hij verbonden is.",
+      "install": "Op een iPhone of iPad kunnen meldingen alleen als Sandhovius op je beginscherm staat: tik op Deel en dan op Zet op beginscherm.",
+      "unsupported": "Deze browser kan geen meldingen ontvangen."
+    }
   }
 }

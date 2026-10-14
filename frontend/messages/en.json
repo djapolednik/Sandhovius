@@ -288,7 +288,9 @@
       "deleteRoutine": "Deleting the routine",
       "routineOn": "Turning routine {name} on",
       "routineOff": "Turning routine {name} off",
-      "presence": "Saving home or away"
+      "presence": "Saving home or away",
+      "notifications": "Setting up notifications",
+      "notifyRule": "Saving the notification"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -442,7 +444,15 @@
     "motionNow": "Motion right now",
     "valveHint": "Heats when your own thermostat turns on the boiler.",
     "adaptive": "Colour follows the day",
-    "adaptiveHint": "Warm in the evening, fresher during the day. Pick a colour yourself and it pauses until the lamp goes off."
+    "adaptiveHint": "Warm in the evening, fresher during the day. Pick a colour yourself and it pauses until the lamp goes off.",
+    "notify": {
+      "open": "Notify me when it opens",
+      "motion": "Notify me about motion"
+    },
+    "notifyHint": "Just for you, on the devices where you turned notifications on.",
+    "notifyNobodyHome": "Only when nobody is home",
+    "notifyBetween": "Only between two times",
+    "notifyAlways": "Sandhovius always reports leaks and smoke to everyone who turned notifications on."
   },
   "schedules": {
     "everyDay": "Every day",
@@ -839,7 +849,8 @@
       "on": "{name} on",
       "onDetail": "{name} on ({detail})",
       "off": "{name} off",
-      "scene": "scene {name}"
+      "scene": "scene {name}",
+      "notify": "notification “{text}” to {to}"
     },
     "missing": {
       "starter": "Choose when the routine starts.",
@@ -855,7 +866,8 @@
       "action": "Choose at least one action under Do.",
       "target": "Choose a device or scene for every step.",
       "presence": "Choose when: everyone away, the first home, or someone.",
-      "person": "Choose a household member."
+      "person": "Choose a household member.",
+      "text": "Write the text of the notification (80 characters at most)."
     },
     "unknownPerson": "someone who's no longer in the household",
     "presenceEvents": {
@@ -874,7 +886,15 @@
       "away": "Member away"
     },
     "presenceStateLegend": "Who needs to be home",
-    "presenceHint": "Everyone sets themselves to Home or Away, on Home."
+    "presenceHint": "Everyone sets themselves to Home or Away, on Home.",
+    "everyone": "everyone",
+    "notifyGroup": "Notification",
+    "notifyOption": "Send a notification",
+    "notifyText": "Notification text",
+    "notifyPlaceholder": "For example: The front door is open",
+    "notifyTo": "To whom",
+    "notifyEveryone": "Nobody picked: everyone gets it.",
+    "notifyToHint": "Only people who turned notifications on get it."
   },
   "presence": {
     "home": "Home",
@@ -886,5 +906,19 @@
     "nobodyHome": "Nobody is home",
     "memberHome": "Home",
     "memberAway": "Away"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "turnOn": "Turn on notifications on this device",
+    "turnOff": "Turn off on this device",
+    "states": {
+      "on": "On for this device. Sandhovius always tells you about leaks and smoke; anything else you turn on at a sensor or in a routine.",
+      "off": "Get a notification about leaks, smoke, or whatever you choose, even when the app is closed.",
+      "stale": "Your box was replaced. Signing this device up again…",
+      "denied": "Notifications are blocked for this app. Allow them in your browser or phone settings.",
+      "noKey": "Your box doesn't have a sender for notifications yet. It sets one up once it's connected.",
+      "install": "On an iPhone or iPad, notifications only work when Sandhovius is on your home screen: tap Share, then Add to Home Screen.",
+      "unsupported": "This browser can't receive notifications."
+    }
   }
 }

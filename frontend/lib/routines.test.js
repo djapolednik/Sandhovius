@@ -192,3 +192,25 @@ test('thuis/weg: wat mist en het record', () => {
   assert.deepEqual(record.conditions, [{ kind: 'presence', state: 'someone_home' }, { kind: 'presence', state: 'away', user: 'sanne' }])
   for (const k of ['presence', 'person']) assertMessage(`routines.missing.${k}`)
 })
+
+test('melding als actie: zin, wat mist en het record', () => {
+  const people = { ...names, users: { sanne: 'Sanne', tom: 'Tom' } }
+  const starter = { kind: 'sensor', device: 'door', event: 'open' }
+  const notify = (text, users) => ({ kind: 'notify', text, ...(users ? { users } : {}) })
+  assert.equal(
+    describeAutomation(nl, routine(starter, [notify('Deur open')]), people),
+    'Als Voordeur opengaat: melding „Deur open” aan iedereen.'
+  )
+  assert.equal(
+    describeAutomation(en, routine(starter, [on('hall'), notify(' Door open ', ['sanne', 'tom'])]), people),
+    'When Voordeur opens: Ganglamp on and notification “Door open” to Sanne and Tom.'
+  )
+  assert.equal(missingStep(routine(starter, [notify('  ')]))?.key, 'routines.missing.text')
+  assert.equal(missingStep(routine(starter, [notify('x'.repeat(81))]))?.key, 'routines.missing.text')
+  assert.equal(missingStep(routine(starter, [notify('Hoi')])), null)
+  assert.deepEqual(routineRecord({ starter, actions: [notify(' Hoi ', []), notify('Hoi', ['tom'])] }).actions, [
+    { kind: 'notify', text: 'Hoi' },
+    { kind: 'notify', text: 'Hoi', users: ['tom'] },
+  ])
+  assertMessage('routines.missing.text')
+})

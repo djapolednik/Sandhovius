@@ -53,6 +53,7 @@ import SceneModal from '../components/SceneModal'
 import MotionLightSheet from '../components/MotionLightSheet'
 import RoutineSheet from '../components/RoutineSheet'
 import PresenceBar from '../components/PresenceBar'
+import NotificationsSection from '../components/NotificationsSection'
 import { byRoom, motionSensors, switchableDevices } from '../lib/motionLights'
 import { routineSensors, routineTitle } from '../lib/routines'
 import { memberName } from '../lib/presence'
@@ -132,6 +133,9 @@ export default function Home() {
   // gekozen huis.
   const [presence, setPresence] = useState([])
   const [houseMembers, setHouseMembers] = useState([])
+  // Meldingen: je eigen aanmeldingen (per apparaat) en Meld dit-regels.
+  const [pushSubscriptions, setPushSubscriptions] = useState([])
+  const [notifyRules, setNotifyRules] = useState([])
   // Scène die nu loopt of net klaar is: { [sceneId]: 'running' | 'done' }.
   const [sceneRunState, setSceneRunState] = useState({})
   // Open scène-sheet: 'new', een scène-ID, of null.
@@ -525,6 +529,8 @@ export default function Home() {
     setRoutines([])
     setPresence([])
     setHouseMembers([])
+    setPushSubscriptions([])
+    setNotifyRules([])
     setSelectedRoomId('')
     setRealtimeLink('connecting')
     setLoaded(false)
@@ -557,6 +563,8 @@ export default function Home() {
         motionRecords,
         routineRecords,
         presenceRecords,
+        subscriptionRecords,
+        notifyRuleRecords,
       ] = await Promise.all([
         pb.collection('houses').getFullList(),
         pb.collection('rooms').getFullList({ sort: 'order' }),
@@ -568,6 +576,8 @@ export default function Home() {
         pb.collection('motion_lights').getFullList(),
         pb.collection('automations').getFullList(),
         pb.collection('presence').getFullList(),
+        pb.collection('push_subscriptions').getFullList(),
+        pb.collection('notification_rules').getFullList(),
       ])
       // Een huis dat er niet meer is en dat je niet zelf verliet: een ander
       // heeft je eruit gehaald. Rustig zeggen, en verder met het volgende huis.
@@ -585,6 +595,8 @@ export default function Home() {
       setMotionLights(motionRecords)
       setRoutines(routineRecords)
       setPresence(presenceRecords)
+      setPushSubscriptions(subscriptionRecords)
+      setNotifyRules(notifyRuleRecords)
       setFavorites(favoriteRecords)
       setInvitations(invitationRecords)
       setLoaded(true)
@@ -662,7 +674,9 @@ export default function Home() {
     if (!membership) return
     let cancelled = false
     const houseId = membership.split(':')[0]
-    pb.send(`/api/sandhovius/houses/${houseId}/members`, { method: 'GET' })
+    // requestKey: null — de Huisgenoten-sectie haalt dezelfde lijst; anders
+    // annuleert de SDK er één.
+    pb.send(`/api/sandhovius/houses/${houseId}/members`, { method: 'GET', requestKey: null })
       .then((res) => {
         if (!cancelled) setHouseMembers(res.items ?? [])
       })
@@ -671,6 +685,25 @@ export default function Home() {
       cancelled = true
     }
   }, [membership])
+
+  // Meldingen op dit apparaat (Opties → Meldingen).
+  async function createPushSubscription(fields) {
+    const record = await pb.collection('push_subscriptions').create(fields)
+    setPushSubscriptions((prev) => [...prev.filter((s) => s.id !== record.id), record])
+  }
+
+  async function deletePushSubscription(id) {
+    await pb.collection('push_subscriptions').delete(id)
+    setPushSubscriptions((prev) => prev.filter((s) => s.id !== id))
+  }
+
+  // Meld dit: een eigen regel per sensor en gebeurtenis.
+  async function saveNotifyRule(id, fields) {
+    const record = id
+      ? await pb.collection('notification_rules').update(id, fields)
+      : await pb.collection('notification_rules').create({ ...fields, house: house.id, user: userId })
+    setNotifyRules((prev) => [...prev.filter((r) => r.id !== record.id), record])
+  }
 
   // Je eigen stand: meteen om, en terug als opslaan mislukt.
   async function setMyPresence(home) {
@@ -1553,6 +1586,8 @@ export default function Home() {
   async function tryRoutine(actions) {
     const failed = []
     for (const action of actions) {
+      // Een melding verstuurt alleen de box; die slaat uitproberen over.
+      if (action.kind === 'notify') continue
       const scene = action.kind === 'scene'
       const name = scene ? routineNames.scenes[action.scene] : routineNames.devices[action.device]
       try {
@@ -2031,6 +2066,18 @@ export default function Home() {
           house={house}
           connection={<ConnectionStatus realtimeLink={realtimeLink} house={houseLink} now={now} />}
           isAdmin={houseAdmin}
+          notifications={
+            house && (
+              <NotificationsSection
+                house={house}
+                userId={userId}
+                language={language}
+                subscriptions={pushSubscriptions}
+                onCreate={createPushSubscription}
+                onDelete={deletePushSubscription}
+              />
+            )
+          }
           household={
             house && (
               <HouseholdSection
@@ -2313,6 +2360,8 @@ export default function Home() {
           onSetLight={setLight}
           onIdentify={identifyDevice}
           houseReachable={houseReachable}
+          notifyRules={notifyRules.filter((r) => r.device === settingsDevice.id && r.user === userId)}
+          onSaveNotifyRule={saveNotifyRule}
           onDelete={deleteDevice}
           onClose={() => setSettingsDeviceId(null)}
         />

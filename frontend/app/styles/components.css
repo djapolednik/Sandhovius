@@ -1407,6 +1407,25 @@
   color: var(--text-secondary);
 }
 
+/* Meld dit in de detail-sheet van een sensor: de opties springen iets in. */
+.notify-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notify-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--border);
+}
+
+.notify-always {
+  margin: 0;
+}
+
 /* ==================== Routines ====================
    De sheet bouwt een zin op: bovenaan de hele routine in woorden, dan Als,
    Alleen als, Doe en Daarna uit, elk op Inset zoals de schema-rijen. */

@@ -19,6 +19,7 @@ export default function SettingsView({
   connection,
   isAdmin = false,
   household,
+  notifications,
   houses = [],
   onSelectHouse,
   roomCount,
@@ -96,6 +97,7 @@ export default function SettingsView({
       )}
 
       {household}
+      {notifications}
 
       <section className="panel settings-section" aria-labelledby="settings-look">
         <h2 id="settings-look" className="settings-heading">

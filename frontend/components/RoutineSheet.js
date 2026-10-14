@@ -87,15 +87,19 @@ function conditionsFrom(input) {
   return out
 }
 
-// Een stap: target is "d:<id>" (apparaat) of "s:<id>" (scène), of leeg.
+// Een stap: target is "d:<id>" (apparaat), "s:<id>" (scène), "n:" (een
+// melding, met text en users), of leeg.
 const rowFrom = (a) => ({
   key: uid(),
-  target: a.kind === 'scene' ? `s:${a.scene}` : a.device ? `d:${a.device}` : '',
+  target: a.kind === 'notify' ? 'n:' : a.kind === 'scene' ? `s:${a.scene}` : a.device ? `d:${a.device}` : '',
   action: a.action ?? 'turn_on',
   payload: a.payload ?? null,
+  text: a.text ?? '',
+  users: a.users ?? [],
 })
 
 function actionFrom(row) {
+  if (row.target === 'n:') return { kind: 'notify', text: row.text, users: row.users }
   if (row.target.startsWith('s:')) return { kind: 'scene', scene: row.target.slice(2) }
   const out = { kind: 'device', device: row.target.slice(2), action: row.action }
   if (row.action === 'turn_on' && row.payload) out.payload = row.payload
@@ -603,6 +607,9 @@ export default function RoutineSheet({
                             ))}
                           </optgroup>
                         )}
+                        <optgroup label={t('routines.notifyGroup')}>
+                          <option value="n:">{t('routines.notifyOption')}</option>
+                        </optgroup>
                       </select>
                       <button
                         type="button"
@@ -625,6 +632,48 @@ export default function RoutineSheet({
                         label={(mode) => t(`routines.modes.${mode}`)}
                         onChange={(action) => patchRow(row.key, { action })}
                       />
+                    )}
+                    {row.target === 'n:' && (
+                      <>
+                        <label className="form-field">
+                          <span className="form-label">{t('routines.notifyText')}</span>
+                          <input
+                            className="input"
+                            maxLength={80}
+                            value={row.text}
+                            placeholder={t('routines.notifyPlaceholder')}
+                            onChange={(e) => patchRow(row.key, { text: e.target.value })}
+                          />
+                        </label>
+                        <fieldset className="house-choice motion-choice">
+                          <legend className="form-label">{t('routines.notifyTo')}</legend>
+                          {people.map((p) => {
+                            const chosen = row.users.includes(p.id)
+                            return (
+                              <label key={p.id} className={`house-choice-option ${chosen ? 'house-choice-selected' : ''}`}>
+                                <input
+                                  type="checkbox"
+                                  className="visually-hidden"
+                                  checked={chosen}
+                                  onChange={() =>
+                                    patchRow(row.key, {
+                                      users: chosen ? row.users.filter((u) => u !== p.id) : [...row.users, p.id],
+                                    })
+                                  }
+                                />
+                                <span className="motion-choice-text">
+                                  <span>{p.name}</span>
+                                </span>
+                                {chosen && <CheckIcon width="18" height="18" aria-hidden="true" />}
+                              </label>
+                            )
+                          })}
+                          <p className="settings-hint motion-empty">
+                            {row.users.length === 0 ? `${t('routines.notifyEveryone')} ` : ''}
+                            {t('routines.notifyToHint')}
+                          </p>
+                        </fieldset>
+                      </>
                     )}
                     {device?.type === 'light' && row.action === 'turn_on' && (
                       <Segmented
@@ -652,7 +701,7 @@ export default function RoutineSheet({
               className="btn btn-plain schedule-add"
               onClick={() => {
                 setTrying(null)
-                setRows((prev) => [...prev, { key: uid(), target: '', action: 'turn_on', payload: null }])
+                setRows((prev) => [...prev, rowFrom({})])
               }}
             >
               <PlusIcon width="18" height="18" aria-hidden="true" />
@@ -661,7 +710,7 @@ export default function RoutineSheet({
           ) : (
             <p className="settings-hint">{t('routines.maxActions')}</p>
           )}
-          {draft.actions.length > 0 && (
+          {draft.actions.some((a) => a.kind !== 'notify') && (
             <div className="routine-try">
               <button
                 type="button"

@@ -33,6 +33,8 @@ export default function DeviceSettingsModal({
   onSetLight,
   onIdentify,
   houseReachable = true,
+  notifyRules = [],
+  onSaveNotifyRule,
   onDelete,
   onClose,
 }) {
@@ -73,6 +75,18 @@ export default function DeviceSettingsModal({
       const message = describeError(t, what, err)
       if (mounted.current) setError(message)
       else onSaveError?.(message)
+    }
+  }
+
+  // Meld dit (spec 2026-10-14-notifications-design.md): een eigen regel,
+  // zichzelf opslaand zoals de rest van de sheet.
+  async function saveRule(id, fields) {
+    setError('')
+    try {
+      await onSaveNotifyRule(id, fields)
+      if (mounted.current) setSavedTick((n) => n + 1)
+    } catch (err) {
+      if (mounted.current) setError(describeError(t, t('errors.what.notifyRule'), err))
     }
   }
 
@@ -166,6 +180,10 @@ export default function DeviceSettingsModal({
           </div>
           <div className="modal-divider" />
         </>
+      )}
+
+      {device.type === 'sensor' && onSaveNotifyRule && (
+        <NotifyRules device={device} rules={notifyRules} onSave={saveRule} />
       )}
 
       {device.type === 'switch' && (
@@ -297,6 +315,107 @@ function DeviceStatus({ device }) {
           aanzet (model A): dat zeggen we eerlijk. */}
       {device.capabilities?.includes('valve') && <p className="login-note">{t('deviceSheet.valveHint')}</p>}
     </>
+  )
+}
+
+// Meld dit: per gebeurtenis die de sensor kan melden een schakelaar, alleen
+// voor jou, met "alleen als niemand thuis is" en "alleen tussen". Lekkage en
+// rook meldt de box altijd: daar staat alleen dat.
+const NOTIFY_EVENTS = [
+  ['contact', 'open'],
+  ['occupancy', 'motion'],
+]
+
+function NotifyRules({ device, rules, onSave }) {
+  const t = useTranslations()
+  const caps = device.capabilities ?? []
+  const events = NOTIFY_EVENTS.filter(([cap]) => caps.includes(cap)).map(([, event]) => event)
+  const always = caps.includes('water_leak') || caps.includes('smoke')
+  if (events.length === 0 && !always) return null
+  return (
+    <>
+      {always && <p className="settings-hint notify-always">{t('deviceSheet.notifyAlways')}</p>}
+      {events.map((event) => (
+        <NotifyRule key={event} device={device} event={event} rule={rules.find((r) => r.event === event)} onSave={onSave} />
+      ))}
+      <div className="modal-divider" />
+    </>
+  )
+}
+
+function NotifyRule({ device, event, rule, onSave }) {
+  const t = useTranslations()
+  const on = !!rule?.enabled
+  const between = !!rule?.from
+  const [from, setFrom] = useState(rule?.from || '22:00')
+  const [to, setTo] = useState(rule?.to || '07:00')
+  const id = `notify-${device.id}-${event}`
+  const save = (fields) =>
+    onSave(rule?.id ?? null, {
+      device: device.id,
+      event,
+      enabled: rule?.enabled ?? true,
+      nobody_home: rule?.nobody_home ?? false,
+      from: rule?.from ?? '',
+      to: rule?.to ?? '',
+      ...fields,
+    })
+  const switchRow = (rowId, label, hint, checked, onToggle) => (
+    <div className="settings-row">
+      <span className="settings-row-text">
+        <span id={rowId}>{label}</span>
+        {hint && <span className="settings-row-hint">{hint}</span>}
+      </span>
+      <button
+        type="button"
+        className={`switch switch-accent ${checked ? 'switch-on' : ''}`}
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby={rowId}
+        onClick={onToggle}
+      >
+        <span className="switch-thumb" />
+      </button>
+    </div>
+  )
+  return (
+    <div className="notify-rule">
+      {switchRow(id, t(`deviceSheet.notify.${event}`), t('deviceSheet.notifyHint'), on, () => save({ enabled: !on }))}
+      {on && (
+        <div className="notify-options">
+          {switchRow(`${id}-away`, t('deviceSheet.notifyNobodyHome'), null, !!rule.nobody_home, () =>
+            save({ nobody_home: !rule.nobody_home })
+          )}
+          {switchRow(`${id}-between`, t('deviceSheet.notifyBetween'), null, between, () =>
+            save(between ? { from: '', to: '' } : { from, to })
+          )}
+          {between && (
+            <div className="routine-between">
+              <label className="form-field">
+                <span className="form-label">{t('routines.from')}</span>
+                <input
+                  className="input schedule-time"
+                  type="time"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  onBlur={() => from && from !== to && from !== rule.from && save({ from, to })}
+                />
+              </label>
+              <label className="form-field">
+                <span className="form-label">{t('routines.until')}</span>
+                <input
+                  className="input schedule-time"
+                  type="time"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  onBlur={() => to && from !== to && to !== rule.to && save({ from, to })}
+                />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 

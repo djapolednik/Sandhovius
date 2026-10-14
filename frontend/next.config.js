@@ -13,6 +13,15 @@ const nextConfig = {
         source: '/((?!_next/static|_next/image).*)',
         headers: [{ key: 'Cache-Control', value: 'no-cache' }],
       },
+      // De service worker (meldingen): altijd vers, alleen eigen scripts.
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
     ]
   },
 }
