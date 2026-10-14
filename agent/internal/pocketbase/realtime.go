@@ -81,6 +81,13 @@ func (c *Client) SubscribeBox(ctx context.Context, onSubscribed func(), handler 
 // connection drops, returning an error in the latter case so the caller can
 // decide whether to reconnect.
 func (c *Client) subscribeCollection(ctx context.Context, collectionName string, onSubscribed func(), handler func(data []byte)) error {
+	return c.subscribeCollections(ctx, []string{collectionName}, onSubscribed, func(_ string, data []byte) { handler(data) })
+}
+
+// subscribeCollections is subscribeCollection voor meer collecties op één
+// SSE-verbinding; handler krijgt de naam van de collectie erbij.
+func (c *Client) subscribeCollections(ctx context.Context, collections []string, onSubscribed func(), handler func(collection string, data []byte)) error {
+	collectionName := strings.Join(collections, ",")
 	// Zonder token (nog niet ingelogd, bv. PocketBase was weg bij het
 	// opstarten) accepteert PocketBase een gast-abonnement dat nooit events
 	// krijgt. Dan een fout, zodat de herhaallus het later opnieuw probeert.
@@ -117,7 +124,7 @@ func (c *Client) subscribeCollection(ctx context.Context, collectionName string,
 		case strings.HasPrefix(line, "id:"):
 			clientID := strings.TrimSpace(strings.TrimPrefix(line, "id:"))
 			if !subscribed {
-				if err := c.subscribeRealtime(clientID, []string{collectionName}); err != nil {
+				if err := c.subscribeRealtime(clientID, collections); err != nil {
 					return fmt.Errorf("pocketbase: subscribe to %s: %w", collectionName, err)
 				}
 				subscribed = true
@@ -131,8 +138,10 @@ func (c *Client) subscribeCollection(ctx context.Context, collectionName string,
 
 		case strings.HasPrefix(line, "data:"):
 			data := strings.TrimSpace(strings.TrimPrefix(line, "data:"))
-			if eventName == collectionName {
-				handler([]byte(data))
+			for _, name := range collections {
+				if eventName == name {
+					handler(name, []byte(data))
+				}
 			}
 			eventName = ""
 		}

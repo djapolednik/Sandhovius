@@ -8,10 +8,44 @@ import (
 type Device struct {
 	ID       string `json:"id"`
 	Gateway  string `json:"gateway"`
+	Room     string `json:"room"`
 	EntityID string `json:"entity_id"`
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Online   bool   `json:"online"`
+	// Identiteit uit het koppelen (spec 2026-10-14-device-pairing-design.md):
+	// Source zigbee/hue, Address het Zigbee IEEE-adres of het HA-device-id,
+	// Endpoint "l1"/"l2" bij een apparaat met meer delen.
+	Source       string   `json:"source"`
+	Address      string   `json:"address"`
+	Endpoint     string   `json:"endpoint"`
+	Model        string   `json:"model"`
+	ShownAs      string   `json:"shown_as"`
+	Capabilities []string `json:"capabilities"`
+}
+
+// NewDevice is wat de box na koppelen aanmaakt.
+type NewDevice struct {
+	Gateway, Room, Name, Type, Source, Address, Endpoint, EntityID, Model string
+	Capabilities                                                          []string
+}
+
+// CreateDevice maakt een device in het huis van de box (alleen de box mag
+// dat, na koppelen in de app).
+func (c *Client) CreateDevice(d NewDevice) (Device, error) {
+	body := map[string]any{
+		"gateway": d.Gateway, "name": d.Name, "type": d.Type, "source": d.Source,
+		"address": d.Address, "endpoint": d.Endpoint, "entity_id": d.EntityID, "model": d.Model,
+		"capabilities": d.Capabilities, "online": true,
+	}
+	if d.Room != "" {
+		body["room"] = d.Room
+	}
+	var out Device
+	if err := c.doAuthed("POST", "/api/collections/devices/records", body, &out); err != nil {
+		return Device{}, fmt.Errorf("pocketbase: create device %s: %w", d.Address, err)
+	}
+	return out, nil
 }
 
 type deviceListResponse struct {
