@@ -169,17 +169,17 @@ De bridge mag tegelijk aan Google Home of de Hue-app hangen.
 
 ### Bestaande devices
 
-- **Helpers:** een PocketBase-migratie verwijdert devices met een
-  `entity_id` die begint met `input_boolean.` of `input_number.`, met hun
-  `device_state` en favorieten, en ruimt verwijzingen in scènes op
-  (bewegingslichten volgen via de relatie). De agent verwijdert bij de
-  eerste start na de update zijn helpers uit HA (eenmalig, vlag in `/data`).
-  `provisionDeviceEntity` en het commando `provision` verdwijnen.
-- **Zigbee-devices met de friendly name in `entity_id`:** de agent vult bij
-  het opstarten `address`, `source`, `type`/`capabilities` en de echte
-  `entity_id` aan uit `zigbee2mqtt/bridge/devices`. Daarna zoekt hij binnenkomende
-  Zigbee-berichten op via een kaart friendly name → adres (uit hetzelfde,
-  retained topic), niet via `entity_id`.
+- **Harde overgang:** een PocketBase-migratie verwijdert **alle** bestaande
+  devices (er zijn alleen dev-data: helpers en `fake-lights`-lampen; geen
+  echte Zigbee-apparaten), met hun `device_state` en favorieten, en maakt
+  de stappen van scènes leeg (bewegingslichten volgen via de relatie). Een
+  overgang voor Zigbee-devices met de friendly name in `entity_id` is dus
+  niet nodig. De agent verwijdert bij de eerste start na de update zijn
+  helpers uit HA (eenmalig, vlag in `/data`). `provisionDeviceEntity` en het
+  commando `provision` verdwijnen.
+- **Opzoeken:** binnenkomende Zigbee-berichten zoekt de agent op via een
+  kaart friendly name → adres (uit het retained topic
+  `zigbee2mqtt/bridge/devices`), niet via `entity_id`.
 
 ### Tegel en lezing
 
@@ -187,8 +187,8 @@ De bridge mag tegelijk aan Google Home of de Hue-app hangen.
 - **De lezing op een sensortegel**: de eerste mogelijkheid uit
   `smoke` > `water_leak` > `contact` > `occupancy` > `temperature` >
   `humidity` > `illuminance`. `battery` is nooit de lezing.
-- Dezelfde volgorde in Go (agent, voor routines later) en in `lib/` (PWA),
-  met gedeelde testvectoren zoals `claim_codes.json`.
+- Die volgorde staat nu alleen in `lib/` (PWA). De agent krijgt hem pas met
+  de routines; dan met gedeelde testvectoren zoals `claim_codes.json`.
 
 ## Batterij en sensorstanden (A2)
 
@@ -196,11 +196,11 @@ De bridge mag tegelijk aan Google Home of de Hue-app hangen.
   tekst): `contact` "Dicht"/"Open", `water_leak` "Droog"/"Lek", `smoke`
   "Geen rook"/"Rook", `occupancy` "Beweging"/"Geen beweging",
   `temperature` "21,5°", `humidity` "55%".
-- **Let op:** "Batterij bijna leeg" onder 15% (één regel per apparaat; bij
-  meer: "3 apparaten hebben een bijna lege batterij"), "Lekkage in de
-  keuken" en "Rook in de gang" bovenaan, zwaarder dan offline
-  (`sortAttention`). Geen gloed; de tegel van een sensor gloeit nooit.
-- In de detail-sheet de batterij als regel ("Batterij 62%").
+- **Let op:** "Batterij bijna leeg" bestaat al (`lib/battery.js`, 20% en
+  lager, ook in de detail-sheet). Nieuw: "Lekkage" en "Rook" als soort,
+  zwaarder dan alles (`sortAttention`: `smoke`, `leak`, `offline`,
+  `battery`). Geen gloed; de tegel van een sensor gloeit nooit.
+- Let op bij Zigbee2MQTT: `contact: true` betekent **dicht**.
 
 ## PWA
 
@@ -257,8 +257,8 @@ Copy in `messages/nl.json` en `en.json`; foutcodes van de box als sleutels
 - **Integratietests** (`backend/tests`): bewoner kan geen device aanmaken en
   geen box-velden zetten; `shown_as` alleen op een switch; één open sessie
   per huis; een lid van een ander huis ziet geen sessies of candidates.
-- **`lib/`:** de lezing-volgorde (gedeelde testvectoren met Go), de woorden
-  per mogelijkheid, de batterij-regel.
+- **`lib/`:** de lezing-volgorde, de woorden per mogelijkheid, lek en rook
+  in Let op.
 - **Met de hand:** Hue op de dev-machine via `HUE_BRIDGE_HOST` (dat schakelt
   echte lampen in huis; vooraf zeggen), de nep-Zigbee voor de rest; met een
   stick later op de thuisserver.
