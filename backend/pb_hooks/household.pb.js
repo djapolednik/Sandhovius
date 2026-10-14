@@ -36,6 +36,20 @@ onRecordCreateRequest((e) => {
     return e.json(400, { status: 400, code: "already_member", params: {}, message: "already a member", data: {} })
   }
 
+  // D2: een gast met een einddatum. until is de gekozen dag (tekst), ends het
+  // einde ervan (door de app in de tijdzone van de telefoon uitgerekend). Een
+  // gast is huisgenoot, geen beheerder; de einddatum ligt binnen een jaar.
+  const until = e.record.getString("until")
+  if (until === "") {
+    e.record.set("ends", "")
+  } else {
+    const ends = new Date(e.record.getString("ends").replace(" ", "T"))
+    const year = Date.now() + 366 * 24 * 60 * 60 * 1000
+    if (e.record.getString("role") !== "member" || !(ends.getTime() > Date.now()) || ends.getTime() > year) {
+      return e.json(400, { status: 400, code: "invalid_until", params: {}, message: "invalid until", data: {} })
+    }
+  }
+
   const week = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
   e.record.set("expires", week.toISOString().replace("T", " "))
   e.record.set("house_name", house.getString("name"))
@@ -74,7 +88,8 @@ onRecordAfterCreateSuccess((e) => {
     inv.getString("inviter_name"),
     inv.getString("house_name"),
     settings.meta.appURL + "/uitnodiging",
-    inv.getString("role")
+    inv.getString("role"),
+    inv.getString("until")
   )
   try {
     $app.newMailClient().send(new MailerMessage({
@@ -101,6 +116,11 @@ routerAdd("GET", "/api/sandhovius/houses/{id}/members", (e) => {
   }
   const admins = Array.from(house.getStringSlice("admins"))
   const operateOnly = Array.from(house.getStringSlice("operate_only"))
+  // D2: tot wanneer een gast lid is ("JJJJ-MM-DD"), anders leeg.
+  const until = {}
+  for (const g of $app.findRecordsByFilter("guests", "house = {:house}", "", 0, 0, { house: house.id })) {
+    until[g.getString("user")] = g.getString("until")
+  }
   const items = $app.findRecordsByIds("users", Array.from(house.getStringSlice("members"))).map((u) => ({
     id: u.id,
     name: u.getString("name"),
@@ -108,6 +128,7 @@ routerAdd("GET", "/api/sandhovius/houses/{id}/members", (e) => {
     role: admins.includes(u.id) ? "admin" : "member",
     // D1: mag automatiseringen en apparaten wijzigen (beheerders altijd).
     can_edit: admins.includes(u.id) || !operateOnly.includes(u.id),
+    until: until[u.id] || "",
   }))
   const label = (m) => (m.name || m.email).toLowerCase()
   items.sort((a, b) =>
@@ -148,6 +169,17 @@ routerAdd("POST", "/api/sandhovius/invitations/{id}/accept", (e) => {
       house.set("members", members.concat([user.id]))
       if (inv.getString("role") === "admin") {
         house.set("admins", Array.from(house.getStringSlice("admins")).concat([user.id]))
+      }
+      // D2: een gast bedient alleen (een beheerder kan dat later aanzetten)
+      // en is lid tot het einde van de gekozen dag.
+      if (inv.getString("until") !== "") {
+        house.set("operate_only", Array.from(house.getStringSlice("operate_only")).concat([user.id]))
+        const guest = new Record(txApp.findCollectionByNameOrId("guests"))
+        guest.set("house", house.id)
+        guest.set("user", user.id)
+        guest.set("until", inv.getString("until"))
+        guest.set("ends", inv.getString("ends"))
+        txApp.save(guest)
       }
       txApp.save(house)
     }
@@ -206,6 +238,12 @@ routerAdd("PATCH", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
     house.set("admins", nextAdmins)
     house.set("operate_only", restrict ? operateOnly.concat([target]) : operateOnly)
     txApp.save(house)
+    // Een beheerder is geen gast: de einddatum vervalt.
+    if (isAdmin) {
+      for (const g of txApp.findRecordsByFilter("guests", "house = {:house} && user = {:user}", "", 0, 0, { house: house.id, user: target })) {
+        txApp.delete(g)
+      }
+    }
     result = { status: 200, role: isAdmin ? "admin" : "member", canEdit: !restrict }
   })
 
@@ -241,22 +279,7 @@ routerAdd("DELETE", "/api/sandhovius/houses/{id}/members/{user}", (e) => {
       result = { status: 409, code: "last_admin", message: "a house needs at least one admin" }
       return
     }
-    house.set("members", members.filter((m) => m !== target))
-    house.set("admins", admins.filter((a) => a !== target))
-    house.set("operate_only", Array.from(house.getStringSlice("operate_only")).filter((u) => u !== target))
-    txApp.save(house)
-
-    const favorites = txApp.findRecordsByFilter("favorites", "user = {:user} && device.gateway = {:house}", "", 0, 0, {
-      user: target,
-      house: house.id,
-    })
-    for (const f of favorites) txApp.delete(f)
-    // Thuis/weg van iemand die geen lid meer is telt niet meer mee.
-    const presence = txApp.findRecordsByFilter("presence", "user = {:user} && house = {:house}", "", 0, 0, {
-      user: target,
-      house: house.id,
-    })
-    for (const p of presence) txApp.delete(p)
+    require(`${__hooks}/membership.js`).removeMember(txApp, house, target)
     result = { status: 204 }
   })
 

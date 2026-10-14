@@ -379,7 +379,7 @@ func TestBoxCannotCreateOrDelete(t *testing.T) {
 	p := startPB(t)
 	w := fixture(t, p)
 	bodies := map[string]map[string]any{
-		"houses":   {"name": "Nep", "members": []string{w.UserA}, "admins": []string{w.UserA}},
+		"houses": {"name": "Nep", "members": []string{w.UserA}, "admins": []string{w.UserA}},
 		// devices: een box maakt na koppelen een device in zijn eigen huis; zie
 		// TestBoxCreatesDeviceInOwnHouse (devices_test.go)
 		"commands": {"device": w.DevA, "action": "turn_on", "status": "pending"},

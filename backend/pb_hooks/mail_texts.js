@@ -49,6 +49,8 @@ const TEXTS = {
       title: "Je bent uitgenodigd",
       intro: ["{inviter} nodigt je uit om {house} samen te bedienen met Sandhovius."],
       roles: { member: "Als huisgenoot", admin: "Als beheerder" },
+      guest: "Als gast, tot en met {date}",
+      months: ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"],
       expires: "Verloopt over 7 dagen",
       how: "Log in of maak een account aan met dit e-mailadres; de uitnodiging staat dan bovenaan je Home.",
       button: "Uitnodiging bekijken",
@@ -92,6 +94,8 @@ const TEXTS = {
       title: "You're invited",
       intro: ["{inviter} invited you to control {house} together with Sandhovius."],
       roles: { member: "As a housemate", admin: "As an admin" },
+      guest: "As a guest, until {date}",
+      months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
       expires: "Expires in 7 days",
       how: "Sign in or create an account with this email address; the invitation then appears at the top of your Home.",
       button: "View invitation",
@@ -237,13 +241,16 @@ function renderAuthAlert(language, info) {
 // Uitnodiging: naam van de uitnodiger en huisnaam komen van gebruikers, dus
 // in de HTML escapen; in het onderwerp (een header) alleen regeleinden weg.
 // Het huis staat als klein kaartje in de mail: naam, rol, verloopt.
-function renderInvitation(language, inviter, houseName, link, role) {
+// until: "JJJJ-MM-DD" bij een gast (D2), anders leeg.
+function renderInvitation(language, inviter, houseName, link, role, until) {
   const t = textsFor(language).invitation
   // met een functie vervangen: anders betekent "$&" in een naam iets
   const fill = (s, esc) =>
     s.replace("{inviter}", () => esc(inviter || "")).replace("{house}", () => esc(houseName || ""))
   const plain = (v) => String(v).replace(/[\r\n]+/g, " ")
-  const roleText = t.roles[role] || t.roles.member
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(until || "")
+  const date = parts ? Number(parts[3]) + " " + t.months[Number(parts[2]) - 1] + " " + parts[1] : ""
+  const roleText = date ? t.guest.replace("{date}", date) : t.roles[role] || t.roles.member
   const content =
     t.intro.map((p) => para(fill(p, escapeHTML))).join("") +
     card(
