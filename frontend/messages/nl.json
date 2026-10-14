@@ -282,7 +282,8 @@
       "motionOn": "Het bewegingslicht bij {name} aanzetten",
       "motionOff": "Het bewegingslicht bij {name} uitzetten",
       "shownAs": "Weergave opslaan",
-      "identify": "{name} laten knipperen"
+      "identify": "{name} laten knipperen",
+      "adaptive": "Kleur volgt de dag opslaan"
     },
     "codes": {
       "email_not_verified": "Bevestig eerst je e-mailadres",
@@ -303,7 +304,8 @@
       "hue_button": "De bridge reageerde nog niet. Druk op de knop en probeer het nog eens.",
       "invalid_capabilities": "Dit apparaat kan dat niet.",
       "invalid_shown_as": "Alleen een stopcontact kan als lamp worden getoond.",
-      "zigbee_unavailable": "Zoeken lukt nu niet. Probeer het later opnieuw."
+      "zigbee_unavailable": "Zoeken lukt nu niet. Probeer het later opnieuw.",
+      "invalid_adaptive": "Deze lamp kan zijn wittint niet veranderen."
     }
   },
   "household": {
@@ -432,7 +434,9 @@
     "shownAsLight": "Weergeven als lamp",
     "shownAsLightHint": "Voor een stopcontact met een lamp erin: een lamptegel die warm oplicht. Dimmen kan niet.",
     "motionNow": "Er is nu beweging",
-    "valveHint": "Verwarmt als je eigen thermostaat de ketel aanzet."
+    "valveHint": "Verwarmt als je eigen thermostaat de ketel aanzet.",
+    "adaptive": "Kleur volgt de dag",
+    "adaptiveHint": "Warm ’s avonds, frisser overdag. Kies je zelf een kleur, dan stopt het tot de lamp uit gaat."
   },
   "schedules": {
     "everyDay": "Elke dag",

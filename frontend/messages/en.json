@@ -282,7 +282,8 @@
       "motionOn": "Turning on the motion light for {name}",
       "motionOff": "Turning off the motion light for {name}",
       "shownAs": "Saving how it’s shown",
-      "identify": "Making {name} blink"
+      "identify": "Making {name} blink",
+      "adaptive": "Saving colour follows the day"
     },
     "codes": {
       "email_not_verified": "Confirm your email address first",
@@ -303,7 +304,8 @@
       "hue_button": "The bridge didn’t respond yet. Press the button and try again.",
       "invalid_capabilities": "This device can’t do that.",
       "invalid_shown_as": "Only a plug can be shown as a light.",
-      "zigbee_unavailable": "Searching isn’t possible right now. Try again later."
+      "zigbee_unavailable": "Searching isn’t possible right now. Try again later.",
+      "invalid_adaptive": "This lamp can’t change its white tone."
     }
   },
   "household": {
@@ -432,7 +434,9 @@
     "shownAsLight": "Show as a lamp",
     "shownAsLightHint": "For a plug with a lamp in it: a lamp tile that glows warm. It can’t be dimmed.",
     "motionNow": "Motion right now",
-    "valveHint": "Heats when your own thermostat turns on the boiler."
+    "valveHint": "Heats when your own thermostat turns on the boiler.",
+    "adaptive": "Colour follows the day",
+    "adaptiveHint": "Warm in the evening, fresher during the day. Pick a colour yourself and it pauses until the lamp goes off."
   },
   "schedules": {
     "everyDay": "Every day",

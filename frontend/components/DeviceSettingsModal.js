@@ -145,6 +145,29 @@ export default function DeviceSettingsModal({
       )}
       <div className="modal-divider" />
 
+      {/* Kleur volgt de dag: alleen een lamp die zijn wittint kan veranderen. */}
+      {device.type === 'light' && device.capabilities?.includes('color_temp') && (
+        <>
+          <div className="settings-row">
+            <span className="settings-row-text">
+              <span id={`adaptive-${device.id}`}>{t('deviceSheet.adaptive')}</span>
+              <span className="settings-row-hint">{t('deviceSheet.adaptiveHint')}</span>
+            </span>
+            <button
+              type="button"
+              className={`switch switch-accent ${device.adaptive ? 'switch-on' : ''}`}
+              role="switch"
+              aria-checked={!!device.adaptive}
+              aria-labelledby={`adaptive-${device.id}`}
+              onClick={() => save({ adaptive: !device.adaptive }, t('errors.what.adaptive'))}
+            >
+              <span className="switch-thumb" />
+            </button>
+          </div>
+          <div className="modal-divider" />
+        </>
+      )}
+
       {device.type === 'switch' && (
         <>
           <div className="settings-row">
