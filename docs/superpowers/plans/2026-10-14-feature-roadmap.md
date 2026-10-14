@@ -128,7 +128,11 @@ Begin met 1 + "iedereen weg" als voorwaarde/starter in B1.
 
 ## Fase C — inzicht
 
-### C1. Geschiedenis
+### C1. Geschiedenis (wacht op fase 3)
+
+Overgeslagen op 2026-10-14: het architectuurbesluit hieronder hoort pas bij
+fase 3.
+
 
 "Wanneer ging de voordeur open?" De box heeft het al
 (`agent/internal/history/`). **Afbakening:** eerst deur-/contactsensoren en
@@ -149,7 +153,11 @@ pakket zitten.
 
 ## Fase D — huisgenoten
 
-### D1. Rechten als één schakelaar
+### D1. Rechten als één schakelaar ✅ gebouwd 2026-10-14
+
+Gebouwd volgens `docs/superpowers/specs/2026-10-14-member-rights-design.md`:
+standaard aan, uit = alleen bedienen, beheerders altijd alles.
+
 
 Geen derde rol, maar onder de rol in `MemberSheet` één schakelaar **Mag
 automatiseringen en apparaten wijzigen**. Beheerders blijven beheerders. In de
@@ -326,6 +334,6 @@ Model B (een knop vraagt zelf warmte aan de ketel) kan later bovenop B1.
 ## Volgorde
 
 A0 + A2 ✅ → A1 ✅ → F1 ✅ → E1 ✅ → B1 ✅ → B3 (handmatig) ✅ → B2 ✅ (box offline
-met fase 3) → C1 → D1 → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
+met fase 3) → C1 (na fase 3) → D1 ✅ → D2. K1 los, wanneer er een middag over is. A3, C2, E2 en
 F2 alleen als er tijd of vraag is. Ruwe maat bij 10–15 uur/week: A1 + F1 + E1
 ~4 weken, B1 ~4–6 weken, de rest volgt op fase 3.

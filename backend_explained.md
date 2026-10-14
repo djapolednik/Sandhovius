@@ -106,7 +106,7 @@ het starten helemaal op.
 |---|---|---|---|
 | `users` | auth | Bewoners; token geldt een jaar (de PWA verlengt het dagelijks, dus ingelogd tot je zelf uitlogt; wachtwoord wijzigen maakt alle tokens ongeldig) | `email`, `verified`, `language` (`nl`/`en`, taal van e-mails) |
 | `boxes` | auth | Eén per fysieke box | `serial` (login), wachtwoord = boxgeheim, `house`, `claim_code_hash` (verborgen), `agent_version` + `reported_at` (alleen via `box.pb.js`) |
-| `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated` |
+| `houses` | base | Eén per huis | `members` en `admins` (meervoudige relaties naar `users`; beheerders zijn altijd ook lid, er is altijd minstens één), `name`, `select` (online/offline), `claimed_at`, `last_seen` (autodate = hartslag), `weather`, `weather_updated`, `push_key` (box), `operate_only` (leden die alleen mogen bedienen; alleen via het leden-endpoint) |
 | `rooms` | base | Kamers | `house`, `name`, `order` |
 | `devices` | base | Apparaten; alleen de box maakt ze (bij koppelen) | `gateway` (= huis), `name`, `room`, `shown_as` (bewoner: `light` of leeg, alleen bij `type = switch`); box: `type` (`light`/`switch`/`sensor`/`climate`), `source` (`zigbee`/`hue`), `address` (IEEE-adres of HA-device-id, nooit de naam), `endpoint` (`l1`, `l2` … bij een meervoudig apparaat), `entity_id` (HA-hoofdentiteit; leeg bij een sensor), `capabilities` (JSON, vaste woordenlijst), `model`, `online`; bewoner ook: `adaptive` (kleur volgt de dag, alleen bij `color_temp`) |
 | `pairing_sessions` | base | Een koppelsessie: de box zoekt | `house`, `kind` (`light`/`switch`/`sensor`/`climate`/`hue`), `status` (`starting`/`open`/`waiting_button`/`closed`/`failed`), `expires`, `error` (foutcode), `created_by`, `extend`, `button_pressed` |
@@ -253,6 +253,13 @@ toont ze nooit, alleen óf er een fout is. Spec:
   1–80 tekens en `users` uit de leden (leeg = iedereen).
 - **`houses.push_key`** — alleen de box: de migratie zet een voorwaarde achter
   de bestaande `updateRule` voor iedereen die geen box is.
+- **Alleen bedienen (D1)**: `PATCH /api/sandhovius/houses/{id}/members/{user}`
+  neemt naast `role` ook `can_edit` en zet `houses.operate_only` (een
+  beheerder kan het niet zijn: 409 `admin_can_edit`; beheerder maken haalt de
+  beperking weg). De wijzigregels voor bewoners op rooms, devices, scenes,
+  schedules, automations, motion_lights, pairing_sessions en
+  pairing_candidates hebben `<huis>.operate_only.id != @request.auth.id`
+  erachter (zonder `?` = voor alle leden van de lijst; leeg = iedereen door).
 - **`household.pb.js`** ruimt bij verlaten of verwijderen ook de
   `presence`-rij van dat lid in dat huis op.
 - **`pairing.pb.js`** — zet `created_by` op de bewoner en weigert een tweede
