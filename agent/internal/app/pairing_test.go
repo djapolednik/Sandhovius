@@ -189,3 +189,23 @@ func TestExtend(t *testing.T) {
 		t.Errorf("expiresAt = %v", e.expiresAt())
 	}
 }
+
+// Model A: een wandthermostaat in een radiatorknop-sessie is niet
+// ondersteund en gaat van het netwerk; een TRVZB wordt een candidate.
+func TestClimateOnlyTestedValves(t *testing.T) {
+	e := newPairingEngine("climate", nil, pairT0)
+	e.joined("0x1")
+	wall := bridgeDev(t, "0x1", "wall_thermostat")
+	acts := e.interviewed("0x1", wall, true)
+	if !reflect.DeepEqual(kinds(acts), []string{"candidate 0x1", "remove 0x1"}) || acts[0].Status != "unsupported" {
+		t.Errorf("wandthermostaat: %+v", acts)
+	}
+
+	e.joined("0x2")
+	trv := bridgeDev(t, "0x2", "sonoff_trvzb")
+	trv.Model = "TRVZB"
+	acts = e.interviewed("0x2", trv, true)
+	if len(acts) != 1 || acts[0].Status != "found" || acts[0].Part.Type != "climate" {
+		t.Errorf("TRVZB: %+v", acts)
+	}
+}

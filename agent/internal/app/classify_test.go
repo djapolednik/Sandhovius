@@ -33,7 +33,11 @@ func TestClassify(t *testing.T) {
 		{"aqara_contact", []Part{{"", "sensor", []string{"contact", "battery"}}}},
 		{"leak", []Part{{"", "sensor", []string{"water_leak", "battery"}}}},
 		{"double_switch", []Part{{"l1", "switch", []string{"onoff"}}, {"l2", "switch", []string{"onoff"}}}},
-		{"trv", []Part{{"", "climate", []string{"heating", "temperature", "battery"}}}},
+		// Sonoff TRVZB, de exposes uit zigbee-herdsman-converters (sonoff.ts):
+		// een kraan herken je aan valve_opening_degree
+		{"sonoff_trvzb", []Part{{"", "climate", []string{"heating", "valve", "temperature", "battery"}}}},
+		// een wandthermostaat: climate zonder kraan
+		{"wall_thermostat", []Part{{"", "climate", []string{"heating", "temperature", "battery"}}}},
 	}
 	for _, c := range cases {
 		if got := classify(loadExposes(t, c.file)); !reflect.DeepEqual(got, c.want) {
@@ -60,5 +64,25 @@ func TestClassifyColorLight(t *testing.T) {
 	want := []Part{{"", "light", []string{"onoff", "brightness", "color"}}}
 	if got := classify(exposes); !reflect.DeepEqual(got, want) {
 		t.Errorf("kleurlamp: %+v", got)
+	}
+}
+
+// Verwarming volgens model A (spec, "Verwarming"): alleen geteste
+// radiatorknoppen. Een wandthermostaat of een niet geteste kraan is niet
+// ondersteund; een lamp of sensor blijft gewoon staan.
+func TestSupportedParts(t *testing.T) {
+	trvzb := classify(loadExposes(t, "sonoff_trvzb"))
+	if got := supportedParts("TRVZB", trvzb); !reflect.DeepEqual(got, trvzb) {
+		t.Errorf("TRVZB: %+v", got)
+	}
+	if got := supportedParts("014G2461", trvzb); got != nil {
+		t.Errorf("niet geteste kraan: %+v", got)
+	}
+	if got := supportedParts("TRVZB", classify(loadExposes(t, "wall_thermostat"))); got != nil {
+		t.Errorf("wandthermostaat: %+v", got)
+	}
+	bulb := classify(loadExposes(t, "ikea_bulb_ws"))
+	if got := supportedParts("LED1545G12", bulb); !reflect.DeepEqual(got, bulb) {
+		t.Errorf("lamp: %+v", got)
 	}
 }

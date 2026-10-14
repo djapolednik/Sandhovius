@@ -1,0 +1,24 @@
+[
+  {"type": "climate", "features": [
+    {"type": "numeric", "name": "occupied_heating_setpoint", "property": "occupied_heating_setpoint"},
+    {"type": "numeric", "name": "local_temperature", "property": "local_temperature"},
+    {"type": "numeric", "name": "local_temperature_calibration", "property": "local_temperature_calibration"},
+    {"type": "enum", "name": "system_mode", "property": "system_mode", "values": ["off", "auto", "heat"]},
+    {"type": "enum", "name": "running_state", "property": "running_state", "values": ["idle", "heat"]}
+  ]},
+  {"type": "numeric", "name": "battery", "property": "battery", "unit": "%"},
+  {"type": "binary", "name": "child_lock", "property": "child_lock"},
+  {"type": "binary", "name": "open_window", "property": "open_window"},
+  {"type": "numeric", "name": "frost_protection_temperature", "property": "frost_protection_temperature"},
+  {"type": "enum", "name": "temperature_sensor_select", "property": "temperature_sensor_select"},
+  {"type": "numeric", "name": "external_temperature_input", "property": "external_temperature_input"},
+  {"type": "numeric", "name": "idle_steps", "property": "idle_steps"},
+  {"type": "numeric", "name": "closing_steps", "property": "closing_steps"},
+  {"type": "numeric", "name": "valve_opening_limit_voltage", "property": "valve_opening_limit_voltage"},
+  {"type": "numeric", "name": "valve_closing_limit_voltage", "property": "valve_closing_limit_voltage"},
+  {"type": "numeric", "name": "valve_motor_running_voltage", "property": "valve_motor_running_voltage"},
+  {"type": "numeric", "name": "valve_opening_degree", "property": "valve_opening_degree"},
+  {"type": "numeric", "name": "valve_closing_degree", "property": "valve_closing_degree"},
+  {"type": "numeric", "name": "temperature_accuracy", "property": "temperature_accuracy"},
+  {"type": "numeric", "name": "linkquality", "property": "linkquality"}
+]

@@ -88,7 +88,7 @@ func (e *pairingEngine) interviewed(ieee string, dev mqtt.BridgeDevice, ok bool)
 
 	var parts []Part
 	if ok && dev.Supported {
-		parts = classify(dev.Exposes)
+		parts = supportedParts(dev.Model, classify(dev.Exposes))
 	}
 	if parts == nil {
 		return append([]pairingAction{{Kind: "candidate", Address: ieee, Status: "unsupported", Model: dev.Model}},
