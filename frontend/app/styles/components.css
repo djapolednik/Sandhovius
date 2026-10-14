@@ -765,6 +765,23 @@
   max-width: 40rem;
 }
 
+/* Vanaf een iPad staand: twee kolommen panelen. Kolommen, geen raster: elk
+   paneel houdt zijn eigen hoogte (Huis is hoger dan Weergave) en er ontstaan
+   geen gaten. De volgorde blijft die van de pagina, kolom voor kolom. */
+@media (min-width: 48rem) {
+  .settings-view {
+    display: block;
+    columns: 2;
+    column-gap: 0.9rem;
+    max-width: 72rem;
+  }
+
+  .settings-view > * {
+    break-inside: avoid;
+    margin-bottom: 0.9rem;
+  }
+}
+
 .settings-section {
   padding: 1.1rem 1.25rem 1.25rem;
   container-type: inline-size;

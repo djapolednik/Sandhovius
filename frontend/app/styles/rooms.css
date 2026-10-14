@@ -597,6 +597,13 @@
   color: var(--text-secondary);
 }
 
+/* De tweede regel (software bijgewerkt) onder "Verbonden met je huis": de
+   negatieve marge hierboven is alleen voor de eerste regel, anders schuift
+   hij eroverheen. */
+.connection-status + .connection-software {
+  margin-top: 0.2rem;
+}
+
 .connection-status-live svg {
   color: var(--on-text);
   flex-shrink: 0;
