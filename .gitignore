@@ -24,3 +24,6 @@ box.json
 
 # Printbladen met claimcodes: nooit in git.
 sheets/
+
+# nep-Zigbee2MQTT (scripts/fake-zigbee.py): bewaarde nep-apparaten
+scripts/.fake-zigbee.json
