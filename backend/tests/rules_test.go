@@ -245,7 +245,7 @@ var otherValueOverrides = map[string]any{"schedules.time": "07:45", "schedules.t
 
 // allowedFields zijn de velden die een box mag schrijven (Global Constraints).
 var allowedFields = map[string][]string{
-	"houses":       {"select", "weather", "weather_updated"},
+	"houses":       {"select", "weather", "weather_updated", "push_key"},
 	"devices":      {"entity_id", "online", "source", "address", "endpoint", "capabilities", "model"},
 	"device_state": {"state", "updated_at"},
 	"commands":     {"status", "error"},
